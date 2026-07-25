@@ -2,19 +2,24 @@ includes:
     - vendor/larastan/larastan/extension.neon
 
 parameters:
-    level: 6
+    level: 8
 
     paths:
         - app
         - modules
-        - routes
-        - tests
 
     excludePaths:
+        analyseAndScan:
+            - tests/*
+            - modules/*/Tests/*
+
         analyse:
             - bootstrap/cache/*
             - storage/*
             - vendor/*
+
+    parallel:
+        maximumNumberOfProcesses: 1
 
     tmpDir: storage/framework/cache/phpstan
 
