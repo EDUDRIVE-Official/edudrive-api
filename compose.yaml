@@ -1,0 +1,113 @@
+name: edudrive
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: edudrive-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - edudrive-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:alpine
+    container_name: edudrive-nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - edudrive-network
+    depends_on:
+      - app
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: edudrive-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: edudrive
+      POSTGRES_USER: edudrive
+      POSTGRES_PASSWORD: edudrive_local_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - edudrive-postgres-data:/var/lib/postgresql/data
+    networks:
+      - edudrive-network
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U edudrive -d edudrive
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: edudrive-redis
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+    ports:
+      - "6380:6379"
+    volumes:
+      - edudrive-redis-data:/data
+    networks:
+      - edudrive-network
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: edudrive-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: edudrive
+      MINIO_ROOT_PASSWORD: edudrive_local_password
+    ports:
+       - "9100:9000"
+       - "9101:9001"
+    volumes:
+      - edudrive-minio-data:/data
+    networks:
+      - edudrive-network
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: edudrive-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - edudrive-network
+
+networks:
+  edudrive-network:
+    driver: bridge
+
+volumes:
+  edudrive-postgres-data:
+  edudrive-redis-data:
+  edudrive-minio-data:
