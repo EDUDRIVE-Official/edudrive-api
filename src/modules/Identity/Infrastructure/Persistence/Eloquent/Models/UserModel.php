@@ -6,6 +6,7 @@ namespace Modules\Identity\Infrastructure\Persistence\Eloquent\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Carbon;
+use Laravel\Sanctum\HasApiTokens;
 
 /**
  * @property string $id
@@ -19,6 +20,8 @@ use Illuminate\Support\Carbon;
  */
 final class UserModel extends Authenticatable
 {
+    use HasApiTokens;
+
     protected $table = 'users';
 
     protected $primaryKey = 'id';

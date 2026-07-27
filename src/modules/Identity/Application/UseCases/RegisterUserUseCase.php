@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Identity\Application\UseCases;
 
 use Modules\Identity\Application\DTO\RegisterUserCommand;
+use Modules\Identity\Application\DTO\RegisterUserResponse;
 use Modules\Identity\Application\Exceptions\EmailAlreadyExists;
 use Modules\Identity\Application\Services\PasswordHasher;
 use Modules\Identity\Application\Services\UuidGenerator;
@@ -20,7 +21,7 @@ final readonly class RegisterUserUseCase
         private UuidGenerator $uuidGenerator,
     ) {}
 
-    public function execute(RegisterUserCommand $command): User
+    public function execute(RegisterUserCommand $command): RegisterUserResponse
     {
         $email = Email::fromString($command->email);
 
@@ -37,6 +38,11 @@ final readonly class RegisterUserUseCase
 
         $this->users->save($user);
 
-        return $user;
+        return new RegisterUserResponse(
+            id: $user->id(),
+            name: $user->name(),
+            email: $user->email()->value(),
+            status: $user->status()->value,
+        );
     }
 }

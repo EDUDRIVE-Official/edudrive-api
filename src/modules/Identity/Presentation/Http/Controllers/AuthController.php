@@ -29,10 +29,10 @@ final class AuthController extends Controller
 
         return ApiResponse::created(
             [
-                'id' => $user->id(),
-                'name' => $user->name(),
-                'email' => $user->email()->value(),
-                'status' => $user->status()->value,
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'status' => $user->status,
             ],
             'Usuario registrado correctamente.',
         );
