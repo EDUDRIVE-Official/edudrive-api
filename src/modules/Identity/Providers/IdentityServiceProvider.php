@@ -6,12 +6,14 @@ namespace Modules\Identity\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Modules\Identity\Application\Services\AccessTokenIssuer;
+use Modules\Identity\Application\Services\AccessTokenRevoker;
 use Modules\Identity\Application\Services\PasswordHasher;
 use Modules\Identity\Application\Services\UuidGenerator;
 use Modules\Identity\Domain\Repositories\UserRepository;
 use Modules\Identity\Infrastructure\Persistence\Repositories\EloquentUserRepository;
 use Modules\Identity\Infrastructure\Security\LaravelPasswordHasher;
 use Modules\Identity\Infrastructure\Security\SanctumAccessTokenIssuer;
+use Modules\Identity\Infrastructure\Security\SanctumAccessTokenRevoker;
 use Modules\Identity\Infrastructure\Support\LaravelUuidGenerator;
 
 final class IdentityServiceProvider extends ServiceProvider
@@ -36,6 +38,11 @@ final class IdentityServiceProvider extends ServiceProvider
         $this->app->bind(
             AccessTokenIssuer::class,
             SanctumAccessTokenIssuer::class,
+        );
+
+        $this->app->bind(
+            AccessTokenRevoker::class,
+            SanctumAccessTokenRevoker::class,
         );
     }
 

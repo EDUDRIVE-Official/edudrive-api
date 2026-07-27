@@ -18,7 +18,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */
-final class UserModel extends Authenticatable
+class UserModel extends Authenticatable
 {
     use HasApiTokens;
 

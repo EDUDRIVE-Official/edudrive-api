@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Route;
 use Modules\Identity\Presentation\Http\Controllers\ActivateUserController;
 use Modules\Identity\Presentation\Http\Controllers\AuthController;
 use Modules\Identity\Presentation\Http\Controllers\LoginController;
+use Modules\Identity\Presentation\Http\Controllers\LogoutController;
+use Modules\Identity\Presentation\Http\Controllers\MeController;
 
 Route::middleware('api')
     ->prefix('api/v1/auth')
@@ -19,4 +21,12 @@ Route::middleware('api')
         Route::post('/users/{userId}/activate', ActivateUserController::class)
             ->whereUuid('userId')
             ->name('api.v1.auth.users.activate');
+
+        Route::middleware('auth:sanctum')->group(function (): void {
+            Route::get('/me', MeController::class)
+                ->name('api.v1.auth.me');
+
+            Route::post('/logout', LogoutController::class)
+                ->name('api.v1.auth.logout');
+        });
     });

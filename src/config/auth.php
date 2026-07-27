@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use Modules\Identity\Infrastructure\Persistence\Eloquent\Models\UserModel;
 
 return [
 
@@ -66,13 +67,11 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
+            'model' => env(
+                'AUTH_MODEL',
+                UserModel::class,
+            ),
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
     ],
 
     /*
