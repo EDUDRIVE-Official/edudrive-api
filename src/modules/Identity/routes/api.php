@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Identity\Presentation\Http\Controllers\ActivateUserController;
 use Modules\Identity\Presentation\Http\Controllers\AuthController;
 use Modules\Identity\Presentation\Http\Controllers\LoginController;
+use Modules\Identity\Presentation\Http\Controllers\LogoutAllController;
 use Modules\Identity\Presentation\Http\Controllers\LogoutController;
 use Modules\Identity\Presentation\Http\Controllers\MeController;
 
@@ -28,5 +29,8 @@ Route::middleware('api')
 
             Route::post('/logout', LogoutController::class)
                 ->name('api.v1.auth.logout');
+
+            Route::post('/logout-all', LogoutAllController::class)
+                ->name('api.v1.auth.logout-all');
         });
     });

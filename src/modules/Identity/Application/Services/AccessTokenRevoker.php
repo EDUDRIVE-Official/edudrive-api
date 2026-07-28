@@ -7,4 +7,6 @@ namespace Modules\Identity\Application\Services;
 interface AccessTokenRevoker
 {
     public function revokeCurrent(string $tokenId): void;
+
+    public function revokeAllForUser(string $userId): void;
 }

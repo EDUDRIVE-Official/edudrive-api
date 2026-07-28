@@ -22,6 +22,16 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(CorrelationId::class);
+
+        $middleware->redirectGuestsTo(
+            static function (Request $request): ?string {
+                if ($request->is('api/*') || $request->expectsJson()) {
+                    return null;
+                }
+
+                return '/login';
+            },
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
