@@ -422,3 +422,94 @@ Gestión avanzada de sesiones:
 - Recuperación de contraseña
 - Cambio de contraseña
 - Base para MFA
+
+---
+
+# 2026-07-27 — Hito ENG-010.1
+
+## Logout global de sesiones
+
+### Estado
+
+✅ COMPLETADO
+
+### Endpoint
+
+POST /api/v1/auth/logout-all
+
+### Funcionalidad
+
+Permite revocar todos los tokens activos del usuario autenticado, cerrando la sesión en todos los dispositivos.
+
+### Casos de uso
+
+- Pérdida o robo de un dispositivo.
+- Cambio de contraseña.
+- Sospecha de acceso no autorizado.
+- Cierre global de sesiones.
+
+### Componentes implementados
+
+- AccessTokenRevoker::revokeAllForUser()
+- SanctumAccessTokenRevoker
+- LogoutAllUsersUseCase
+- LogoutAllController
+- Ruta protegida con auth:sanctum
+
+### Validaciones realizadas
+
+- Login múltiple.
+- Generación de múltiples tokens.
+- Revocación global.
+- Verificación de invalidez de todos los tokens.
+
+### Resultado
+
+El endpoint revoca correctamente todas las sesiones del usuario y devuelve respuesta JSON estandarizada.
+
+---
+
+# 2026-07-28 — Hito ENG-010.2
+
+## Gestión de sesiones activas
+
+### Estado
+
+✅ COMPLETADO
+
+### Endpoint
+
+GET /api/v1/auth/sessions
+
+### Objetivo
+
+Permitir al usuario consultar todas las sesiones activas asociadas a su cuenta.
+
+### Componentes implementados
+
+- SessionData
+- SessionRepository
+- SanctumSessionRepository
+- GetUserSessionsUseCase
+- SessionsController
+
+### Características
+
+- Obtiene todas las sesiones activas.
+- Identifica la sesión actual.
+- Expone:
+  - id
+  - nombre
+  - current
+  - created_at
+  - last_used_at
+
+### Arquitectura
+
+La capa Application depende únicamente de SessionRepository.
+
+La infraestructura implementa dicho contrato mediante SanctumSessionRepository, evitando acoplamiento con Laravel Sanctum.
+
+### Resultado
+
+El endpoint devuelve correctamente todas las sesiones del usuario autenticado mediante una respuesta JSON estandarizada.

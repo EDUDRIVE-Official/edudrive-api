@@ -9,6 +9,7 @@ use Modules\Identity\Presentation\Http\Controllers\LoginController;
 use Modules\Identity\Presentation\Http\Controllers\LogoutAllController;
 use Modules\Identity\Presentation\Http\Controllers\LogoutController;
 use Modules\Identity\Presentation\Http\Controllers\MeController;
+use Modules\Identity\Presentation\Http\Controllers\SessionsController;
 
 Route::middleware('api')
     ->prefix('api/v1/auth')
@@ -26,6 +27,9 @@ Route::middleware('api')
         Route::middleware('auth:sanctum')->group(function (): void {
             Route::get('/me', MeController::class)
                 ->name('api.v1.auth.me');
+
+            Route::get('/sessions', SessionsController::class)
+                ->name('api.v1.auth.sessions');
 
             Route::post('/logout', LogoutController::class)
                 ->name('api.v1.auth.logout');
