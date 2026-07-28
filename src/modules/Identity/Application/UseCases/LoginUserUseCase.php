@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Modules\Identity\Application\UseCases;
 
+use Modules\Audit\Application\DTO\AuditEntry;
+use Modules\Audit\Application\Services\AuditLogger;
 use Modules\Identity\Application\Commands\LoginUserCommand;
 use Modules\Identity\Application\Responses\LoginUserResponse;
 use Modules\Identity\Application\Services\AccessTokenIssuer;
@@ -19,6 +21,7 @@ final readonly class LoginUserUseCase
         private UserRepository $users,
         private PasswordHasher $passwordHasher,
         private AccessTokenIssuer $accessTokenIssuer,
+        private AuditLogger $auditLogger,
     ) {}
 
     public function execute(LoginUserCommand $command): LoginUserResponse
@@ -44,6 +47,18 @@ final readonly class LoginUserUseCase
         $issuedToken = $this->accessTokenIssuer->issue(
             $user->id(),
             $command->tokenName,
+        );
+
+        $this->auditLogger->log(
+            new AuditEntry(
+                action: 'auth.login',
+                userId: $user->id(),
+                entity: 'User',
+                entityId: $user->id(),
+                metadata: [
+                    'token_name' => $command->tokenName,
+                ],
+            ),
         );
 
         return new LoginUserResponse(
