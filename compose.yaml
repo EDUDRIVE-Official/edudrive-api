@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
     working_dir: /var/www/html
     volumes:
-      - ./src:/var/www/html
+      - ./:/var/www/html
     networks:
       - edudrive-network
     depends_on:
@@ -25,7 +25,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./src:/var/www/html:ro
+      - ./:/var/www/html:ro
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - edudrive-network

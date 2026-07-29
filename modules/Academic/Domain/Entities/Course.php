@@ -14,8 +14,7 @@ final class Course
         private string $name,
         private ?string $description,
         private CourseStatus $status = CourseStatus::Draft,
-    ) {
-    }
+    ) {}
 
     public function code(): CourseCode
     {
