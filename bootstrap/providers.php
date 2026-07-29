@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Providers\AppServiceProvider;
+use Modules\Academic\Infrastructure\Providers\AcademicServiceProvider;
 use Modules\Audit\Infrastructure\Providers\AuditServiceProvider;
 use Modules\Foundation\Providers\FoundationServiceProvider;
 use Modules\Identity\Providers\IdentityServiceProvider;
@@ -12,4 +13,5 @@ return [
     FoundationServiceProvider::class,
     IdentityServiceProvider::class,
     AuditServiceProvider::class,
+    AcademicServiceProvider::class,
 ];
