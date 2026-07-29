@@ -513,3 +513,171 @@ La infraestructura implementa dicho contrato mediante SanctumSessionRepository, 
 ### Resultado
 
 El endpoint devuelve correctamente todas las sesiones del usuario autenticado mediante una respuesta JSON estandarizada.
+
+
+---
+
+# ENG-010 — Cierre del Módulo Identity y Auditoría
+
+**Fecha:** 2026-07-29
+
+## Objetivo
+
+Completar el módulo de autenticación (Identity) e integrar el módulo de auditoría (Audit) para registrar todos los eventos críticos relacionados con la autenticación de usuarios.
+
+## Actividades realizadas
+
+### Infraestructura
+
+- Configuración definitiva de PostgreSQL como base de datos principal.
+- Corrección de la configuración Docker para utilizar PostgreSQL en lugar de SQLite.
+- Verificación de la conectividad entre Laravel y PostgreSQL.
+
+### Sanctum
+
+- Adaptación de Laravel Sanctum para trabajar con UUID.
+- Actualización de la tabla `personal_access_tokens` utilizando `uuidMorphs()`.
+- Validación del correcto funcionamiento de autenticación mediante Bearer Tokens.
+
+### Identity
+
+Se completaron los siguientes casos de uso:
+
+- Registro de usuarios.
+- Activación de cuentas.
+- Inicio de sesión.
+- Cierre de sesión actual.
+- Cierre de todas las sesiones.
+- Consulta de usuario autenticado.
+- Consulta de sesiones activas.
+
+### Audit
+
+Se implementó el nuevo módulo Audit siguiendo la arquitectura modular del proyecto.
+
+#### Componentes implementados
+
+- AuditEntry (DTO)
+- AuditLogger (Contrato)
+- AuditRepository (Contrato)
+- EloquentAuditRepository
+- DatabaseAuditLogger
+- AuditLogModel
+- AuditServiceProvider
+
+#### Persistencia
+
+Se creó la tabla:
+
+- audit_logs
+
+Campos principales:
+
+- id
+- user_id
+- action
+- entity
+- entity_id
+- ip
+- user_agent
+- metadata
+- occurred_at
+- timestamps
+
+### Eventos auditados
+
+Actualmente se registran automáticamente los siguientes eventos:
+
+- auth.login
+- auth.logout
+- auth.logout_all
+
+Cada registro almacena:
+
+- Usuario
+- Entidad afectada
+- Identificador
+- Metadata
+- Fecha y hora del evento
+
+## Correcciones realizadas
+
+Durante este hito se solucionaron, entre otros, los siguientes problemas:
+
+- Laravel utilizando SQLite por configuración incorrecta.
+- UUID incompatibles con Sanctum.
+- Registro del AuditServiceProvider.
+- Error "Target AuditLogger is not instantiable".
+- Respuesta JSON correcta para usuarios no autenticados.
+- Auditoría integrada con Login, Logout y Logout All.
+
+## Validaciones realizadas
+
+Se verificó exitosamente:
+
+- composer format
+- composer quality
+
+Pruebas funcionales mediante Postman:
+
+- Registro
+- Login
+- Logout
+- Logout All
+- Me
+- Sessions
+
+Validación directa en PostgreSQL:
+
+```sql
+SELECT
+    action,
+    user_id,
+    entity,
+    entity_id,
+    metadata,
+    occurred_at
+FROM audit_logs;
+```
+
+Confirmando la creación correcta de registros:
+
+- auth.login
+- auth.logout
+- auth.logout_all
+
+## Estado del proyecto
+
+Módulos completados:
+
+- Foundation
+- Identity
+- Audit
+
+Estado de la infraestructura:
+
+- Docker
+- PostgreSQL
+- Redis
+- MinIO
+- Mailpit
+
+Estado general:
+
+**Fase de Plataforma Base finalizada.**
+
+La arquitectura técnica ya soporta el desarrollo de los módulos funcionales de EDUDRIVE.
+
+## Próximo hito
+
+ENG-020
+
+**Implementación del módulo Academic**, que administrará la estructura académica oficial de EDUDRIVE:
+
+- Cursos
+- Módulos
+- Lecciones
+- Competencias
+- Objetivos de aprendizaje
+- Recursos
+- Versionado curricular
