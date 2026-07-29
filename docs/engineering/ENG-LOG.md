@@ -681,3 +681,58 @@ ENG-020
 - Objetivos de aprendizaje
 - Recursos
 - Versionado curricular
+
+## 2026-07-29 — IMP-020 (Bloque 1)
+
+### Completado
+
+- Reestructuración definitiva del repositorio Laravel.
+- Integración del módulo Academic.
+- Definición del estándar oficial de módulos (ENG-003).
+- Endpoint `/api/v1/academic/status`.
+- Aggregate Root `Course`.
+- Value Objects:
+  - CourseId
+  - CourseCode
+  - CourseTitle
+- Enum `CourseStatus`.
+- Excepciones de dominio.
+- Migración `academic_courses`.
+- Integración de pruebas modulares con Pest.
+- Validación completa mediante:
+  - composer test
+  - composer analyse
+  - composer quality
+
+**Estado:** ✅ Finalizado.
+
+## 2026-07-29 — IMP-020 (Bloque 3)
+
+### Completado
+
+- Implementación del contrato `CourseRepository`.
+- Implementación de `CourseModel`.
+- Implementación de `EloquentCourseRepository`.
+- Registro del binding del repositorio en `AcademicServiceProvider`.
+- Implementación de `CreateCourseCommand`.
+- Implementación de `CreateCourseHandler`.
+- Implementación de `CreateCourseRequest`.
+- Implementación de `CourseController`.
+- Creación del endpoint:
+  - `POST /api/v1/academic/courses`
+- Persistencia real de cursos en PostgreSQL.
+- Normalización automática del código de curso.
+- Validación de códigos duplicados desde la capa de aplicación.
+- Reconstrucción del Aggregate `Course` desde Eloquent.
+- Pruebas Feature para creación y validación.
+- Pruebas de integración del repositorio.
+- Integración completa de pruebas modulares en la suite global.
+
+### Validaciones
+
+- `composer test` ✅
+- `composer analyse` ✅
+- `composer quality` ✅
+
+**Estado:** Finalizado.
+

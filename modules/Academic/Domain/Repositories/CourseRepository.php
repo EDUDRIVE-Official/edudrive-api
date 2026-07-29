@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Modules\Academic\Domain\Repositories;
 
-use Modules\Academic\Domain\Entities\Course;
+use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
+use Modules\Academic\Domain\ValueObjects\CourseId;
 
 interface CourseRepository
 {
     public function save(Course $course): void;
 
+    public function findById(CourseId $id): ?Course;
+
     public function findByCode(CourseCode $code): ?Course;
 
-    public function exists(CourseCode $code): bool;
-
-    public function delete(Course $course): void;
+    public function existsByCode(CourseCode $code): bool;
 }
