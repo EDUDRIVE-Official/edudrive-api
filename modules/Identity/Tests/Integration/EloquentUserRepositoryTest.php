@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use DateTimeImmutable;
 use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Enums\UserStatus;
 use Modules\Identity\Domain\Repositories\UserRepository;

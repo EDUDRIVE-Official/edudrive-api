@@ -9,5 +9,19 @@ enum CourseStatus: string
     case Draft = 'draft';
     case Published = 'published';
     case Archived = 'archived';
-    case Deprecated = 'deprecated';
+
+    public function isDraft(): bool
+    {
+        return $this === self::Draft;
+    }
+
+    public function isPublished(): bool
+    {
+        return $this === self::Published;
+    }
+
+    public function isArchived(): bool
+    {
+        return $this === self::Archived;
+    }
 }

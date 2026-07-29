@@ -63,7 +63,7 @@
         ],
         "test": [
             "@php artisan config:clear --ansi",
-            "@php vendor/bin/pest"
+            "@php artisan test tests modules"
         ],
         "quality": [
             "@format:test",

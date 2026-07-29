@@ -6,9 +6,9 @@ namespace Modules\Academic\Domain\ValueObjects;
 
 use InvalidArgumentException;
 
-final readonly class CourseCode
+final readonly class CourseTitle
 {
-    private const int MAX_LENGTH = 50;
+    private const int MAX_LENGTH = 180;
 
     private function __construct(
         private string $value,
@@ -16,21 +16,15 @@ final readonly class CourseCode
 
     public static function fromString(string $value): self
     {
-        $value = strtoupper(trim($value));
+        $value = trim($value);
 
         if ($value === '') {
-            throw new InvalidArgumentException('El código del curso no puede estar vacío.');
+            throw new InvalidArgumentException('El título del curso no puede estar vacío.');
         }
 
         if (mb_strlen($value) > self::MAX_LENGTH) {
             throw new InvalidArgumentException(
-                sprintf('El código del curso no puede superar %d caracteres.', self::MAX_LENGTH),
-            );
-        }
-
-        if (preg_match('/^[A-Z0-9]+(?:-[A-Z0-9]+)*$/', $value) !== 1) {
-            throw new InvalidArgumentException(
-                'El código del curso solo puede contener letras, números y guiones intermedios.',
+                sprintf('El título del curso no puede superar %d caracteres.', self::MAX_LENGTH),
             );
         }
 
