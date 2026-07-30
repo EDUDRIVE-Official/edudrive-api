@@ -56,7 +56,7 @@ If the containers aren't running yet: `docker compose up -d --build` from `edudr
       return $model;
   }
   ```
-  (`app(...)` is used instead of `test()->app->make(...)` because a plain top-level function has no access to the test case's `protected $app` property from outside class scope — `app()` is the global container-resolution helper and reaches the same bound instance.)
+  (`app(...)` is used instead of `app(...)` because a plain top-level function has no access to the test case's `protected $app` property from outside class scope — `app()` is the global container-resolution helper and reaches the same bound instance.)
 
 ---
 
@@ -1506,7 +1506,7 @@ use function Pest\Laravel\postJson;
 function anAuthenticatedUserForAddCampusTest(): void
 {
     /** @var Tests\TestCase $this */
-    $repository = test()->app->make(UserRepository::class);
+    $repository = app(UserRepository::class);
 
     $user = User::register(
         id: (string) Illuminate\Support\Str::uuid(),
@@ -1522,7 +1522,7 @@ function anAuthenticatedUserForAddCampusTest(): void
 
 it('agrega una sede a una organización existente', function (): void {
     /** @var Tests\TestCase $this */
-    $organizations = test()->app->make(OrganizationRepository::class);
+    $organizations = app(OrganizationRepository::class);
 
     $organizationId = OrganizationId::fromString((string) Illuminate\Support\Str::uuid());
 
@@ -1874,7 +1874,7 @@ use function Pest\Laravel\getJson;
 
 it('lista las organizaciones existentes', function (): void {
     /** @var Tests\TestCase $this */
-    $organizations = test()->app->make(OrganizationRepository::class);
+    $organizations = app(OrganizationRepository::class);
 
     $organizations->save(Organization::create(
         id: OrganizationId::fromString((string) Illuminate\Support\Str::uuid()),
@@ -2997,7 +2997,7 @@ use function Pest\Laravel\postJson;
 function registerUserForAssignRoleTest(): UserModel
 {
     /** @var Tests\TestCase $this */
-    $repository = test()->app->make(UserRepository::class);
+    $repository = app(UserRepository::class);
 
     $user = User::register(
         id: (string) Illuminate\Support\Str::uuid(),
@@ -3628,7 +3628,7 @@ In `CreateOrganizationTest.php`, replace the `actingAsAuthenticatedUser()` helpe
 function actingAsAuthenticatedUser(): UserModel
 {
     /** @var Tests\TestCase $this */
-    $repository = test()->app->make(UserRepository::class);
+    $repository = app(UserRepository::class);
 
     $user = User::register(
         id: (string) Illuminate\Support\Str::uuid(),
@@ -3641,7 +3641,7 @@ function actingAsAuthenticatedUser(): UserModel
 
     $model = UserModel::query()->findOrFail($user->id());
 
-    test()->app->make(\Modules\Authorization\Domain\Repositories\RoleAssignmentRepository::class)->save(
+    app(\Modules\Authorization\Domain\Repositories\RoleAssignmentRepository::class)->save(
         \Modules\Authorization\Domain\Entities\RoleAssignment::assign(
             id: (string) Illuminate\Support\Str::uuid(),
             userId: $user->id(),
@@ -3661,7 +3661,7 @@ Add a new test in the same file:
 ```php
 it('rechaza la creación de organizaciones a un usuario sin el permiso organizations.manage', function (): void {
     /** @var Tests\TestCase $this */
-    $repository = test()->app->make(UserRepository::class);
+    $repository = app(UserRepository::class);
 
     $user = User::register(
         id: (string) Illuminate\Support\Str::uuid(),
@@ -3672,7 +3672,7 @@ it('rechaza la creación de organizaciones a un usuario sin el permiso organizat
 
     $repository->save($user);
 
-    test()->app->make(\Modules\Authorization\Domain\Repositories\RoleAssignmentRepository::class)->save(
+    app(\Modules\Authorization\Domain\Repositories\RoleAssignmentRepository::class)->save(
         \Modules\Authorization\Domain\Entities\RoleAssignment::assign(
             id: (string) Illuminate\Support\Str::uuid(),
             userId: $user->id(),
