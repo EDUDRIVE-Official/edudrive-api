@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Organization\Infrastructure\Persistence\Eloquent\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
@@ -14,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property string $type
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * @property-read Collection<int, CampusModel> $campuses
  */
 final class OrganizationModel extends Model
 {

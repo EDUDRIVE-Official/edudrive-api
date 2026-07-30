@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Organization\Infrastructure\Persistence\Eloquent\Repositories;
 
+use Illuminate\Support\Facades\DB;
 use Modules\Organization\Domain\Aggregates\Organization;
 use Modules\Organization\Domain\Entities\Campus;
 use Modules\Organization\Domain\Enums\OrganizationType;
@@ -17,30 +18,34 @@ final class EloquentOrganizationRepository implements OrganizationRepository
 {
     public function save(Organization $organization): void
     {
-        OrganizationModel::query()->updateOrCreate(
-            ['id' => $organization->id()->value()],
-            [
-                'name' => $organization->name()->value(),
-                'type' => $organization->type()->value,
-            ],
-        );
+        DB::transaction(function () use ($organization): void {
+            OrganizationModel::query()->updateOrCreate(
+                ['id' => $organization->id()->value()],
+                [
+                    'name' => $organization->name()->value(),
+                    'type' => $organization->type()->value,
+                ],
+            );
 
-        CampusModel::query()
-            ->where('organization_id', $organization->id()->value())
-            ->delete();
+            CampusModel::query()
+                ->where('organization_id', $organization->id()->value())
+                ->delete();
 
-        foreach ($organization->campuses() as $campus) {
-            CampusModel::query()->create([
-                'id' => $campus->id(),
-                'organization_id' => $organization->id()->value(),
-                'name' => $campus->name(),
-            ]);
-        }
+            foreach ($organization->campuses() as $campus) {
+                CampusModel::query()->create([
+                    'id' => $campus->id(),
+                    'organization_id' => $organization->id()->value(),
+                    'name' => $campus->name(),
+                ]);
+            }
+        });
     }
 
     public function findById(OrganizationId $id): ?Organization
     {
-        $model = OrganizationModel::query()->find($id->value());
+        $model = OrganizationModel::query()
+            ->with('campuses')
+            ->find($id->value());
 
         return $model === null
             ? null
@@ -54,6 +59,7 @@ final class EloquentOrganizationRepository implements OrganizationRepository
     {
         $organizations = OrganizationModel::query()
             ->orderBy('created_at')
+            ->with('campuses')
             ->get()
             ->map(
                 fn (OrganizationModel $model): Organization => $this->toDomain($model),
@@ -65,10 +71,8 @@ final class EloquentOrganizationRepository implements OrganizationRepository
 
     private function toDomain(OrganizationModel $model): Organization
     {
-        $campuses = CampusModel::query()
-            ->where('organization_id', $model->getAttribute('id'))
-            ->orderBy('created_at')
-            ->get()
+        $campuses = $model->campuses
+            ->sortBy('created_at')
             ->map(
                 static fn (CampusModel $campusModel): Campus => Campus::create(
                     id: (string) $campusModel->getAttribute('id'),
