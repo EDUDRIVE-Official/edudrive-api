@@ -15,8 +15,11 @@ it('otorga todos los permisos definidos al superadministrador', function (): voi
 it('solo otorga permisos de visualización a administradores institucionales, docentes y estudiantes', function (): void {
     expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewOrganizations))->toBeTrue()
         ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageOrganizations))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageRoleAssignments))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewOrganizations))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageOrganizations))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageRoleAssignments))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ViewOrganizations))->toBeTrue()
-        ->and(RolePermissions::grants(Role::Student, Permission::ManageOrganizations))->toBeFalse();
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageOrganizations))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageRoleAssignments))->toBeFalse();
 });

@@ -9,28 +9,25 @@ use Modules\Authorization\Domain\Enums\Role;
 
 final class RolePermissions
 {
-    /**
-     * @var array<string, list<Permission>>
-     */
-    private const array MAP = [
-        'super_admin' => [
-            Permission::ManageOrganizations,
-            Permission::ViewOrganizations,
-            Permission::ManageRoleAssignments,
-        ],
-        'institutional_admin' => [
-            Permission::ViewOrganizations,
-        ],
-        'teacher' => [
-            Permission::ViewOrganizations,
-        ],
-        'student' => [
-            Permission::ViewOrganizations,
-        ],
-    ];
-
     public static function grants(Role $role, Permission $permission): bool
     {
-        return in_array($permission, self::MAP[$role->value], true);
+        return in_array($permission, self::permissionsFor($role), true);
+    }
+
+    /**
+     * @return list<Permission>
+     */
+    private static function permissionsFor(Role $role): array
+    {
+        return match ($role) {
+            Role::SuperAdmin => [
+                Permission::ManageOrganizations,
+                Permission::ViewOrganizations,
+                Permission::ManageRoleAssignments,
+            ],
+            Role::InstitutionalAdmin, Role::Teacher, Role::Student => [
+                Permission::ViewOrganizations,
+            ],
+        };
     }
 }
