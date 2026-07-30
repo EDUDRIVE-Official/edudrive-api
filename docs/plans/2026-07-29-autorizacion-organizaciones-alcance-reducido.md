@@ -32,6 +32,31 @@ If the containers aren't running yet: `docker compose up -d --build` from `edudr
 - Test file naming/location: `modules/{Module}/Tests/{Unit|Feature|Integration}/...`. Plain test files (no helper classes) don't declare a namespace — copy the style of `CourseCodeTest.php`. Test files that define extra top-level classes (not anonymous classes) declare a namespace under `Modules\{Module}\Tests\...` — copy the style of `LaravelCommandBusTest.php`. Anonymous classes (`new class implements X {}`) never need a namespace.
 - Run a single test file with: `docker compose exec app php artisan test path/to/File.php`.
 - After **every** task: `docker compose exec app composer quality` must pass before committing.
+- **Shared authenticated-user test helper** (added to `tests/Pest.php` during Task 7, available globally to every test file from Task 7 onward — call it directly, never redeclare it locally):
+  ```php
+  function actingAsAuthenticatedUser(): \Modules\Identity\Infrastructure\Persistence\Eloquent\Models\UserModel
+  {
+      $repository = app(\Modules\Identity\Domain\Repositories\UserRepository::class);
+
+      $user = \Modules\Identity\Domain\Entities\User::register(
+          id: (string) \Illuminate\Support\Str::uuid(),
+          name: 'Usuario de prueba',
+          email: \Modules\Identity\Domain\ValueObjects\Email::fromString(
+              sprintf('%s@edudrive.cr', \Illuminate\Support\Str::uuid()),
+          ),
+          passwordHash: 'hashed-password',
+      );
+
+      $repository->save($user);
+
+      $model = \Modules\Identity\Infrastructure\Persistence\Eloquent\Models\UserModel::query()->findOrFail($user->id());
+
+      \Laravel\Sanctum\Sanctum::actingAs($model);
+
+      return $model;
+  }
+  ```
+  (`app(...)` is used instead of `app(...)` because a plain top-level function has no access to the test case's `protected $app` property from outside class scope — `app()` is the global container-resolution helper and reaches the same bound instance.)
 
 ---
 
@@ -1104,6 +1129,8 @@ git commit -m "feat(organization): add Eloquent persistence for Organization agg
 
 This is the first authenticated endpoint in the whole codebase to get a Pest feature test — there's no existing example, so it introduces the `Laravel\Sanctum\Sanctum::actingAs()` helper pattern (standard Sanctum testing API, already available since `laravel/sanctum` is installed).
 
+> **Amendment (made during implementation of this task):** the `actingAsAuthenticatedUser()` helper below was moved out of this test file and into `tests/Pest.php` as a global function, because this codebase runs its whole suite in a single PHP process (no `--parallel`) — a same-named top-level function declared in two different test files would fatal-error with "Cannot redeclare function". **Tasks 8, 17, 18 and 19 must call this same global `actingAsAuthenticatedUser()` helper (already available, no import needed) instead of declaring their own local copy under a different name.** Where a task's test snippet below defines its own similarly-named local helper (e.g. `anAuthenticatedUserForAddCampusTest()`, `registerUserForAssignRoleTest()`), skip that local definition and call `actingAsAuthenticatedUser()` directly instead.
+
 **Step 1: Write the failing test**
 
 ```php
@@ -1111,35 +1138,10 @@ This is the first authenticated endpoint in the whole codebase to get a Pest fea
 
 declare(strict_types=1);
 
-use Laravel\Sanctum\Sanctum;
-use Modules\Identity\Domain\Entities\User;
-use Modules\Identity\Domain\Repositories\UserRepository;
-use Modules\Identity\Domain\ValueObjects\Email;
-use Modules\Identity\Infrastructure\Persistence\Eloquent\Models\UserModel;
-
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\postJson;
 
-function actingAsAuthenticatedUser(): UserModel
-{
-    /** @var Tests\TestCase $this */
-    $repository = test()->app->make(UserRepository::class);
-
-    $user = User::register(
-        id: (string) Illuminate\Support\Str::uuid(),
-        name: 'Usuario de prueba',
-        email: Email::fromString(sprintf('%s@edudrive.cr', Illuminate\Support\Str::uuid())),
-        passwordHash: 'hashed-password',
-    );
-
-    $repository->save($user);
-
-    $model = UserModel::query()->findOrFail($user->id());
-
-    Sanctum::actingAs($model);
-
-    return $model;
-}
+// actingAsAuthenticatedUser() now lives in tests/Pest.php (see amendment above) — do not redeclare it here.
 
 it('crea una organización cuando el usuario está autenticado', function (): void {
     actingAsAuthenticatedUser();
@@ -1504,7 +1506,7 @@ use function Pest\Laravel\postJson;
 function anAuthenticatedUserForAddCampusTest(): void
 {
     /** @var Tests\TestCase $this */
-    $repository = test()->app->make(UserRepository::class);
+    $repository = app(UserRepository::class);
 
     $user = User::register(
         id: (string) Illuminate\Support\Str::uuid(),
@@ -1520,7 +1522,7 @@ function anAuthenticatedUserForAddCampusTest(): void
 
 it('agrega una sede a una organización existente', function (): void {
     /** @var Tests\TestCase $this */
-    $organizations = test()->app->make(OrganizationRepository::class);
+    $organizations = app(OrganizationRepository::class);
 
     $organizationId = OrganizationId::fromString((string) Illuminate\Support\Str::uuid());
 
@@ -1872,7 +1874,7 @@ use function Pest\Laravel\getJson;
 
 it('lista las organizaciones existentes', function (): void {
     /** @var Tests\TestCase $this */
-    $organizations = test()->app->make(OrganizationRepository::class);
+    $organizations = app(OrganizationRepository::class);
 
     $organizations->save(Organization::create(
         id: OrganizationId::fromString((string) Illuminate\Support\Str::uuid()),
@@ -2995,7 +2997,7 @@ use function Pest\Laravel\postJson;
 function registerUserForAssignRoleTest(): UserModel
 {
     /** @var Tests\TestCase $this */
-    $repository = test()->app->make(UserRepository::class);
+    $repository = app(UserRepository::class);
 
     $user = User::register(
         id: (string) Illuminate\Support\Str::uuid(),
@@ -3626,7 +3628,7 @@ In `CreateOrganizationTest.php`, replace the `actingAsAuthenticatedUser()` helpe
 function actingAsAuthenticatedUser(): UserModel
 {
     /** @var Tests\TestCase $this */
-    $repository = test()->app->make(UserRepository::class);
+    $repository = app(UserRepository::class);
 
     $user = User::register(
         id: (string) Illuminate\Support\Str::uuid(),
@@ -3639,7 +3641,7 @@ function actingAsAuthenticatedUser(): UserModel
 
     $model = UserModel::query()->findOrFail($user->id());
 
-    test()->app->make(\Modules\Authorization\Domain\Repositories\RoleAssignmentRepository::class)->save(
+    app(\Modules\Authorization\Domain\Repositories\RoleAssignmentRepository::class)->save(
         \Modules\Authorization\Domain\Entities\RoleAssignment::assign(
             id: (string) Illuminate\Support\Str::uuid(),
             userId: $user->id(),
@@ -3659,7 +3661,7 @@ Add a new test in the same file:
 ```php
 it('rechaza la creación de organizaciones a un usuario sin el permiso organizations.manage', function (): void {
     /** @var Tests\TestCase $this */
-    $repository = test()->app->make(UserRepository::class);
+    $repository = app(UserRepository::class);
 
     $user = User::register(
         id: (string) Illuminate\Support\Str::uuid(),
@@ -3670,7 +3672,7 @@ it('rechaza la creación de organizaciones a un usuario sin el permiso organizat
 
     $repository->save($user);
 
-    test()->app->make(\Modules\Authorization\Domain\Repositories\RoleAssignmentRepository::class)->save(
+    app(\Modules\Authorization\Domain\Repositories\RoleAssignmentRepository::class)->save(
         \Modules\Authorization\Domain\Entities\RoleAssignment::assign(
             id: (string) Illuminate\Support\Str::uuid(),
             userId: $user->id(),
