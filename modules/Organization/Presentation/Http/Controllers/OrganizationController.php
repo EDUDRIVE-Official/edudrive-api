@@ -6,8 +6,11 @@ namespace Modules\Organization\Presentation\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Modules\Foundation\Application\Bus\CommandBus;
+use Modules\Organization\Application\Commands\AddCampusCommand;
 use Modules\Organization\Application\Commands\CreateOrganizationCommand;
+use Modules\Organization\Application\Responses\AddCampusResponse;
 use Modules\Organization\Application\Responses\CreateOrganizationResponse;
+use Modules\Organization\Presentation\Http\Requests\AddCampusRequest;
 use Modules\Organization\Presentation\Http\Requests\CreateOrganizationRequest;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -27,6 +30,28 @@ final class OrganizationController
         );
 
         assert($result instanceof CreateOrganizationResponse);
+
+        return response()->json(
+            ['data' => $result->toArray()],
+            Response::HTTP_CREATED,
+        );
+    }
+
+    public function addCampus(
+        string $organizationId,
+        AddCampusRequest $request,
+        CommandBus $commandBus,
+    ): JsonResponse {
+        $validated = $request->validated();
+
+        $result = $commandBus->dispatch(
+            new AddCampusCommand(
+                organizationId: $organizationId,
+                name: (string) $validated['name'],
+            ),
+        );
+
+        assert($result instanceof AddCampusResponse);
 
         return response()->json(
             ['data' => $result->toArray()],

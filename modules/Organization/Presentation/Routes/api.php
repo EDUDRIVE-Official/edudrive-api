@@ -15,5 +15,9 @@ Route::prefix('api/v1/organizations')
         Route::middleware('auth:sanctum')->group(function (): void {
             Route::post('/', [OrganizationController::class, 'store'])
                 ->name('store');
+
+            Route::post('/{organizationId}/campuses', [OrganizationController::class, 'addCampus'])
+                ->whereUuid('organizationId')
+                ->name('campuses.store');
         });
     });
