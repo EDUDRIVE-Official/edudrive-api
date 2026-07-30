@@ -9,8 +9,8 @@
 | Proyecto | EDUDRIVE |
 | Componente | edudrive-api |
 | Estado | Activo |
-| Versión | 1.0.0 |
-| Fecha | 2026-07-25 |
+| Versión | 1.1.0 |
+| Fecha | 2026-07-29 |
 | Responsable | Equipo de Ingeniería EDUDRIVE |
 
 ---
@@ -176,7 +176,7 @@ Endpoint:
 POST /api/v1/auth/register
 ENG-008 — Autenticación con Sanctum
 
-Estado: En progreso
+Estado: Completado
 
 ENG-008.1 — Instalación de Laravel Sanctum
 
@@ -191,7 +191,7 @@ Ejecución de migraciones.
 Validación con composer quality.
 ENG-008.2 — Servicio de verificación de contraseña
 
-Estado: Pendiente
+Estado: Completado
 
 Incluye:
 
@@ -200,7 +200,7 @@ Verificación de contraseña.
 Implementación mediante Laravel Hash.
 ENG-008.3 — Servicio de emisión de tokens
 
-Estado: Pendiente
+Estado: Completado
 
 Incluye:
 
@@ -210,7 +210,7 @@ Encapsulación de createToken.
 DTO de token.
 ENG-008.4 — Login de usuario
 
-Estado: Pendiente
+Estado: Completado
 
 Incluye:
 
@@ -224,7 +224,7 @@ Endpoint:
 POST /api/v1/auth/login
 ENG-008.5 — Perfil autenticado
 
-Estado: Pendiente
+Estado: Completado
 
 Incluye:
 
@@ -234,7 +234,7 @@ Identificación del usuario mediante Sanctum.
 Respuesta de perfil sin información sensible.
 ENG-008.6 — Cierre de sesión
 
-Estado: Pendiente
+Estado: Completado
 
 Incluye:
 
@@ -243,7 +243,7 @@ Endpoint:
 POST /api/v1/auth/logout
 ENG-008.7 — Cierre de todas las sesiones
 
-Estado: Pendiente
+Estado: Completado
 
 Incluye:
 
@@ -252,7 +252,7 @@ Endpoint:
 POST /api/v1/auth/logout-all
 ENG-008.8 — Pruebas de autenticación
 
-Estado: Pendiente
+Estado: Completado
 
 Incluye pruebas para:
 
@@ -453,6 +453,9 @@ Historial de aceptación.
 Versionado de términos.
 Revocación de consentimiento.
 11. Fase 5 — Catálogo educativo
+
+Nota (2026-07-29): esta fase se adelantó parcialmente fuera de orden, bajo los bloques de implementación IMP-020 e IMP-021 (ver ENG-LOG.md), antes de completar las Fases 2 y 3. Se implementó el agregado `Course` (dominio, persistencia, creación y listado de cursos vía `CommandBus`/`QueryBus`), lo que cubre parte del alcance de ENG-026 (Cursos). El resto de ENG-026 y las historias ENG-024, ENG-025, ENG-027 a ENG-029 permanecen pendientes. La historia técnica activa vuelve a las Fases 2 y 3 (Autorización y Organizaciones) antes de continuar aquí — ver sección 25.
+
 ENG-024 — Catálogo de competencias
 
 Estado: Pendiente
@@ -1230,22 +1233,18 @@ No se debe iniciar una fase si depende de estructuras esenciales todavía no imp
 
 25. Historia técnica activa
 
-La historia activa del proyecto es:
+Actualizado 2026-07-29: ENG-008 (Autenticación con Sanctum) y su auditoría básica (auth.login, auth.logout, auth.logout_all) están completados. Academic se adelantó parcialmente (ver nota en la sección 11) y queda en pausa.
 
-ENG-008 — Autenticación con Sanctum
+La historia activa del proyecto pasa a la Fase 2 — Autorización y gobierno de acceso, con un alcance inicial reducido respecto al listado completo de ENG-012 a ENG-015 (detalle en `docs/plans/2026-07-29-consolidacion-autorizacion-organizaciones-design.md`):
 
-El siguiente incremento será:
+- Roles mínimos viables: Superadministrador, Administrador institucional, Docente/Instructor, Estudiante.
+- Catálogo simple de permisos, asignación a roles y middleware de verificación.
+- Organización + Sede (Fase 3, ENG-016/017) con un enum simple de tipo institucional.
+- Membresía organizacional (usuario–organización–rol).
 
-ENG-008.2 — Servicio de verificación de contraseña
+Quedan diferidos explícitamente: roles adicionales (Coordinador, Evaluador, Soporte, Integración SIMUDRIVE), políticas de acceso complejas, historial de membresía, grupos/cohortes (ENG-019) y consentimientos (ENG-023).
 
-Después continuará:
-
-ENG-008.3 — Servicio de emisión de tokens
-ENG-008.4 — Login de usuario
-ENG-008.5 — Perfil autenticado
-ENG-008.6 — Cierre de sesión
-ENG-008.7 — Cierre de todas las sesiones
-ENG-008.8 — Pruebas de autenticación
+Después de esta historia, se retoma Academic (Fase 5) donde quedó.
 26. Definición de terminado
 
 Una historia se considera terminada cuando cumple:
@@ -1281,3 +1280,4 @@ docker compose exec app php artisan optimize:clear
 28. Control de cambios
 Versión	Fecha	Descripción
 1.0.0	2026-07-25	Creación del roadmap técnico oficial del backend
+1.1.0	2026-07-29	Reconciliación con ENG-LOG.md: ENG-008 y subtareas marcadas como Completado, nota de avance adelantado de Academic (Fase 5), historia técnica activa actualizada a Autorización y Organizaciones con alcance reducido
