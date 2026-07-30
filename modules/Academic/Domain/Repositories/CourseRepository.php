@@ -17,4 +17,9 @@ interface CourseRepository
     public function findByCode(CourseCode $code): ?Course;
 
     public function existsByCode(CourseCode $code): bool;
+
+    /**
+     * @return list<Course>
+     */
+    public function all(): array;
 }

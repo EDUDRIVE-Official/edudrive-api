@@ -60,6 +60,22 @@ final class EloquentCourseRepository implements CourseRepository
             ->exists();
     }
 
+    /**
+     * @return list<Course>
+     */
+    public function all(): array
+    {
+        $courses = CourseModel::query()
+            ->orderBy('created_at')
+            ->get()
+            ->map(
+                fn (CourseModel $model): Course => $this->toDomain($model),
+            )
+            ->all();
+
+        return array_values($courses);
+    }
+
     private function toDomain(CourseModel $model): Course
     {
         return Course::restore(

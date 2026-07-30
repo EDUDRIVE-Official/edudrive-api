@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Modules\Academic\Application\Commands;
 
-final readonly class CreateCourseCommand
+use Modules\Foundation\Application\Commands\Command;
+
+final readonly class CreateCourseCommand implements Command
 {
     public function __construct(
         public string $code,
