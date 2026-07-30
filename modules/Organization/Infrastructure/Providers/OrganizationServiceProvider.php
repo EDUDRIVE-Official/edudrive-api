@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace Modules\Organization\Infrastructure\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Modules\Organization\Domain\Repositories\OrganizationRepository;
+use Modules\Organization\Infrastructure\Persistence\Eloquent\Repositories\EloquentOrganizationRepository;
 
 final class OrganizationServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->bind(
+            OrganizationRepository::class,
+            EloquentOrganizationRepository::class,
+        );
     }
 
     public function boot(): void
