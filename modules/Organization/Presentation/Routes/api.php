@@ -13,6 +13,9 @@ Route::prefix('api/v1/organizations')
             ->name('status');
 
         Route::middleware('auth:sanctum')->group(function (): void {
+            Route::get('/', [OrganizationController::class, 'index'])
+                ->name('index');
+
             Route::post('/', [OrganizationController::class, 'store'])
                 ->name('store');
 
