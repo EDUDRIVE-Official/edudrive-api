@@ -9,7 +9,7 @@
 | Proyecto | EDUDRIVE |
 | Componente | edudrive-api |
 | Estado | Activo |
-| Versión | 1.1.0 |
+| Versión | 1.1.1 |
 | Fecha | 2026-07-29 |
 | Responsable | Equipo de Ingeniería EDUDRIVE |
 
@@ -176,7 +176,7 @@ Endpoint:
 POST /api/v1/auth/register
 ENG-008 — Autenticación con Sanctum
 
-Estado: Completado
+Estado: En progreso (solo falta ENG-008.8)
 
 ENG-008.1 — Instalación de Laravel Sanctum
 
@@ -252,7 +252,9 @@ Endpoint:
 POST /api/v1/auth/logout-all
 ENG-008.8 — Pruebas de autenticación
 
-Estado: Completado
+Estado: Pendiente
+
+Nota (2026-07-29): los endpoints de login, /me, logout y logout-all funcionan y fueron validados manualmente, pero no existen todavía pruebas Feature automatizadas para ellos (solo hay un test de integración del repositorio de usuarios). Queda pendiente.
 
 Incluye pruebas para:
 
@@ -1281,3 +1283,4 @@ docker compose exec app php artisan optimize:clear
 Versión	Fecha	Descripción
 1.0.0	2026-07-25	Creación del roadmap técnico oficial del backend
 1.1.0	2026-07-29	Reconciliación con ENG-LOG.md: ENG-008 y subtareas marcadas como Completado, nota de avance adelantado de Academic (Fase 5), historia técnica activa actualizada a Autorización y Organizaciones con alcance reducido
+1.1.1	2026-07-29	Corrección: ENG-008.8 (pruebas de autenticación) revertida a Pendiente al confirmar que no existen pruebas Feature automatizadas para login/me/logout/logout-all, solo un test de integración del repositorio de usuarios
