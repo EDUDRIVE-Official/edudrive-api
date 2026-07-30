@@ -6,19 +6,43 @@ namespace Modules\Academic\Presentation\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Modules\Academic\Application\Commands\CreateCourseCommand;
-use Modules\Academic\Application\UseCases\CreateCourseHandler;
+use Modules\Academic\Application\Queries\ListCoursesQuery;
+use Modules\Academic\Application\Responses\CourseListItemResponse;
+use Modules\Academic\Application\Responses\CreateCourseResponse;
 use Modules\Academic\Presentation\Http\Requests\CreateCourseRequest;
+use Modules\Foundation\Application\Bus\CommandBus;
+use Modules\Foundation\Application\Bus\QueryBus;
 use Symfony\Component\HttpFoundation\Response;
 
 final class CourseController
 {
+    public function index(
+        QueryBus $queryBus,
+    ): JsonResponse {
+        $result = $queryBus->ask(
+            new ListCoursesQuery,
+        );
+
+        assert(is_array($result));
+
+        /** @var list<CourseListItemResponse> $result */
+        $data = array_map(
+            static fn (CourseListItemResponse $course): array => $course->toArray(),
+            $result,
+        );
+
+        return response()->json([
+            'data' => $data,
+        ]);
+    }
+
     public function store(
         CreateCourseRequest $request,
-        CreateCourseHandler $handler,
+        CommandBus $commandBus,
     ): JsonResponse {
         $validated = $request->validated();
 
-        $result = $handler->handle(
+        $result = $commandBus->dispatch(
             new CreateCourseCommand(
                 code: (string) $validated['code'],
                 title: (string) $validated['title'],
@@ -27,6 +51,8 @@ final class CourseController
                     : null,
             ),
         );
+
+        assert($result instanceof CreateCourseResponse);
 
         return response()->json(
             [

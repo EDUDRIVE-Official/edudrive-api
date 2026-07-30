@@ -12,6 +12,9 @@ Route::prefix('api/v1/academic')
         Route::get('/status', AcademicStatusController::class)
             ->name('status');
 
+        Route::get('/courses', [CourseController::class, 'index'])
+            ->name('courses.index');
+
         Route::post('/courses', [CourseController::class, 'store'])
             ->name('courses.store');
     });

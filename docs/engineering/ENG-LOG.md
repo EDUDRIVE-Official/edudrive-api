@@ -736,3 +736,34 @@ ENG-020
 
 **Estado:** Finalizado.
 
+## 2026-07-29 — IMP-021 (Bloque 1)
+
+### Completado
+
+- Implementación del contrato `Command`.
+- Implementación del contrato `Query`.
+- Implementación de `CommandBus`.
+- Implementación de `QueryBus`.
+- Implementación de `MessageHandlerRegistry`.
+- Implementación de `MessageHandlerNotFound`.
+- Implementación de `InMemoryMessageHandlerRegistry`.
+- Implementación de `LaravelCommandBus`.
+- Implementación de `LaravelQueryBus`.
+- Registro de los buses en `FoundationServiceProvider`.
+- Registro de handlers desde los módulos.
+- Migración de `CreateCourseCommand` al `CommandBus`.
+- Desacoplamiento de `CourseController` respecto a `CreateCourseHandler`.
+- Pruebas unitarias del registro de handlers.
+- Pruebas unitarias del `CommandBus`.
+- Pruebas unitarias del `QueryBus`.
+- Corrección de namespaces y cumplimiento PSR-4.
+- Corrección automática de estilo con Pint.
+
+### Validaciones
+
+- `composer test` ✅
+- `composer analyse` ✅
+- `composer quality` ✅
+
+**Estado:** Finalizado.
+
