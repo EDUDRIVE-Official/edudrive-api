@@ -12,20 +12,16 @@ use Modules\Organization\Domain\ValueObjects\OrganizationName;
 final class Organization
 {
     /**
-     * @var list<Campus>
-     */
-    private array $campuses;
-
-    /**
      * @param  list<Campus>  $campuses
      */
     private function __construct(
         private readonly OrganizationId $id,
         private OrganizationName $name,
         private readonly OrganizationType $type,
-        array $campuses = [],
+        private array $campuses = [],
     ) {
-        $this->campuses = $campuses;
+        // @phpstan-ignore function.alreadyNarrowedType, function.alreadyNarrowedType (runtime guard: the `list<Campus>` docblock is not enforced by PHP itself)
+        assert(array_is_list($campuses));
     }
 
     public static function create(
