@@ -44,3 +44,27 @@ it('devuelve 404 al agregar una sede a una organización inexistente', function 
         'name' => 'Sede Fantasma',
     ])->assertNotFound();
 });
+
+it('rechaza datos obligatorios faltantes', function (): void {
+    $organizations = app(OrganizationRepository::class);
+
+    $organizationId = OrganizationId::fromString((string) Str::uuid());
+
+    $organizations->save(Organization::create(
+        id: $organizationId,
+        name: OrganizationName::fromString('Escuela de Manejo EDUDRIVE'),
+        type: OrganizationType::DrivingSchool,
+    ));
+
+    actingAsAuthenticatedUser();
+
+    postJson("/api/v1/organizations/{$organizationId->value()}/campuses", [])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['name']);
+});
+
+it('rechaza la creación sin autenticación', function (): void {
+    postJson('/api/v1/organizations/'.((string) Str::uuid()).'/campuses', [
+        'name' => 'Sede Sin Autenticación',
+    ])->assertUnauthorized();
+});
