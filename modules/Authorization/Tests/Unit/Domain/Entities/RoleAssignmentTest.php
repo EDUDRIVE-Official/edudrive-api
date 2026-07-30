@@ -29,3 +29,17 @@ it('acepta una organización asociada a la asignación', function (): void {
 
     expect($assignment->organizationId())->toBe('01981a64-8300-7b1d-b442-764ea7f91603');
 });
+
+it('conserva la fecha de asignación explícita en lugar de usar la fecha actual', function (): void {
+    $assignedAt = new DateTimeImmutable('2024-03-15T10:30:00+00:00');
+
+    $assignment = RoleAssignment::assign(
+        id: '01981a64-8300-7b1d-b442-764ea7f91604',
+        userId: '01981a64-8300-7b1d-b442-764ea7f91601',
+        role: Role::Student,
+        organizationId: null,
+        assignedAt: $assignedAt,
+    );
+
+    expect($assignment->assignedAt())->toBe($assignedAt);
+});
