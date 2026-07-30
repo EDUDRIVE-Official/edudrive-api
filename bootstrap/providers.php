@@ -7,6 +7,7 @@ use Modules\Academic\Infrastructure\Providers\AcademicServiceProvider;
 use Modules\Audit\Infrastructure\Providers\AuditServiceProvider;
 use Modules\Foundation\Providers\FoundationServiceProvider;
 use Modules\Identity\Providers\IdentityServiceProvider;
+use Modules\Organization\Infrastructure\Providers\OrganizationServiceProvider;
 
 return [
     AppServiceProvider::class,
@@ -14,4 +15,5 @@ return [
     IdentityServiceProvider::class,
     AuditServiceProvider::class,
     AcademicServiceProvider::class,
+    OrganizationServiceProvider::class,
 ];
