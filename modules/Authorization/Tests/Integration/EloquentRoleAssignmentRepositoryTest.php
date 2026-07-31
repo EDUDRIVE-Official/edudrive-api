@@ -1,0 +1,50 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Support\Str;
+use Modules\Authorization\Domain\Entities\RoleAssignment;
+use Modules\Authorization\Domain\Enums\Role;
+use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
+use Tests\TestCase;
+
+it('guarda y recupera las asignaciones de rol de un usuario', function (): void {
+    /** @var TestCase $this */
+    $repository = $this->app->make(RoleAssignmentRepository::class);
+
+    $userId = (string) Str::uuid();
+
+    $repository->save(RoleAssignment::assign(
+        id: (string) Str::uuid(),
+        userId: $userId,
+        role: Role::Teacher,
+        organizationId: null,
+    ));
+
+    $repository->save(RoleAssignment::assign(
+        id: (string) Str::uuid(),
+        userId: $userId,
+        role: Role::Student,
+        organizationId: (string) Str::uuid(),
+    ));
+
+    $assignments = $repository->findByUserId($userId);
+
+    expect($assignments)->toHaveCount(2)
+        ->and($assignments[0]->role())->toBe(Role::Teacher)
+        ->and($assignments[1]->role())->toBe(Role::Student);
+});
+
+it('no devuelve asignaciones de otros usuarios', function (): void {
+    /** @var TestCase $this */
+    $repository = $this->app->make(RoleAssignmentRepository::class);
+
+    $repository->save(RoleAssignment::assign(
+        id: (string) Str::uuid(),
+        userId: (string) Str::uuid(),
+        role: Role::Student,
+        organizationId: null,
+    ));
+
+    expect($repository->findByUserId((string) Str::uuid()))->toBe([]);
+});

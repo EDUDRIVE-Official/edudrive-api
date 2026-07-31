@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace Modules\Authorization\Infrastructure\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
+use Modules\Authorization\Infrastructure\Persistence\Eloquent\Repositories\EloquentRoleAssignmentRepository;
 
 final class AuthorizationServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->bind(
+            RoleAssignmentRepository::class,
+            EloquentRoleAssignmentRepository::class,
+        );
     }
 
     public function boot(): void
