@@ -19,6 +19,8 @@ return new class extends Migration
 
             $table->timestampTz('assigned_at')->index();
             $table->timestampsTz();
+
+            $table->index(['user_id', 'assigned_at']);
         });
     }
 
