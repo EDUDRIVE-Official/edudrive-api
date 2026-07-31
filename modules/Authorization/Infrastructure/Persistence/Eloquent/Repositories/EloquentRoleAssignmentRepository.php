@@ -32,6 +32,7 @@ final class EloquentRoleAssignmentRepository implements RoleAssignmentRepository
         $assignments = RoleAssignmentModel::query()
             ->where('user_id', $userId)
             ->orderBy('assigned_at')
+            ->orderBy('id')
             ->get()
             ->map(
                 static fn (RoleAssignmentModel $model): RoleAssignment => RoleAssignment::assign(
