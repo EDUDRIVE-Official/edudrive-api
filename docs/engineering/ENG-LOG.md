@@ -794,9 +794,9 @@ ENG-020
 
 ### Validaciones
 
-- `composer test` ✅ (89 tests, 228 assertions)
-- `composer analyse` ✅ (Larastan/PHPStan, 0 errores)
-- `composer quality` ✅ (Pint, 210 archivos sin cambios de estilo pendientes)
+- `composer test` ✅
+- `composer analyse` ✅
+- `composer quality` ✅
 
 **Estado:** Finalizado.
 
