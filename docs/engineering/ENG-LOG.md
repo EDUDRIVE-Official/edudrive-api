@@ -767,3 +767,36 @@ ENG-020
 
 **Estado:** Finalizado.
 
+## 2026-07-31 — IMP-022 (Cierre de historia)
+
+### Completado
+
+- Módulo `Organization` completo:
+  - Aggregate `Organization` y entidad `Campus`.
+  - Value Objects `OrganizationId` y `OrganizationName`.
+  - Enum `OrganizationType`.
+  - Contrato `OrganizationRepository` y su implementación `EloquentOrganizationRepository`.
+  - Migraciones `organizations` y `organization_campuses`.
+  - Endpoints `POST /api/v1/organizations` (crear organización), `POST /api/v1/organizations/{id}/campuses` (agregar sede) y `GET /api/v1/organizations` (listar organizaciones con sus sedes).
+  - Endpoint de estado `GET /api/v1/organizations/status`.
+- Módulo `Authorization` completo:
+  - Catálogo de roles y permisos (`Role`, `Permission`, `RolePermissions`) con los 4 roles mínimos viables: Superadministrador, Administrador institucional, Docente/Instructor y Estudiante.
+  - Entidad `RoleAssignment` con soporte para asociación opcional a una organización (columna `organization_id` sin llave foránea entre módulos, siguiendo el precedente de `audit_logs.user_id`).
+  - Contrato `RoleAssignmentRepository` y su implementación `EloquentRoleAssignmentRepository`.
+  - Servicio `PermissionChecker` y su implementación `RoleAssignmentPermissionChecker`.
+  - Middleware `permission` (`EnsurePermission`) registrado como alias, para proteger rutas por permiso.
+  - Caso de uso `AssignRole` con endpoint protegido y comando de consola `authorization:assign-role` para el arranque inicial (bootstrap) del primer rol sin depender de un flujo HTTP.
+  - Caso de uso `ListMyRoles` con endpoint para que un usuario autenticado consulte sus propias asignaciones de rol.
+  - Endpoint de estado `GET /api/v1/authorization/status`.
+- Integración entre ambos módulos: el permiso `organizations.manage` quedó exigido mediante el middleware `permission` en los endpoints de escritura de `Organization` (crear organización, agregar sede), dejando la lectura (listado) abierta a cualquier usuario autenticado.
+- Suite de pruebas modular completa para ambos módulos (unitarias, de integración y de feature), incluyendo casos de rechazo por falta de autenticación, datos inválidos y falta de permiso.
+- Actualización de `docs/roadmap/ENG-000-roadmap-tecnico-backend.md` para cerrar formalmente esta historia técnica de alcance reducido y dejar registrado lo diferido explícitamente.
+
+### Validaciones
+
+- `composer test` ✅ (89 tests, 228 assertions)
+- `composer analyse` ✅ (Larastan/PHPStan, 0 errores)
+- `composer quality` ✅ (Pint, 210 archivos sin cambios de estilo pendientes)
+
+**Estado:** Finalizado.
+

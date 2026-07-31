@@ -9,8 +9,8 @@
 | Proyecto | EDUDRIVE |
 | Componente | edudrive-api |
 | Estado | Activo |
-| Versión | 1.1.1 |
-| Fecha | 2026-07-29 |
+| Versión | 1.2.0 |
+| Fecha | 2026-07-31 |
 | Responsable | Equipo de Ingeniería EDUDRIVE |
 
 ---
@@ -1247,6 +1247,19 @@ La historia activa del proyecto pasa a la Fase 2 — Autorización y gobierno de
 Quedan diferidos explícitamente: roles adicionales (Coordinador, Evaluador, Soporte, Integración SIMUDRIVE), políticas de acceso complejas, historial de membresía, grupos/cohortes (ENG-019) y consentimientos (ENG-023).
 
 Después de esta historia, se retoma Academic (Fase 5) donde quedó.
+
+Actualizado 2026-07-31: la historia de Autorización y Organizaciones con alcance reducido descrita arriba está **Completado**. Se implementaron los módulos `Organization` (aggregate `Organization`, entidad `Campus`, endpoints de creación de organización, agregado de sede y listado) y `Authorization` (catálogo de roles/permisos con los 4 roles mínimos viables, `RoleAssignment` con asociación opcional a una organización, `PermissionChecker`, middleware `permission` y comando de consola `authorization:assign-role` para el arranque inicial), más la integración entre ambos: el permiso `organizations.manage` protege los endpoints de escritura de `Organization`. Detalle completo en `docs/engineering/ENG-LOG.md` (IMP-022) y en el plan `docs/plans/2026-07-29-autorizacion-organizaciones-alcance-reducido.md`.
+
+Esto **no** equivale a completar ENG-012 a ENG-019 en su alcance íntegro. Quedan diferidos y pendientes para una historia futura:
+
+- Roles adicionales a los 4 construidos (Coordinador, Evaluador, Soporte, Integración SIMUDRIVE) — ENG-012.
+- Permisos con alcance por organización (`PermissionChecker` hoy es un sí/no global por usuario, no filtrado por `organization_id`) — ENG-013/ENG-014.
+- Historial de membresía y revocación de una asignación de rol (el modelo actual es de solo inserción, sin endpoint `DELETE`) — ENG-018.
+- Grupos y cohortes — ENG-019.
+- Consentimientos y privacidad — ENG-023.
+- Un flujo HTTP de autoservicio para crear el primer administrador (el arranque hoy es exclusivamente por CLI, aceptable en local/desarrollo pero es una brecha real antes de cualquier despliegue a producción).
+
+La historia técnica activa vuelve a la Fase 5 — Catálogo educativo (Academic), retomándola donde quedó según la nota de la sección 11.
 26. Definición de terminado
 
 Una historia se considera terminada cuando cumple:
@@ -1284,3 +1297,4 @@ Versión	Fecha	Descripción
 1.0.0	2026-07-25	Creación del roadmap técnico oficial del backend
 1.1.0	2026-07-29	Reconciliación con ENG-LOG.md: ENG-008 y subtareas marcadas como Completado, nota de avance adelantado de Academic (Fase 5), historia técnica activa actualizada a Autorización y Organizaciones con alcance reducido
 1.1.1	2026-07-29	Corrección: ENG-008.8 (pruebas de autenticación) revertida a Pendiente al confirmar que no existen pruebas Feature automatizadas para login/me/logout/logout-all, solo un test de integración del repositorio de usuarios
+1.2.0	2026-07-31	Cierre de la historia técnica de Autorización y Organizaciones con alcance reducido (Completado), con detalle de lo diferido para ENG-012 a ENG-019; historia técnica activa vuelve a Academic (Fase 5)
