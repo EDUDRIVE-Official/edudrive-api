@@ -47,3 +47,32 @@ it('niega un permiso cuando el usuario no tiene ninguna asignación', function (
 
     expect($checker->userHasPermission('user-1', Permission::ViewOrganizations))->toBeFalse();
 });
+
+it('confirma un permiso cuando una asignación posterior lo otorga aunque la primera no lo haga', function (): void {
+    $repository = new class implements RoleAssignmentRepository
+    {
+        public function save(RoleAssignment $assignment): void {}
+
+        public function findByUserId(string $userId): array
+        {
+            return [
+                RoleAssignment::assign(
+                    id: 'assignment-1',
+                    userId: $userId,
+                    role: Role::Teacher,
+                    organizationId: null,
+                ),
+                RoleAssignment::assign(
+                    id: 'assignment-2',
+                    userId: $userId,
+                    role: Role::SuperAdmin,
+                    organizationId: null,
+                ),
+            ];
+        }
+    };
+
+    $checker = new RoleAssignmentPermissionChecker($repository);
+
+    expect($checker->userHasPermission('user-1', Permission::ManageOrganizations))->toBeTrue();
+});
