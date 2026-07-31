@@ -6,8 +6,10 @@ namespace Modules\Authorization\Infrastructure\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Modules\Authorization\Application\Commands\AssignRoleCommand;
+use Modules\Authorization\Application\Queries\ListMyRolesQuery;
 use Modules\Authorization\Application\Services\PermissionChecker;
 use Modules\Authorization\Application\UseCases\AssignRoleHandler;
+use Modules\Authorization\Application\UseCases\ListMyRolesHandler;
 use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
 use Modules\Authorization\Infrastructure\Persistence\Eloquent\Repositories\EloquentRoleAssignmentRepository;
 use Modules\Authorization\Infrastructure\Services\RoleAssignmentPermissionChecker;
@@ -35,6 +37,11 @@ final class AuthorizationServiceProvider extends ServiceProvider
         $registry->register(
             AssignRoleCommand::class,
             AssignRoleHandler::class,
+        );
+
+        $registry->register(
+            ListMyRolesQuery::class,
+            ListMyRolesHandler::class,
         );
 
         $this->commands([
