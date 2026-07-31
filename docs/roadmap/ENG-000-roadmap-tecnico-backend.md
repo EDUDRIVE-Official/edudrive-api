@@ -309,7 +309,9 @@ Políticas de seguridad por aplicación.
 8. Fase 2 — Autorización y gobierno de acceso
 ENG-012 — Roles del sistema
 
-Estado: Pendiente
+Estado: Parcial — ver sección 25
+
+Nota (2026-07-31): se construyeron 4 de los 11 roles listados abajo (Superadministrador, Administrador institucional, Docente/Instructor y Estudiante), como parte de la historia de alcance reducido de Autorización y Organizaciones (ver sección 25 y ENG-LOG.md, IMP-022). Administrador EDUDRIVE, Coordinador, Tutor o encargado, Evaluador, Soporte e Integración SIMUDRIVE quedan pendientes.
 
 Roles iniciales previstos:
 
@@ -326,7 +328,9 @@ Soporte.
 Integración SIMUDRIVE.
 ENG-013 — Permisos
 
-Estado: Pendiente
+Estado: Parcial — ver sección 25
+
+Nota (2026-07-31): se implementó un catálogo simple de 3 permisos (`organizations.manage`, `organizations.view`, `roles.manage`), su asignación a roles y verificación mediante el middleware `permission`, como parte de la historia de alcance reducido (ver sección 25 y ENG-LOG.md, IMP-022). Las políticas de acceso más allá de la verificación booleana por permiso quedan pendientes.
 
 Incluye:
 
@@ -338,6 +342,8 @@ Pruebas de autorización.
 ENG-014 — Contexto organizacional
 
 Estado: Pendiente
+
+Nota (2026-07-31): `RoleAssignment` incluye un campo `organizationId` opcional desde la historia de alcance reducido (ver sección 25), pero `PermissionChecker` lo ignora por completo: no hay cambio de contexto, ni restricción de datos por institución, ni ninguna otra lógica de autorización que lo utilice todavía. El campo existe en el modelo, pero no está funcionalmente conectado, por lo que esta historia se mantiene en Pendiente.
 
 Incluye:
 
@@ -362,7 +368,9 @@ Cambios de roles y permisos.
 9. Fase 3 — Organizaciones e instituciones
 ENG-016 — Organizaciones
 
-Estado: Pendiente
+Estado: Parcial — ver sección 25
+
+Nota (2026-07-31): se implementó el aggregate `Organization` con endpoints de creación y listado, como parte de la historia de alcance reducido (ver sección 25 y ENG-LOG.md, IMP-022). El tipo institucional usa un enum simplificado de 5 valores (incluyendo un catch-all `Other`) que no distingue individualmente Universidades, Asociaciones ni Operadores EDUDRIVE, y no se implementó ningún campo adicional (información de contacto, ubicación, estado operativo, configuración regional).
 
 Tipos previstos:
 
@@ -375,7 +383,9 @@ Asociaciones.
 Operadores EDUDRIVE.
 ENG-017 — Sedes
 
-Estado: Pendiente
+Estado: Parcial — ver sección 25
+
+Nota (2026-07-31): se implementó la entidad `Campus` y el endpoint para agregar una sede a una organización existente, como parte de la historia de alcance reducido (ver sección 25 y ENG-LOG.md, IMP-022). Solo se modeló el nombre de la sede; información de contacto, ubicación, estado operativo y configuración regional quedan pendientes.
 
 Incluye:
 
@@ -386,7 +396,9 @@ Estado operativo.
 Configuración regional.
 ENG-018 — Membresías organizacionales
 
-Estado: Pendiente
+Estado: Parcial — ver sección 25
+
+Nota (2026-07-31): `RoleAssignment(usuario, rol, organización)` sirve como un registro simple de membresía (vinculación de usuario, rol y fecha de asignación), construido como parte de la historia de alcance reducido (ver sección 25 y ENG-LOG.md, IMP-022). No existe estado de membresía, ni historial de cambios, ni revocación (el modelo es de solo inserción, sin endpoint `DELETE`).
 
 Incluye:
 
