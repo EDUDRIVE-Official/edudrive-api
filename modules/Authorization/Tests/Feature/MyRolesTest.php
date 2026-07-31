@@ -46,6 +46,14 @@ it('lista los roles del usuario autenticado', function (): void {
         ->assertJsonPath('data.0.role', 'teacher');
 });
 
+it('devuelve una lista vacía cuando el usuario no tiene roles asignados', function (): void {
+    actingAsAuthenticatedUser();
+
+    getJson('/api/v1/authorization/me/roles')
+        ->assertOk()
+        ->assertJsonCount(0, 'data');
+});
+
 it('rechaza la consulta de roles sin autenticación', function (): void {
     getJson('/api/v1/authorization/me/roles')->assertUnauthorized();
 });
