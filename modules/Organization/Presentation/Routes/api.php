@@ -16,11 +16,13 @@ Route::prefix('api/v1/organizations')
             Route::get('/', [OrganizationController::class, 'index'])
                 ->name('index');
 
-            Route::post('/', [OrganizationController::class, 'store'])
-                ->name('store');
+            Route::middleware('permission:organizations.manage')->group(function (): void {
+                Route::post('/', [OrganizationController::class, 'store'])
+                    ->name('store');
 
-            Route::post('/{organizationId}/campuses', [OrganizationController::class, 'addCampus'])
-                ->whereUuid('organizationId')
-                ->name('campuses.store');
+                Route::post('/{organizationId}/campuses', [OrganizationController::class, 'addCampus'])
+                    ->whereUuid('organizationId')
+                    ->name('campuses.store');
+            });
         });
     });
