@@ -65,6 +65,27 @@ it('permite asignar un rol cuando quien llama es superadministrador', function (
     ]);
 });
 
+it('rechaza la asignación de un rol a un usuario inexistente', function (): void {
+    $superAdmin = registerUserForAssignRoleTest();
+
+    /** @var TestCase $this */
+    $this->app->make(RoleAssignmentRepository::class)->save(
+        RoleAssignment::assign(
+            id: (string) Str::uuid(),
+            userId: $superAdmin->id,
+            role: Role::SuperAdmin,
+            organizationId: null,
+        ),
+    );
+
+    Sanctum::actingAs($superAdmin);
+
+    postJson('/api/v1/authorization/role-assignments', [
+        'user_id' => (string) Str::uuid(),
+        'role' => 'teacher',
+    ])->assertNotFound();
+});
+
 it('rechaza la asignación de roles a quien no es superadministrador', function (): void {
     $student = registerUserForAssignRoleTest();
 
