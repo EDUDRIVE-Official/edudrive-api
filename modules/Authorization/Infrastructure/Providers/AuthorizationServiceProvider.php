@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Modules\Authorization\Infrastructure\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Modules\Authorization\Application\Services\PermissionChecker;
 use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
 use Modules\Authorization\Infrastructure\Persistence\Eloquent\Repositories\EloquentRoleAssignmentRepository;
+use Modules\Authorization\Infrastructure\Services\RoleAssignmentPermissionChecker;
 
 final class AuthorizationServiceProvider extends ServiceProvider
 {
@@ -15,6 +17,11 @@ final class AuthorizationServiceProvider extends ServiceProvider
         $this->app->bind(
             RoleAssignmentRepository::class,
             EloquentRoleAssignmentRepository::class,
+        );
+
+        $this->app->bind(
+            PermissionChecker::class,
+            RoleAssignmentPermissionChecker::class,
         );
     }
 
