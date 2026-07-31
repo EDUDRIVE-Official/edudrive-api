@@ -10,7 +10,12 @@ use Modules\Authorization\Application\Services\PermissionChecker;
 use Modules\Authorization\Domain\Enums\Permission;
 use Modules\Foundation\Presentation\Http\Responses\ApiErrorResponse;
 use Symfony\Component\HttpFoundation\Response;
+use ValueError;
 
+/**
+ * Must run after an authentication middleware (e.g. `auth:sanctum`) that
+ * populates `$request->user()` for the correct guard.
+ */
 final readonly class EnsurePermission
 {
     public function __construct(
@@ -29,7 +34,15 @@ final readonly class EnsurePermission
             );
         }
 
-        $requiredPermission = Permission::from($permission);
+        try {
+            $requiredPermission = Permission::from($permission);
+        } catch (ValueError) {
+            return ApiErrorResponse::make(
+                message: 'La configuración de permisos de esta ruta no es válida.',
+                status: 500,
+                code: 'INVALID_PERMISSION_CONFIGURATION',
+            );
+        }
 
         if (! $this->checker->userHasPermission(
             (string) $user->getAuthIdentifier(),
