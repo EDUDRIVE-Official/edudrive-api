@@ -8,6 +8,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Modules\Authorization\Presentation\Http\Middleware\EnsurePermission;
 use Modules\Foundation\Domain\Exceptions\DomainException;
 use Modules\Foundation\Presentation\Http\Middleware\CorrelationId;
 use Modules\Foundation\Presentation\Http\Responses\ApiErrorResponse;
@@ -22,6 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(CorrelationId::class);
+
+        $middleware->alias([
+            'permission' => EnsurePermission::class,
+        ]);
 
         $middleware->redirectGuestsTo(
             static function (Request $request): ?string {
