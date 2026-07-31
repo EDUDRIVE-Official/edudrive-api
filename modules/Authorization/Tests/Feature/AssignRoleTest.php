@@ -35,19 +35,7 @@ function registerUserForAssignRoleTest(): UserModel
 }
 
 it('permite asignar un rol cuando quien llama es superadministrador', function (): void {
-    $superAdmin = registerUserForAssignRoleTest();
-
-    /** @var TestCase $this */
-    $this->app->make(RoleAssignmentRepository::class)->save(
-        RoleAssignment::assign(
-            id: (string) Str::uuid(),
-            userId: $superAdmin->id,
-            role: Role::SuperAdmin,
-            organizationId: null,
-        ),
-    );
-
-    Sanctum::actingAs($superAdmin);
+    actingAsSuperAdminUser();
 
     $targetUser = registerUserForAssignRoleTest();
 
@@ -56,7 +44,7 @@ it('permite asignar un rol cuando quien llama es superadministrador', function (
         'role' => 'teacher',
     ])
         ->assertCreated()
-        ->assertJsonPath('data.userId', $targetUser->id)
+        ->assertJsonPath('data.user_id', $targetUser->id)
         ->assertJsonPath('data.role', 'teacher');
 
     assertDatabaseHas('authorization_role_assignments', [

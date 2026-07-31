@@ -26,15 +26,15 @@ final readonly class RoleAssignmentResponse
     }
 
     /**
-     * @return array{id: string, userId: string, role: string, organizationId: string|null}
+     * @return array{id: string, user_id: string, role: string, organization_id: string|null}
      */
     public function toArray(): array
     {
         return [
             'id' => $this->id,
-            'userId' => $this->userId,
+            'user_id' => $this->userId,
             'role' => $this->role,
-            'organizationId' => $this->organizationId,
+            'organization_id' => $this->organizationId,
         ];
     }
 }
