@@ -2,7 +2,7 @@
 @php
     $variants = [
         'primary' => 'bg-primary text-white hover:bg-secondary',
-        'secondary' => 'border border-border bg-surface text-primary hover:bg-background',
+        'secondary' => 'border border-border bg-surface text-text hover:bg-background',
         'danger' => 'bg-danger text-white hover:bg-danger/90',
     ];
 
