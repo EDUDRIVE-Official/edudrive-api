@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use DateTimeImmutable;
 use Illuminate\Support\Str;
 use Modules\Authorization\Domain\Entities\RoleAssignment;
 use Modules\Authorization\Domain\Enums\Role;
@@ -19,6 +20,7 @@ it('guarda y recupera las asignaciones de rol de un usuario', function (): void 
         userId: $userId,
         role: Role::Teacher,
         organizationId: null,
+        assignedAt: new DateTimeImmutable('2026-01-01 10:00:00'),
     ));
 
     $repository->save(RoleAssignment::assign(
@@ -26,6 +28,7 @@ it('guarda y recupera las asignaciones de rol de un usuario', function (): void 
         userId: $userId,
         role: Role::Student,
         organizationId: (string) Str::uuid(),
+        assignedAt: new DateTimeImmutable('2026-01-01 10:05:00'),
     ));
 
     $assignments = $repository->findByUserId($userId);
