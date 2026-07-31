@@ -22,42 +22,6 @@ use function Pest\Laravel\postJson;
 
 use Tests\TestCase;
 
-/**
- * Local helper (distinct from the shared `actingAsAuthenticatedUser()` in
- * tests/Pest.php, which returns a user with no role) because write endpoints
- * on this module now require the `organizations.manage` permission, which
- * only `SuperAdmin` holds per `RolePermissions`.
- */
-function anAuthenticatedUserForAddCampusTest(): UserModel
-{
-    /** @var TestCase $this */
-    $repository = app(UserRepository::class);
-
-    $user = User::register(
-        id: (string) Str::uuid(),
-        name: 'Usuario de prueba',
-        email: Email::fromString(sprintf('%s@edudrive.cr', Str::uuid())),
-        passwordHash: 'hashed-password',
-    );
-
-    $repository->save($user);
-
-    $model = UserModel::query()->findOrFail($user->id());
-
-    app(RoleAssignmentRepository::class)->save(
-        RoleAssignment::assign(
-            id: (string) Str::uuid(),
-            userId: $user->id(),
-            role: Role::SuperAdmin,
-            organizationId: null,
-        ),
-    );
-
-    Sanctum::actingAs($model);
-
-    return $model;
-}
-
 it('agrega una sede a una organización existente', function (): void {
     $organizations = app(OrganizationRepository::class);
 
@@ -69,7 +33,7 @@ it('agrega una sede a una organización existente', function (): void {
         type: OrganizationType::DrivingSchool,
     ));
 
-    anAuthenticatedUserForAddCampusTest();
+    actingAsSuperAdminUser();
 
     postJson("/api/v1/organizations/{$organizationId->value()}/campuses", [
         'name' => 'Sede Cabo Velas',
@@ -84,7 +48,7 @@ it('agrega una sede a una organización existente', function (): void {
 });
 
 it('devuelve 404 al agregar una sede a una organización inexistente', function (): void {
-    anAuthenticatedUserForAddCampusTest();
+    actingAsSuperAdminUser();
 
     postJson('/api/v1/organizations/'.((string) Str::uuid()).'/campuses', [
         'name' => 'Sede Fantasma',
@@ -102,7 +66,7 @@ it('rechaza datos obligatorios faltantes', function (): void {
         type: OrganizationType::DrivingSchool,
     ));
 
-    anAuthenticatedUserForAddCampusTest();
+    actingAsSuperAdminUser();
 
     postJson("/api/v1/organizations/{$organizationId->value()}/campuses", [])
         ->assertUnprocessable()
