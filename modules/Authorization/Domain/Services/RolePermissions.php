@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Modules\Authorization\Domain\Services;
+
+use Modules\Authorization\Domain\Enums\Permission;
+use Modules\Authorization\Domain\Enums\Role;
+
+final class RolePermissions
+{
+    public static function grants(Role $role, Permission $permission): bool
+    {
+        return in_array($permission, self::permissionsFor($role), true);
+    }
+
+    /**
+     * @return list<Permission>
+     */
+    private static function permissionsFor(Role $role): array
+    {
+        return match ($role) {
+            Role::SuperAdmin => [
+                Permission::ManageOrganizations,
+                Permission::ViewOrganizations,
+                Permission::ManageRoleAssignments,
+            ],
+            Role::InstitutionalAdmin, Role::Teacher, Role::Student => [
+                Permission::ViewOrganizations,
+            ],
+        };
+    }
+}

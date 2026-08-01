@@ -9,8 +9,8 @@
 | Proyecto | EDUDRIVE |
 | Componente | edudrive-api |
 | Estado | Activo |
-| Versión | 1.1.1 |
-| Fecha | 2026-07-29 |
+| Versión | 1.2.0 |
+| Fecha | 2026-07-31 |
 | Responsable | Equipo de Ingeniería EDUDRIVE |
 
 ---
@@ -309,7 +309,9 @@ Políticas de seguridad por aplicación.
 8. Fase 2 — Autorización y gobierno de acceso
 ENG-012 — Roles del sistema
 
-Estado: Pendiente
+Estado: Parcial — ver sección 25
+
+Nota (2026-07-31): se construyeron 4 de los 11 roles listados abajo (Superadministrador, Administrador institucional, Docente/Instructor y Estudiante), como parte de la historia de alcance reducido de Autorización y Organizaciones (ver sección 25 y ENG-LOG.md, IMP-022). Administrador EDUDRIVE, Coordinador, Tutor o encargado, Evaluador, Soporte e Integración SIMUDRIVE quedan pendientes.
 
 Roles iniciales previstos:
 
@@ -326,7 +328,9 @@ Soporte.
 Integración SIMUDRIVE.
 ENG-013 — Permisos
 
-Estado: Pendiente
+Estado: Parcial — ver sección 25
+
+Nota (2026-07-31): se implementó un catálogo simple de 3 permisos (`organizations.manage`, `organizations.view`, `roles.manage`), su asignación a roles y verificación mediante el middleware `permission`, como parte de la historia de alcance reducido (ver sección 25 y ENG-LOG.md, IMP-022). Las políticas de acceso más allá de la verificación booleana por permiso quedan pendientes.
 
 Incluye:
 
@@ -338,6 +342,8 @@ Pruebas de autorización.
 ENG-014 — Contexto organizacional
 
 Estado: Pendiente
+
+Nota (2026-07-31): `RoleAssignment` incluye un campo `organizationId` opcional desde la historia de alcance reducido (ver sección 25), pero `PermissionChecker` lo ignora por completo: no hay cambio de contexto, ni restricción de datos por institución, ni ninguna otra lógica de autorización que lo utilice todavía. El campo existe en el modelo, pero no está funcionalmente conectado, por lo que esta historia se mantiene en Pendiente.
 
 Incluye:
 
@@ -362,7 +368,9 @@ Cambios de roles y permisos.
 9. Fase 3 — Organizaciones e instituciones
 ENG-016 — Organizaciones
 
-Estado: Pendiente
+Estado: Parcial — ver sección 25
+
+Nota (2026-07-31): se implementó el aggregate `Organization` con endpoints de creación y listado, como parte de la historia de alcance reducido (ver sección 25 y ENG-LOG.md, IMP-022). El tipo institucional usa un enum simplificado de 5 valores (incluyendo un catch-all `Other`) que no distingue individualmente Universidades, Asociaciones ni Operadores EDUDRIVE, y no se implementó ningún campo adicional (información de contacto, ubicación, estado operativo, configuración regional).
 
 Tipos previstos:
 
@@ -375,7 +383,9 @@ Asociaciones.
 Operadores EDUDRIVE.
 ENG-017 — Sedes
 
-Estado: Pendiente
+Estado: Parcial — ver sección 25
+
+Nota (2026-07-31): se implementó la entidad `Campus` y el endpoint para agregar una sede a una organización existente, como parte de la historia de alcance reducido (ver sección 25 y ENG-LOG.md, IMP-022). Solo se modeló el nombre de la sede; información de contacto, ubicación, estado operativo y configuración regional quedan pendientes.
 
 Incluye:
 
@@ -386,7 +396,9 @@ Estado operativo.
 Configuración regional.
 ENG-018 — Membresías organizacionales
 
-Estado: Pendiente
+Estado: Parcial — ver sección 25
+
+Nota (2026-07-31): `RoleAssignment(usuario, rol, organización)` sirve como un registro simple de membresía (vinculación de usuario, rol y fecha de asignación), construido como parte de la historia de alcance reducido (ver sección 25 y ENG-LOG.md, IMP-022). No existe estado de membresía, ni historial de cambios, ni revocación (el modelo es de solo inserción, sin endpoint `DELETE`).
 
 Incluye:
 
@@ -1247,6 +1259,19 @@ La historia activa del proyecto pasa a la Fase 2 — Autorización y gobierno de
 Quedan diferidos explícitamente: roles adicionales (Coordinador, Evaluador, Soporte, Integración SIMUDRIVE), políticas de acceso complejas, historial de membresía, grupos/cohortes (ENG-019) y consentimientos (ENG-023).
 
 Después de esta historia, se retoma Academic (Fase 5) donde quedó.
+
+Actualizado 2026-07-31: la historia de Autorización y Organizaciones con alcance reducido descrita arriba está **Completado**. Se implementaron los módulos `Organization` (aggregate `Organization`, entidad `Campus`, endpoints de creación de organización, agregado de sede y listado) y `Authorization` (catálogo de roles/permisos con los 4 roles mínimos viables, `RoleAssignment` con asociación opcional a una organización, `PermissionChecker`, middleware `permission` y comando de consola `authorization:assign-role` para el arranque inicial), más la integración entre ambos: el permiso `organizations.manage` protege los endpoints de escritura de `Organization`. Detalle completo en `docs/engineering/ENG-LOG.md` (IMP-022) y en el plan `docs/plans/2026-07-29-autorizacion-organizaciones-alcance-reducido.md`.
+
+Esto **no** equivale a completar ENG-012 a ENG-019 en su alcance íntegro. Quedan diferidos y pendientes para una historia futura:
+
+- Roles adicionales a los 4 construidos (Coordinador, Evaluador, Soporte, Integración SIMUDRIVE) — ENG-012.
+- Permisos con alcance por organización (`PermissionChecker` hoy es un sí/no global por usuario, no filtrado por `organization_id`) — ENG-013/ENG-014.
+- Historial de membresía y revocación de una asignación de rol (el modelo actual es de solo inserción, sin endpoint `DELETE`) — ENG-018.
+- Grupos y cohortes — ENG-019.
+- Consentimientos y privacidad — ENG-023.
+- Un flujo HTTP de autoservicio para crear el primer administrador (el arranque hoy es exclusivamente por CLI, aceptable en local/desarrollo pero es una brecha real antes de cualquier despliegue a producción).
+
+La historia técnica activa vuelve a la Fase 5 — Catálogo educativo (Academic), retomándola donde quedó según la nota de la sección 11.
 26. Definición de terminado
 
 Una historia se considera terminada cuando cumple:
@@ -1284,3 +1309,4 @@ Versión	Fecha	Descripción
 1.0.0	2026-07-25	Creación del roadmap técnico oficial del backend
 1.1.0	2026-07-29	Reconciliación con ENG-LOG.md: ENG-008 y subtareas marcadas como Completado, nota de avance adelantado de Academic (Fase 5), historia técnica activa actualizada a Autorización y Organizaciones con alcance reducido
 1.1.1	2026-07-29	Corrección: ENG-008.8 (pruebas de autenticación) revertida a Pendiente al confirmar que no existen pruebas Feature automatizadas para login/me/logout/logout-all, solo un test de integración del repositorio de usuarios
+1.2.0	2026-07-31	Cierre de la historia técnica de Autorización y Organizaciones con alcance reducido (Completado), con detalle de lo diferido para ENG-012 a ENG-019; historia técnica activa vuelve a Academic (Fase 5)
