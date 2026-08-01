@@ -21,6 +21,6 @@
     />
 
     @if ($error)
-        <p id="{{ $errorId }}" class="font-sans text-sm text-danger">{{ $error }}</p>
+        <p id="{{ $errorId }}" class="font-sans text-sm text-danger-text">{{ $error }}</p>
     @endif
 </div>
