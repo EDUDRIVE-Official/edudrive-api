@@ -49,6 +49,18 @@
     --color-warning: #f9a825;
     --color-danger: #c62828;
 
+    /*
+     * Tonos de texto para usar sobre fondos con tinte semántico al 10% (ej.
+     * badges) — edudrive-design-system/tokens/colors.json, grupo
+     * semanticText.*Light. El tono base de "semantic" no siempre alcanza
+     * 4.5:1 de contraste (WCAG AA) en ese uso; ver la descripción de cada
+     * valor en el token fuente para el cálculo exacto.
+     */
+    --color-success-text: #2e7d32;
+    --color-info-text: #0d47a1;
+    --color-warning-text: #8a5a00;
+    --color-danger-text: #c62828;
+
     /* Colores neutrales — valores claros (modo oscuro se sobreescribe abajo) */
     --color-background: #f8f9fa;
     --color-surface: #ffffff;
@@ -58,12 +70,18 @@
 }
 
 /*
- * Modo oscuro — edudrive-design-system/tokens/colors.json (neutral.*Dark).
- * text-secondary y border no tienen variante oscura definida todavía en el
- * design system; se mantienen iguales hasta que se agregue esa decisión ahí.
+ * Modo oscuro — edudrive-design-system/tokens/colors.json (neutral.*Dark y
+ * semanticText.*Dark). text-secondary y border no tienen variante oscura
+ * definida todavía en el design system; se mantienen iguales hasta que se
+ * agregue esa decisión ahí.
  */
 [data-theme='dark'] {
     --color-background: #1b1f23;
     --color-surface: #252a30;
     --color-text: #f5f7f9;
+
+    --color-success-text: #81c784;
+    --color-info-text: #64b5f6;
+    --color-warning-text: #f9a825;
+    --color-danger-text: #ef9a9a;
 }
