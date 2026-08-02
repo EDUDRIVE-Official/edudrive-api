@@ -37,6 +37,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 return '/login';
             },
         );
+
+        $middleware->redirectUsersTo(
+            static fn (Request $request): string => '/organizations',
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
