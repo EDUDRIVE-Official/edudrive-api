@@ -6,9 +6,11 @@ namespace Modules\Academic\Presentation\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Modules\Academic\Application\Commands\CreateCourseCommand;
+use Modules\Academic\Application\Commands\PublishCourseCommand;
 use Modules\Academic\Application\Queries\ListCoursesQuery;
 use Modules\Academic\Application\Responses\CourseListItemResponse;
 use Modules\Academic\Application\Responses\CreateCourseResponse;
+use Modules\Academic\Application\Responses\PublishCourseResponse;
 use Modules\Academic\Presentation\Http\Requests\CreateCourseRequest;
 use Modules\Foundation\Application\Bus\CommandBus;
 use Modules\Foundation\Application\Bus\QueryBus;
@@ -72,5 +74,20 @@ final class CourseController
             ],
             Response::HTTP_CREATED,
         );
+    }
+
+    public function publish(
+        string $courseId,
+        CommandBus $commandBus,
+    ): JsonResponse {
+        $result = $commandBus->dispatch(
+            new PublishCourseCommand(courseId: $courseId),
+        );
+
+        assert($result instanceof PublishCourseResponse);
+
+        return response()->json([
+            'data' => $result->toArray(),
+        ]);
     }
 }

@@ -21,6 +21,10 @@ Route::prefix('api/v1/academic')
             Route::middleware('permission:courses.manage')->group(function (): void {
                 Route::post('/courses', [CourseController::class, 'store'])
                     ->name('courses.store');
+
+                Route::post('/courses/{courseId}/publish', [CourseController::class, 'publish'])
+                    ->whereUuid('courseId')
+                    ->name('courses.publish');
             });
         });
     });

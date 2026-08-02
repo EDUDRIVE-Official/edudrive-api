@@ -6,9 +6,11 @@ namespace Modules\Academic\Infrastructure\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Modules\Academic\Application\Commands\CreateCourseCommand;
+use Modules\Academic\Application\Commands\PublishCourseCommand;
 use Modules\Academic\Application\Queries\ListCoursesQuery;
 use Modules\Academic\Application\UseCases\CreateCourseHandler;
 use Modules\Academic\Application\UseCases\ListCoursesHandler;
+use Modules\Academic\Application\UseCases\PublishCourseHandler;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCourseRepository;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
@@ -29,6 +31,11 @@ final class AcademicServiceProvider extends ServiceProvider
         $registry->register(
             CreateCourseCommand::class,
             CreateCourseHandler::class,
+        );
+
+        $registry->register(
+            PublishCourseCommand::class,
+            PublishCourseHandler::class,
         );
 
         $registry->register(
