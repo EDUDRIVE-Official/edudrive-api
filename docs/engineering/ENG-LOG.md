@@ -800,3 +800,27 @@ ENG-020
 
 **Estado:** Finalizado.
 
+## 2026-08-01 — IMP-023 (Corrección de EnsurePermission + panel web de Organizaciones)
+
+### Completado
+
+- Corrección de `Modules\Authorization\Presentation\Http\Middleware\EnsurePermission`: negocia contenido según el tipo de petición (`$request->is('api/*') || $request->expectsJson()`), igual que el resto de la aplicación (`bootstrap/app.php`). Antes devolvía siempre JSON (`ApiErrorResponse`), lo que no se había notado porque el middleware solo se usaba en rutas `api/*`. Sin este cambio, las rutas web nuevas habrían mostrado JSON crudo ante un 401/403.
+- Primer panel web administrativo real, construido sobre los endpoints de `Organization`/`Authorization` ya completados en IMP-022, sin tocar ningún módulo `Domain`/`Application`:
+  - Autenticación web con sesión (guard `web`): `LoginWebController`/`LogoutWebController` (`Modules\Identity\Presentation\Http\Controllers`), reusando `LoginUserUseCase` tal cual (mismas reglas de dominio que el login de la API). Rutas `GET/POST /login`, `POST /logout`.
+  - Layout de aplicación autenticada `<x-layouts.app>` (topbar con usuario/logout/tema).
+  - Panel de Organizaciones web: `OrganizationWebController` (`Modules\Organization\Presentation\Http\Controllers`), reusando `CommandBus`/`QueryBus`/`CreateOrganizationRequest` tal cual. Rutas `GET /organizations` (permiso `organizations.view`), `GET/POST /organizations/create` (permiso `organizations.manage`).
+  - Vista de error `resources/views/errors/403.blade.php` envuelta en el mismo layout, para que un usuario autenticado sin permisos conserve el botón de cerrar sesión (evita quedar atrapado sin salida).
+  - `OrganizationType::label()`: etiquetas legibles en español para el tipo de organización, usadas de forma consistente en listar y crear.
+- Trade-off aceptado y documentado (`docs/plans/2026-08-01-panel-organizaciones-web-design.md`, sección 4.1): cada login web sigue emitiendo un token Sanctum sin uso (vía `LoginUserUseCase`), que no expira (`config/sanctum.php` `expiration => null`) ni se revoca al cerrar sesión web — aparece como "sesión activa" fantasma en `GET /api/v1/auth/sessions`. No se modificó el caso de uso para evitarlo.
+- Suite de pruebas Feature nueva (login/logout web, negociación de contenido del middleware, listar/crear organizaciones vía web), con casos de rechazo por falta de sesión, falta de permiso y validación.
+- Este trabajo es presentación web (Blade), no una historia técnica nueva del roadmap `ENG-000` (que cubre específicamente el backend) — no se le asigna ENG-XXX propio, mismo criterio ya aplicado a los componentes del design system. Detalle completo y diseño en `docs/plans/2026-08-01-panel-organizaciones-web-design.md` y `docs/plans/2026-08-01-panel-organizaciones-web.md`.
+
+### Validaciones
+
+- `composer test` ✅ (105 pruebas)
+- `composer analyse` ✅
+- `composer quality` ✅
+- Verificación visual manual en navegador (modo claro y oscuro): login, error de credenciales, listar, crear, mensaje de éxito, cerrar sesión.
+
+**Estado:** Finalizado.
+

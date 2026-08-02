@@ -9,8 +9,8 @@
 | Proyecto | EDUDRIVE |
 | Componente | edudrive-api |
 | Estado | Activo |
-| Versión | 1.2.0 |
-| Fecha | 2026-07-31 |
+| Versión | 1.3.0 |
+| Fecha | 2026-08-01 |
 | Responsable | Equipo de Ingeniería EDUDRIVE |
 
 ---
@@ -331,6 +331,8 @@ ENG-013 — Permisos
 Estado: Parcial — ver sección 25
 
 Nota (2026-07-31): se implementó un catálogo simple de 3 permisos (`organizations.manage`, `organizations.view`, `roles.manage`), su asignación a roles y verificación mediante el middleware `permission`, como parte de la historia de alcance reducido (ver sección 25 y ENG-LOG.md, IMP-022). Las políticas de acceso más allá de la verificación booleana por permiso quedan pendientes.
+
+Nota (2026-08-01): se corrigió un defecto del middleware `permission` (`EnsurePermission`) — antes devolvía siempre una respuesta JSON aunque la petición no fuera a la API, lo que no se había notado porque solo se usaba en rutas `api/*`. Ahora negocia contenido igual que el resto de la aplicación (JSON solo para `api/*`/`expectsJson()`, página HTML de error en cualquier otro caso), lo que permitió reusarlo sin cambios de fondo en las primeras rutas web del panel de Organizaciones (ver ENG-LOG.md, IMP-023). Es una corrección, no una ampliación de alcance de ENG-013.
 
 Incluye:
 
@@ -1272,6 +1274,10 @@ Esto **no** equivale a completar ENG-012 a ENG-019 en su alcance íntegro. Queda
 - Un flujo HTTP de autoservicio para crear el primer administrador (el arranque hoy es exclusivamente por CLI, aceptable en local/desarrollo pero es una brecha real antes de cualquier despliegue a producción).
 
 La historia técnica activa vuelve a la Fase 5 — Catálogo educativo (Academic), retomándola donde quedó según la nota de la sección 11.
+
+Actualizado 2026-08-01: antes de retomar Academic, se construyó un panel web administrativo mínimo (login con sesión + listar/crear organizaciones) sobre los endpoints de `Organization`/`Authorization` ya completados el 2026-07-31 — diseño en `docs/plans/2026-08-01-panel-organizaciones-web-design.md`, plan de implementación en `docs/plans/2026-08-01-panel-organizaciones-web.md`, detalle en `docs/engineering/ENG-LOG.md` (IMP-023). Este trabajo es presentación web (Blade), no una historia técnica nueva de este roadmap (que cubre específicamente el backend): no se modificó ningún módulo `Domain`/`Application` salvo la corrección de `EnsurePermission` ya registrada en la nota de ENG-013. Por eso no se le asigna un ENG-XXX propio, siguiendo el mismo criterio ya aplicado a los componentes del design system (`docs/plans/2026-07-31-design-system-web-componentes-design.md`), que tampoco aparecen en este roadmap.
+
+Con esto cerrado, la historia técnica activa **sigue siendo** la Fase 5 — Catálogo educativo (Academic), sin cambios respecto a la nota anterior.
 26. Definición de terminado
 
 Una historia se considera terminada cuando cumple:
@@ -1310,3 +1316,4 @@ Versión	Fecha	Descripción
 1.1.0	2026-07-29	Reconciliación con ENG-LOG.md: ENG-008 y subtareas marcadas como Completado, nota de avance adelantado de Academic (Fase 5), historia técnica activa actualizada a Autorización y Organizaciones con alcance reducido
 1.1.1	2026-07-29	Corrección: ENG-008.8 (pruebas de autenticación) revertida a Pendiente al confirmar que no existen pruebas Feature automatizadas para login/me/logout/logout-all, solo un test de integración del repositorio de usuarios
 1.2.0	2026-07-31	Cierre de la historia técnica de Autorización y Organizaciones con alcance reducido (Completado), con detalle de lo diferido para ENG-012 a ENG-019; historia técnica activa vuelve a Academic (Fase 5)
+1.3.0	2026-08-01	Corrección de `EnsurePermission` (ENG-013) registrada; panel web de Organizaciones (login + listar/crear) documentado como trabajo de presentación fuera del alcance de este roadmap (IMP-023 en ENG-LOG.md); historia técnica activa confirmada sin cambios (Academic, Fase 5)
