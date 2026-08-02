@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Modules\Academic\Presentation\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Modules\Academic\Application\Commands\ArchiveCourseCommand;
 use Modules\Academic\Application\Commands\CreateCourseCommand;
 use Modules\Academic\Application\Commands\PublishCourseCommand;
 use Modules\Academic\Application\Queries\ListCoursesQuery;
+use Modules\Academic\Application\Responses\ArchiveCourseResponse;
 use Modules\Academic\Application\Responses\CourseListItemResponse;
 use Modules\Academic\Application\Responses\CreateCourseResponse;
 use Modules\Academic\Application\Responses\PublishCourseResponse;
@@ -85,6 +87,21 @@ final class CourseController
         );
 
         assert($result instanceof PublishCourseResponse);
+
+        return response()->json([
+            'data' => $result->toArray(),
+        ]);
+    }
+
+    public function archive(
+        string $courseId,
+        CommandBus $commandBus,
+    ): JsonResponse {
+        $result = $commandBus->dispatch(
+            new ArchiveCourseCommand(courseId: $courseId),
+        );
+
+        assert($result instanceof ArchiveCourseResponse);
 
         return response()->json([
             'data' => $result->toArray(),

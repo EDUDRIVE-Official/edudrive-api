@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Modules\Academic\Infrastructure\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Modules\Academic\Application\Commands\ArchiveCourseCommand;
 use Modules\Academic\Application\Commands\CreateCourseCommand;
 use Modules\Academic\Application\Commands\PublishCourseCommand;
 use Modules\Academic\Application\Queries\ListCoursesQuery;
+use Modules\Academic\Application\UseCases\ArchiveCourseHandler;
 use Modules\Academic\Application\UseCases\CreateCourseHandler;
 use Modules\Academic\Application\UseCases\ListCoursesHandler;
 use Modules\Academic\Application\UseCases\PublishCourseHandler;
@@ -36,6 +38,11 @@ final class AcademicServiceProvider extends ServiceProvider
         $registry->register(
             PublishCourseCommand::class,
             PublishCourseHandler::class,
+        );
+
+        $registry->register(
+            ArchiveCourseCommand::class,
+            ArchiveCourseHandler::class,
         );
 
         $registry->register(

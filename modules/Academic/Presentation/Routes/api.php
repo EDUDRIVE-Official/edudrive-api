@@ -25,6 +25,10 @@ Route::prefix('api/v1/academic')
                 Route::post('/courses/{courseId}/publish', [CourseController::class, 'publish'])
                     ->whereUuid('courseId')
                     ->name('courses.publish');
+
+                Route::post('/courses/{courseId}/archive', [CourseController::class, 'archive'])
+                    ->whereUuid('courseId')
+                    ->name('courses.archive');
             });
         });
     });
