@@ -5,11 +5,7 @@ declare(strict_types=1);
 use DateTimeImmutable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
-use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Repositories\CourseRepository;
-use Modules\Academic\Domain\ValueObjects\CourseCode;
-use Modules\Academic\Domain\ValueObjects\CourseId;
-use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Authorization\Domain\Entities\RoleAssignment;
 use Modules\Authorization\Domain\Enums\Role;
 use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
@@ -21,21 +17,6 @@ use Modules\Identity\Infrastructure\Persistence\Eloquent\Models\UserModel;
 use function Pest\Laravel\postJson;
 
 use Tests\TestCase;
-
-function createDraftCourseForPublishing(string $code = 'EDU-020'): Course
-{
-    $repository = app(CourseRepository::class);
-
-    $course = Course::create(
-        id: CourseId::fromString((string) Str::uuid()),
-        code: CourseCode::fromString($code),
-        title: CourseTitle::fromString('Curso de prueba'),
-    );
-
-    $repository->save($course);
-
-    return $course;
-}
 
 it('publica un curso en borrador', function (): void {
     /** @var TestCase $this */

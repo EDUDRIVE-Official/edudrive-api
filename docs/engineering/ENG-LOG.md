@@ -824,3 +824,25 @@ ENG-020
 
 **Estado:** Finalizado.
 
+## 2026-08-02 — IMP-024 (Cierre de ENG-026 — Cursos)
+
+### Completado
+
+- Ampliación del aggregate `Course`: nuevos campos `objectives`, `prerequisites`, `modality` (nuevo enum `CourseModality`: `in_person`/`virtual`/`hybrid`) y `duration_hours`, propagados a la migración de persistencia y al repositorio Eloquent.
+- Ampliación del catálogo de permisos del módulo `Authorization`: `courses.manage` y `courses.view` (el catálogo pasa de 3 a 5 permisos). `SuperAdmin` recibe ambos; `InstitutionalAdmin`, `Teacher` y `Student` reciben únicamente `courses.view`.
+- `GET`/`POST /api/v1/academic/courses`, hasta ahora sin autenticación, quedaron protegidos con `auth:sanctum` y el middleware `permission` (`courses.view`/`courses.manage` respectivamente); los 4 campos nuevos se conectaron a lo largo de toda la capa HTTP (request, comando, respuesta).
+- Corrección de un defecto preexistente real detectado durante este trabajo: las excepciones de dominio de `Academic` (`CourseAlreadyPublished`, `CourseAlreadyArchived`, `ArchivedCourseCannotBeModified`, `CourseCodeAlreadyExists`) extendían el `\DomainException` nativo de PHP en lugar de `Modules\Foundation\Domain\Exceptions\DomainException`, por lo que el manejador de excepciones genérico de `bootstrap/app.php` no las reconocía y producían 500 crudos en vez del código HTTP correcto (por ejemplo, crear un curso con un código duplicado devolvía 500 en lugar de 409). Se corrigió cambiando la clase base de las 4 excepciones; no se tocó `bootstrap/app.php`.
+- Nuevo endpoint `POST /api/v1/academic/courses/{id}/publish`, protegido por `courses.manage`.
+- Nuevo endpoint `POST /api/v1/academic/courses/{id}/archive`, protegido por `courses.manage`.
+- Ambos endpoints nuevos reutilizan `Course::publish()`/`Course::archive()`, métodos de dominio ya existentes y ya cubiertos por pruebas unitarias, que hasta ahora no tenían ningún caso de uso ni endpoint que los invocara. Se agregó una excepción `CourseNotFound` (404) compartida por ambos.
+- Diferido explícitamente, para no duplicar/adelantar otras historias: el versionado curricular real (borradores, revisión, aprobación, historial de versiones — su propia historia futura, ENG-029), un endpoint de edición general de un curso ya existente, y permisos de cursos con alcance por organización.
+- Actualización de `docs/roadmap/ENG-000-roadmap-tecnico-backend.md` para reflejar el cierre de ENG-026 (Parcial — ver sección 25) y mover la historia técnica activa a pendiente de decisión.
+
+### Validaciones
+
+- `composer test` ✅ (128 pruebas)
+- `composer analyse` ✅
+- `composer quality` ✅
+
+**Estado:** Finalizado.
+

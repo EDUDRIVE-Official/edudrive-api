@@ -5,6 +5,11 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
+use Modules\Academic\Domain\Aggregates\Course;
+use Modules\Academic\Domain\Repositories\CourseRepository;
+use Modules\Academic\Domain\ValueObjects\CourseCode;
+use Modules\Academic\Domain\ValueObjects\CourseId;
+use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Authorization\Domain\Entities\RoleAssignment;
 use Modules\Authorization\Domain\Enums\Role;
 use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
@@ -42,6 +47,27 @@ function actingAsAuthenticatedUser(): UserModel
     Sanctum::actingAs($model);
 
     return $model;
+}
+
+/**
+ * Creates and persists a draft `Course`, for tests that need an existing
+ * course to publish, archive, or otherwise act on. Shared by
+ * `Modules\Academic\Tests\Feature\PublishCourseTest` and
+ * `Modules\Academic\Tests\Feature\ArchiveCourseTest`.
+ */
+function createDraftCourseForPublishing(string $code = 'EDU-020'): Course
+{
+    $repository = app(CourseRepository::class);
+
+    $course = Course::create(
+        id: CourseId::fromString((string) Str::uuid()),
+        code: CourseCode::fromString($code),
+        title: CourseTitle::fromString('Curso de prueba'),
+    );
+
+    $repository->save($course);
+
+    return $course;
 }
 
 /**

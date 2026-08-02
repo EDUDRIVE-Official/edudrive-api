@@ -55,7 +55,7 @@ Completar ENG-026 (Cursos) dejando diferido explícitamente solo el versionado c
 
 - Nuevos casos en `Modules\Authorization\Domain\Enums\Permission`: `ManageCourses` (`'courses.manage'`), `ViewCourses` (`'courses.view'`).
 - `Modules\Authorization\Domain\Services\RolePermissions::permissionsFor()`: `SuperAdmin` obtiene ambos; `InstitutionalAdmin`, `Teacher`, `Student` obtienen solo `ViewCourses` — mismo patrón exacto que `Organization`.
-- Todas las rutas de `Academic` (existentes y nuevas) pasan a requerir `auth:sanctum`:
+- Todas las rutas de cursos de `Academic` (existentes y nuevas) pasan a requerir `auth:sanctum` (`GET /status` queda fuera de este cambio y sigue pública, mismo criterio que `Organization`):
   - `GET /courses` → agrega `permission:courses.view`.
   - `POST /courses`, `POST /courses/{id}/publish`, `POST /courses/{id}/archive` → agregan `permission:courses.manage`.
 - **Cambio de comportamiento explícito**: hoy estos endpoints no piden autenticación; después de esta historia sí. No hay consumidores en producción todavía (proyecto pre-lanzamiento), así que no hay compatibilidad hacia atrás que romper, pero se deja anotado por si algún script/colección de pruebas manual asumía acceso anónimo.
