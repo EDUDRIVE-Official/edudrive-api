@@ -9,4 +9,6 @@ enum Permission: string
     case ManageOrganizations = 'organizations.manage';
     case ViewOrganizations = 'organizations.view';
     case ManageRoleAssignments = 'roles.manage';
+    case ManageCourses = 'courses.manage';
+    case ViewCourses = 'courses.view';
 }

@@ -24,9 +24,12 @@ final class RolePermissions
                 Permission::ManageOrganizations,
                 Permission::ViewOrganizations,
                 Permission::ManageRoleAssignments,
+                Permission::ManageCourses,
+                Permission::ViewCourses,
             ],
             Role::InstitutionalAdmin, Role::Teacher, Role::Student => [
                 Permission::ViewOrganizations,
+                Permission::ViewCourses,
             ],
         };
     }
