@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Modules\Academic\Domain\Exceptions;
 
-use DomainException;
+use Modules\Foundation\Domain\Exceptions\DomainException;
 
 final class CourseAlreadyPublished extends DomainException
 {
     public static function create(): self
     {
-        return new self('El curso ya está publicado.');
+        return new self(
+            message: 'El curso ya está publicado.',
+            errorCode: 'COURSE_ALREADY_PUBLISHED',
+            statusCode: 422,
+        );
     }
 }

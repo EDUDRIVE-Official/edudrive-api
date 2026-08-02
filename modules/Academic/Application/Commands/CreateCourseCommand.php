@@ -12,5 +12,9 @@ final readonly class CreateCourseCommand implements Command
         public string $code,
         public string $title,
         public ?string $description,
+        public ?string $objectives,
+        public ?string $prerequisites,
+        public ?string $modality,
+        public ?int $durationHours,
     ) {}
 }

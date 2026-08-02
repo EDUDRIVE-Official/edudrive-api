@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Modules\Academic\Presentation\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
+use Modules\Academic\Domain\Enums\CourseModality;
 
 final class CreateCourseRequest extends FormRequest
 {
@@ -14,7 +16,7 @@ final class CreateCourseRequest extends FormRequest
     }
 
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, array<int, mixed>>
      */
     public function rules(): array
     {
@@ -34,6 +36,24 @@ final class CreateCourseRequest extends FormRequest
                 'nullable',
                 'string',
             ],
+            'objectives' => [
+                'nullable',
+                'string',
+            ],
+            'prerequisites' => [
+                'nullable',
+                'string',
+            ],
+            'modality' => [
+                'nullable',
+                'string',
+                new Enum(CourseModality::class),
+            ],
+            'duration_hours' => [
+                'nullable',
+                'integer',
+                'min:1',
+            ],
         ];
     }
 
@@ -49,6 +69,11 @@ final class CreateCourseRequest extends FormRequest
             'title.required' => 'El título del curso es obligatorio.',
             'title.max' => 'El título no puede superar 180 caracteres.',
             'description.string' => 'La descripción debe ser texto.',
+            'objectives.string' => 'Los objetivos deben ser texto.',
+            'prerequisites.string' => 'Los requisitos deben ser texto.',
+            'modality.enum' => 'La modalidad del curso no es válida.',
+            'duration_hours.integer' => 'La duración debe ser un número entero de horas.',
+            'duration_hours.min' => 'La duración debe ser de al menos 1 hora.',
         ];
     }
 }

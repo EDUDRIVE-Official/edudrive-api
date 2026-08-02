@@ -9,6 +9,7 @@ use Modules\Academic\Application\Commands\CreateCourseCommand;
 use Modules\Academic\Application\Exceptions\CourseCodeAlreadyExists;
 use Modules\Academic\Application\Responses\CreateCourseResponse;
 use Modules\Academic\Domain\Aggregates\Course;
+use Modules\Academic\Domain\Enums\CourseModality;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
@@ -34,6 +35,10 @@ final readonly class CreateCourseHandler
             code: $code,
             title: CourseTitle::fromString($command->title),
             description: $command->description,
+            objectives: $command->objectives,
+            prerequisites: $command->prerequisites,
+            modality: $command->modality === null ? null : CourseModality::from($command->modality),
+            durationHours: $command->durationHours,
         );
 
         $this->courses->save($course);

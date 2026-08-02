@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Modules\Academic\Application\Exceptions;
 
-use DomainException;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
+use Modules\Foundation\Domain\Exceptions\DomainException;
 
 final class CourseCodeAlreadyExists extends DomainException
 {
     public static function forCode(CourseCode $code): self
     {
         return new self(
-            sprintf(
+            message: sprintf(
                 'Ya existe un curso con el código %s.',
                 $code->value(),
             ),
+            errorCode: 'COURSE_CODE_ALREADY_EXISTS',
+            statusCode: 409,
         );
     }
 }

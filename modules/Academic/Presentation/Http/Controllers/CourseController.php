@@ -49,6 +49,18 @@ final class CourseController
                 description: isset($validated['description'])
                     ? (string) $validated['description']
                     : null,
+                objectives: isset($validated['objectives'])
+                    ? (string) $validated['objectives']
+                    : null,
+                prerequisites: isset($validated['prerequisites'])
+                    ? (string) $validated['prerequisites']
+                    : null,
+                modality: isset($validated['modality'])
+                    ? (string) $validated['modality']
+                    : null,
+                durationHours: isset($validated['duration_hours'])
+                    ? (int) $validated['duration_hours']
+                    : null,
             ),
         );
 

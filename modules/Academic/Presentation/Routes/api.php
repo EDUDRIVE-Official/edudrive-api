@@ -12,9 +12,15 @@ Route::prefix('api/v1/academic')
         Route::get('/status', AcademicStatusController::class)
             ->name('status');
 
-        Route::get('/courses', [CourseController::class, 'index'])
-            ->name('courses.index');
+        Route::middleware('auth:sanctum')->group(function (): void {
+            Route::middleware('permission:courses.view')->group(function (): void {
+                Route::get('/courses', [CourseController::class, 'index'])
+                    ->name('courses.index');
+            });
 
-        Route::post('/courses', [CourseController::class, 'store'])
-            ->name('courses.store');
+            Route::middleware('permission:courses.manage')->group(function (): void {
+                Route::post('/courses', [CourseController::class, 'store'])
+                    ->name('courses.store');
+            });
+        });
     });

@@ -13,6 +13,10 @@ final readonly class CreateCourseResponse
         public string $code,
         public string $title,
         public ?string $description,
+        public ?string $objectives,
+        public ?string $prerequisites,
+        public ?string $modality,
+        public ?int $durationHours,
         public string $status,
     ) {}
 
@@ -23,6 +27,10 @@ final readonly class CreateCourseResponse
             code: $course->code()->value(),
             title: $course->title()->value(),
             description: $course->description(),
+            objectives: $course->objectives(),
+            prerequisites: $course->prerequisites(),
+            modality: $course->modality()?->value,
+            durationHours: $course->durationHours(),
             status: $course->status()->value,
         );
     }
@@ -33,6 +41,10 @@ final readonly class CreateCourseResponse
      *     code: string,
      *     title: string,
      *     description: string|null,
+     *     objectives: string|null,
+     *     prerequisites: string|null,
+     *     modality: string|null,
+     *     duration_hours: int|null,
      *     status: string
      * }
      */
@@ -43,6 +55,10 @@ final readonly class CreateCourseResponse
             'code' => $this->code,
             'title' => $this->title,
             'description' => $this->description,
+            'objectives' => $this->objectives,
+            'prerequisites' => $this->prerequisites,
+            'modality' => $this->modality,
+            'duration_hours' => $this->durationHours,
             'status' => $this->status,
         ];
     }
