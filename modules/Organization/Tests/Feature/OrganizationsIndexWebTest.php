@@ -76,4 +76,5 @@ it('muestra el botón de crear a un superadministrador', function (): void {
 
     $response->assertOk();
     $response->assertSeeText('Nueva organización');
+    $response->assertSee('href="'.route('organizations.create').'"', false);
 });

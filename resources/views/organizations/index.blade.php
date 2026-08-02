@@ -4,7 +4,7 @@
             <h1 class="font-heading text-2xl font-bold">Organizaciones</h1>
             @if ($canManage)
                 <a
-                    href="{{ Illuminate\Support\Facades\Route::has('organizations.create') ? route('organizations.create') : '#' }}"
+                    href="{{ route('organizations.create') }}"
                     class="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-sm bg-primary px-4 font-sans font-medium text-white transition hover:bg-secondary focus-visible:outline-none focus-visible:shadow-focus"
                 >
                     Nueva organización
