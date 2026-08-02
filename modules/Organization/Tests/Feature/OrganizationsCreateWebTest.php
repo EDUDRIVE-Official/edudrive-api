@@ -36,7 +36,7 @@ it('rechaza a un usuario con solo permiso de vista', function (): void {
         ),
     );
 
-    $this->actingAs(UserModel::query()->findOrFail($user->id()));
+    $this->actingAs(UserModel::query()->findOrFail($user->id()), 'web');
 
     $this->get('/organizations/create')->assertForbidden();
     $this->post('/organizations', ['name' => 'X', 'type' => 'company'])->assertForbidden();
@@ -45,7 +45,7 @@ it('rechaza a un usuario con solo permiso de vista', function (): void {
 it('muestra el formulario de creación a un superadministrador', function (): void {
     /** @var TestCase $this */
     $user = actingAsSuperAdminUser();
-    $this->actingAs($user);
+    $this->actingAs($user, 'web');
 
     $this->get('/organizations/create')
         ->assertOk()
@@ -55,7 +55,7 @@ it('muestra el formulario de creación a un superadministrador', function (): vo
 it('crea una organización y redirige a la lista con un mensaje de éxito', function (): void {
     /** @var TestCase $this */
     $user = actingAsSuperAdminUser();
-    $this->actingAs($user);
+    $this->actingAs($user, 'web');
 
     $response = $this->post('/organizations', [
         'name' => 'Escuela de Manejo EDUDRIVE',
@@ -74,7 +74,7 @@ it('crea una organización y redirige a la lista con un mensaje de éxito', func
 it('vuelve al formulario con errores cuando faltan datos obligatorios', function (): void {
     /** @var TestCase $this */
     $user = actingAsSuperAdminUser();
-    $this->actingAs($user);
+    $this->actingAs($user, 'web');
 
     $response = $this->post('/organizations', []);
 

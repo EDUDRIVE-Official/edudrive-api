@@ -1,12 +1,3 @@
-@php
-    $typeLabels = [
-        'educational_center' => 'Centro educativo',
-        'driving_school' => 'Escuela de manejo',
-        'company' => 'Empresa',
-        'public_institution' => 'Institución pública',
-        'other' => 'Otro',
-    ];
-@endphp
 <x-layouts.app title="EDUDRIVE — Nueva organización">
     <div class="mx-auto flex max-w-sm flex-col gap-6">
         <h1 class="font-heading text-2xl font-bold">Nueva organización</h1>
@@ -30,7 +21,7 @@
                     >
                         @foreach ($types as $type)
                             <option value="{{ $type->value }}" @selected(old('type') === $type->value)>
-                                {{ $typeLabels[$type->value] ?? $type->value }}
+                                {{ $type->label() }}
                             </option>
                         @endforeach
                     </select>

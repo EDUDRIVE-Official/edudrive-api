@@ -30,15 +30,14 @@
                 @endauth
                 <button
                     type="button"
-                    x-data
-                    @click="
-                        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-                        document.documentElement.setAttribute('data-theme', next);
-                        localStorage.setItem('edudrive-theme', next);
-                    "
+                    x-data="{ theme: document.documentElement.getAttribute('data-theme') }"
+                    x-init="$watch('theme', value => { document.documentElement.setAttribute('data-theme', value); localStorage.setItem('edudrive-theme', value); })"
+                    @click="theme = theme === 'dark' ? 'light' : 'dark'"
+                    :aria-pressed="theme === 'dark'"
+                    aria-label="Cambiar entre modo claro y oscuro"
                     class="rounded-sm border border-border px-3 py-2 text-sm text-text hover:bg-background focus-visible:outline-none focus-visible:shadow-focus"
                 >
-                    Cambiar tema
+                    <span x-text="theme === 'dark' ? 'Modo oscuro' : 'Modo claro'"></span>
                 </button>
             </div>
         </div>

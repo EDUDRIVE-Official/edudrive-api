@@ -22,7 +22,7 @@ it('responde con una página web (no JSON) cuando no hay sesión en una ruta que
 it('responde con una página web (no JSON) cuando falta el permiso en una ruta que no es de la API', function (): void {
     /** @var TestCase $this */
     $user = actingAsAuthenticatedUser();
-    $this->actingAs($user);
+    $this->actingAs($user, 'web');
 
     $response = $this->get('/test-permission-web');
 

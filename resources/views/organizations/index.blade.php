@@ -27,7 +27,7 @@
             @forelse ($organizations as $organization)
                 <tr>
                     <td class="px-4 py-2">{{ $organization['name'] }}</td>
-                    <td class="px-4 py-2">{{ $organization['type'] }}</td>
+                    <td class="px-4 py-2">{{ \Modules\Organization\Domain\Enums\OrganizationType::from($organization['type'])->label() }}</td>
                     <td class="px-4 py-2">{{ count($organization['campuses']) }}</td>
                 </tr>
             @empty

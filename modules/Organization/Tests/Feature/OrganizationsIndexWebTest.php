@@ -25,7 +25,7 @@ it('redirige a un invitado que intenta ver la lista de organizaciones', function
 it('rechaza a un usuario autenticado sin ninguna asignación de rol', function (): void {
     /** @var TestCase $this */
     $user = actingAsAuthenticatedUser();
-    $this->actingAs($user);
+    $this->actingAs($user, 'web');
 
     $this->get('/organizations')->assertForbidden();
 });
@@ -58,7 +58,7 @@ it('muestra la lista a un usuario con permiso de vista, sin el botón de crear',
         type: OrganizationType::EducationalCenter,
     ));
 
-    $this->actingAs(UserModel::query()->findOrFail($user->id()));
+    $this->actingAs(UserModel::query()->findOrFail($user->id()), 'web');
 
     $response = $this->get('/organizations');
 
@@ -70,7 +70,7 @@ it('muestra la lista a un usuario con permiso de vista, sin el botón de crear',
 it('muestra el botón de crear a un superadministrador', function (): void {
     /** @var TestCase $this */
     $user = actingAsSuperAdminUser();
-    $this->actingAs($user);
+    $this->actingAs($user, 'web');
 
     $response = $this->get('/organizations');
 
