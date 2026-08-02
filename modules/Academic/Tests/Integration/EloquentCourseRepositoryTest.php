@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Modules\Academic\Domain\Aggregates\Course;
+use Modules\Academic\Domain\Enums\CourseModality;
 use Modules\Academic\Domain\Enums\CourseStatus;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
@@ -88,4 +89,31 @@ it('confirma si un código de curso ya existe', function (): void {
             ),
         )
         ->toBeFalse();
+});
+
+it('guarda y recupera los campos nuevos de un curso (objetivos, requisitos, modalidad, duración)', function (): void {
+    $repository = app(EloquentCourseRepository::class);
+
+    $course = Course::create(
+        id: CourseId::fromString('01981a64-8300-7b1d-b442-764ea7f915c3'),
+        code: CourseCode::fromString('EDU-004'),
+        title: CourseTitle::fromString('Manejo defensivo'),
+        objectives: 'Aplicar técnicas de manejo defensivo.',
+        prerequisites: 'Licencia de conducir vigente.',
+        modality: CourseModality::Hybrid,
+        durationHours: 15,
+    );
+
+    $repository->save($course);
+
+    $storedCourse = $repository->findById($course->id());
+
+    expect($storedCourse?->objectives())
+        ->toBe('Aplicar técnicas de manejo defensivo.')
+        ->and($storedCourse?->prerequisites())
+        ->toBe('Licencia de conducir vigente.')
+        ->and($storedCourse?->modality())
+        ->toBe(CourseModality::Hybrid)
+        ->and($storedCourse?->durationHours())
+        ->toBe(15);
 });

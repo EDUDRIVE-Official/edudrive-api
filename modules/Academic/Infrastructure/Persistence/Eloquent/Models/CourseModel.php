@@ -23,6 +23,7 @@ final class CourseModel extends Model
         return [
             'published_at' => 'immutable_datetime',
             'archived_at' => 'immutable_datetime',
+            'duration_hours' => 'integer',
         ];
     }
 }

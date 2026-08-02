@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Modules\Academic\Domain\Aggregates\Course;
+use Modules\Academic\Domain\Enums\CourseModality;
 use Modules\Academic\Domain\Enums\CourseStatus;
 use Modules\Academic\Domain\Exceptions\ArchivedCourseCannotBeModified;
 use Modules\Academic\Domain\Exceptions\CourseAlreadyArchived;
@@ -117,4 +118,48 @@ it('normaliza una descripción vacía como nula', function (): void {
     );
 
     expect($course->description())->toBeNull();
+});
+
+it('crea un curso con objetivos, requisitos, modalidad y duración', function (): void {
+    $course = Course::create(
+        id: CourseId::fromString('01981a64-8300-7b1d-b442-764ea7f915c0'),
+        code: CourseCode::fromString('EDU-001'),
+        title: CourseTitle::fromString('Introducción a la seguridad vial'),
+        description: 'Curso introductorio de EDUDRIVE.',
+        objectives: 'Comprender los principios básicos de seguridad vial.',
+        prerequisites: 'Ninguno.',
+        modality: CourseModality::Virtual,
+        durationHours: 20,
+    );
+
+    expect($course->objectives())
+        ->toBe('Comprender los principios básicos de seguridad vial.')
+        ->and($course->prerequisites())
+        ->toBe('Ninguno.')
+        ->and($course->modality())
+        ->toBe(CourseModality::Virtual)
+        ->and($course->durationHours())
+        ->toBe(20);
+});
+
+it('normaliza objetivos y requisitos vacíos como nulos', function (): void {
+    $course = Course::create(
+        id: CourseId::fromString('01981a64-8300-7b1d-b442-764ea7f915c0'),
+        code: CourseCode::fromString('EDU-001'),
+        title: CourseTitle::fromString('Introducción a la seguridad vial'),
+        objectives: '   ',
+        prerequisites: '   ',
+    );
+
+    expect($course->objectives())->toBeNull()
+        ->and($course->prerequisites())->toBeNull();
+});
+
+it('permite crear un curso sin los campos opcionales nuevos', function (): void {
+    $course = createAcademicCourse();
+
+    expect($course->objectives())->toBeNull()
+        ->and($course->prerequisites())->toBeNull()
+        ->and($course->modality())->toBeNull()
+        ->and($course->durationHours())->toBeNull();
 });

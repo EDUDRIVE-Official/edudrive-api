@@ -7,6 +7,7 @@ namespace Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Modules\Academic\Domain\Aggregates\Course;
+use Modules\Academic\Domain\Enums\CourseModality;
 use Modules\Academic\Domain\Enums\CourseStatus;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
@@ -26,6 +27,10 @@ final class EloquentCourseRepository implements CourseRepository
                 'code' => $course->code()->value(),
                 'title' => $course->title()->value(),
                 'description' => $course->description(),
+                'objectives' => $course->objectives(),
+                'prerequisites' => $course->prerequisites(),
+                'modality' => $course->modality()?->value,
+                'duration_hours' => $course->durationHours(),
                 'status' => $course->status()->value,
                 'published_at' => $course->publishedAt(),
                 'archived_at' => $course->archivedAt(),
@@ -78,6 +83,8 @@ final class EloquentCourseRepository implements CourseRepository
 
     private function toDomain(CourseModel $model): Course
     {
+        $modality = $model->getAttribute('modality');
+
         return Course::restore(
             id: CourseId::fromString((string) $model->getAttribute('id')),
             code: CourseCode::fromString((string) $model->getAttribute('code')),
@@ -85,6 +92,14 @@ final class EloquentCourseRepository implements CourseRepository
             description: $this->nullableString(
                 $model->getAttribute('description'),
             ),
+            objectives: $this->nullableString(
+                $model->getAttribute('objectives'),
+            ),
+            prerequisites: $this->nullableString(
+                $model->getAttribute('prerequisites'),
+            ),
+            modality: $modality === null ? null : CourseModality::from((string) $modality),
+            durationHours: $model->getAttribute('duration_hours'),
             status: CourseStatus::from(
                 (string) $model->getAttribute('status'),
             ),

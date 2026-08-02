@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Academic\Domain\Aggregates;
 
 use DateTimeImmutable;
+use Modules\Academic\Domain\Enums\CourseModality;
 use Modules\Academic\Domain\Enums\CourseStatus;
 use Modules\Academic\Domain\Exceptions\ArchivedCourseCannotBeModified;
 use Modules\Academic\Domain\Exceptions\CourseAlreadyArchived;
@@ -20,6 +21,10 @@ final class Course
         private readonly CourseCode $code,
         private CourseTitle $title,
         private ?string $description,
+        private ?string $objectives,
+        private ?string $prerequisites,
+        private ?CourseModality $modality,
+        private ?int $durationHours,
         private CourseStatus $status,
         private ?DateTimeImmutable $publishedAt,
         private ?DateTimeImmutable $archivedAt,
@@ -30,12 +35,20 @@ final class Course
         CourseCode $code,
         CourseTitle $title,
         ?string $description = null,
+        ?string $objectives = null,
+        ?string $prerequisites = null,
+        ?CourseModality $modality = null,
+        ?int $durationHours = null,
     ): self {
         return new self(
             id: $id,
             code: $code,
             title: $title,
-            description: self::normalizeDescription($description),
+            description: self::normalizeText($description),
+            objectives: self::normalizeText($objectives),
+            prerequisites: self::normalizeText($prerequisites),
+            modality: $modality,
+            durationHours: $durationHours,
             status: CourseStatus::Draft,
             publishedAt: null,
             archivedAt: null,
@@ -47,6 +60,10 @@ final class Course
         CourseCode $code,
         CourseTitle $title,
         ?string $description,
+        ?string $objectives,
+        ?string $prerequisites,
+        ?CourseModality $modality,
+        ?int $durationHours,
         CourseStatus $status,
         ?DateTimeImmutable $publishedAt,
         ?DateTimeImmutable $archivedAt,
@@ -55,7 +72,11 @@ final class Course
             id: $id,
             code: $code,
             title: $title,
-            description: self::normalizeDescription($description),
+            description: self::normalizeText($description),
+            objectives: self::normalizeText($objectives),
+            prerequisites: self::normalizeText($prerequisites),
+            modality: $modality,
+            durationHours: $durationHours,
             status: $status,
             publishedAt: $publishedAt,
             archivedAt: $archivedAt,
@@ -73,7 +94,7 @@ final class Course
     {
         $this->ensureIsNotArchived();
 
-        $this->description = self::normalizeDescription($description);
+        $this->description = self::normalizeText($description);
     }
 
     public function publish(DateTimeImmutable $publishedAt): void
@@ -118,6 +139,26 @@ final class Course
         return $this->description;
     }
 
+    public function objectives(): ?string
+    {
+        return $this->objectives;
+    }
+
+    public function prerequisites(): ?string
+    {
+        return $this->prerequisites;
+    }
+
+    public function modality(): ?CourseModality
+    {
+        return $this->modality;
+    }
+
+    public function durationHours(): ?int
+    {
+        return $this->durationHours;
+    }
+
     public function status(): CourseStatus
     {
         return $this->status;
@@ -140,14 +181,14 @@ final class Course
         }
     }
 
-    private static function normalizeDescription(?string $description): ?string
+    private static function normalizeText(?string $value): ?string
     {
-        if ($description === null) {
+        if ($value === null) {
             return null;
         }
 
-        $description = trim($description);
+        $value = trim($value);
 
-        return $description === '' ? null : $description;
+        return $value === '' ? null : $value;
     }
 }
