@@ -23,8 +23,10 @@ use Modules\Academic\Application\UseCases\ListCoursesHandler;
 use Modules\Academic\Application\UseCases\PublishCourseHandler;
 use Modules\Academic\Domain\Repositories\CompetencyRepository;
 use Modules\Academic\Domain\Repositories\CourseRepository;
+use Modules\Academic\Domain\Repositories\ProgramRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCompetencyRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCourseRepository;
+use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentProgramRepository;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
 
 final class AcademicServiceProvider extends ServiceProvider
@@ -39,6 +41,11 @@ final class AcademicServiceProvider extends ServiceProvider
         $this->app->bind(
             CourseRepository::class,
             EloquentCourseRepository::class,
+        );
+
+        $this->app->bind(
+            ProgramRepository::class,
+            EloquentProgramRepository::class,
         );
     }
 
