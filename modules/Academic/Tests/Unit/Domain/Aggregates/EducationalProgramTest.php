@@ -20,7 +20,7 @@ function createRegionalEducationalProgram(): EducationalProgram
     return EducationalProgram::create(
         id: ProgramId::fromString('019c4ab7-6b40-7d3e-b0aa-7c3c47ea9d12'),
         code: ProgramCode::fromString(' moto-aprendiz '),
-        name: 'Formacion regional para aprendices de motocicleta',
+        title: 'Formacion regional para aprendices de motocicleta',
         description: 'Trayecto formativo regional.',
         audience: ProgramAudience::fromValues(
             minAge: 16,
@@ -42,6 +42,22 @@ function secondProgramCourseId(): CourseId
     return CourseId::fromString('019c4ab8-6cb6-7497-ada2-c70d75cab5c6');
 }
 
+/** @param list<ProgramCourse> $courses */
+function restoreEducationalProgramWith(array $courses, string $title = 'Programa restaurado', string $description = 'Descripcion restaurada'): EducationalProgram
+{
+    return EducationalProgram::restore(
+        ProgramId::fromString('019c4ab7-6b40-7d3e-b0aa-7c3c47ea9d12'),
+        ProgramCode::fromString('REGIONAL-BASE'),
+        $title,
+        $description,
+        ProgramAudience::fromValues(null, null, [], [], []),
+        $courses,
+        ProgramStatus::Draft,
+        null,
+        null,
+    );
+}
+
 it('normaliza la identidad y el codigo del programa', function (): void {
     $id = ProgramId::fromString(' 019C4AB7-6B40-7D3E-B0AA-7C3C47EA9D12 ');
     $code = ProgramCode::fromString(' moto-aprendiz ');
@@ -58,12 +74,76 @@ it('rechaza un codigo de programa mayor a sesenta caracteres', function (): void
     ProgramCode::fromString(str_repeat('A', 61));
 })->throws(InvalidArgumentException::class, 'El codigo del programa debe tener entre 1 y 60 caracteres.');
 
+it('acepta el parametro title y normaliza los textos al crear', function (): void {
+    $program = EducationalProgram::create(
+        id: ProgramId::fromString('019c4ab7-6b40-7d3e-b0aa-7c3c47ea9d12'),
+        code: ProgramCode::fromString('REGIONAL-BASE'),
+        title: '  Programa regional  ',
+        description: '  Descripcion regional  ',
+        audience: ProgramAudience::fromValues(null, null, [], [], []),
+    );
+
+    expect($program->title())->toBe('Programa regional')
+        ->and($program->description())->toBe('Descripcion regional');
+});
+
+it('rechaza un titulo en blanco al crear', function (): void {
+    EducationalProgram::create(
+        ProgramId::fromString('019c4ab7-6b40-7d3e-b0aa-7c3c47ea9d12'),
+        ProgramCode::fromString('REGIONAL-BASE'),
+        '   ',
+        'Descripcion regional',
+        ProgramAudience::fromValues(null, null, [], [], []),
+    );
+})->throws(InvalidArgumentException::class, 'El titulo del programa no puede estar vacio.');
+
+it('rechaza un titulo mayor a ciento ochenta caracteres al crear', function (): void {
+    EducationalProgram::create(
+        ProgramId::fromString('019c4ab7-6b40-7d3e-b0aa-7c3c47ea9d12'),
+        ProgramCode::fromString('REGIONAL-BASE'),
+        str_repeat('A', 181),
+        'Descripcion regional',
+        ProgramAudience::fromValues(null, null, [], [], []),
+    );
+})->throws(InvalidArgumentException::class, 'El titulo del programa no puede superar 180 caracteres.');
+
+it('rechaza una descripcion en blanco al crear', function (): void {
+    EducationalProgram::create(
+        ProgramId::fromString('019c4ab7-6b40-7d3e-b0aa-7c3c47ea9d12'),
+        ProgramCode::fromString('REGIONAL-BASE'),
+        'Programa regional',
+        '   ',
+        ProgramAudience::fromValues(null, null, [], [], []),
+    );
+})->throws(InvalidArgumentException::class, 'La descripcion del programa no puede estar vacia.');
+
+it('normaliza los textos al restaurar', function (): void {
+    $program = restoreEducationalProgramWith([], '  Programa restaurado  ', '  Descripcion restaurada  ');
+
+    expect($program->title())->toBe('Programa restaurado')
+        ->and($program->description())->toBe('Descripcion restaurada');
+});
+
+it('rechaza textos invalidos al restaurar', function (string $title, string $description, string $message): void {
+    try {
+        restoreEducationalProgramWith([], $title, $description);
+
+        test()->fail('Se esperaba el rechazo del texto invalido.');
+    } catch (InvalidArgumentException $exception) {
+        expect($exception->getMessage())->toBe($message);
+    }
+})->with([
+    'titulo en blanco' => ['   ', 'Descripcion valida', 'El titulo del programa no puede estar vacio.'],
+    'titulo demasiado largo' => [str_repeat('A', 181), 'Descripcion valida', 'El titulo del programa no puede superar 180 caracteres.'],
+    'descripcion en blanco' => ['Titulo valido', '   ', 'La descripcion del programa no puede estar vacia.'],
+]);
+
 it('crea un programa nuevo en borrador y sin cursos', function (): void {
     $program = createRegionalEducationalProgram();
 
     expect($program->id()->value())->toBe('019c4ab7-6b40-7d3e-b0aa-7c3c47ea9d12')
         ->and($program->code()->value())->toBe('MOTO-APRENDIZ')
-        ->and($program->name())->toBe('Formacion regional para aprendices de motocicleta')
+        ->and($program->title())->toBe('Formacion regional para aprendices de motocicleta')
         ->and($program->description())->toBe('Trayecto formativo regional.')
         ->and($program->audience()->minAge())->toBe(16)
         ->and($program->status())->toBe(ProgramStatus::Draft)
@@ -80,8 +160,8 @@ it('restaura todos los datos de un programa', function (): void {
     $program = EducationalProgram::restore(
         id: ProgramId::fromString('019c4ab7-6b40-7d3e-b0aa-7c3c47ea9d12'),
         code: ProgramCode::fromString('REGIONAL-BASE'),
-        name: 'Programa restaurado',
-        description: null,
+        title: 'Programa restaurado',
+        description: 'Descripcion restaurada',
         audience: $audience,
         courses: $courses,
         status: ProgramStatus::Published,
@@ -89,8 +169,8 @@ it('restaura todos los datos de un programa', function (): void {
         archivedAt: null,
     );
 
-    expect($program->name())->toBe('Programa restaurado')
-        ->and($program->description())->toBeNull()
+    expect($program->title())->toBe('Programa restaurado')
+        ->and($program->description())->toBe('Descripcion restaurada')
         ->and($program->audience())->toBe($audience)
         ->and($program->courses())->toBe($courses)
         ->and($program->status())->toBe(ProgramStatus::Published)
@@ -124,6 +204,33 @@ it('rechaza cursos duplicados antes de alterar la secuencia existente', function
             ->and($program->courses()[0]->position())->toBe(1);
     }
 });
+
+it('rechaza cursos duplicados al restaurar', function (): void {
+    restoreEducationalProgramWith([
+        ProgramCourse::create(firstProgramCourseId(), 1),
+        ProgramCourse::create(firstProgramCourseId(), 2),
+    ]);
+})->throws(InvalidArgumentException::class, 'Un curso no puede aparecer mas de una vez en el programa.');
+
+it('rechaza posiciones repetidas al restaurar', function (): void {
+    restoreEducationalProgramWith([
+        ProgramCourse::create(firstProgramCourseId(), 1),
+        ProgramCourse::create(secondProgramCourseId(), 1),
+    ]);
+})->throws(InvalidArgumentException::class, 'La secuencia de cursos debe tener posiciones consecutivas desde uno.');
+
+it('rechaza huecos entre posiciones al restaurar', function (): void {
+    restoreEducationalProgramWith([
+        ProgramCourse::create(firstProgramCourseId(), 1),
+        ProgramCourse::create(secondProgramCourseId(), 3),
+    ]);
+})->throws(InvalidArgumentException::class, 'La secuencia de cursos debe tener posiciones consecutivas desde uno.');
+
+it('rechaza una posicion que no coincide con su indice al restaurar', function (): void {
+    restoreEducationalProgramWith([
+        ProgramCourse::create(firstProgramCourseId(), 2),
+    ]);
+})->throws(InvalidArgumentException::class, 'La secuencia de cursos debe tener posiciones consecutivas desde uno.');
 
 it('impide publicar un programa sin cursos', function (): void {
     createRegionalEducationalProgram()->publish(new DateTimeImmutable('2026-08-03 09:00:00'));

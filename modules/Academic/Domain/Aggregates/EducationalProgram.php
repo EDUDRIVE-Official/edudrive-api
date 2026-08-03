@@ -21,8 +21,8 @@ final class EducationalProgram
     private function __construct(
         private readonly ProgramId $id,
         private readonly ProgramCode $code,
-        private readonly string $name,
-        private readonly ?string $description,
+        private readonly string $title,
+        private readonly string $description,
         private ProgramAudience $audience,
         private array $courses,
         private ProgramStatus $status,
@@ -33,15 +33,15 @@ final class EducationalProgram
     public static function create(
         ProgramId $id,
         ProgramCode $code,
-        string $name,
-        ?string $description,
+        string $title,
+        string $description,
         ProgramAudience $audience,
     ): self {
         return new self(
             id: $id,
             code: $code,
-            name: $name,
-            description: $description,
+            title: self::requireTitle($title),
+            description: self::requireDescription($description),
             audience: $audience,
             courses: [],
             status: ProgramStatus::Draft,
@@ -54,19 +54,21 @@ final class EducationalProgram
     public static function restore(
         ProgramId $id,
         ProgramCode $code,
-        string $name,
-        ?string $description,
+        string $title,
+        string $description,
         ProgramAudience $audience,
         array $courses,
         ProgramStatus $status,
         ?DateTimeImmutable $publishedAt,
         ?DateTimeImmutable $archivedAt,
     ): self {
+        self::validateRestoredCourses($courses);
+
         return new self(
             id: $id,
             code: $code,
-            name: $name,
-            description: $description,
+            title: self::requireTitle($title),
+            description: self::requireDescription($description),
             audience: $audience,
             courses: $courses,
             status: $status,
@@ -136,12 +138,12 @@ final class EducationalProgram
         return $this->code;
     }
 
-    public function name(): string
+    public function title(): string
     {
-        return $this->name;
+        return $this->title;
     }
 
-    public function description(): ?string
+    public function description(): string
     {
         return $this->description;
     }
@@ -176,6 +178,50 @@ final class EducationalProgram
     {
         if ($this->status->isArchived()) {
             throw ArchivedProgramCannotBeModified::create();
+        }
+    }
+
+    private static function requireTitle(string $title): string
+    {
+        $title = trim($title);
+
+        if ($title === '') {
+            throw new InvalidArgumentException('El titulo del programa no puede estar vacio.');
+        }
+
+        if (mb_strlen($title) > 180) {
+            throw new InvalidArgumentException('El titulo del programa no puede superar 180 caracteres.');
+        }
+
+        return $title;
+    }
+
+    private static function requireDescription(string $description): string
+    {
+        $description = trim($description);
+
+        if ($description === '') {
+            throw new InvalidArgumentException('La descripcion del programa no puede estar vacia.');
+        }
+
+        return $description;
+    }
+
+    /** @param list<ProgramCourse> $courses */
+    private static function validateRestoredCourses(array $courses): void
+    {
+        $seen = [];
+
+        foreach ($courses as $index => $course) {
+            if ($course->position() !== $index + 1) {
+                throw new InvalidArgumentException('La secuencia de cursos debe tener posiciones consecutivas desde uno.');
+            }
+
+            if (isset($seen[$course->courseId()->value()])) {
+                throw new InvalidArgumentException('Un curso no puede aparecer mas de una vez en el programa.');
+            }
+
+            $seen[$course->courseId()->value()] = true;
         }
     }
 }
