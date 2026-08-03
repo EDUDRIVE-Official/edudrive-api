@@ -11,7 +11,10 @@ use Modules\Academic\Domain\Enums\MasteryLevel;
 
 final class CreateCompetencyRequest extends FormRequest
 {
-    public function authorize(): bool { return true; }
+    public function authorize(): bool
+    {
+        return true;
+    }
 
     /** @return array<string, array<int, mixed>> */
     public function rules(): array

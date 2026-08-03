@@ -12,6 +12,7 @@ use Modules\Academic\Domain\Repositories\CompetencyRepository;
 final readonly class ListCompetenciesHandler
 {
     public function __construct(private CompetencyRepository $competencies) {}
+
     /** @return list<CompetencyResponse> */
     public function handle(ListCompetenciesQuery $query): array
     {

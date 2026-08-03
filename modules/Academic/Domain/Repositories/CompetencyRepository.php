@@ -11,9 +11,13 @@ use Modules\Academic\Domain\ValueObjects\CompetencyId;
 interface CompetencyRepository
 {
     public function save(Competency $competency): void;
+
     public function findById(CompetencyId $id): ?Competency;
+
     public function findByCode(CompetencyCode $code): ?Competency;
+
     public function existsByCode(CompetencyCode $code): bool;
+
     /** @return list<Competency> */
     public function all(): array;
 }

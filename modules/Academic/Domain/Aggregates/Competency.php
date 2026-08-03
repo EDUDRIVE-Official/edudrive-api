@@ -42,7 +42,9 @@ final class Competency
         $this->ensureIsActive();
         $code = Subcompetency::normalizeCode($code);
         foreach ($this->subcompetencies as $subcompetency) {
-            if ($subcompetency->code() === $code) { throw new InvalidArgumentException('El código de la subcompetencia ya existe.'); }
+            if ($subcompetency->code() === $code) {
+                throw new InvalidArgumentException('El código de la subcompetencia ya existe.');
+            }
         }
         $this->subcompetencies[] = Subcompetency::create($code, $title, count($this->subcompetencies) + 1);
     }
@@ -53,34 +55,72 @@ final class Competency
         $this->findSubcompetency($subcompetencyCode)->addIndicator($code, $description);
     }
 
-    public function id(): CompetencyId { return $this->id; }
-    public function code(): CompetencyCode { return $this->code; }
-    public function title(): string { return $this->title; }
-    public function description(): string { return $this->description; }
-    public function category(): CompetencyCategory { return $this->category; }
-    public function masteryLevel(): MasteryLevel { return $this->masteryLevel; }
-    public function isActive(): bool { return $this->active; }
+    public function id(): CompetencyId
+    {
+        return $this->id;
+    }
+
+    public function code(): CompetencyCode
+    {
+        return $this->code;
+    }
+
+    public function title(): string
+    {
+        return $this->title;
+    }
+
+    public function description(): string
+    {
+        return $this->description;
+    }
+
+    public function category(): CompetencyCategory
+    {
+        return $this->category;
+    }
+
+    public function masteryLevel(): MasteryLevel
+    {
+        return $this->masteryLevel;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->active;
+    }
+
     /** @return list<Subcompetency> */
-    public function subcompetencies(): array { return $this->subcompetencies; }
+    public function subcompetencies(): array
+    {
+        return $this->subcompetencies;
+    }
 
     private function findSubcompetency(string $code): Subcompetency
     {
         $code = Subcompetency::normalizeCode($code);
         foreach ($this->subcompetencies as $subcompetency) {
-            if ($subcompetency->code() === $code) { return $subcompetency; }
+            if ($subcompetency->code() === $code) {
+                return $subcompetency;
+            }
         }
         throw new InvalidArgumentException('La subcompetencia no existe.');
     }
 
     private function ensureIsActive(): void
     {
-        if (! $this->active) { throw new DomainException('Una competencia inactiva no puede ser modificada.'); }
+        if (! $this->active) {
+            throw new DomainException('Una competencia inactiva no puede ser modificada.');
+        }
     }
 
     private static function requireText(string $value, string $message): string
     {
         $value = trim($value);
-        if ($value === '') { throw new InvalidArgumentException($message); }
+        if ($value === '') {
+            throw new InvalidArgumentException($message);
+        }
+
         return $value;
     }
 }

@@ -60,12 +60,14 @@ final class EloquentCompetencyRepository implements CompetencyRepository
     public function findById(CompetencyId $id): ?Competency
     {
         $model = CompetencyModel::query()->with('subcompetencies.indicators')->find($id->value());
+
         return $model === null ? null : $this->toDomain($model);
     }
 
     public function findByCode(CompetencyCode $code): ?Competency
     {
         $model = CompetencyModel::query()->with('subcompetencies.indicators')->where('code', $code->value())->first();
+
         return $model === null ? null : $this->toDomain($model);
     }
 
@@ -76,8 +78,10 @@ final class EloquentCompetencyRepository implements CompetencyRepository
 
     public function all(): array
     {
-        return CompetencyModel::query()->with('subcompetencies.indicators')->orderBy('code')->get()
-            ->map(fn (CompetencyModel $model): Competency => $this->toDomain($model))->values()->all();
+        $competencies = CompetencyModel::query()->with('subcompetencies.indicators')->orderBy('code')->get()
+            ->map(fn (CompetencyModel $model): Competency => $this->toDomain($model))->all();
+
+        return array_values($competencies);
     }
 
     private function toDomain(CompetencyModel $model): Competency
@@ -87,15 +91,15 @@ final class EloquentCompetencyRepository implements CompetencyRepository
                 (string) $indicator->getAttribute('code'),
                 (string) $indicator->getAttribute('description'),
                 (int) $indicator->getAttribute('position'),
-            ))->values()->all();
+            ))->all();
 
             return Subcompetency::restore(
                 (string) $subcompetency->getAttribute('code'),
                 (string) $subcompetency->getAttribute('title'),
                 (int) $subcompetency->getAttribute('position'),
-                $indicators,
+                array_values($indicators),
             );
-        })->values()->all();
+        })->all();
 
         return Competency::restore(
             CompetencyId::fromString((string) $model->getAttribute('id')),
@@ -105,7 +109,7 @@ final class EloquentCompetencyRepository implements CompetencyRepository
             CompetencyCategory::from((string) $model->getAttribute('category')),
             MasteryLevel::from((string) $model->getAttribute('mastery_level')),
             $model->getAttribute('status') === 'active',
-            $subcompetencies,
+            array_values($subcompetencies),
         );
     }
 }

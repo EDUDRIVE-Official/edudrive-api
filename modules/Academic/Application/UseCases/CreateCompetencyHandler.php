@@ -22,7 +22,9 @@ final readonly class CreateCompetencyHandler
     public function handle(CreateCompetencyCommand $command): CompetencyResponse
     {
         $code = CompetencyCode::fromString($command->code);
-        if ($this->competencies->existsByCode($code)) { throw CompetencyCodeAlreadyExists::forCode($code); }
+        if ($this->competencies->existsByCode($code)) {
+            throw CompetencyCodeAlreadyExists::forCode($code);
+        }
 
         $competency = Competency::create(
             CompetencyId::fromString((string) Str::uuid()),
@@ -33,6 +35,7 @@ final readonly class CreateCompetencyHandler
             MasteryLevel::from($command->masteryLevel),
         );
         $this->competencies->save($competency);
+
         return CompetencyResponse::fromCompetency($competency);
     }
 }

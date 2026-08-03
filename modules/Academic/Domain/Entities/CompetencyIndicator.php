@@ -28,9 +28,20 @@ final readonly class CompetencyIndicator
         return self::create($code, $description, $position);
     }
 
-    public function code(): string { return $this->code; }
-    public function description(): string { return $this->description; }
-    public function position(): int { return $this->position; }
+    public function code(): string
+    {
+        return $this->code;
+    }
+
+    public function description(): string
+    {
+        return $this->description;
+    }
+
+    public function position(): int
+    {
+        return $this->position;
+    }
 
     public static function normalizeCode(string $code): string
     {
@@ -38,13 +49,17 @@ final readonly class CompetencyIndicator
         if ($code === '' || mb_strlen($code) > 80 || preg_match('/^[A-Z0-9]+(?:[.-][A-Z0-9]+)*$/', $code) !== 1) {
             throw new InvalidArgumentException('El código del indicador no es válido.');
         }
+
         return $code;
     }
 
     private static function requireText(string $value, string $message): string
     {
         $value = trim($value);
-        if ($value === '') { throw new InvalidArgumentException($message); }
+        if ($value === '') {
+            throw new InvalidArgumentException($message);
+        }
+
         return $value;
     }
 }

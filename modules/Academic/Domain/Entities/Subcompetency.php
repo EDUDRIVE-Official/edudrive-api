@@ -38,11 +38,26 @@ final class Subcompetency
         $this->indicators[] = CompetencyIndicator::create($code, $description, count($this->indicators) + 1);
     }
 
-    public function code(): string { return $this->code; }
-    public function title(): string { return $this->title; }
-    public function position(): int { return $this->position; }
+    public function code(): string
+    {
+        return $this->code;
+    }
+
+    public function title(): string
+    {
+        return $this->title;
+    }
+
+    public function position(): int
+    {
+        return $this->position;
+    }
+
     /** @return list<CompetencyIndicator> */
-    public function indicators(): array { return $this->indicators; }
+    public function indicators(): array
+    {
+        return $this->indicators;
+    }
 
     public static function normalizeCode(string $code): string
     {
@@ -50,13 +65,17 @@ final class Subcompetency
         if ($code === '' || mb_strlen($code) > 70 || preg_match('/^[A-Z0-9]+(?:[.-][A-Z0-9]+)*$/', $code) !== 1) {
             throw new InvalidArgumentException('El código de la subcompetencia no es válido.');
         }
+
         return $code;
     }
 
     private static function requireTitle(string $title): string
     {
         $title = trim($title);
-        if ($title === '') { throw new InvalidArgumentException('El nombre de la subcompetencia no puede estar vacío.'); }
+        if ($title === '') {
+            throw new InvalidArgumentException('El nombre de la subcompetencia no puede estar vacío.');
+        }
+
         return $title;
     }
 }

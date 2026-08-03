@@ -23,6 +23,7 @@ final class CompetencyController
     {
         $result = $queryBus->ask(new ListCompetenciesQuery);
         assert(is_array($result));
+
         /** @var list<CompetencyResponse> $result */
         return response()->json(['data' => array_map(
             static fn (CompetencyResponse $competency): array => $competency->toArray(),
@@ -41,6 +42,7 @@ final class CompetencyController
             (string) $data['mastery_level'],
         ));
         assert($result instanceof CompetencyResponse);
+
         return response()->json(['data' => $result->toArray()], Response::HTTP_CREATED);
     }
 
@@ -53,6 +55,7 @@ final class CompetencyController
             (string) $data['title'],
         ));
         assert($result instanceof CompetencyResponse);
+
         return response()->json(['data' => $result->toArray()]);
     }
 
@@ -66,6 +69,7 @@ final class CompetencyController
             (string) $data['description'],
         ));
         assert($result instanceof CompetencyResponse);
+
         return response()->json(['data' => $result->toArray()]);
     }
 }

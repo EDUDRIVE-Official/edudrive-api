@@ -17,17 +17,36 @@ function inMemoryCompetencyRepository(): CompetencyRepository
         /** @var array<string, Competency> */
         private array $competencies = [];
 
-        public function save(Competency $competency): void { $this->competencies[$competency->code()->value()] = $competency; }
+        public function save(Competency $competency): void
+        {
+            $this->competencies[$competency->code()->value()] = $competency;
+        }
+
         public function findById(CompetencyId $id): ?Competency
         {
             foreach ($this->competencies as $competency) {
-                if ($competency->id()->equals($id)) { return $competency; }
+                if ($competency->id()->equals($id)) {
+                    return $competency;
+                }
             }
+
             return null;
         }
-        public function findByCode(CompetencyCode $code): ?Competency { return $this->competencies[$code->value()] ?? null; }
-        public function existsByCode(CompetencyCode $code): bool { return isset($this->competencies[$code->value()]); }
-        public function all(): array { return array_values($this->competencies); }
+
+        public function findByCode(CompetencyCode $code): ?Competency
+        {
+            return $this->competencies[$code->value()] ?? null;
+        }
+
+        public function existsByCode(CompetencyCode $code): bool
+        {
+            return isset($this->competencies[$code->value()]);
+        }
+
+        public function all(): array
+        {
+            return array_values($this->competencies);
+        }
     };
 }
 

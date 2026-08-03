@@ -8,7 +8,10 @@ use Illuminate\Foundation\Http\FormRequest;
 
 final class AddSubcompetencyRequest extends FormRequest
 {
-    public function authorize(): bool { return true; }
+    public function authorize(): bool
+    {
+        return true;
+    }
 
     /** @return array<string, array<int, mixed>> */
     public function rules(): array

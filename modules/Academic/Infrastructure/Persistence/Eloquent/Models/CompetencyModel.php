@@ -10,9 +10,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 final class CompetencyModel extends Model
 {
     protected $table = 'academic_competencies';
+
     protected $primaryKey = 'id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
+
     protected $guarded = [];
 
     /** @return HasMany<SubcompetencyModel, $this> */

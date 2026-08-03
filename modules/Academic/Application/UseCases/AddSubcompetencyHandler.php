@@ -13,12 +13,14 @@ use Modules\Academic\Domain\ValueObjects\CompetencyId;
 final readonly class AddSubcompetencyHandler
 {
     public function __construct(private CompetencyRepository $competencies) {}
+
     public function handle(AddSubcompetencyCommand $command): CompetencyResponse
     {
         $id = CompetencyId::fromString($command->competencyId);
         $competency = $this->competencies->findById($id) ?? throw CompetencyNotFound::forId($id);
         $competency->addSubcompetency($command->code, $command->title);
         $this->competencies->save($competency);
+
         return CompetencyResponse::fromCompetency($competency);
     }
 }

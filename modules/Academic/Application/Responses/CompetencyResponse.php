@@ -45,6 +45,23 @@ final readonly class CompetencyResponse
         );
     }
 
+    /**
+     * @return array{
+     *     id: string,
+     *     code: string,
+     *     title: string,
+     *     description: string,
+     *     category: string,
+     *     mastery_level: string,
+     *     status: string,
+     *     subcompetencies: list<array{
+     *         code: string,
+     *         title: string,
+     *         position: int,
+     *         indicators: list<array{code: string, description: string, position: int}>
+     *     }>
+     * }
+     */
     public function toArray(): array
     {
         return [

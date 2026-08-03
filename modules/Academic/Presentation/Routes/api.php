@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Modules\Academic\Presentation\Http\Controllers\AcademicStatusController;
-use Modules\Academic\Presentation\Http\Controllers\CourseController;
 use Modules\Academic\Presentation\Http\Controllers\CompetencyController;
+use Modules\Academic\Presentation\Http\Controllers\CourseController;
 
 Route::prefix('api/v1/academic')
     ->name('api.v1.academic.')
