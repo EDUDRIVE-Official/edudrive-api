@@ -476,7 +476,9 @@ Nota (2026-07-29): esta fase se adelantó parcialmente fuera de orden, bajo los 
 
 ENG-024 — Catálogo de competencias
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-03): se completó el catálogo regional latinoamericano de competencias viales con jerarquía de subcompetencias e indicadores observables, categorías y niveles de dominio controlados, persistencia PostgreSQL, casos de uso mediante `CommandBus`/`QueryBus` y API protegida por `competencies.manage`/`competencies.view`. Ver sección 25 y `docs/engineering/ENG-LOG.md` (IMP-025). Los perfiles normativos por país, asociaciones con cursos/evaluaciones/SIMUDRIVE y el versionado curricular quedan explícitamente diferidos a historias posteriores; no forman parte de este incremento.
 
 Incluye:
 
@@ -1285,7 +1287,9 @@ Con esto cerrado, la historia técnica activa **sigue siendo** la Fase 5 — Cat
 
 Actualizado 2026-08-02: se completó ENG-026 (Cursos) — ver la nota de la sección 11 y `docs/engineering/ENG-LOG.md` (IMP-024) para el detalle completo. Quedan explícitamente diferidos: el versionado curricular real (ENG-029, su propia historia futura), un endpoint de edición general de un curso ya existente, y ENG-024 (catálogo de competencias), ENG-025 (programas educativos), ENG-027 (módulos y unidades), ENG-028 (lecciones) — historias separadas, no tocadas aquí.
 
-La historia técnica activa pasa a **Pendiente de decisión** — ninguna de las fases restantes (ENG-024/025/027/028/029, o volver a Fase 4 — Perfiles, que el roadmap nunca completó fuera de orden) fue elegida todavía como siguiente paso.
+Actualizado 2026-08-03: se completó ENG-024 (Catálogo de competencias) — ver la nota de la sección 11 y `docs/engineering/ENG-LOG.md` (IMP-025). El incremento entrega el núcleo regional jerárquico; quedan fuera perfiles por país, asociaciones con cursos/evaluaciones/SIMUDRIVE y versionado curricular.
+
+La historia técnica activa pasa nuevamente a **Pendiente de decisión** entre ENG-025, ENG-027, ENG-028, ENG-029 o volver a Fase 4 — Perfiles.
 26. Definición de terminado
 
 Una historia se considera terminada cuando cumple:
@@ -1326,3 +1330,4 @@ Versión	Fecha	Descripción
 1.2.0	2026-07-31	Cierre de la historia técnica de Autorización y Organizaciones con alcance reducido (Completado), con detalle de lo diferido para ENG-012 a ENG-019; historia técnica activa vuelve a Academic (Fase 5)
 1.3.0	2026-08-01	Corrección de `EnsurePermission` (ENG-013) registrada; panel web de Organizaciones (login + listar/crear) documentado como trabajo de presentación fuera del alcance de este roadmap (IMP-023 en ENG-LOG.md); historia técnica activa confirmada sin cambios (Academic, Fase 5)
 1.4.0	2026-08-02	Cierre de ENG-026 (Cursos): campos nuevos, endpoints publish/archive, permisos courses.manage/courses.view, corrección del manejo de excepciones de Academic (IMP-024 en ENG-LOG.md); catálogo de permisos actualizado de 3 a 5; historia técnica activa pasa a pendiente de decisión
+1.5.0	2026-08-03	Cierre de ENG-024 (Catálogo de competencias): agregado jerárquico, persistencia, casos de uso, API protegida y permisos competencies.manage/competencies.view (IMP-025 en ENG-LOG.md); alcance futuro diferido explícitamente

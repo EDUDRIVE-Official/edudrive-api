@@ -846,3 +846,29 @@ ENG-020
 
 **Estado:** Finalizado.
 
+## 2026-08-03 — IMP-025 (Cierre de ENG-024 — Catálogo regional de competencias viales)
+
+### Completado
+
+- Nuevo agregado `Competency`, con `CompetencyId`, `CompetencyCode`, categorías controladas (`risk_management`, `road_rules`, `vehicle_control`, `vulnerable_road_users`, `eco_driving`) y niveles de dominio (`foundation`, `developing`, `proficient`, `advanced`).
+- Jerarquía de entidades `Subcompetency` y `CompetencyIndicator`, con códigos normalizados, unicidad, orden explícito y reglas de modificación dentro del dominio.
+- Persistencia PostgreSQL mediante las tablas `academic_competencies`, `academic_subcompetencies` y `academic_competency_indicators`, claves foráneas con eliminación en cascada y repositorio `EloquentCompetencyRepository` que reconstruye el agregado sin exponer modelos Eloquent.
+- Casos de uso registrados en los buses existentes para crear competencias, agregar subcompetencias, agregar indicadores y consultar el catálogo jerárquico.
+- Nuevos permisos `competencies.manage` y `competencies.view`: `SuperAdmin` recibe ambos; `InstitutionalAdmin`, `Teacher` y `Student` reciben solo consulta.
+- API protegida con `auth:sanctum` y middleware de permisos:
+  - `GET /api/v1/academic/competencies`
+  - `POST /api/v1/academic/competencies`
+  - `POST /api/v1/academic/competencies/{competencyId}/subcompetencies`
+  - `POST /api/v1/academic/competencies/{competencyId}/subcompetencies/{subcompetencyCode}/indicators`
+- Validación HTTP de códigos, campos obligatorios, categorías y niveles; conflicto 409 para código de competencia duplicado mediante `COMPETENCY_CODE_ALREADY_EXISTS`.
+- Pruebas unitarias, de integración y Feature para reglas jerárquicas, persistencia, handlers, autorización, validación y consulta completa.
+- Diferido explícitamente: perfiles normativos por país, asociaciones con cursos, evaluaciones o SIMUDRIVE, cálculo de dominio y versionado curricular (ENG-029).
+
+### Validaciones
+
+- `composer format` ✅ (263 archivos; 19 ajustes de estilo aplicados a ENG-024)
+- `composer analyse` ✅ (194 archivos, sin errores)
+- `composer quality` ✅ (143 pruebas, 409 aserciones)
+- Setup del worktree completado con `npm ci` y `npm run build` para generar el manifest Vite requerido por las pruebas web preexistentes.
+
+**Estado:** Finalizado.
