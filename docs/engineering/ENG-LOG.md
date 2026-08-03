@@ -872,3 +872,34 @@ ENG-020
 - Setup del worktree completado con `npm ci` y `npm run build` para generar el manifest Vite requerido por las pruebas web preexistentes.
 
 **Estado:** Finalizado.
+
+## 2026-08-03 — IMP-026 (Cierre de ENG-025 — Programas educativos regionales)
+
+### Completado
+
+- Nuevo agregado `EducationalProgram`, con código normalizado, título, descripción y ciclo de vida `draft`, `published` y `archived`. La publicación exige al menos un curso y que todos los cursos referenciados estén publicados; el archivo vuelve inmutable el programa.
+- Nuevo value object `ProgramAudience`, con criterios regionales opcionales y combinables por rango etario, etapas neutrales de licencia (`unlicensed`, `learner`, `licensed`, `professional`), contextos (`general`, `institutional`, `corporate`) y vehículos (`motorcycle`, `automobile`).
+- Secuencia reutilizable de cursos existentes mediante `ProgramCourse`, con posición explícita, orden estable y rechazo de duplicados.
+- Persistencia PostgreSQL normalizada en cinco tablas: `academic_programs`, `academic_program_courses`, `academic_program_license_stages`, `academic_program_contexts` y `academic_program_vehicle_types`. El repositorio Eloquent guarda el agregado completo en una transacción y lo reconstruye sin exponer modelos de infraestructura.
+- Casos de uso registrados en `CommandBus`/`QueryBus` para crear y listar programas, cambiar audiencia, reemplazar cursos, publicar y archivar.
+- Nuevos permisos `programs.manage` y `programs.view`: `SuperAdmin` recibe ambos; `InstitutionalAdmin`, `Teacher` y `Student` reciben únicamente consulta.
+- API protegida con `auth:sanctum` y middleware de permisos:
+  - `GET /api/v1/academic/programs`
+  - `POST /api/v1/academic/programs`
+  - `PATCH /api/v1/academic/programs/{programId}/audience`
+  - `PUT /api/v1/academic/programs/{programId}/courses`
+  - `POST /api/v1/academic/programs/{programId}/publish`
+  - `POST /api/v1/academic/programs/{programId}/archive`
+- Pruebas unitarias, de integración y Feature para audiencia, invariantes, persistencia, casos de uso, flujo HTTP completo, autenticación, permisos, validación y errores públicos.
+- Diferido explícitamente: propiedad o personalización por organización; perfiles normativos por país y categorías legales de licencia; asociaciones adicionales entre cursos, competencias, evaluaciones o SIMUDRIVE más allá de la secuencia ordenada propia del programa; módulos y lecciones; versionado e historial curricular; inscripción y seguimiento de progreso.
+
+### Validaciones
+
+- `npm ci` ✅ (90 paquetes instalados, 0 vulnerabilidades).
+- `npm run build` ✅ (Vite 7.3.6, 57 módulos transformados y `public/build/manifest.json` generado).
+- `composer format` ✅ (313 archivos, sin cambios de estilo pendientes).
+- `composer analyse` ✅ (237 archivos, sin errores).
+- `composer quality` ✅ (212 pruebas, 675 aserciones).
+- `php artisan route:list --path=api/v1/academic/programs` ✅ (6 rutas registradas).
+
+**Estado:** Finalizado.

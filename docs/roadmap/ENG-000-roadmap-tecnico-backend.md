@@ -9,8 +9,8 @@
 | Proyecto | EDUDRIVE |
 | Componente | edudrive-api |
 | Estado | Activo |
-| Versión | 1.4.0 |
-| Fecha | 2026-08-02 |
+| Versión | 1.6.0 |
+| Fecha | 2026-08-03 |
 | Responsable | Equipo de Ingeniería EDUDRIVE |
 
 ---
@@ -489,7 +489,9 @@ Niveles de dominio.
 Relación con teoría y práctica.
 ENG-025 — Programas educativos
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-03): se completaron las plantillas regionales reutilizables mediante el agregado `EducationalProgram`, con segmentación opcional por edad, etapa neutral de licencia, contexto y tipo de vehículo; secuencia ordenada de cursos existentes; ciclo de vida `draft`/`published`/`archived`; persistencia normalizada; casos de uso mediante `CommandBus`/`QueryBus`; y API protegida por `programs.manage`/`programs.view`. Ver sección 25 y `docs/engineering/ENG-LOG.md` (IMP-026). Quedan explícitamente diferidos la propiedad por organización, los perfiles y categorías legales por país, módulos/lecciones, asociaciones adicionales entre cursos, competencias, evaluaciones o SIMUDRIVE más allá de la secuencia propia del programa, inscripción/progreso y versionado.
 
 Incluye:
 
@@ -1289,7 +1291,9 @@ Actualizado 2026-08-02: se completó ENG-026 (Cursos) — ver la nota de la secc
 
 Actualizado 2026-08-03: se completó ENG-024 (Catálogo de competencias) — ver la nota de la sección 11 y `docs/engineering/ENG-LOG.md` (IMP-025). El incremento entrega el núcleo regional jerárquico; quedan fuera perfiles por país, asociaciones con cursos/evaluaciones/SIMUDRIVE y versionado curricular.
 
-La historia técnica activa pasa nuevamente a **Pendiente de decisión** entre ENG-025, ENG-027, ENG-028, ENG-029 o volver a Fase 4 — Perfiles.
+Actualizado 2026-08-03: se completó ENG-025 (Programas educativos) — ver la nota de la sección 11 y `docs/engineering/ENG-LOG.md` (IMP-026). El incremento entrega plantillas regionales con audiencia combinable, cursos existentes ordenados y ciclo de vida publicable/archivable, sin propiedad organizacional ni reglas legales nacionales.
+
+La historia técnica activa pasa nuevamente a **Pendiente de decisión** entre ENG-027, ENG-028, ENG-029 o volver a Fase 4 — Perfiles.
 26. Definición de terminado
 
 Una historia se considera terminada cuando cumple:
@@ -1331,3 +1335,4 @@ Versión	Fecha	Descripción
 1.3.0	2026-08-01	Corrección de `EnsurePermission` (ENG-013) registrada; panel web de Organizaciones (login + listar/crear) documentado como trabajo de presentación fuera del alcance de este roadmap (IMP-023 en ENG-LOG.md); historia técnica activa confirmada sin cambios (Academic, Fase 5)
 1.4.0	2026-08-02	Cierre de ENG-026 (Cursos): campos nuevos, endpoints publish/archive, permisos courses.manage/courses.view, corrección del manejo de excepciones de Academic (IMP-024 en ENG-LOG.md); catálogo de permisos actualizado de 3 a 5; historia técnica activa pasa a pendiente de decisión
 1.5.0	2026-08-03	Cierre de ENG-024 (Catálogo de competencias): agregado jerárquico, persistencia, casos de uso, API protegida y permisos competencies.manage/competencies.view (IMP-025 en ENG-LOG.md); alcance futuro diferido explícitamente
+1.6.0	2026-08-03	Cierre de ENG-025 (Programas educativos): plantillas regionales, audiencia combinable, cursos ordenados, ciclo de vida, persistencia normalizada, API protegida y permisos programs.manage/programs.view (IMP-026 en ENG-LOG.md); alcance futuro diferido explícitamente
