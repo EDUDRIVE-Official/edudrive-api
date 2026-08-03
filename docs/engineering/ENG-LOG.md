@@ -891,15 +891,16 @@ ENG-020
   - `POST /api/v1/academic/programs/{programId}/publish`
   - `POST /api/v1/academic/programs/{programId}/archive`
 - Pruebas unitarias, de integración y Feature para audiencia, invariantes, persistencia, casos de uso, flujo HTTP completo, autenticación, permisos, validación y errores públicos.
+- Endurecimiento final de invariantes: edades alineadas con el límite `smallint` de persistencia; cursos duplicados expuestos mediante `DUPLICATE_PROGRAM_COURSE`; reemplazo atómico de la secuencia de un programa publicado, que conserva al menos un curso y exige que todos sigan publicados; y traducción de colisiones concurrentes del código único a `PROGRAM_CODE_ALREADY_EXISTS` sin ocultar otras violaciones de base de datos.
 - Diferido explícitamente: propiedad o personalización por organización; perfiles normativos por país y categorías legales de licencia; asociaciones adicionales entre cursos, competencias, evaluaciones o SIMUDRIVE más allá de la secuencia ordenada propia del programa; módulos y lecciones; versionado e historial curricular; inscripción y seguimiento de progreso.
 
 ### Validaciones
 
 - `npm ci` ✅ (90 paquetes instalados, 0 vulnerabilidades).
 - `npm run build` ✅ (Vite 7.3.6, 57 módulos transformados y `public/build/manifest.json` generado).
-- `composer format` ✅ (313 archivos, sin cambios de estilo pendientes).
-- `composer analyse` ✅ (237 archivos, sin errores).
-- `composer quality` ✅ (212 pruebas, 675 aserciones).
+- `composer format` ✅ (314 archivos, sin cambios de estilo pendientes).
+- `composer analyse` ✅ (238 archivos, sin errores).
+- `composer quality` ✅ (222 pruebas, 730 aserciones).
 - `php artisan route:list --path=api/v1/academic/programs` ✅ (6 rutas registradas).
 
 **Estado:** Finalizado.
