@@ -6,10 +6,15 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use Modules\Academic\Domain\Aggregates\Course;
+use Modules\Academic\Domain\Entities\CourseModule;
+use Modules\Academic\Domain\Entities\CourseUnit;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
+use Modules\Academic\Domain\ValueObjects\CourseModuleId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
+use Modules\Academic\Domain\ValueObjects\CourseUnitId;
+use Modules\Academic\Domain\ValueObjects\CurriculumCode;
 use Modules\Authorization\Domain\Entities\RoleAssignment;
 use Modules\Authorization\Domain\Enums\Role;
 use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
@@ -28,6 +33,61 @@ pest()
         '../modules/*/Tests/Feature',
         '../modules/*/Tests/Integration',
     );
+
+final class CurriculumAwareTestCourseRepository implements CourseRepository
+{
+    /** @var array<string, Course> */
+    private array $courses = [];
+
+    /** @param list<Course> $courses */
+    public function __construct(
+        array $courses = [],
+        private readonly ?CourseRepository $delegate = null,
+    ) {
+        foreach ($courses as $course) {
+            $this->save($course);
+        }
+    }
+
+    public function save(Course $course): void
+    {
+        $this->delegate?->save($course);
+        $this->courses[$course->id()->value()] = $course;
+    }
+
+    public function findById(CourseId $id): ?Course
+    {
+        return $this->courses[$id->value()] ?? $this->delegate?->findById($id);
+    }
+
+    public function findByCode(CourseCode $code): ?Course
+    {
+        foreach ($this->courses as $course) {
+            if ($course->code()->equals($code)) {
+                return $course;
+            }
+        }
+
+        return $this->delegate?->findByCode($code);
+    }
+
+    public function existsByCode(CourseCode $code): bool
+    {
+        return $this->findByCode($code) !== null;
+    }
+
+    /** @return list<Course> */
+    public function all(): array
+    {
+        $courses = $this->courses;
+
+        foreach ($this->delegate?->all() ?? [] as $course) {
+            $courses[$course->id()->value()] ??= $course;
+        }
+
+        return array_values($courses);
+    }
+}
 
 function actingAsAuthenticatedUser(): UserModel
 {
@@ -64,10 +124,62 @@ function createDraftCourseForPublishing(string $code = 'EDU-020'): Course
         code: CourseCode::fromString($code),
         title: CourseTitle::fromString('Curso de prueba'),
     );
+    addMinimalCurriculum($course);
 
     $repository->save($course);
+    preserveCourseCurriculumInMemory($course);
 
     return $course;
+}
+
+function addMinimalCurriculum(Course $course): void
+{
+    $course->replaceCurriculum([
+        CourseModule::create(
+            id: CourseModuleId::fromString((string) Str::uuid()),
+            code: CurriculumCode::fromString('MOD-01'),
+            title: 'Fundamentos',
+            description: 'Modulo curricular minimo de prueba.',
+            objectives: null,
+            durationMinutes: 30,
+            position: 1,
+            prerequisiteModuleIds: [],
+            units: [
+                CourseUnit::create(
+                    id: CourseUnitId::fromString((string) Str::uuid()),
+                    code: CurriculumCode::fromString('UNI-01'),
+                    title: 'Introduccion',
+                    description: 'Unidad curricular minima de prueba.',
+                    objectives: null,
+                    durationMinutes: 15,
+                    position: 1,
+                    prerequisiteUnitIds: [],
+                ),
+            ],
+        ),
+    ]);
+}
+
+function preserveCourseCurriculumInMemory(Course $course): void
+{
+    $repository = app(CourseRepository::class);
+
+    if ($repository instanceof CurriculumAwareTestCourseRepository) {
+        $repository->save($course);
+
+        return;
+    }
+
+    $courses = array_filter(
+        $repository->all(),
+        static fn (Course $stored): bool => ! $stored->id()->equals($course->id()),
+    );
+    $courses[] = $course;
+
+    app()->instance(
+        CourseRepository::class,
+        new CurriculumAwareTestCourseRepository(array_values($courses), $repository),
+    );
 }
 
 /**

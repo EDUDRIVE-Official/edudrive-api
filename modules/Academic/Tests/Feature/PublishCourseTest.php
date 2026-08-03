@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use DateTimeImmutable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use Modules\Academic\Domain\Repositories\CourseRepository;

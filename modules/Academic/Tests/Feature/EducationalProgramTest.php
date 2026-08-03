@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
+use Modules\Academic\Domain\Repositories\CourseRepository;
+use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Authorization\Domain\Entities\RoleAssignment;
 use Modules\Authorization\Domain\Enums\Role;
 use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
@@ -55,6 +57,15 @@ function createPublishedCourseForProgram(TestCase $test, string $code): array
     ])->assertCreated();
 
     $id = (string) $created->json('data.id');
+    $course = app(CourseRepository::class)->findById(CourseId::fromString($id));
+
+    if ($course === null) {
+        throw new RuntimeException("No se encontro el curso {$id} recien creado.");
+    }
+
+    addMinimalCurriculum($course);
+    preserveCourseCurriculumInMemory($course);
+
     $test->postJson("/api/v1/academic/courses/{$id}/publish")
         ->assertOk()
         ->assertJsonPath('data.status', 'published');

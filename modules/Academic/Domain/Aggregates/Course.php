@@ -5,11 +5,19 @@ declare(strict_types=1);
 namespace Modules\Academic\Domain\Aggregates;
 
 use DateTimeImmutable;
+use Modules\Academic\Domain\Entities\CourseModule;
 use Modules\Academic\Domain\Enums\CourseModality;
 use Modules\Academic\Domain\Enums\CourseStatus;
 use Modules\Academic\Domain\Exceptions\ArchivedCourseCannotBeModified;
 use Modules\Academic\Domain\Exceptions\CourseAlreadyArchived;
 use Modules\Academic\Domain\Exceptions\CourseAlreadyPublished;
+use Modules\Academic\Domain\Exceptions\CourseCurriculumCannotBeModified;
+use Modules\Academic\Domain\Exceptions\CourseCurriculumRequired;
+use Modules\Academic\Domain\Exceptions\CourseModuleRequiresUnits;
+use Modules\Academic\Domain\Exceptions\DuplicateCourseModule;
+use Modules\Academic\Domain\Exceptions\DuplicateCourseUnit;
+use Modules\Academic\Domain\Exceptions\InvalidCurriculumPosition;
+use Modules\Academic\Domain\Exceptions\InvalidCurriculumPrerequisite;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
@@ -28,6 +36,8 @@ final class Course
         private CourseStatus $status,
         private ?DateTimeImmutable $publishedAt,
         private ?DateTimeImmutable $archivedAt,
+        /** @var list<CourseModule> */
+        private array $modules,
     ) {}
 
     public static function create(
@@ -52,9 +62,11 @@ final class Course
             status: CourseStatus::Draft,
             publishedAt: null,
             archivedAt: null,
+            modules: [],
         );
     }
 
+    /** @param list<CourseModule> $modules */
     public static function restore(
         CourseId $id,
         CourseCode $code,
@@ -67,8 +79,9 @@ final class Course
         CourseStatus $status,
         ?DateTimeImmutable $publishedAt,
         ?DateTimeImmutable $archivedAt,
+        array $modules = [],
     ): self {
-        return new self(
+        $course = new self(
             id: $id,
             code: $code,
             title: $title,
@@ -80,7 +93,12 @@ final class Course
             status: $status,
             publishedAt: $publishedAt,
             archivedAt: $archivedAt,
+            modules: $modules,
         );
+
+        $course->validateCurriculum($modules);
+
+        return $course;
     }
 
     public function rename(CourseTitle $title): void
@@ -97,12 +115,34 @@ final class Course
         $this->description = self::normalizeText($description);
     }
 
+    /** @param list<CourseModule> $modules */
+    public function replaceCurriculum(array $modules): void
+    {
+        if (! $this->status->isDraft()) {
+            throw CourseCurriculumCannotBeModified::create();
+        }
+
+        $this->validateCurriculum($modules);
+
+        $this->modules = $modules;
+    }
+
     public function publish(DateTimeImmutable $publishedAt): void
     {
         $this->ensureIsNotArchived();
 
         if ($this->status->isPublished()) {
             throw CourseAlreadyPublished::create();
+        }
+
+        if ($this->modules === []) {
+            throw CourseCurriculumRequired::create();
+        }
+
+        foreach ($this->modules as $module) {
+            if ($module->units() === []) {
+                throw CourseModuleRequiresUnits::create();
+            }
         }
 
         $this->status = CourseStatus::Published;
@@ -172,6 +212,82 @@ final class Course
     public function archivedAt(): ?DateTimeImmutable
     {
         return $this->archivedAt;
+    }
+
+    /** @return list<CourseModule> */
+    public function modules(): array
+    {
+        return $this->modules;
+    }
+
+    /** @param list<CourseModule> $modules */
+    private function validateCurriculum(array $modules): void
+    {
+        /** @var array<string, true> $moduleIds */
+        $moduleIds = [];
+        /** @var array<string, true> $moduleCodes */
+        $moduleCodes = [];
+        /** @var array<string, true> $unitIds */
+        $unitIds = [];
+
+        foreach ($modules as $moduleIndex => $module) {
+            if ($module->position() !== $moduleIndex + 1) {
+                throw InvalidCurriculumPosition::create();
+            }
+
+            $moduleId = $module->id()->value();
+            $moduleCode = $module->code()->value();
+
+            if (isset($moduleIds[$moduleId]) || isset($moduleCodes[$moduleCode])) {
+                throw DuplicateCourseModule::create();
+            }
+
+            $prerequisiteModuleIds = [];
+
+            foreach ($module->prerequisiteModuleIds() as $prerequisiteModuleId) {
+                $prerequisiteId = $prerequisiteModuleId->value();
+
+                if (isset($prerequisiteModuleIds[$prerequisiteId]) || ! isset($moduleIds[$prerequisiteId])) {
+                    throw InvalidCurriculumPrerequisite::create();
+                }
+
+                $prerequisiteModuleIds[$prerequisiteId] = true;
+            }
+
+            /** @var array<string, true> $unitCodes */
+            $unitCodes = [];
+
+            foreach ($module->units() as $unitIndex => $unit) {
+                if ($unit->position() !== $unitIndex + 1) {
+                    throw InvalidCurriculumPosition::create();
+                }
+
+                $unitId = $unit->id()->value();
+                $unitCode = $unit->code()->value();
+
+                if (isset($unitIds[$unitId]) || isset($unitCodes[$unitCode])) {
+                    throw DuplicateCourseUnit::create();
+                }
+
+                $prerequisiteUnitIds = [];
+
+                foreach ($unit->prerequisiteUnitIds() as $prerequisiteUnitId) {
+                    $prerequisiteId = $prerequisiteUnitId->value();
+
+                    if (isset($prerequisiteUnitIds[$prerequisiteId]) || ! isset($unitIds[$prerequisiteId])) {
+                        throw InvalidCurriculumPrerequisite::create();
+                    }
+
+                    $prerequisiteUnitIds[$prerequisiteId] = true;
+                }
+
+                $unitIds[$unitId] = true;
+                $unitCodes[$unitCode] = true;
+            }
+
+            $moduleIds[$moduleId] = true;
+            $moduleCodes[$moduleCode] = true;
+        }
     }
 
     private function ensureIsNotArchived(): void
