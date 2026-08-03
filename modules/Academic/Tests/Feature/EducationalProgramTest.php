@@ -147,6 +147,19 @@ it('valida vocabularios y edades del programa', function (): void {
         ]);
 });
 
+it('rechaza un rango etario invertido mediante la invariante del dominio', function (): void {
+    /** @var TestCase $this */
+    actingAsSuperAdminUser();
+
+    $payload = validProgramPayload('PROGRAM-AGE-RANGE');
+    $payload['min_age'] = 19;
+    $payload['max_age'] = 18;
+
+    $this->postJson('/api/v1/academic/programs', $payload)
+        ->assertUnprocessable()
+        ->assertJsonPath('code', 'INVALID_PROGRAM_AGE_RANGE');
+});
+
 it('protege la consulta con autenticación y separa permisos de lectura y gestión', function (): void {
     /** @var TestCase $this */
     $this->getJson('/api/v1/academic/programs')->assertUnauthorized();

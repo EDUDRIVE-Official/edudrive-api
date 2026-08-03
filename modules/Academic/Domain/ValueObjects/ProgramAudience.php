@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use Modules\Academic\Domain\Enums\LicenseStage;
 use Modules\Academic\Domain\Enums\ProgramContext;
 use Modules\Academic\Domain\Enums\VehicleType;
+use Modules\Academic\Domain\Exceptions\InvalidProgramAgeRange;
 
 final readonly class ProgramAudience
 {
@@ -45,7 +46,7 @@ final readonly class ProgramAudience
         }
 
         if ($minAge !== null && $maxAge !== null && $minAge > $maxAge) {
-            throw new InvalidArgumentException('La edad minima no puede superar la edad maxima.');
+            throw InvalidProgramAgeRange::create();
         }
 
         return new self(

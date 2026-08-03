@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Modules\Academic\Domain\Enums\LicenseStage;
 use Modules\Academic\Domain\Enums\ProgramContext;
 use Modules\Academic\Domain\Enums\VehicleType;
+use Modules\Academic\Domain\Exceptions\InvalidProgramAgeRange;
 use Modules\Academic\Domain\ValueObjects\ProgramAudience;
 
 it('crea una audiencia con edades opcionales validas', function (?int $minAge, ?int $maxAge): void {
@@ -35,7 +36,7 @@ it('rechaza una edad maxima negativa', function (): void {
 
 it('rechaza un rango cuya edad minima supera la maxima', function (): void {
     ProgramAudience::fromValues(19, 18, [], [], []);
-})->throws(InvalidArgumentException::class, 'La edad minima no puede superar la edad maxima.');
+})->throws(InvalidProgramAgeRange::class, 'La edad minima no puede superar la edad maxima.');
 
 it('deduplica las restricciones por valor y conserva su primer orden', function (): void {
     $audience = ProgramAudience::fromValues(
