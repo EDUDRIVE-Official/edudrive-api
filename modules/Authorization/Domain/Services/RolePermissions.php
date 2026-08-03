@@ -28,11 +28,14 @@ final class RolePermissions
                 Permission::ViewCourses,
                 Permission::ManageCompetencies,
                 Permission::ViewCompetencies,
+                Permission::ManagePrograms,
+                Permission::ViewPrograms,
             ],
             Role::InstitutionalAdmin, Role::Teacher, Role::Student => [
                 Permission::ViewOrganizations,
                 Permission::ViewCourses,
                 Permission::ViewCompetencies,
+                Permission::ViewPrograms,
             ],
         };
     }

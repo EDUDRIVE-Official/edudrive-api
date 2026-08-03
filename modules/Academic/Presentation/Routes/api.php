@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Academic\Presentation\Http\Controllers\AcademicStatusController;
 use Modules\Academic\Presentation\Http\Controllers\CompetencyController;
 use Modules\Academic\Presentation\Http\Controllers\CourseController;
+use Modules\Academic\Presentation\Http\Controllers\ProgramController;
 
 Route::prefix('api/v1/academic')
     ->name('api.v1.academic.')
@@ -46,6 +47,28 @@ Route::prefix('api/v1/academic')
                 Route::post('/courses/{courseId}/archive', [CourseController::class, 'archive'])
                     ->whereUuid('courseId')
                     ->name('courses.archive');
+            });
+
+            Route::middleware('permission:programs.view')->group(function (): void {
+                Route::get('/programs', [ProgramController::class, 'index'])
+                    ->name('programs.index');
+            });
+
+            Route::middleware('permission:programs.manage')->group(function (): void {
+                Route::post('/programs', [ProgramController::class, 'store'])
+                    ->name('programs.store');
+                Route::patch('/programs/{programId}/audience', [ProgramController::class, 'changeAudience'])
+                    ->whereUuid('programId')
+                    ->name('programs.audience.update');
+                Route::put('/programs/{programId}/courses', [ProgramController::class, 'replaceCourses'])
+                    ->whereUuid('programId')
+                    ->name('programs.courses.update');
+                Route::post('/programs/{programId}/publish', [ProgramController::class, 'publish'])
+                    ->whereUuid('programId')
+                    ->name('programs.publish');
+                Route::post('/programs/{programId}/archive', [ProgramController::class, 'archive'])
+                    ->whereUuid('programId')
+                    ->name('programs.archive');
             });
         });
     });

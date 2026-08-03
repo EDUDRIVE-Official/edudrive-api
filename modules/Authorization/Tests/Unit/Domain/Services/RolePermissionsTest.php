@@ -51,3 +51,17 @@ it('solo otorga consulta de competencias a los demás roles', function (): void 
         ->and(RolePermissions::grants(Role::Student, Permission::ViewCompetencies))->toBeTrue()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageCompetencies))->toBeFalse();
 });
+
+it('otorga gestión y consulta de programas al superadministrador', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManagePrograms))->toBeTrue()
+        ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewPrograms))->toBeTrue();
+});
+
+it('solo otorga consulta de programas a los demás roles', function (): void {
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewPrograms))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManagePrograms))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ViewPrograms))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManagePrograms))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ViewPrograms))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManagePrograms))->toBeFalse();
+});
