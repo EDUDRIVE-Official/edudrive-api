@@ -160,6 +160,35 @@ it('rechaza un rango etario invertido mediante la invariante del dominio', funct
         ->assertJsonPath('code', 'INVALID_PROGRAM_AGE_RANGE');
 });
 
+it('preserva los criterios omitidos al actualizar parcialmente la audiencia', function (): void {
+    /** @var TestCase $this */
+    actingAsSuperAdminUser();
+
+    $created = $this->postJson('/api/v1/academic/programs', validProgramPayload('PROGRAM-PATCH-AUDIENCE'))
+        ->assertCreated();
+    $programId = (string) $created->json('data.id');
+
+    $this->patchJson("/api/v1/academic/programs/{$programId}/audience", [
+        'contexts' => ['corporate'],
+    ])->assertOk()
+        ->assertJsonPath('data.audience.min_age', 16)
+        ->assertJsonPath('data.audience.max_age', 18)
+        ->assertJsonPath('data.audience.license_stages', ['learner'])
+        ->assertJsonPath('data.audience.contexts', ['corporate'])
+        ->assertJsonPath('data.audience.vehicle_types', ['motorcycle']);
+
+    $this->patchJson("/api/v1/academic/programs/{$programId}/audience", [
+        'min_age' => null,
+        'license_stages' => [],
+        'vehicle_types' => [],
+    ])->assertOk()
+        ->assertJsonPath('data.audience.min_age', null)
+        ->assertJsonPath('data.audience.max_age', 18)
+        ->assertJsonPath('data.audience.license_stages', [])
+        ->assertJsonPath('data.audience.contexts', ['corporate'])
+        ->assertJsonPath('data.audience.vehicle_types', []);
+});
+
 it('protege la consulta con autenticación y separa permisos de lectura y gestión', function (): void {
     /** @var TestCase $this */
     $this->getJson('/api/v1/academic/programs')->assertUnauthorized();

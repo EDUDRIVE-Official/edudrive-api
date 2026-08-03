@@ -20,5 +20,10 @@ final readonly class ChangeProgramAudienceCommand implements Command
         public array $licenseStages,
         public array $contexts,
         public array $vehicleTypes,
+        public bool $minAgeProvided = true,
+        public bool $maxAgeProvided = true,
+        public bool $licenseStagesProvided = true,
+        public bool $contextsProvided = true,
+        public bool $vehicleTypesProvided = true,
     ) {}
 }

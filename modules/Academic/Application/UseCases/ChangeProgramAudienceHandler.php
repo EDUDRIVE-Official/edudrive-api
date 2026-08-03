@@ -27,21 +27,29 @@ final readonly class ChangeProgramAudienceHandler
             throw ProgramNotFound::withId($command->programId);
         }
 
+        $currentAudience = $program->audience();
+
         $program->changeAudience(ProgramAudience::fromValues(
-            minAge: $command->minAge,
-            maxAge: $command->maxAge,
-            licenseStages: array_map(
-                static fn (string $stage): LicenseStage => LicenseStage::from($stage),
-                $command->licenseStages,
-            ),
-            contexts: array_map(
-                static fn (string $context): ProgramContext => ProgramContext::from($context),
-                $command->contexts,
-            ),
-            vehicleTypes: array_map(
-                static fn (string $vehicleType): VehicleType => VehicleType::from($vehicleType),
-                $command->vehicleTypes,
-            ),
+            minAge: $command->minAgeProvided ? $command->minAge : $currentAudience->minAge(),
+            maxAge: $command->maxAgeProvided ? $command->maxAge : $currentAudience->maxAge(),
+            licenseStages: $command->licenseStagesProvided
+                ? array_map(
+                    static fn (string $stage): LicenseStage => LicenseStage::from($stage),
+                    $command->licenseStages,
+                )
+                : $currentAudience->licenseStages(),
+            contexts: $command->contextsProvided
+                ? array_map(
+                    static fn (string $context): ProgramContext => ProgramContext::from($context),
+                    $command->contexts,
+                )
+                : $currentAudience->contexts(),
+            vehicleTypes: $command->vehicleTypesProvided
+                ? array_map(
+                    static fn (string $vehicleType): VehicleType => VehicleType::from($vehicleType),
+                    $command->vehicleTypes,
+                )
+                : $currentAudience->vehicleTypes(),
         ));
 
         $this->programs->save($program);

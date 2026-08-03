@@ -64,6 +64,11 @@ final class ProgramController
             licenseStages: self::stringList($data['license_stages'] ?? []),
             contexts: self::stringList($data['contexts'] ?? []),
             vehicleTypes: self::stringList($data['vehicle_types'] ?? []),
+            minAgeProvided: array_key_exists('min_age', $data),
+            maxAgeProvided: array_key_exists('max_age', $data),
+            licenseStagesProvided: array_key_exists('license_stages', $data),
+            contextsProvided: array_key_exists('contexts', $data),
+            vehicleTypesProvided: array_key_exists('vehicle_types', $data),
         ));
         assert($result instanceof ProgramResponse);
 
