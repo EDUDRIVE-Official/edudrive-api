@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\QueryException;
+use Modules\Academic\Application\Exceptions\ProgramCodeAlreadyExists;
 use Modules\Academic\Domain\Aggregates\EducationalProgram;
 use Modules\Academic\Domain\Enums\LicenseStage;
 use Modules\Academic\Domain\Enums\ProgramContext;
@@ -95,6 +97,53 @@ it('consulta programas por codigo normalizado y los lista ordenados por codigo',
             static fn (EducationalProgram $program): string => $program->code()->value(),
             $repository->all(),
         ))->toBe(['ALPHA-001', 'ZETA-001']);
+});
+
+it('traduce la carrera del codigo unico al error publico de programa duplicado', function (): void {
+    $repository = app(EloquentProgramRepository::class);
+    $existing = EducationalProgram::create(
+        id: ProgramId::fromString('019c4000-0000-7000-8000-000000000031'),
+        code: ProgramCode::fromString('RACE-CODE-001'),
+        title: 'Programa existente',
+        description: 'Programa que gana la carrera de persistencia.',
+        audience: ProgramAudience::fromValues(null, null, [], [], []),
+    );
+    $conflicting = EducationalProgram::create(
+        id: ProgramId::fromString('019c4000-0000-7000-8000-000000000032'),
+        code: ProgramCode::fromString('race-code-001'),
+        title: 'Programa concurrente',
+        description: 'Programa que pierde la carrera de persistencia.',
+        audience: ProgramAudience::fromValues(null, null, [], [], []),
+    );
+    $repository->save($existing);
+
+    try {
+        $repository->save($conflicting);
+
+        test()->fail('Se esperaba ProgramCodeAlreadyExists.');
+    } catch (ProgramCodeAlreadyExists $exception) {
+        expect($exception->statusCode())->toBe(409)
+            ->and($exception->errorCode())->toBe('PROGRAM_CODE_ALREADY_EXISTS')
+            ->and($exception->getMessage())->toContain('RACE-CODE-001');
+    }
+
+    expect($repository->findById($conflicting->id()))->toBeNull();
+});
+
+it('no convierte otras violaciones de persistencia en un codigo de programa duplicado', function (): void {
+    $repository = app(EloquentProgramRepository::class);
+    $program = EducationalProgram::create(
+        id: ProgramId::fromString('019c4000-0000-7000-8000-000000000041'),
+        code: ProgramCode::fromString('OTHER-CONSTRAINT-001'),
+        title: 'Programa con referencia invalida',
+        description: 'Comprueba que una FK conserve su excepcion original.',
+        audience: ProgramAudience::fromValues(null, null, [], [], []),
+    );
+    $program->replaceCourses([
+        CourseId::fromString('019c4000-0000-7000-8000-000000000099'),
+    ]);
+
+    expect(fn () => $repository->save($program))->toThrow(QueryException::class);
 });
 
 function createProgramCourseRow(CourseId $id, string $code): void

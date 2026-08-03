@@ -17,8 +17,8 @@ final class ReplaceProgramCoursesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'course_ids' => ['required', 'array', 'distinct'],
-            'course_ids.*' => ['required', 'uuid', 'distinct'],
+            'course_ids' => ['required', 'array'],
+            'course_ids.*' => ['required', 'uuid', 'distinct:ignore_case'],
         ];
     }
 }

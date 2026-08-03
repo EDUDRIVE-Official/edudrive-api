@@ -12,6 +12,8 @@ use Modules\Academic\Domain\Exceptions\InvalidProgramAgeRange;
 
 final readonly class ProgramAudience
 {
+    public const int MAXIMUM_AGE = 32767;
+
     /**
      * @param  list<LicenseStage>  $licenseStages
      * @param  list<ProgramContext>  $contexts
@@ -43,6 +45,11 @@ final readonly class ProgramAudience
 
         if ($maxAge !== null && $maxAge < 0) {
             throw new InvalidArgumentException('La edad maxima no puede ser negativa.');
+        }
+
+        if (($minAge !== null && $minAge > self::MAXIMUM_AGE)
+            || ($maxAge !== null && $maxAge > self::MAXIMUM_AGE)) {
+            throw InvalidProgramAgeRange::exceedsMaximum(self::MAXIMUM_AGE);
         }
 
         if ($minAge !== null && $maxAge !== null && $minAge > $maxAge) {

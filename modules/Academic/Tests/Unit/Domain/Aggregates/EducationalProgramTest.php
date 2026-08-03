@@ -9,6 +9,7 @@ use Modules\Academic\Domain\Enums\ProgramContext;
 use Modules\Academic\Domain\Enums\ProgramStatus;
 use Modules\Academic\Domain\Enums\VehicleType;
 use Modules\Academic\Domain\Exceptions\ArchivedProgramCannotBeModified;
+use Modules\Academic\Domain\Exceptions\DuplicateProgramCourse;
 use Modules\Academic\Domain\Exceptions\ProgramAlreadyArchived;
 use Modules\Academic\Domain\Exceptions\ProgramAlreadyPublished;
 use Modules\Academic\Domain\Exceptions\ProgramRequiresCourses;
@@ -199,8 +200,10 @@ it('rechaza cursos duplicados antes de alterar la secuencia existente', function
         $program->replaceCourses([secondProgramCourseId(), secondProgramCourseId()]);
 
         test()->fail('Se esperaba el rechazo del curso duplicado.');
-    } catch (InvalidArgumentException $exception) {
-        expect($exception->getMessage())->toBe('Un curso no puede aparecer mas de una vez en el programa.')
+    } catch (DuplicateProgramCourse $exception) {
+        expect($exception->errorCode())->toBe('DUPLICATE_PROGRAM_COURSE')
+            ->and($exception->statusCode())->toBe(422)
+            ->and($exception->getMessage())->toBe('Un curso no puede aparecer mas de una vez en el programa.')
             ->and($program->courses())->toHaveCount(1)
             ->and($program->courses()[0]->courseId()->equals(firstProgramCourseId()))->toBeTrue()
             ->and($program->courses()[0]->position())->toBe(1);
@@ -212,7 +215,7 @@ it('rechaza cursos duplicados al restaurar', function (): void {
         ProgramCourse::create(firstProgramCourseId(), 1),
         ProgramCourse::create(firstProgramCourseId(), 2),
     ]);
-})->throws(InvalidArgumentException::class, 'Un curso no puede aparecer mas de una vez en el programa.');
+})->throws(DuplicateProgramCourse::class, 'Un curso no puede aparecer mas de una vez en el programa.');
 
 it('rechaza posiciones repetidas al restaurar', function (): void {
     restoreEducationalProgramWith([

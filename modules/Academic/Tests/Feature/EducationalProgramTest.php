@@ -160,6 +160,35 @@ it('rechaza un rango etario invertido mediante la invariante del dominio', funct
         ->assertJsonPath('code', 'INVALID_PROGRAM_AGE_RANGE');
 });
 
+it('alinea create y patch con el limite smallint de edades', function (): void {
+    /** @var TestCase $this */
+    actingAsSuperAdminUser();
+
+    $maximumPayload = validProgramPayload('PROGRAM-MAXIMUM-AGE');
+    $maximumPayload['min_age'] = 32767;
+    $maximumPayload['max_age'] = 32767;
+
+    $created = $this->postJson('/api/v1/academic/programs', $maximumPayload)
+        ->assertCreated()
+        ->assertJsonPath('data.audience.min_age', 32767)
+        ->assertJsonPath('data.audience.max_age', 32767);
+    $programId = (string) $created->json('data.id');
+
+    $invalidPayload = validProgramPayload('PROGRAM-OVERFLOW-AGE');
+    $invalidPayload['max_age'] = 32768;
+
+    $this->postJson('/api/v1/academic/programs', $invalidPayload)
+        ->assertUnprocessable()
+        ->assertJsonPath('code', 'VALIDATION_ERROR')
+        ->assertJsonValidationErrors(['max_age']);
+
+    $this->patchJson("/api/v1/academic/programs/{$programId}/audience", [
+        'min_age' => 32768,
+    ])->assertUnprocessable()
+        ->assertJsonPath('code', 'VALIDATION_ERROR')
+        ->assertJsonValidationErrors(['min_age']);
+});
+
 it('preserva los criterios omitidos al actualizar parcialmente la audiencia', function (): void {
     /** @var TestCase $this */
     actingAsSuperAdminUser();
@@ -226,7 +255,7 @@ it('rechaza cursos inexistentes y secuencias duplicadas', function (): void {
         ->assertJsonPath('code', 'PROGRAM_COURSE_NOT_FOUND');
 
     $this->putJson("/api/v1/academic/programs/{$programId}/courses", [
-        'course_ids' => [$unknownCourseId, $unknownCourseId],
+        'course_ids' => [$unknownCourseId, strtoupper($unknownCourseId)],
     ])->assertUnprocessable()
         ->assertJsonValidationErrors(['course_ids.0']);
 });
@@ -252,4 +281,48 @@ it('rechaza publicar un programa con un curso no publicado', function (): void {
     $this->postJson("/api/v1/academic/programs/{$programId}/publish")
         ->assertUnprocessable()
         ->assertJsonPath('code', 'PROGRAM_COURSE_NOT_PUBLISHED');
+});
+
+it('mantiene valida y atomica la secuencia al reemplazar cursos de un programa publicado', function (): void {
+    /** @var TestCase $this */
+    actingAsSuperAdminUser();
+
+    $firstCourse = createPublishedCourseForProgram($this, 'PROG-PUBLISHED-C01');
+    $secondCourse = createPublishedCourseForProgram($this, 'PROG-PUBLISHED-C02');
+    $draftCourse = $this->postJson('/api/v1/academic/courses', [
+        'code' => 'PROG-PUBLISHED-DRAFT',
+        'title' => 'Curso borrador para reemplazo',
+    ])->assertCreated();
+    $draftCourseId = (string) $draftCourse->json('data.id');
+
+    $created = $this->postJson('/api/v1/academic/programs', validProgramPayload('PROGRAM-PUBLISHED-REPLACE'))
+        ->assertCreated();
+    $programId = (string) $created->json('data.id');
+
+    $this->putJson("/api/v1/academic/programs/{$programId}/courses", [
+        'course_ids' => [$firstCourse['id'], $secondCourse['id']],
+    ])->assertOk();
+    $this->postJson("/api/v1/academic/programs/{$programId}/publish")->assertOk();
+
+    $this->putJson("/api/v1/academic/programs/{$programId}/courses", [
+        'course_ids' => [$secondCourse['id'], $firstCourse['id']],
+    ])->assertOk()
+        ->assertJsonPath('data.courses.0.course_id', $secondCourse['id'])
+        ->assertJsonPath('data.courses.1.course_id', $firstCourse['id']);
+
+    $this->putJson("/api/v1/academic/programs/{$programId}/courses", [
+        'course_ids' => [],
+    ])->assertUnprocessable()
+        ->assertJsonPath('code', 'VALIDATION_ERROR')
+        ->assertJsonValidationErrors(['course_ids']);
+
+    $this->putJson("/api/v1/academic/programs/{$programId}/courses", [
+        'course_ids' => [$draftCourseId],
+    ])->assertUnprocessable()
+        ->assertJsonPath('code', 'PROGRAM_COURSE_NOT_PUBLISHED');
+
+    $this->getJson('/api/v1/academic/programs')
+        ->assertOk()
+        ->assertJsonPath('data.0.courses.0.course_id', $secondCourse['id'])
+        ->assertJsonPath('data.0.courses.1.course_id', $firstCourse['id']);
 });

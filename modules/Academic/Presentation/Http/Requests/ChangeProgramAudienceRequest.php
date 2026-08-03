@@ -9,6 +9,7 @@ use Illuminate\Validation\Rules\Enum;
 use Modules\Academic\Domain\Enums\LicenseStage;
 use Modules\Academic\Domain\Enums\ProgramContext;
 use Modules\Academic\Domain\Enums\VehicleType;
+use Modules\Academic\Domain\ValueObjects\ProgramAudience;
 
 final class ChangeProgramAudienceRequest extends FormRequest
 {
@@ -21,8 +22,8 @@ final class ChangeProgramAudienceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'min_age' => ['nullable', 'integer', 'min:0'],
-            'max_age' => ['nullable', 'integer', 'min:0'],
+            'min_age' => ['nullable', 'integer', 'min:0', 'max:'.ProgramAudience::MAXIMUM_AGE],
+            'max_age' => ['nullable', 'integer', 'min:0', 'max:'.ProgramAudience::MAXIMUM_AGE],
             'license_stages' => ['array'],
             'license_stages.*' => [new Enum(LicenseStage::class)],
             'contexts' => ['array'],

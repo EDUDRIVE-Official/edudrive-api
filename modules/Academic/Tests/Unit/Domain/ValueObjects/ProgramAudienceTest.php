@@ -38,6 +38,27 @@ it('rechaza un rango cuya edad minima supera la maxima', function (): void {
     ProgramAudience::fromValues(19, 18, [], [], []);
 })->throws(InvalidProgramAgeRange::class, 'La edad minima no puede superar la edad maxima.');
 
+it('acepta el maximo representable por el smallint de persistencia', function (): void {
+    $audience = ProgramAudience::fromValues(32767, 32767, [], [], []);
+
+    expect($audience->minAge())->toBe(32767)
+        ->and($audience->maxAge())->toBe(32767);
+});
+
+it('rechaza edades que exceden el smallint con un error publico estable', function (?int $minAge, ?int $maxAge): void {
+    try {
+        ProgramAudience::fromValues($minAge, $maxAge, [], [], []);
+
+        test()->fail('Se esperaba InvalidProgramAgeRange.');
+    } catch (InvalidProgramAgeRange $exception) {
+        expect($exception->statusCode())->toBe(422)
+            ->and($exception->errorCode())->toBe('INVALID_PROGRAM_AGE_RANGE');
+    }
+})->with([
+    'edad minima fuera de rango' => [32768, null],
+    'edad maxima fuera de rango' => [null, 32768],
+]);
+
 it('deduplica las restricciones por valor y conserva su primer orden', function (): void {
     $audience = ProgramAudience::fromValues(
         minAge: null,

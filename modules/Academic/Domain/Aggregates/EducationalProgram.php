@@ -9,6 +9,7 @@ use InvalidArgumentException;
 use Modules\Academic\Domain\Entities\ProgramCourse;
 use Modules\Academic\Domain\Enums\ProgramStatus;
 use Modules\Academic\Domain\Exceptions\ArchivedProgramCannotBeModified;
+use Modules\Academic\Domain\Exceptions\DuplicateProgramCourse;
 use Modules\Academic\Domain\Exceptions\ProgramAlreadyArchived;
 use Modules\Academic\Domain\Exceptions\ProgramAlreadyPublished;
 use Modules\Academic\Domain\Exceptions\ProgramRequiresCourses;
@@ -91,11 +92,15 @@ final class EducationalProgram
     {
         $this->ensureIsNotArchived();
 
+        if ($this->status->isPublished() && $courseIds === []) {
+            throw ProgramRequiresCourses::create();
+        }
+
         $seen = [];
 
         foreach ($courseIds as $courseId) {
             if (isset($seen[$courseId->value()])) {
-                throw new InvalidArgumentException('Un curso no puede aparecer mas de una vez en el programa.');
+                throw DuplicateProgramCourse::create();
             }
 
             $seen[$courseId->value()] = true;
@@ -231,7 +236,7 @@ final class EducationalProgram
             }
 
             if (isset($seen[$course->courseId()->value()])) {
-                throw new InvalidArgumentException('Un curso no puede aparecer mas de una vez en el programa.');
+                throw DuplicateProgramCourse::create();
             }
 
             $seen[$course->courseId()->value()] = true;

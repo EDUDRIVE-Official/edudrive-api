@@ -7,8 +7,10 @@ namespace Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Modules\Academic\Application\Exceptions\ProgramCodeAlreadyExists;
 use Modules\Academic\Domain\Aggregates\EducationalProgram;
 use Modules\Academic\Domain\Entities\ProgramCourse;
 use Modules\Academic\Domain\Enums\LicenseStage;
@@ -30,62 +32,70 @@ final class EloquentProgramRepository implements ProgramRepository
 {
     public function save(EducationalProgram $program): void
     {
-        DB::transaction(function () use ($program): void {
-            $model = ProgramModel::query()->updateOrCreate(
-                ['id' => $program->id()->value()],
-                [
-                    'code' => $program->code()->value(),
-                    'title' => $program->title(),
-                    'description' => $program->description(),
-                    'min_age' => $program->audience()->minAge(),
-                    'max_age' => $program->audience()->maxAge(),
-                    'status' => $program->status()->value,
-                    'published_at' => $program->publishedAt(),
-                    'archived_at' => $program->archivedAt(),
-                ],
-            );
+        try {
+            DB::transaction(function () use ($program): void {
+                $model = ProgramModel::query()->updateOrCreate(
+                    ['id' => $program->id()->value()],
+                    [
+                        'code' => $program->code()->value(),
+                        'title' => $program->title(),
+                        'description' => $program->description(),
+                        'min_age' => $program->audience()->minAge(),
+                        'max_age' => $program->audience()->maxAge(),
+                        'status' => $program->status()->value,
+                        'published_at' => $program->publishedAt(),
+                        'archived_at' => $program->archivedAt(),
+                    ],
+                );
 
-            $model->courses()->delete();
-            $model->licenseStages()->delete();
-            $model->contexts()->delete();
-            $model->vehicleTypes()->delete();
+                $model->courses()->delete();
+                $model->licenseStages()->delete();
+                $model->contexts()->delete();
+                $model->vehicleTypes()->delete();
 
-            foreach ($program->courses() as $course) {
-                ProgramCourseModel::query()->create([
-                    'id' => (string) Str::uuid(),
-                    'program_id' => $model->getKey(),
-                    'course_id' => $course->courseId()->value(),
-                    'position' => $course->position(),
-                ]);
+                foreach ($program->courses() as $course) {
+                    ProgramCourseModel::query()->create([
+                        'id' => (string) Str::uuid(),
+                        'program_id' => $model->getKey(),
+                        'course_id' => $course->courseId()->value(),
+                        'position' => $course->position(),
+                    ]);
+                }
+
+                foreach ($program->audience()->licenseStages() as $index => $stage) {
+                    ProgramLicenseStageModel::query()->create([
+                        'id' => (string) Str::uuid(),
+                        'program_id' => $model->getKey(),
+                        'value' => $stage->value,
+                        'position' => $index + 1,
+                    ]);
+                }
+
+                foreach ($program->audience()->contexts() as $index => $context) {
+                    ProgramContextModel::query()->create([
+                        'id' => (string) Str::uuid(),
+                        'program_id' => $model->getKey(),
+                        'value' => $context->value,
+                        'position' => $index + 1,
+                    ]);
+                }
+
+                foreach ($program->audience()->vehicleTypes() as $index => $vehicleType) {
+                    ProgramVehicleTypeModel::query()->create([
+                        'id' => (string) Str::uuid(),
+                        'program_id' => $model->getKey(),
+                        'value' => $vehicleType->value,
+                        'position' => $index + 1,
+                    ]);
+                }
+            });
+        } catch (QueryException $exception) {
+            if ($this->isProgramCodeUniqueViolation($exception)) {
+                throw ProgramCodeAlreadyExists::forCode($program->code());
             }
 
-            foreach ($program->audience()->licenseStages() as $index => $stage) {
-                ProgramLicenseStageModel::query()->create([
-                    'id' => (string) Str::uuid(),
-                    'program_id' => $model->getKey(),
-                    'value' => $stage->value,
-                    'position' => $index + 1,
-                ]);
-            }
-
-            foreach ($program->audience()->contexts() as $index => $context) {
-                ProgramContextModel::query()->create([
-                    'id' => (string) Str::uuid(),
-                    'program_id' => $model->getKey(),
-                    'value' => $context->value,
-                    'position' => $index + 1,
-                ]);
-            }
-
-            foreach ($program->audience()->vehicleTypes() as $index => $vehicleType) {
-                ProgramVehicleTypeModel::query()->create([
-                    'id' => (string) Str::uuid(),
-                    'program_id' => $model->getKey(),
-                    'value' => $vehicleType->value,
-                    'position' => $index + 1,
-                ]);
-            }
-        });
+            throw $exception;
+        }
     }
 
     public function findById(ProgramId $id): ?EducationalProgram
@@ -195,5 +205,18 @@ final class EloquentProgramRepository implements ProgramRepository
         }
 
         return new DateTimeImmutable((string) $value);
+    }
+
+    private function isProgramCodeUniqueViolation(QueryException $exception): bool
+    {
+        $sqlState = (string) ($exception->errorInfo[0] ?? $exception->getCode());
+        $message = $exception->getMessage();
+
+        if ($sqlState === '23505') {
+            return str_contains($message, 'academic_programs_code_unique');
+        }
+
+        return $sqlState === '23000'
+            && str_contains($message, 'UNIQUE constraint failed: academic_programs.code');
     }
 }

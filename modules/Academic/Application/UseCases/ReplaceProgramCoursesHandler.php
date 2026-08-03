@@ -6,6 +6,7 @@ namespace Modules\Academic\Application\UseCases;
 
 use Modules\Academic\Application\Commands\ReplaceProgramCoursesCommand;
 use Modules\Academic\Application\Exceptions\CourseNotFoundForProgram;
+use Modules\Academic\Application\Exceptions\ProgramCourseNotPublished;
 use Modules\Academic\Application\Exceptions\ProgramNotFound;
 use Modules\Academic\Application\Responses\ProgramResponse;
 use Modules\Academic\Domain\Repositories\CourseRepository;
@@ -35,8 +36,14 @@ final readonly class ReplaceProgramCoursesHandler
         );
 
         foreach ($courseIds as $courseId) {
-            if ($this->courses->findById($courseId) === null) {
+            $course = $this->courses->findById($courseId);
+
+            if ($course === null) {
                 throw CourseNotFoundForProgram::withId($courseId->value());
+            }
+
+            if ($program->status()->isPublished() && ! $course->status()->isPublished()) {
+                throw ProgramCourseNotPublished::withId($courseId->value());
             }
         }
 

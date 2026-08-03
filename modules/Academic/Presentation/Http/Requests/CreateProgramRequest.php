@@ -9,6 +9,7 @@ use Illuminate\Validation\Rules\Enum;
 use Modules\Academic\Domain\Enums\LicenseStage;
 use Modules\Academic\Domain\Enums\ProgramContext;
 use Modules\Academic\Domain\Enums\VehicleType;
+use Modules\Academic\Domain\ValueObjects\ProgramAudience;
 
 final class CreateProgramRequest extends FormRequest
 {
@@ -24,8 +25,8 @@ final class CreateProgramRequest extends FormRequest
             'code' => ['required', 'string', 'max:60', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$/'],
             'title' => ['required', 'string', 'max:180'],
             'description' => ['required', 'string'],
-            'min_age' => ['nullable', 'integer', 'min:0'],
-            'max_age' => ['nullable', 'integer', 'min:0'],
+            'min_age' => ['nullable', 'integer', 'min:0', 'max:'.ProgramAudience::MAXIMUM_AGE],
+            'max_age' => ['nullable', 'integer', 'min:0', 'max:'.ProgramAudience::MAXIMUM_AGE],
             'license_stages' => ['array'],
             'license_stages.*' => [new Enum(LicenseStage::class)],
             'contexts' => ['array'],

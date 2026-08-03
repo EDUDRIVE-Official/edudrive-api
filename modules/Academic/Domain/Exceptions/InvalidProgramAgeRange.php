@@ -16,4 +16,13 @@ final class InvalidProgramAgeRange extends DomainException
             statusCode: 422,
         );
     }
+
+    public static function exceedsMaximum(int $maximum): self
+    {
+        return new self(
+            message: sprintf('Las edades del programa no pueden superar %d.', $maximum),
+            errorCode: 'INVALID_PROGRAM_AGE_RANGE',
+            statusCode: 422,
+        );
+    }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Modules\Academic\Application\Commands\ChangeProgramAudienceCommand;
 use Modules\Academic\Application\Commands\ReplaceProgramCoursesCommand;
 use Modules\Academic\Application\Exceptions\CourseNotFoundForProgram;
+use Modules\Academic\Application\Exceptions\ProgramCourseNotPublished;
 use Modules\Academic\Application\Exceptions\ProgramNotFound;
 use Modules\Academic\Application\UseCases\ChangeProgramAudienceHandler;
 use Modules\Academic\Application\UseCases\ReplaceProgramCoursesHandler;
@@ -13,6 +14,8 @@ use Modules\Academic\Domain\Aggregates\EducationalProgram;
 use Modules\Academic\Domain\Enums\LicenseStage;
 use Modules\Academic\Domain\Enums\ProgramContext;
 use Modules\Academic\Domain\Enums\VehicleType;
+use Modules\Academic\Domain\Exceptions\DuplicateProgramCourse;
+use Modules\Academic\Domain\Exceptions\ProgramRequiresCourses;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\ProgramRepository;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
@@ -194,7 +197,7 @@ it('rechaza un curso desconocido con el error publico esperado sin guardar ni mu
         ))->toBe([$originalCourse->id()->value()]);
 });
 
-it('delega al dominio el rechazo de cursos duplicados sin guardar ni mutar', function (): void {
+it('delega al dominio el rechazo publico de UUID duplicados tras normalizar casing sin guardar ni mutar', function (): void {
     $course = task4Course('019c2600-0000-7000-8000-000000000001', 'COURSE-01');
     $program = task4Program();
     $programs = new Task4InMemoryProgramRepository($program);
@@ -203,10 +206,17 @@ it('delega al dominio el rechazo de cursos duplicados sin guardar ni mutar', fun
         new Task4InMemoryCourseRepository([$course]),
     );
 
-    expect(fn () => $handler->handle(new ReplaceProgramCoursesCommand(
-        programId: $program->id()->value(),
-        courseIds: [$course->id()->value(), $course->id()->value()],
-    )))->toThrow(InvalidArgumentException::class, 'Un curso no puede aparecer mas de una vez en el programa.');
+    try {
+        $handler->handle(new ReplaceProgramCoursesCommand(
+            programId: $program->id()->value(),
+            courseIds: [$course->id()->value(), strtoupper($course->id()->value())],
+        ));
+
+        test()->fail('Se esperaba DuplicateProgramCourse.');
+    } catch (DuplicateProgramCourse $exception) {
+        expect($exception->statusCode())->toBe(422)
+            ->and($exception->errorCode())->toBe('DUPLICATE_PROGRAM_COURSE');
+    }
 
     expect($programs->saveCalls)->toBe(0)
         ->and($program->courses())->toBe([]);
@@ -228,6 +238,87 @@ it('rechaza reemplazar cursos de un programa inexistente', function (): void {
             ->and($exception->errorCode())->toBe('PROGRAM_NOT_FOUND')
             ->and($exception->getMessage())->toContain($programId);
     }
+});
+
+it('permite reordenar un programa publicado cuando todos los cursos siguen publicados', function (): void {
+    $firstCourse = task4Course('019c2600-0000-7000-8000-000000000001', 'COURSE-01');
+    $secondCourse = task4Course('019c2600-0000-7000-8000-000000000002', 'COURSE-02');
+    $firstCourse->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'));
+    $secondCourse->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'));
+    $program = task4Program();
+    $program->replaceCourses([$firstCourse->id(), $secondCourse->id()]);
+    $program->publish(new DateTimeImmutable('2026-08-03T13:00:00+00:00'));
+    $programs = new Task4InMemoryProgramRepository($program);
+    $handler = new ReplaceProgramCoursesHandler(
+        $programs,
+        new Task4InMemoryCourseRepository([$firstCourse, $secondCourse]),
+    );
+
+    $response = $handler->handle(new ReplaceProgramCoursesCommand(
+        programId: $program->id()->value(),
+        courseIds: [$secondCourse->id()->value(), $firstCourse->id()->value()],
+    ));
+
+    expect($response->toArray()['courses'])->toBe([
+        ['course_id' => $secondCourse->id()->value(), 'position' => 1],
+        ['course_id' => $firstCourse->id()->value(), 'position' => 2],
+    ])->and($programs->saveCalls)->toBe(1);
+});
+
+it('rechaza dejar vacio un programa publicado sin guardar ni mutar', function (): void {
+    $course = task4Course('019c2600-0000-7000-8000-000000000001', 'COURSE-01');
+    $course->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'));
+    $program = task4Program();
+    $program->replaceCourses([$course->id()]);
+    $program->publish(new DateTimeImmutable('2026-08-03T13:00:00+00:00'));
+    $programs = new Task4InMemoryProgramRepository($program);
+    $handler = new ReplaceProgramCoursesHandler(
+        $programs,
+        new Task4InMemoryCourseRepository([$course]),
+    );
+
+    expect(fn () => $handler->handle(new ReplaceProgramCoursesCommand(
+        programId: $program->id()->value(),
+        courseIds: [],
+    )))->toThrow(ProgramRequiresCourses::class);
+
+    expect($programs->saveCalls)->toBe(0)
+        ->and(array_map(
+            static fn ($programCourse): string => $programCourse->courseId()->value(),
+            $program->courses(),
+        ))->toBe([$course->id()->value()]);
+});
+
+it('rechaza incorporar un curso no publicado a un programa publicado sin guardar ni mutar', function (): void {
+    $publishedCourse = task4Course('019c2600-0000-7000-8000-000000000001', 'COURSE-01');
+    $draftCourse = task4Course('019c2600-0000-7000-8000-000000000002', 'COURSE-02');
+    $publishedCourse->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'));
+    $program = task4Program();
+    $program->replaceCourses([$publishedCourse->id()]);
+    $program->publish(new DateTimeImmutable('2026-08-03T13:00:00+00:00'));
+    $programs = new Task4InMemoryProgramRepository($program);
+    $handler = new ReplaceProgramCoursesHandler(
+        $programs,
+        new Task4InMemoryCourseRepository([$publishedCourse, $draftCourse]),
+    );
+
+    try {
+        $handler->handle(new ReplaceProgramCoursesCommand(
+            programId: $program->id()->value(),
+            courseIds: [$draftCourse->id()->value()],
+        ));
+
+        test()->fail('Se esperaba ProgramCourseNotPublished.');
+    } catch (ProgramCourseNotPublished $exception) {
+        expect($exception->statusCode())->toBe(422)
+            ->and($exception->errorCode())->toBe('PROGRAM_COURSE_NOT_PUBLISHED');
+    }
+
+    expect($programs->saveCalls)->toBe(0)
+        ->and(array_map(
+            static fn ($programCourse): string => $programCourse->courseId()->value(),
+            $program->courses(),
+        ))->toBe([$publishedCourse->id()->value()]);
 });
 
 it('cambia la audiencia regional del programa', function (): void {
