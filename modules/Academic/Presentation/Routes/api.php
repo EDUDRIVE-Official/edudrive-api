@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use Modules\Academic\Presentation\Http\Controllers\AcademicStatusController;
 use Modules\Academic\Presentation\Http\Controllers\CourseController;
+use Modules\Academic\Presentation\Http\Controllers\CompetencyController;
 
 Route::prefix('api/v1/academic')
     ->name('api.v1.academic.')
@@ -13,6 +14,22 @@ Route::prefix('api/v1/academic')
             ->name('status');
 
         Route::middleware('auth:sanctum')->group(function (): void {
+            Route::middleware('permission:competencies.view')->group(function (): void {
+                Route::get('/competencies', [CompetencyController::class, 'index'])
+                    ->name('competencies.index');
+            });
+
+            Route::middleware('permission:competencies.manage')->group(function (): void {
+                Route::post('/competencies', [CompetencyController::class, 'store'])
+                    ->name('competencies.store');
+                Route::post('/competencies/{competencyId}/subcompetencies', [CompetencyController::class, 'addSubcompetency'])
+                    ->whereUuid('competencyId')
+                    ->name('competencies.subcompetencies.store');
+                Route::post('/competencies/{competencyId}/subcompetencies/{subcompetencyCode}/indicators', [CompetencyController::class, 'addIndicator'])
+                    ->whereUuid('competencyId')
+                    ->name('competencies.indicators.store');
+            });
+
             Route::middleware('permission:courses.view')->group(function (): void {
                 Route::get('/courses', [CourseController::class, 'index'])
                     ->name('courses.index');

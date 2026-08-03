@@ -11,4 +11,6 @@ enum Permission: string
     case ManageRoleAssignments = 'roles.manage';
     case ManageCourses = 'courses.manage';
     case ViewCourses = 'courses.view';
+    case ManageCompetencies = 'competencies.manage';
+    case ViewCompetencies = 'competencies.view';
 }
