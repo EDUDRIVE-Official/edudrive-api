@@ -37,6 +37,8 @@ El público objetivo admitirá criterios opcionales y combinables:
 
 Las etapas de licencia son neutrales. Categorías legales locales como A1, B1 o C pertenecerán a futuros perfiles nacionales.
 
+Una lista vacía en cualquiera de estos criterios significa que el programa no restringe esa dimensión.
+
 ### ProgramCourse
 
 Cada elemento referenciará un `CourseId` y conservará una posición explícita. Un mismo curso no podrá aparecer dos veces dentro del programa.
