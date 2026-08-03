@@ -8,11 +8,13 @@ use Illuminate\Support\ServiceProvider;
 use Modules\Academic\Application\Commands\AddCompetencyIndicatorCommand;
 use Modules\Academic\Application\Commands\AddSubcompetencyCommand;
 use Modules\Academic\Application\Commands\ArchiveCourseCommand;
+use Modules\Academic\Application\Commands\ArchiveProgramCommand;
 use Modules\Academic\Application\Commands\ChangeProgramAudienceCommand;
 use Modules\Academic\Application\Commands\CreateCompetencyCommand;
 use Modules\Academic\Application\Commands\CreateCourseCommand;
 use Modules\Academic\Application\Commands\CreateProgramCommand;
 use Modules\Academic\Application\Commands\PublishCourseCommand;
+use Modules\Academic\Application\Commands\PublishProgramCommand;
 use Modules\Academic\Application\Commands\ReplaceProgramCoursesCommand;
 use Modules\Academic\Application\Queries\ListCompetenciesQuery;
 use Modules\Academic\Application\Queries\ListCoursesQuery;
@@ -20,6 +22,7 @@ use Modules\Academic\Application\Queries\ListProgramsQuery;
 use Modules\Academic\Application\UseCases\AddCompetencyIndicatorHandler;
 use Modules\Academic\Application\UseCases\AddSubcompetencyHandler;
 use Modules\Academic\Application\UseCases\ArchiveCourseHandler;
+use Modules\Academic\Application\UseCases\ArchiveProgramHandler;
 use Modules\Academic\Application\UseCases\ChangeProgramAudienceHandler;
 use Modules\Academic\Application\UseCases\CreateCompetencyHandler;
 use Modules\Academic\Application\UseCases\CreateCourseHandler;
@@ -28,6 +31,7 @@ use Modules\Academic\Application\UseCases\ListCompetenciesHandler;
 use Modules\Academic\Application\UseCases\ListCoursesHandler;
 use Modules\Academic\Application\UseCases\ListProgramsHandler;
 use Modules\Academic\Application\UseCases\PublishCourseHandler;
+use Modules\Academic\Application\UseCases\PublishProgramHandler;
 use Modules\Academic\Application\UseCases\ReplaceProgramCoursesHandler;
 use Modules\Academic\Domain\Repositories\CompetencyRepository;
 use Modules\Academic\Domain\Repositories\CourseRepository;
@@ -68,6 +72,8 @@ final class AcademicServiceProvider extends ServiceProvider
         $registry->register(ListProgramsQuery::class, ListProgramsHandler::class);
         $registry->register(ChangeProgramAudienceCommand::class, ChangeProgramAudienceHandler::class);
         $registry->register(ReplaceProgramCoursesCommand::class, ReplaceProgramCoursesHandler::class);
+        $registry->register(PublishProgramCommand::class, PublishProgramHandler::class);
+        $registry->register(ArchiveProgramCommand::class, ArchiveProgramHandler::class);
 
         $registry->register(
             CreateCourseCommand::class,

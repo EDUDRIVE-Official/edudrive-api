@@ -9,6 +9,8 @@ use InvalidArgumentException;
 use Modules\Academic\Domain\Entities\ProgramCourse;
 use Modules\Academic\Domain\Enums\ProgramStatus;
 use Modules\Academic\Domain\Exceptions\ArchivedProgramCannotBeModified;
+use Modules\Academic\Domain\Exceptions\ProgramAlreadyArchived;
+use Modules\Academic\Domain\Exceptions\ProgramAlreadyPublished;
 use Modules\Academic\Domain\Exceptions\ProgramRequiresCourses;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\ProgramAudience;
@@ -110,19 +112,30 @@ final class EducationalProgram
 
     public function publish(DateTimeImmutable $publishedAt): void
     {
-        $this->ensureIsNotArchived();
-
-        if ($this->courses === []) {
-            throw ProgramRequiresCourses::create();
-        }
+        $this->ensureCanBePublished();
 
         $this->status = ProgramStatus::Published;
         $this->publishedAt = $publishedAt;
     }
 
-    public function archive(DateTimeImmutable $archivedAt): void
+    public function ensureCanBePublished(): void
     {
         $this->ensureIsNotArchived();
+
+        if ($this->status->isPublished()) {
+            throw ProgramAlreadyPublished::create();
+        }
+
+        if ($this->courses === []) {
+            throw ProgramRequiresCourses::create();
+        }
+    }
+
+    public function archive(DateTimeImmutable $archivedAt): void
+    {
+        if ($this->status->isArchived()) {
+            throw ProgramAlreadyArchived::create();
+        }
 
         $this->status = ProgramStatus::Archived;
         $this->archivedAt = $archivedAt;

@@ -9,6 +9,8 @@ use Modules\Academic\Domain\Enums\ProgramContext;
 use Modules\Academic\Domain\Enums\ProgramStatus;
 use Modules\Academic\Domain\Enums\VehicleType;
 use Modules\Academic\Domain\Exceptions\ArchivedProgramCannotBeModified;
+use Modules\Academic\Domain\Exceptions\ProgramAlreadyArchived;
+use Modules\Academic\Domain\Exceptions\ProgramAlreadyPublished;
 use Modules\Academic\Domain\Exceptions\ProgramRequiresCourses;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\ProgramAudience;
@@ -256,6 +258,29 @@ it('publica un programa con cursos y registra la fecha', function (): void {
     expect($program->status())->toBe(ProgramStatus::Published)
         ->and($program->publishedAt())->toBe($publishedAt);
 });
+
+it('rechaza publicar un programa dos veces', function (): void {
+    $program = createRegionalEducationalProgram();
+    $program->replaceCourses([firstProgramCourseId()]);
+    $program->publish(new DateTimeImmutable('2026-08-03 09:00:00'));
+
+    $program->publish(new DateTimeImmutable('2026-08-03 10:00:00'));
+})->throws(ProgramAlreadyPublished::class, 'El programa ya esta publicado.');
+
+it('rechaza publicar un programa archivado', function (): void {
+    $program = createRegionalEducationalProgram();
+    $program->replaceCourses([firstProgramCourseId()]);
+    $program->archive(new DateTimeImmutable('2026-08-03 09:00:00'));
+
+    $program->publish(new DateTimeImmutable('2026-08-03 10:00:00'));
+})->throws(ArchivedProgramCannotBeModified::class, 'Un programa archivado no puede ser modificado.');
+
+it('rechaza archivar un programa dos veces', function (): void {
+    $program = createRegionalEducationalProgram();
+    $program->archive(new DateTimeImmutable('2026-08-03 09:00:00'));
+
+    $program->archive(new DateTimeImmutable('2026-08-03 10:00:00'));
+})->throws(ProgramAlreadyArchived::class, 'El programa ya esta archivado.');
 
 it('impide cambiar la audiencia de un programa archivado', function (): void {
     $program = createRegionalEducationalProgram();
