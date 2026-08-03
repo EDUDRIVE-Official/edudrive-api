@@ -14,6 +14,8 @@ use Modules\Academic\Application\UseCases\CreateCourseHandler;
 use Modules\Academic\Application\UseCases\ListCoursesHandler;
 use Modules\Academic\Application\UseCases\PublishCourseHandler;
 use Modules\Academic\Domain\Repositories\CourseRepository;
+use Modules\Academic\Domain\Repositories\CompetencyRepository;
+use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCompetencyRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCourseRepository;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
 
@@ -21,6 +23,11 @@ final class AcademicServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(
+            CompetencyRepository::class,
+            EloquentCompetencyRepository::class,
+        );
+
         $this->app->bind(
             CourseRepository::class,
             EloquentCourseRepository::class,
