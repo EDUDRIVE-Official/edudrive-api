@@ -23,8 +23,8 @@ function createRegionalEducationalProgram(): EducationalProgram
         name: 'Formacion regional para aprendices de motocicleta',
         description: 'Trayecto formativo regional.',
         audience: ProgramAudience::fromValues(
-            minimumAge: 16,
-            maximumAge: 18,
+            minAge: 16,
+            maxAge: 18,
             licenseStages: [LicenseStage::Learner],
             contexts: [ProgramContext::General],
             vehicleTypes: [VehicleType::Motorcycle],
@@ -65,7 +65,7 @@ it('crea un programa nuevo en borrador y sin cursos', function (): void {
         ->and($program->code()->value())->toBe('MOTO-APRENDIZ')
         ->and($program->name())->toBe('Formacion regional para aprendices de motocicleta')
         ->and($program->description())->toBe('Trayecto formativo regional.')
-        ->and($program->audience()->minimumAge())->toBe(16)
+        ->and($program->audience()->minAge())->toBe(16)
         ->and($program->status())->toBe(ProgramStatus::Draft)
         ->and($program->courses())->toBeEmpty()
         ->and($program->publishedAt())->toBeNull()

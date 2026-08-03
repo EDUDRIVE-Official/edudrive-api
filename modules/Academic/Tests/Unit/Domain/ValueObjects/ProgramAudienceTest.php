@@ -7,17 +7,17 @@ use Modules\Academic\Domain\Enums\ProgramContext;
 use Modules\Academic\Domain\Enums\VehicleType;
 use Modules\Academic\Domain\ValueObjects\ProgramAudience;
 
-it('crea una audiencia con edades opcionales validas', function (?int $minimumAge, ?int $maximumAge): void {
+it('crea una audiencia con edades opcionales validas', function (?int $minAge, ?int $maxAge): void {
     $audience = ProgramAudience::fromValues(
-        minimumAge: $minimumAge,
-        maximumAge: $maximumAge,
+        minAge: $minAge,
+        maxAge: $maxAge,
         licenseStages: [],
         contexts: [],
         vehicleTypes: [],
     );
 
-    expect($audience->minimumAge())->toBe($minimumAge)
-        ->and($audience->maximumAge())->toBe($maximumAge);
+    expect($audience->minAge())->toBe($minAge)
+        ->and($audience->maxAge())->toBe($maxAge);
 })->with([
     'sin limites de edad' => [null, null],
     'solo edad minima' => [16, null],
@@ -39,8 +39,8 @@ it('rechaza un rango cuya edad minima supera la maxima', function (): void {
 
 it('deduplica las restricciones por valor y conserva su primer orden', function (): void {
     $audience = ProgramAudience::fromValues(
-        minimumAge: null,
-        maximumAge: null,
+        minAge: null,
+        maxAge: null,
         licenseStages: [LicenseStage::Learner, LicenseStage::Unlicensed, LicenseStage::Learner],
         contexts: [ProgramContext::Corporate, ProgramContext::General, ProgramContext::Corporate],
         vehicleTypes: [VehicleType::Automobile, VehicleType::Motorcycle, VehicleType::Automobile],

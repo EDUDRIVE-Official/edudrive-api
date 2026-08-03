@@ -17,8 +17,8 @@ final readonly class ProgramAudience
      * @param  list<VehicleType>  $vehicleTypes
      */
     private function __construct(
-        private ?int $minimumAge,
-        private ?int $maximumAge,
+        private ?int $minAge,
+        private ?int $maxAge,
         private array $licenseStages,
         private array $contexts,
         private array $vehicleTypes,
@@ -30,41 +30,41 @@ final readonly class ProgramAudience
      * @param  list<VehicleType>  $vehicleTypes
      */
     public static function fromValues(
-        ?int $minimumAge,
-        ?int $maximumAge,
+        ?int $minAge,
+        ?int $maxAge,
         array $licenseStages,
         array $contexts,
         array $vehicleTypes,
     ): self {
-        if ($minimumAge !== null && $minimumAge < 0) {
+        if ($minAge !== null && $minAge < 0) {
             throw new InvalidArgumentException('La edad minima no puede ser negativa.');
         }
 
-        if ($maximumAge !== null && $maximumAge < 0) {
+        if ($maxAge !== null && $maxAge < 0) {
             throw new InvalidArgumentException('La edad maxima no puede ser negativa.');
         }
 
-        if ($minimumAge !== null && $maximumAge !== null && $minimumAge > $maximumAge) {
+        if ($minAge !== null && $maxAge !== null && $minAge > $maxAge) {
             throw new InvalidArgumentException('La edad minima no puede superar la edad maxima.');
         }
 
         return new self(
-            minimumAge: $minimumAge,
-            maximumAge: $maximumAge,
+            minAge: $minAge,
+            maxAge: $maxAge,
             licenseStages: self::uniqueLicenseStages($licenseStages),
             contexts: self::uniqueContexts($contexts),
             vehicleTypes: self::uniqueVehicleTypes($vehicleTypes),
         );
     }
 
-    public function minimumAge(): ?int
+    public function minAge(): ?int
     {
-        return $this->minimumAge;
+        return $this->minAge;
     }
 
-    public function maximumAge(): ?int
+    public function maxAge(): ?int
     {
-        return $this->maximumAge;
+        return $this->maxAge;
     }
 
     /** @return list<LicenseStage> */
