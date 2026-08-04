@@ -933,7 +933,8 @@ ENG-020
 - `npm ci` ✅ (90 paquetes instalados, 0 vulnerabilidades).
 - `npm run build` ✅ (Vite 7.3.6, 57 módulos transformados y `public/build/manifest.json` generado).
 - `composer format` ✅ (345 archivos, sin cambios de estilo pendientes).
-- `composer quality` ✅: Pint 345 archivos; PHPStan 264 archivos, sin errores; 303 pruebas y 958 aserciones.
+- `composer quality` final ✅ sobre `db2879d`: Pint 345 archivos; PHPStan 264 archivos, sin errores; 312 pruebas y 1013 aserciones. Este HEAD incluye los fixes de concurrencia entre publicación y reemplazo, canonicalización de prerrequisitos, límites agregados tempranos y restricciones `CHECK` de duración.
+- Cobertura de persistencia ejecutada con SQLite real y compilación del SQL de la restricción `CHECK` mediante la gramática PostgreSQL; no se ejecutó PostgreSQL real. Una prueba de contención sobre PostgreSQL real queda como validación futura no bloqueante.
 - Warning no bloqueante y ajeno a ENG-027: importación no compuesta de `DateTimeImmutable` sin efecto en `modules/Identity/Tests/Feature/LoginWebTest.php:5`.
 - `php artisan route:list --path=api/v1/academic/courses -v --except-vendor` ✅ (6 rutas registradas; todas protegidas por Sanctum y `courses.view`/`courses.manage` según lectura o escritura).
 
