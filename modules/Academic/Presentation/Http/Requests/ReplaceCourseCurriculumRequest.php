@@ -9,9 +9,13 @@ use Illuminate\Foundation\Http\FormRequest;
 
 final class ReplaceCourseCurriculumRequest extends FormRequest
 {
+    private const MAX_TOTAL_MODULES = 200;
+
     private const MAX_TOTAL_UNITS = 1000;
 
     private const MAX_TOTAL_PREREQUISITE_REFERENCES = 5000;
+
+    private bool $totalModulesExceeded = false;
 
     private bool $totalUnitsExceeded = false;
 
@@ -27,12 +31,18 @@ final class ReplaceCourseCurriculumRequest extends FormRequest
     {
         $modules = $this->input('modules');
 
-        if ($this->totalUnitsExceeded || $this->totalPrerequisiteReferencesExceeded) {
+        if ($this->totalModulesExceeded
+            || $this->totalUnitsExceeded
+            || $this->totalPrerequisiteReferencesExceeded) {
             return [
                 'modules' => [
                     'present',
                     'array',
                     function (string $attribute, mixed $value, Closure $fail): void {
+                        if ($this->totalModulesExceeded) {
+                            $fail('The modules field must not contain more than 200 modules.');
+                        }
+
                         if ($this->totalUnitsExceeded) {
                             $fail('The modules field must not contain more than 1000 units in total.');
                         }
@@ -138,6 +148,12 @@ final class ReplaceCourseCurriculumRequest extends FormRequest
         $modules = $this->input('modules');
 
         if (! is_array($modules)) {
+            return;
+        }
+
+        if (count($modules) > self::MAX_TOTAL_MODULES) {
+            $this->totalModulesExceeded = true;
+
             return;
         }
 

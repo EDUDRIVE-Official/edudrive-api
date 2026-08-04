@@ -320,11 +320,16 @@ it('limita el tamano del payload curricular', function (): void {
     actingAsSuperAdminUser();
     $course = createCurriculumDraft('CURRICULUM-SIZE');
 
-    $this->putJson("/api/v1/academic/courses/{$course->id()->value()}/curriculum", [
+    $response = $this->putJson("/api/v1/academic/courses/{$course->id()->value()}/curriculum", [
         'modules' => array_fill(0, 201, []),
-    ])
+    ]);
+
+    $response
         ->assertUnprocessable()
+        ->assertJsonPath('code', 'VALIDATION_ERROR')
         ->assertJsonValidationErrors(['modules']);
+
+    expect(array_keys($response->json('errors')))->toBe(['modules']);
 });
 
 it('rechaza temprano mas de mil unidades totales', function (): void {
