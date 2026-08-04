@@ -904,3 +904,37 @@ ENG-020
 - `php artisan route:list --path=api/v1/academic/programs` ✅ (6 rutas registradas).
 
 **Estado:** Finalizado.
+
+## 2026-08-04 — IMP-027 (Cierre de ENG-027 — Módulos y unidades)
+
+### Completado
+
+- Ampliación del agregado `Course` como único propietario del currículo regional, con entidades `CourseModule` y `CourseUnit`, identificadores UUID tipados (`CourseModuleId`/`CourseUnitId`) y códigos normalizados mediante `CurriculumCode`.
+- Archivos productivos principales: `Domain/Aggregates/Course.php`, `Domain/Entities/CourseModule.php`, `Domain/Entities/CourseUnit.php`, `Application/UseCases/ReplaceCourseCurriculumHandler.php`, `Application/UseCases/GetCourseCurriculumHandler.php`, `Infrastructure/Persistence/Eloquent/Repositories/EloquentCourseRepository.php`, `Infrastructure/Persistence/Migrations/2026_08_03_000003_create_academic_course_curriculum_tables.php`, `Presentation/Http/Requests/ReplaceCourseCurriculumRequest.php`, `Presentation/Http/Controllers/CourseController.php` y `Presentation/Routes/api.php`, todos bajo `modules/Academic`.
+- Estructura fija de dos niveles, curso → módulos → unidades, con código, título, descripción, objetivos opcionales, duración opcional, posición y prerrequisitos. El agregado valida posiciones consecutivas, unicidad de UUID y códigos, prerrequisitos no repetidos y referencias exclusivas a elementos anteriores del mismo currículo.
+- Reemplazo atómico del currículo completo: una estructura inválida conserva intacto el estado anterior. Solo los cursos `draft` son mutables; `published` y `archived` rechazan cambios. La publicación exige al menos un módulo y una unidad por módulo.
+- Compatibilidad legacy: el repositorio puede restaurar un curso publicado antiguo sin filas curriculares; un curso publicado que sí tenga estructura debe satisfacer las invariantes completas.
+- Persistencia Eloquent transaccional integrada en `EloquentCourseRepository`, con modelos `CourseModuleModel`/`CourseUnitModel` y cuatro tablas nuevas:
+  - `academic_course_modules`
+  - `academic_course_units`
+  - `academic_module_prerequisites`
+  - `academic_unit_prerequisites`
+- Sincronización que preserva UUID existentes, admite reordenamientos e intercambio de códigos sin colisiones transitorias, elimina nodos/pivotes obsoletos y evita transferir identificadores entre cursos. Las colisiones de propiedad se traducen al error público 409 `COURSE_CURRICULUM_ID_CONFLICT` sin ocultar otras excepciones de base de datos.
+- Casos de uso `ReplaceCourseCurriculum` y `GetCourseCurriculum` registrados en `CommandBus`/`QueryBus`, con DTO de entrada y respuesta jerárquica tipados.
+- API protegida por `auth:sanctum`, reutilizando los permisos existentes:
+  - `GET /api/v1/academic/courses/{courseId}/curriculum` — `courses.view`
+  - `PUT /api/v1/academic/courses/{courseId}/curriculum` — `courses.manage`
+- Validación HTTP del payload completo, incluidos UUID escalares, códigos, límites de tamaño y duplicados por alcance; las invariantes de orden y prerrequisitos permanecen en el dominio.
+- Pruebas unitarias, de integración y Feature para entidades, agregado, atomicidad, ciclo de vida, persistencia, reordenamiento, colisiones globales de UUID, casos de uso, validación, autenticación y permisos.
+- Diferido explícitamente: lecciones, multimedia y accesibilidad del contenido (ENG-028); versionado, revisión y aprobación curricular (ENG-029); progreso y reglas de avance (ENG-035–037); reutilización de módulos/unidades entre cursos; interfaz web; y perfiles normativos por país.
+
+### Validaciones
+
+- `npm ci` ✅ (90 paquetes instalados, 0 vulnerabilidades).
+- `npm run build` ✅ (Vite 7.3.6, 57 módulos transformados y `public/build/manifest.json` generado).
+- `composer format` ✅ (345 archivos, sin cambios de estilo pendientes).
+- `composer quality` ✅: Pint 345 archivos; PHPStan 264 archivos, sin errores; 303 pruebas y 958 aserciones.
+- Warning no bloqueante y ajeno a ENG-027: importación no compuesta de `DateTimeImmutable` sin efecto en `modules/Identity/Tests/Feature/LoginWebTest.php:5`.
+- `php artisan route:list --path=api/v1/academic/courses -v --except-vendor` ✅ (6 rutas registradas; todas protegidas por Sanctum y `courses.view`/`courses.manage` según lectura o escritura).
+
+**Estado:** Finalizado.

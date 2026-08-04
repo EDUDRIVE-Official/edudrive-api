@@ -9,8 +9,8 @@
 | Proyecto | EDUDRIVE |
 | Componente | edudrive-api |
 | Estado | Activo |
-| Versión | 1.6.0 |
-| Fecha | 2026-08-03 |
+| Versión | 1.7.0 |
+| Fecha | 2026-08-04 |
 | Responsable | Equipo de Ingeniería EDUDRIVE |
 
 ---
@@ -517,7 +517,11 @@ Estado de publicación.
 Versionado.
 ENG-027 — Módulos y unidades
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-04): se completó el currículo regional latinoamericano de cursos mediante el agregado `Course`, con la jerarquía fija curso → módulos ordenados → unidades ordenadas, metadatos curriculares y prerrequisitos dirigidos exclusivamente a elementos anteriores. El reemplazo de la estructura completa es atómico y solo está permitido en estado `draft`; los cursos `published` y `archived` conservan una estructura inmutable. La persistencia normalizada preserva UUID estables, y la API de consulta/reemplazo reutiliza `courses.view`/`courses.manage`. Ver sección 25 y `docs/engineering/ENG-LOG.md` (IMP-027).
+
+Quedan diferidos explícitamente: lecciones, multimedia y accesibilidad del contenido (ENG-028); revisión, publicación y versionado curricular (ENG-029); progreso y reglas de avance (ENG-035–037); reutilización de módulos o unidades entre cursos; interfaz web; y perfiles normativos por país.
 
 Incluye:
 
@@ -1293,7 +1297,9 @@ Actualizado 2026-08-03: se completó ENG-024 (Catálogo de competencias) — ver
 
 Actualizado 2026-08-03: se completó ENG-025 (Programas educativos) — ver la nota de la sección 11 y `docs/engineering/ENG-LOG.md` (IMP-026). El incremento entrega plantillas regionales con audiencia combinable, cursos existentes ordenados y ciclo de vida publicable/archivable, sin propiedad organizacional ni reglas legales nacionales.
 
-La historia técnica activa pasa nuevamente a **Pendiente de decisión** entre ENG-027, ENG-028, ENG-029 o volver a Fase 4 — Perfiles.
+Actualizado 2026-08-04: se completó ENG-027 (Módulos y unidades) — ver la nota de la sección 11 y `docs/engineering/ENG-LOG.md` (IMP-027). El incremento entrega una estructura curricular regional ordenada, transaccional y controlada por el agregado `Course`, sin adelantar lecciones, versionado ni seguimiento de progreso.
+
+La historia técnica activa queda nuevamente **Pendiente de decisión** entre ENG-028, ENG-029 o volver a Fase 4 — Perfiles.
 26. Definición de terminado
 
 Una historia se considera terminada cuando cumple:
@@ -1336,3 +1342,4 @@ Versión	Fecha	Descripción
 1.4.0	2026-08-02	Cierre de ENG-026 (Cursos): campos nuevos, endpoints publish/archive, permisos courses.manage/courses.view, corrección del manejo de excepciones de Academic (IMP-024 en ENG-LOG.md); catálogo de permisos actualizado de 3 a 5; historia técnica activa pasa a pendiente de decisión
 1.5.0	2026-08-03	Cierre de ENG-024 (Catálogo de competencias): agregado jerárquico, persistencia, casos de uso, API protegida y permisos competencies.manage/competencies.view (IMP-025 en ENG-LOG.md); alcance futuro diferido explícitamente
 1.6.0	2026-08-03	Cierre de ENG-025 (Programas educativos): plantillas regionales, audiencia combinable, cursos ordenados, ciclo de vida, persistencia normalizada, API protegida y permisos programs.manage/programs.view (IMP-026 en ENG-LOG.md); alcance futuro diferido explícitamente
+1.7.0	2026-08-04	Cierre de ENG-027 (Módulos y unidades): currículo regional jerárquico dentro del agregado Course, persistencia transaccional, prerrequisitos, API protegida con courses.view/courses.manage y compatibilidad con cursos publicados legacy (IMP-027 en ENG-LOG.md); alcance futuro diferido explícitamente
