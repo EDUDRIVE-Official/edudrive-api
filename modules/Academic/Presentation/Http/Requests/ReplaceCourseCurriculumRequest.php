@@ -17,15 +17,22 @@ final class ReplaceCourseCurriculumRequest extends FormRequest
     /** @return array<string, array<int, mixed>> */
     public function rules(): array
     {
+        $modules = $this->input('modules');
         $rules = [
             'modules' => ['present', 'array', 'max:200'],
-            'modules.*.id' => ['required', 'uuid', 'distinct:ignore_case'],
+            'modules.*.id' => [
+                'bail',
+                'required',
+                'uuid',
+                $this->distinctIgnoringCaseRule($this->valuesForKey($modules, 'id')),
+            ],
             'modules.*.code' => [
+                'bail',
                 'required',
                 'string',
                 'max:60',
                 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$/',
-                'distinct:ignore_case',
+                $this->distinctIgnoringCaseRule($this->valuesForKey($modules, 'code')),
             ],
             'modules.*.title' => ['required', 'string', 'max:180'],
             'modules.*.description' => ['required', 'string', 'max:5000'],
@@ -35,7 +42,12 @@ final class ReplaceCourseCurriculumRequest extends FormRequest
             'modules.*.prerequisite_module_ids' => ['present', 'array', 'max:200'],
             'modules.*.prerequisite_module_ids.*' => ['required', 'uuid'],
             'modules.*.units' => ['present', 'array', 'max:500'],
-            'modules.*.units.*.id' => ['required', 'uuid', 'distinct:ignore_case'],
+            'modules.*.units.*.id' => [
+                'bail',
+                'required',
+                'uuid',
+                $this->distinctIgnoringCaseRule($this->nestedValuesForKey($modules, 'units', 'id')),
+            ],
             'modules.*.units.*.code' => [
                 'required',
                 'string',
@@ -50,8 +62,6 @@ final class ReplaceCourseCurriculumRequest extends FormRequest
             'modules.*.units.*.prerequisite_unit_ids' => ['present', 'array', 'max:200'],
             'modules.*.units.*.prerequisite_unit_ids.*' => ['required', 'uuid'],
         ];
-
-        $modules = $this->input('modules');
 
         if (! is_array($modules)) {
             return $rules;
@@ -109,6 +119,32 @@ final class ReplaceCourseCurriculumRequest extends FormRequest
             if (is_array($item) && array_key_exists($key, $item)) {
                 $values[] = $item[$key];
             }
+        }
+
+        return $values;
+    }
+
+    /** @return list<mixed> */
+    private function nestedValuesForKey(
+        mixed $containers,
+        string $itemsKey,
+        string $valueKey,
+    ): array {
+        if (! is_array($containers)) {
+            return [];
+        }
+
+        $values = [];
+
+        foreach ($containers as $container) {
+            if (! is_array($container)) {
+                continue;
+            }
+
+            array_push(
+                $values,
+                ...$this->valuesForKey($container[$itemsKey] ?? null, $valueKey),
+            );
         }
 
         return $values;

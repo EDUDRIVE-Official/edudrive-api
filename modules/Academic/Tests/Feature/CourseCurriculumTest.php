@@ -209,6 +209,30 @@ it('valida uuid y codigos duplicados por casing en su alcance correcto', functio
         ]);
 });
 
+it('rechaza identificadores curriculares no escalares como error de validacion', function (string $path): void {
+    /** @var TestCase $this */
+    actingAsSuperAdminUser();
+    $course = createCurriculumDraft('CURRICULUM-MALFORMED-'.Str::random(8));
+    $payload = validCurriculumPayload();
+
+    if ($path === 'modules.0.id') {
+        $payload['modules'][0]['id'] = [];
+    } elseif ($path === 'modules.0.code') {
+        $payload['modules'][0]['code'] = [];
+    } else {
+        $payload['modules'][0]['units'][0]['id'] = [];
+    }
+
+    $this->putJson("/api/v1/academic/courses/{$course->id()->value()}/curriculum", $payload)
+        ->assertUnprocessable()
+        ->assertJsonPath('code', 'VALIDATION_ERROR')
+        ->assertJsonValidationErrors([$path]);
+})->with([
+    'module id' => ['modules.0.id'],
+    'module code' => ['modules.0.code'],
+    'unit id' => ['modules.0.units.0.id'],
+]);
+
 it('limita el tamano del payload curricular', function (): void {
     /** @var TestCase $this */
     actingAsSuperAdminUser();
