@@ -98,6 +98,10 @@ final class Course
 
         $course->validateCurriculum($modules);
 
+        if ($status->isPublished() && $modules !== []) {
+            $course->ensureEveryModuleHasUnits();
+        }
+
         return $course;
     }
 
@@ -139,11 +143,7 @@ final class Course
             throw CourseCurriculumRequired::create();
         }
 
-        foreach ($this->modules as $module) {
-            if ($module->units() === []) {
-                throw CourseModuleRequiresUnits::create();
-            }
-        }
+        $this->ensureEveryModuleHasUnits();
 
         $this->status = CourseStatus::Published;
         $this->publishedAt = $publishedAt;
@@ -287,6 +287,15 @@ final class Course
 
             $moduleIds[$moduleId] = true;
             $moduleCodes[$moduleCode] = true;
+        }
+    }
+
+    private function ensureEveryModuleHasUnits(): void
+    {
+        foreach ($this->modules as $module) {
+            if ($module->units() === []) {
+                throw CourseModuleRequiresUnits::create();
+            }
         }
     }
 

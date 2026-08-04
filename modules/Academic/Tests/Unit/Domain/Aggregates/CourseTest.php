@@ -352,7 +352,7 @@ it('rechaza uuid de unidad duplicado en el curso o codigo duplicado dentro del m
     ],
 ]);
 
-it('rechaza prerrequisitos de modulo duplicados o que no hayan sido vistos', function (array $prerequisites): void {
+it('rechaza prerrequisitos de modulo duplicados o que no hayan sido vistos', function (array $prerequisites, bool $applyToSecondModule): void {
     $course = createAcademicCourse();
     $firstModuleId = '01981a64-8300-7b1d-b442-764ea7f91701';
     $secondModuleId = '01981a64-8300-7b1d-b442-764ea7f91702';
@@ -363,23 +363,24 @@ it('rechaza prerrequisitos de modulo duplicados o que no hayan sido vistos', fun
             'MOD-01',
             1,
             [aggregateCourseUnit('01981a64-8300-7b1d-b442-764ea7f91601', 'UNI-01', 1)],
-            $prerequisites,
+            $applyToSecondModule ? [] : $prerequisites,
         ),
         aggregateCourseModule(
             $secondModuleId,
             'MOD-02',
             2,
             [aggregateCourseUnit('01981a64-8300-7b1d-b442-764ea7f91602', 'UNI-01', 1)],
+            $applyToSecondModule ? $prerequisites : [],
         ),
     ]))->toThrow(InvalidCurriculumPrerequisite::class);
 })->with([
     'duplicado' => [[
-        '01981a64-8300-7b1d-b442-764ea7f91709',
-        '01981a64-8300-7b1d-b442-764ea7f91709',
-    ]],
-    'propio' => [['01981a64-8300-7b1d-b442-764ea7f91701']],
-    'futuro' => [['01981a64-8300-7b1d-b442-764ea7f91702']],
-    'externo' => [['01981a64-8300-7b1d-b442-764ea7f91709']],
+        '01981a64-8300-7b1d-b442-764ea7f91701',
+        '01981a64-8300-7b1d-b442-764ea7f91701',
+    ], true],
+    'propio' => [['01981a64-8300-7b1d-b442-764ea7f91701'], false],
+    'futuro' => [['01981a64-8300-7b1d-b442-764ea7f91702'], false],
+    'externo' => [['01981a64-8300-7b1d-b442-764ea7f91709'], false],
 ]);
 
 it('rechaza prerrequisitos de unidad duplicados o que no hayan sido vistos', function (array $prerequisites): void {
@@ -481,8 +482,17 @@ it('prioriza el ciclo de vida y rechaza reemplazar el curriculo publicado o arch
         $course->archive(new DateTimeImmutable('2026-08-03T12:00:00+00:00'));
     }
 
+    $invalidCandidate = [
+        aggregateCourseModule(
+            '01981a64-8300-7b1d-b442-764ea7f91703',
+            'MOD-03',
+            2,
+            [aggregateCourseUnit('01981a64-8300-7b1d-b442-764ea7f91603', 'UNI-01', 1)],
+        ),
+    ];
+
     try {
-        $course->replaceCurriculum([]);
+        $course->replaceCurriculum($invalidCandidate);
 
         test()->fail('Se esperaba CourseCurriculumCannotBeModified.');
     } catch (CourseCurriculumCannotBeModified $exception) {
@@ -513,3 +523,27 @@ it('restaura un curso publicado legado sin curriculo', function (): void {
     expect($course->status())->toBe(CourseStatus::Published)
         ->and($course->modules())->toBe([]);
 });
+
+it('rechaza restaurar un curso publicado con modulos sin unidades', function (): void {
+    Course::restore(
+        id: CourseId::fromString('01981a64-8300-7b1d-b442-764ea7f915c0'),
+        code: CourseCode::fromString('EDU-001'),
+        title: CourseTitle::fromString('Curso publicado invalido'),
+        description: null,
+        objectives: null,
+        prerequisites: null,
+        modality: null,
+        durationHours: null,
+        status: CourseStatus::Published,
+        publishedAt: new DateTimeImmutable('2026-07-01T12:00:00+00:00'),
+        archivedAt: null,
+        modules: [
+            aggregateCourseModule(
+                '01981a64-8300-7b1d-b442-764ea7f91701',
+                'MOD-01',
+                1,
+                [],
+            ),
+        ],
+    );
+})->throws(CourseModuleRequiresUnits::class);
