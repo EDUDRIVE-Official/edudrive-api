@@ -194,7 +194,7 @@ it('valida uuid y codigos duplicados por casing en su alcance correcto', functio
 
     $payload['modules'][1]['id'] = strtoupper((string) $payload['modules'][0]['id']);
     $payload['modules'][1]['code'] = strtoupper((string) $payload['modules'][0]['code']);
-    $payload['modules'][0]['units'][1]['id'] = strtoupper((string) $payload['modules'][0]['units'][0]['id']);
+    $payload['modules'][1]['units'][0]['id'] = strtoupper((string) $payload['modules'][0]['units'][0]['id']);
     $payload['modules'][0]['units'][1]['code'] = strtoupper((string) $payload['modules'][0]['units'][0]['code']);
 
     $this->putJson($url, $payload)
@@ -204,6 +204,7 @@ it('valida uuid y codigos duplicados por casing en su alcance correcto', functio
             'modules.0.id',
             'modules.0.code',
             'modules.0.units.0.id',
+            'modules.1.units.0.id',
             'modules.0.units.0.code',
         ]);
 });
