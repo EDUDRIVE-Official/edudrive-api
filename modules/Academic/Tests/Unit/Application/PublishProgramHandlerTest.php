@@ -91,6 +91,20 @@ final class Task5InMemoryCourseRepository implements CourseRepository
         $this->courses[$course->id()->value()] = $course;
     }
 
+    public function updateAtomically(CourseId $id, Closure $mutation): ?Course
+    {
+        $course = $this->findById($id);
+
+        if ($course === null) {
+            return null;
+        }
+
+        $candidate = clone $course;
+        $mutation($candidate);
+
+        return $candidate;
+    }
+
     public function findById(CourseId $id): ?Course
     {
         return $this->courses[$id->value()] ?? null;

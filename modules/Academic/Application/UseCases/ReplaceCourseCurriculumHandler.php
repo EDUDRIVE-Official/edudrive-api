@@ -9,6 +9,7 @@ use Modules\Academic\Application\DTO\CourseModuleInput;
 use Modules\Academic\Application\DTO\CourseUnitInput;
 use Modules\Academic\Application\Exceptions\CourseNotFound;
 use Modules\Academic\Application\Responses\CourseCurriculumResponse;
+use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Entities\CourseModule;
 use Modules\Academic\Domain\Entities\CourseUnit;
 use Modules\Academic\Domain\Repositories\CourseRepository;
@@ -26,12 +27,6 @@ final readonly class ReplaceCourseCurriculumHandler
     public function handle(ReplaceCourseCurriculumCommand $command): CourseCurriculumResponse
     {
         $courseId = CourseId::fromString($command->courseId);
-        $course = $this->courses->findById($courseId);
-
-        if ($course === null) {
-            throw CourseNotFound::withId($command->courseId);
-        }
-
         $modules = array_map(
             static fn (CourseModuleInput $module): CourseModule => CourseModule::create(
                 id: CourseModuleId::fromString($module->id),
@@ -65,8 +60,16 @@ final readonly class ReplaceCourseCurriculumHandler
             $command->modules,
         );
 
-        $course->replaceCurriculum($modules);
-        $this->courses->save($course);
+        $course = $this->courses->updateAtomically(
+            $courseId,
+            static function (Course $course) use ($modules): void {
+                $course->replaceCurriculum($modules);
+            },
+        );
+
+        if ($course === null) {
+            throw CourseNotFound::withId($command->courseId);
+        }
 
         return CourseCurriculumResponse::fromCourse($course);
     }

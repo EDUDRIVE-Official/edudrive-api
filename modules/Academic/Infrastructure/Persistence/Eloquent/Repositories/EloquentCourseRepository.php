@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories;
 
+use Closure;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,36 +33,36 @@ final class EloquentCourseRepository implements CourseRepository
     {
         try {
             DB::transaction(function () use ($course): void {
-                $model = CourseModel::query()->updateOrCreate(
-                    ['id' => $course->id()->value()],
-                    [
-                        'code' => $course->code()->value(),
-                        'title' => $course->title()->value(),
-                        'description' => $course->description(),
-                        'objectives' => $course->objectives(),
-                        'prerequisites' => $course->prerequisites(),
-                        'modality' => $course->modality()?->value,
-                        'duration_hours' => $course->durationHours(),
-                        'status' => $course->status()->value,
-                        'published_at' => $course->publishedAt(),
-                        'archived_at' => $course->archivedAt(),
-                    ],
-                );
-
-                $this->assertCurriculumOwnership($course);
-                $this->moveExistingCurriculumToTemporaryValues($course->id());
-                $this->syncModules($model, $course->modules());
-                $this->syncUnits($model, $course->modules());
-                $this->deleteObsoleteCurriculum($course);
-                $this->applyFinalPositions($course->modules());
-                $this->syncPrerequisites($course->modules());
+                $this->persist($course);
             });
         } catch (QueryException $exception) {
-            if ($this->isCurriculumIdUniqueViolation($exception)) {
-                throw CourseCurriculumIdConflict::create();
-            }
+            $this->rethrowPersistenceException($exception);
+        }
+    }
 
-            throw $exception;
+    public function updateAtomically(CourseId $id, Closure $mutation): ?Course
+    {
+        try {
+            return DB::transaction(function () use ($id, $mutation): ?Course {
+                $model = $this->queryWithCurriculum()
+                    ->whereKey($id->value())
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($model === null) {
+                    return null;
+                }
+
+                $course = $this->toDomain($model);
+                $mutation($course);
+                $this->persist($course, $model);
+
+                $canonical = $this->queryWithCurriculum()->find($id->value());
+
+                return $canonical === null ? null : $this->toDomain($canonical);
+            });
+        } catch (QueryException $exception) {
+            $this->rethrowPersistenceException($exception);
         }
     }
 
@@ -106,6 +107,33 @@ final class EloquentCourseRepository implements CourseRepository
             'modules.prerequisiteModules',
             'modules.units.prerequisiteUnits',
         ]);
+    }
+
+    private function persist(Course $course, ?CourseModel $model = null): void
+    {
+        $attributes = [
+            'code' => $course->code()->value(),
+            'title' => $course->title()->value(),
+            'description' => $course->description(),
+            'objectives' => $course->objectives(),
+            'prerequisites' => $course->prerequisites(),
+            'modality' => $course->modality()?->value,
+            'duration_hours' => $course->durationHours(),
+            'status' => $course->status()->value,
+            'published_at' => $course->publishedAt(),
+            'archived_at' => $course->archivedAt(),
+        ];
+        $model ??= CourseModel::query()->firstOrNew(['id' => $course->id()->value()]);
+        $model->fill($attributes);
+        $model->save();
+
+        $this->assertCurriculumOwnership($course);
+        $this->moveExistingCurriculumToTemporaryValues($course->id());
+        $this->syncModules($model, $course->modules());
+        $this->syncUnits($model, $course->modules());
+        $this->deleteObsoleteCurriculum($course);
+        $this->applyFinalPositions($course->modules());
+        $this->syncPrerequisites($course->modules());
     }
 
     /** @param list<CourseModule> $modules */
@@ -468,5 +496,14 @@ final class EloquentCourseRepository implements CourseRepository
         return $sqlState === '23000'
             && (str_contains($message, 'UNIQUE constraint failed: academic_course_modules.id')
                 || str_contains($message, 'UNIQUE constraint failed: academic_course_units.id'));
+    }
+
+    private function rethrowPersistenceException(QueryException $exception): never
+    {
+        if ($this->isCurriculumIdUniqueViolation($exception)) {
+            throw CourseCurriculumIdConflict::create();
+        }
+
+        throw $exception;
     }
 }

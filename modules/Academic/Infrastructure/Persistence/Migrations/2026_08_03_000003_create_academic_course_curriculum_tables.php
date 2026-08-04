@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    private const DURATION_MINUTES_DEFINITION =
+        'integer check (duration_minutes is null or duration_minutes > 0)';
+
     public function up(): void
     {
         Schema::create('academic_course_modules', function (Blueprint $table): void {
@@ -17,7 +20,10 @@ return new class extends Migration
             $table->string('title', 180);
             $table->text('description');
             $table->text('objectives')->nullable();
-            $table->unsignedInteger('duration_minutes')->nullable();
+            $table->rawColumn(
+                'duration_minutes',
+                self::DURATION_MINUTES_DEFINITION,
+            )->nullable();
             $table->integer('position');
             $table->timestampsTz();
             $table->unique(['course_id', 'code']);
@@ -31,7 +37,10 @@ return new class extends Migration
             $table->string('title', 180);
             $table->text('description');
             $table->text('objectives')->nullable();
-            $table->unsignedInteger('duration_minutes')->nullable();
+            $table->rawColumn(
+                'duration_minutes',
+                self::DURATION_MINUTES_DEFINITION,
+            )->nullable();
             $table->integer('position');
             $table->timestampsTz();
             $table->unique(['module_id', 'code']);

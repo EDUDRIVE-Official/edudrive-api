@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Academic\Domain\Repositories;
 
+use Closure;
 use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
@@ -11,6 +12,9 @@ use Modules\Academic\Domain\ValueObjects\CourseId;
 interface CourseRepository
 {
     public function save(Course $course): void;
+
+    /** @param Closure(Course): void $mutation */
+    public function updateAtomically(CourseId $id, Closure $mutation): ?Course;
 
     public function findById(CourseId $id): ?Course;
 

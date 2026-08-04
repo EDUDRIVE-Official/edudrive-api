@@ -120,6 +120,49 @@ function validCurriculumPayload(): array
     ];
 }
 
+/** @return array{modules: list<array<string, mixed>>} */
+function curriculumPayloadAtAggregateLimits(): array
+{
+    $moduleIds = array_map(static fn (): string => (string) Str::uuid(), range(1, 200));
+    $remainingPrerequisites = 5000;
+    $modules = [];
+
+    foreach ($moduleIds as $moduleIndex => $moduleId) {
+        $prerequisiteCount = min($moduleIndex, $remainingPrerequisites, 200);
+        $remainingPrerequisites -= $prerequisiteCount;
+        $units = [];
+
+        foreach (range(1, 5) as $unitPosition) {
+            $units[] = [
+                'id' => (string) Str::uuid(),
+                'code' => "uni-{$unitPosition}",
+                'title' => "Unidad {$unitPosition}",
+                'description' => 'Contenido de la unidad.',
+                'objectives' => null,
+                'duration_minutes' => 15,
+                'position' => $unitPosition,
+                'prerequisite_unit_ids' => [],
+            ];
+        }
+
+        $modules[] = [
+            'id' => $moduleId,
+            'code' => sprintf('mod-%03d', $moduleIndex + 1),
+            'title' => sprintf('Modulo %03d', $moduleIndex + 1),
+            'description' => 'Contenido del modulo.',
+            'objectives' => null,
+            'duration_minutes' => 75,
+            'position' => $moduleIndex + 1,
+            'prerequisite_module_ids' => array_slice($moduleIds, 0, $prerequisiteCount),
+            'units' => $units,
+        ];
+    }
+
+    expect($remainingPrerequisites)->toBe(0);
+
+    return ['modules' => $modules];
+}
+
 it('reemplaza consulta publica e inmoviliza el curriculo completo de un curso', function (): void {
     /** @var TestCase $this */
     actingAsSuperAdminUser();
@@ -167,6 +210,45 @@ it('reemplaza consulta publica e inmoviliza el curriculo completo de un curso', 
     $this->getJson("/api/v1/academic/courses/{$courseId}/curriculum")
         ->assertOk()
         ->assertJsonPath('data.modules', $storedData['modules']);
+});
+
+it('devuelve en PUT y GET el mismo orden canonico de prerrequisitos', function (): void {
+    /** @var TestCase $this */
+    actingAsSuperAdminUser();
+    $course = createCurriculumDraft('CURRICULUM-CANONICAL');
+    $payload = validCurriculumPayload();
+    $firstModuleId = (string) $payload['modules'][0]['id'];
+    $secondModuleId = (string) $payload['modules'][1]['id'];
+    $firstUnitId = (string) $payload['modules'][0]['units'][0]['id'];
+    $secondUnitId = (string) $payload['modules'][0]['units'][1]['id'];
+    $payload['modules'][] = [
+        'id' => (string) Str::uuid(),
+        'code' => 'mod-03',
+        'title' => 'Cierre',
+        'description' => 'Integracion del curso.',
+        'objectives' => null,
+        'duration_minutes' => 30,
+        'position' => 3,
+        'prerequisite_module_ids' => [$secondModuleId, $firstModuleId],
+        'units' => [[
+            'id' => (string) Str::uuid(),
+            'code' => 'uni-01',
+            'title' => 'Cierre integrado',
+            'description' => 'Integra aprendizajes previos.',
+            'objectives' => null,
+            'duration_minutes' => 30,
+            'position' => 1,
+            'prerequisite_unit_ids' => [$secondUnitId, $firstUnitId],
+        ]],
+    ];
+    $url = "/api/v1/academic/courses/{$course->id()->value()}/curriculum";
+
+    $putData = $this->putJson($url, $payload)->assertOk()->json('data');
+    $getData = $this->getJson($url)->assertOk()->json('data');
+
+    expect($putData)->toBe($getData)
+        ->and($putData['modules'][2]['prerequisite_module_ids'])->toBe([$firstModuleId, $secondModuleId])
+        ->and($putData['modules'][2]['units'][0]['prerequisite_unit_ids'])->toBe([$firstUnitId, $secondUnitId]);
 });
 
 it('protege lectura y escritura con autenticacion y permisos separados', function (): void {
@@ -243,6 +325,59 @@ it('limita el tamano del payload curricular', function (): void {
     ])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['modules']);
+});
+
+it('rechaza temprano mas de mil unidades totales', function (): void {
+    /** @var TestCase $this */
+    actingAsSuperAdminUser();
+    $course = createCurriculumDraft('CURRICULUM-UNIT-LIMIT');
+
+    $this->putJson("/api/v1/academic/courses/{$course->id()->value()}/curriculum", [
+        'modules' => [
+            ['units' => array_fill(0, 500, [])],
+            ['units' => array_fill(0, 500, [])],
+            ['units' => [[]]],
+        ],
+    ])
+        ->assertUnprocessable()
+        ->assertJsonPath('code', 'VALIDATION_ERROR')
+        ->assertJsonValidationErrors(['modules']);
+
+    expect(app(CourseRepository::class)->findById($course->id())?->modules())->toBe([]);
+});
+
+it('rechaza temprano mas de cinco mil referencias de prerrequisito', function (): void {
+    /** @var TestCase $this */
+    actingAsSuperAdminUser();
+    $course = createCurriculumDraft('CURRICULUM-REFERENCE-LIMIT');
+
+    $this->putJson("/api/v1/academic/courses/{$course->id()->value()}/curriculum", [
+        'modules' => [[
+            'prerequisite_module_ids' => array_fill(0, 2500, 'not-expanded'),
+            'units' => [[
+                'prerequisite_unit_ids' => array_fill(0, 2501, 'not-expanded'),
+            ]],
+        ]],
+    ])
+        ->assertUnprocessable()
+        ->assertJsonPath('code', 'VALIDATION_ERROR')
+        ->assertJsonValidationErrors(['modules']);
+
+    expect(app(CourseRepository::class)->findById($course->id())?->modules())->toBe([]);
+});
+
+it('acepta exactamente los limites agregados de unidades y prerrequisitos', function (): void {
+    /** @var TestCase $this */
+    actingAsSuperAdminUser();
+    $course = createCurriculumDraft('CURRICULUM-EXACT-LIMITS');
+
+    $this->putJson(
+        "/api/v1/academic/courses/{$course->id()->value()}/curriculum",
+        curriculumPayloadAtAggregateLimits(),
+    )
+        ->assertOk()
+        ->assertJsonCount(200, 'data.modules')
+        ->assertJsonCount(5, 'data.modules.199.units');
 });
 
 it('delega al dominio las posiciones no consecutivas', function (): void {

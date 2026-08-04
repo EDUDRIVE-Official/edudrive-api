@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Database\PostgresConnection;
+use Illuminate\Database\QueryException;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Schema\Grammars\PostgresGrammar;
 use Illuminate\Support\Facades\DB;
 use Modules\Academic\Application\Exceptions\CourseCurriculumIdConflict;
 use Modules\Academic\Domain\Aggregates\Course;
@@ -10,6 +14,7 @@ use Modules\Academic\Domain\Entities\CourseModule;
 use Modules\Academic\Domain\Entities\CourseUnit;
 use Modules\Academic\Domain\Enums\CourseModality;
 use Modules\Academic\Domain\Enums\CourseStatus;
+use Modules\Academic\Domain\Exceptions\CourseCurriculumCannotBeModified;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\CourseModuleId;
@@ -106,6 +111,74 @@ it('guarda y recupera un curso por identificador', function (): void {
         ->toBe('Curso introductorio.')
         ->and($storedCourse?->status())
         ->toBe(CourseStatus::Draft);
+});
+
+it('serializa publish antes de replace y conserva el curriculo publicado', function (): void {
+    $repository = app(EloquentCourseRepository::class);
+    $course = persistedCourse('01981a64-8300-7b1d-b442-764ea7f91800', 'ATOMIC-001');
+    $originalModuleId = '01981a64-8300-7b1d-b442-764ea7f91801';
+    $course->replaceCurriculum([
+        persistedCourseModule($originalModuleId, 'MOD-OLD', 1, [
+            persistedCourseUnit('01981a64-8300-7b1d-b442-764ea7f91802', 'UNI-OLD', 1),
+        ]),
+    ]);
+    $repository->save($course);
+
+    $repository->updateAtomically(
+        $course->id(),
+        static function (Course $locked): void {
+            $locked->publish(new DateTimeImmutable('2026-08-04T12:00:00+00:00'));
+        },
+    );
+
+    expect(fn () => $repository->updateAtomically(
+        $course->id(),
+        static function (Course $locked): void {
+            $locked->replaceCurriculum([
+                persistedCourseModule('01981a64-8300-7b1d-b442-764ea7f91803', 'MOD-NEW', 1, [
+                    persistedCourseUnit('01981a64-8300-7b1d-b442-764ea7f91804', 'UNI-NEW', 1),
+                ]),
+            ]);
+        },
+    ))->toThrow(CourseCurriculumCannotBeModified::class);
+
+    $stored = $repository->findById($course->id());
+    expect($stored?->status())->toBe(CourseStatus::Published)
+        ->and($stored?->modules()[0]->id()->value())->toBe($originalModuleId);
+});
+
+it('serializa replace antes de publish y publica exactamente el nuevo curriculo', function (): void {
+    $repository = app(EloquentCourseRepository::class);
+    $course = persistedCourse('01981a64-8300-7b1d-b442-764ea7f91810', 'ATOMIC-002');
+    $course->replaceCurriculum([
+        persistedCourseModule('01981a64-8300-7b1d-b442-764ea7f91811', 'MOD-OLD', 1, [
+            persistedCourseUnit('01981a64-8300-7b1d-b442-764ea7f91812', 'UNI-OLD', 1),
+        ]),
+    ]);
+    $repository->save($course);
+    $newModuleId = '01981a64-8300-7b1d-b442-764ea7f91813';
+
+    $updated = $repository->updateAtomically(
+        $course->id(),
+        static function (Course $locked) use ($newModuleId): void {
+            $locked->replaceCurriculum([
+                persistedCourseModule($newModuleId, 'MOD-NEW', 1, [
+                    persistedCourseUnit('01981a64-8300-7b1d-b442-764ea7f91814', 'UNI-NEW', 1),
+                ]),
+            ]);
+        },
+    );
+    $repository->updateAtomically(
+        $course->id(),
+        static function (Course $locked): void {
+            $locked->publish(new DateTimeImmutable('2026-08-04T12:00:00+00:00'));
+        },
+    );
+
+    $stored = $repository->findById($course->id());
+    expect($updated?->modules()[0]->id()->value())->toBe($newModuleId)
+        ->and($stored?->status())->toBe(CourseStatus::Published)
+        ->and($stored?->modules()[0]->id()->value())->toBe($newModuleId);
 });
 
 it('reconstruye dos modulos con unidades y prerrequisitos en un round trip', function (): void {
@@ -441,6 +514,102 @@ it('restaura un curso publicado legado sin filas curriculares', function (): voi
 
     expect($stored?->status())->toBe(CourseStatus::Published)
         ->and($stored?->modules())->toBe([]);
+});
+
+it('impone duraciones curriculares positivas tambien en la base de datos', function (): void {
+    $repository = app(EloquentCourseRepository::class);
+    $course = persistedCourse('01981a64-8300-7b1d-b442-764ea7f91820', 'CHECK-001');
+    $repository->save($course);
+
+    $moduleRow = [
+        'id' => '01981a64-8300-7b1d-b442-764ea7f91821',
+        'course_id' => $course->id()->value(),
+        'code' => 'MOD-CHECK',
+        'title' => 'Modulo check',
+        'description' => 'Modulo para comprobar la restriccion.',
+        'objectives' => null,
+        'duration_minutes' => 0,
+        'position' => 1,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ];
+
+    expect(fn () => DB::table('academic_course_modules')->insert($moduleRow))
+        ->toThrow(QueryException::class);
+    $moduleRow['duration_minutes'] = -1;
+    expect(fn () => DB::table('academic_course_modules')->insert($moduleRow))
+        ->toThrow(QueryException::class);
+
+    $moduleRow['duration_minutes'] = null;
+    DB::table('academic_course_modules')->insert($moduleRow);
+    DB::table('academic_course_modules')->where('id', $moduleRow['id'])->update(['duration_minutes' => 30]);
+
+    $unitRow = [
+        'id' => '01981a64-8300-7b1d-b442-764ea7f91822',
+        'module_id' => $moduleRow['id'],
+        'code' => 'UNI-CHECK',
+        'title' => 'Unidad check',
+        'description' => 'Unidad para comprobar la restriccion.',
+        'objectives' => null,
+        'duration_minutes' => 0,
+        'position' => 1,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ];
+
+    expect(fn () => DB::table('academic_course_units')->insert($unitRow))
+        ->toThrow(QueryException::class);
+    $unitRow['duration_minutes'] = -1;
+    expect(fn () => DB::table('academic_course_units')->insert($unitRow))
+        ->toThrow(QueryException::class);
+
+    $unitRow['duration_minutes'] = null;
+    DB::table('academic_course_units')->insert($unitRow);
+    DB::table('academic_course_units')->where('id', $unitRow['id'])->update(['duration_minutes' => 15]);
+
+    expect(DB::table('academic_course_modules')->where('id', $moduleRow['id'])->value('duration_minutes'))->toBe(30)
+        ->and(DB::table('academic_course_units')->where('id', $unitRow['id'])->value('duration_minutes'))->toBe(15);
+
+    if (DB::getDriverName() === 'sqlite') {
+        $definitions = DB::table('sqlite_master')
+            ->whereIn('name', ['academic_course_modules', 'academic_course_units'])
+            ->pluck('sql')
+            ->map(static fn (mixed $sql): string => mb_strtolower((string) $sql))
+            ->all();
+
+        expect($definitions)->toHaveCount(2);
+
+        foreach ($definitions as $definition) {
+            expect($definition)->toContain('check')
+                ->toContain('duration_minutes')
+                ->toContain('> 0');
+        }
+    }
+});
+
+it('compila la restriccion de duracion con la gramatica PostgreSQL', function (): void {
+    $migration = require base_path(
+        'modules/Academic/Infrastructure/Persistence/Migrations/2026_08_03_000003_create_academic_course_curriculum_tables.php',
+    );
+    $reflection = new ReflectionClass($migration);
+    $definition = $reflection->getReflectionConstant('DURATION_MINUTES_DEFINITION')?->getValue();
+    expect($definition)->toBeString();
+
+    $connection = new PostgresConnection(new PDO('sqlite::memory:'));
+    $connection->setSchemaGrammar(new PostgresGrammar($connection));
+    $blueprint = new Blueprint(
+        $connection,
+        'academic_course_modules',
+        static function (Blueprint $table) use ($definition): void {
+            $table->create();
+            $table->rawColumn('duration_minutes', $definition)->nullable();
+        },
+    );
+    $sql = mb_strtolower(implode(' ', $blueprint->toSql()));
+
+    expect($sql)->toContain('duration_minutes')
+        ->toContain('check (duration_minutes is null or duration_minutes > 0)')
+        ->toContain(' null');
 });
 
 it('carga all con consultas acotadas y reconstruccion curricular completa', function (): void {

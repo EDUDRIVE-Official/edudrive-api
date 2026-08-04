@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Modules\Academic\Application\Commands\ArchiveCourseCommand;
 use Modules\Academic\Application\Exceptions\CourseNotFound;
 use Modules\Academic\Application\Responses\ArchiveCourseResponse;
+use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 
@@ -22,15 +23,16 @@ final readonly class ArchiveCourseHandler
     ): ArchiveCourseResponse {
         $courseId = CourseId::fromString($command->courseId);
 
-        $course = $this->courses->findById($courseId);
+        $course = $this->courses->updateAtomically(
+            $courseId,
+            static function (Course $course): void {
+                $course->archive(new DateTimeImmutable);
+            },
+        );
 
         if ($course === null) {
             throw CourseNotFound::withId($command->courseId);
         }
-
-        $course->archive(new DateTimeImmutable);
-
-        $this->courses->save($course);
 
         return ArchiveCourseResponse::fromCourse($course);
     }

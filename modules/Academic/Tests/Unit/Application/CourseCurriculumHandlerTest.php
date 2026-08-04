@@ -2,13 +2,17 @@
 
 declare(strict_types=1);
 
+use Modules\Academic\Application\Commands\ArchiveCourseCommand;
+use Modules\Academic\Application\Commands\PublishCourseCommand;
 use Modules\Academic\Application\Commands\ReplaceCourseCurriculumCommand;
 use Modules\Academic\Application\DTO\CourseModuleInput;
 use Modules\Academic\Application\DTO\CourseUnitInput;
 use Modules\Academic\Application\Exceptions\CourseNotFound;
 use Modules\Academic\Application\Queries\GetCourseCurriculumQuery;
 use Modules\Academic\Application\Responses\CourseCurriculumResponse;
+use Modules\Academic\Application\UseCases\ArchiveCourseHandler;
 use Modules\Academic\Application\UseCases\GetCourseCurriculumHandler;
+use Modules\Academic\Application\UseCases\PublishCourseHandler;
 use Modules\Academic\Application\UseCases\ReplaceCourseCurriculumHandler;
 use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Exceptions\InvalidCurriculumPosition;
@@ -22,6 +26,8 @@ use Modules\Foundation\Application\Bus\QueryBus;
 final class Eng027CurriculumCourseRepository implements CourseRepository
 {
     public int $saveCalls = 0;
+
+    public int $atomicUpdateCalls = 0;
 
     /** @var array<string, Course> */
     private array $courses = [];
@@ -38,6 +44,22 @@ final class Eng027CurriculumCourseRepository implements CourseRepository
     {
         $this->saveCalls++;
         $this->courses[$course->id()->value()] = $course;
+    }
+
+    public function updateAtomically(CourseId $id, Closure $mutation): ?Course
+    {
+        $course = $this->findById($id);
+
+        if ($course === null) {
+            return null;
+        }
+
+        $this->atomicUpdateCalls++;
+        $candidate = clone $course;
+        $mutation($candidate);
+        $this->courses[$id->value()] = $candidate;
+
+        return $candidate;
     }
 
     public function findById(CourseId $id): ?Course
@@ -187,7 +209,7 @@ function eng027ExpectedCurriculumResponse(): array
     ];
 }
 
-it('reemplaza el curriculo completo y guarda el agregado exactamente una vez', function (): void {
+it('reemplaza el curriculo completo mediante una mutacion atomica', function (): void {
     $course = eng027CurriculumCourse();
     $courses = new Eng027CurriculumCourseRepository([$course]);
     $handler = new ReplaceCourseCurriculumHandler($courses);
@@ -198,8 +220,39 @@ it('reemplaza el curriculo completo y guarda el agregado exactamente una vez', f
     ));
 
     expect($response->toArray())->toBe(eng027ExpectedCurriculumResponse())
-        ->and($courses->saveCalls)->toBe(1)
-        ->and($course->modules())->toHaveCount(2);
+        ->and($courses->saveCalls)->toBe(0)
+        ->and($courses->atomicUpdateCalls)->toBe(1)
+        ->and($courses->findById($course->id())?->modules())->toHaveCount(2);
+});
+
+it('publica y archiva cursos mediante mutaciones atomicas', function (): void {
+    $publishable = eng027CurriculumCourse();
+    $publishableCourses = new Eng027CurriculumCourseRepository([$publishable]);
+    (new ReplaceCourseCurriculumHandler($publishableCourses))->handle(new ReplaceCourseCurriculumCommand(
+        courseId: $publishable->id()->value(),
+        modules: eng027CurriculumInputs(),
+    ));
+
+    $published = (new PublishCourseHandler($publishableCourses))->handle(
+        new PublishCourseCommand($publishable->id()->value()),
+    );
+
+    $archivable = Course::create(
+        id: CourseId::fromString('019c2b00-0000-7000-8000-000000000002'),
+        code: CourseCode::fromString('ROAD-SAFETY-02'),
+        title: CourseTitle::fromString('Curso archivable'),
+    );
+    $archivableCourses = new Eng027CurriculumCourseRepository([$archivable]);
+    $archived = (new ArchiveCourseHandler($archivableCourses))->handle(
+        new ArchiveCourseCommand($archivable->id()->value()),
+    );
+
+    expect($published->toArray()['status'])->toBe('published')
+        ->and($publishableCourses->atomicUpdateCalls)->toBe(2)
+        ->and($publishableCourses->saveCalls)->toBe(0)
+        ->and($archived->toArray()['status'])->toBe('archived')
+        ->and($archivableCourses->atomicUpdateCalls)->toBe(1)
+        ->and($archivableCourses->saveCalls)->toBe(0);
 });
 
 it('consulta el curriculo ordenado sin guardar el curso', function (): void {
@@ -210,13 +263,15 @@ it('consulta el curriculo ordenado sin guardar el curso', function (): void {
         modules: eng027CurriculumInputs(),
     ));
     $courses->saveCalls = 0;
+    $courses->atomicUpdateCalls = 0;
 
     $response = (new GetCourseCurriculumHandler($courses))->handle(
         new GetCourseCurriculumQuery($course->id()->value()),
     );
 
     expect($response->toArray())->toBe(eng027ExpectedCurriculumResponse())
-        ->and($courses->saveCalls)->toBe(0);
+        ->and($courses->saveCalls)->toBe(0)
+        ->and($courses->atomicUpdateCalls)->toBe(0);
 });
 
 it('rechaza reemplazar el curriculo de un curso inexistente', function (): void {
@@ -236,6 +291,7 @@ it('rechaza reemplazar el curriculo de un curso inexistente', function (): void 
     }
 
     expect($courses->saveCalls)->toBe(0);
+    expect($courses->atomicUpdateCalls)->toBe(0);
 });
 
 it('rechaza consultar el curriculo de un curso inexistente', function (): void {
@@ -272,6 +328,7 @@ it('no guarda ni muta el agregado cuando el dominio rechaza la estructura candid
     ))->toThrow(InvalidCurriculumPosition::class);
 
     expect($courses->saveCalls)->toBe(0)
+        ->and($courses->atomicUpdateCalls)->toBe(1)
         ->and($course->modules())->toBe([]);
 });
 
@@ -289,5 +346,6 @@ it('despacha el reemplazo y la consulta mediante los buses registrados por el pr
     expect($replaceResponse)->toBeInstanceOf(CourseCurriculumResponse::class)
         ->and($getResponse)->toBeInstanceOf(CourseCurriculumResponse::class)
         ->and($getResponse->toArray())->toBe(eng027ExpectedCurriculumResponse())
-        ->and($courses->saveCalls)->toBe(1);
+        ->and($courses->saveCalls)->toBe(0)
+        ->and($courses->atomicUpdateCalls)->toBe(1);
 });

@@ -9,6 +9,14 @@ use Illuminate\Foundation\Http\FormRequest;
 
 final class ReplaceCourseCurriculumRequest extends FormRequest
 {
+    private const MAX_TOTAL_UNITS = 1000;
+
+    private const MAX_TOTAL_PREREQUISITE_REFERENCES = 5000;
+
+    private bool $totalUnitsExceeded = false;
+
+    private bool $totalPrerequisiteReferencesExceeded = false;
+
     public function authorize(): bool
     {
         return true;
@@ -18,6 +26,25 @@ final class ReplaceCourseCurriculumRequest extends FormRequest
     public function rules(): array
     {
         $modules = $this->input('modules');
+
+        if ($this->totalUnitsExceeded || $this->totalPrerequisiteReferencesExceeded) {
+            return [
+                'modules' => [
+                    'present',
+                    'array',
+                    function (string $attribute, mixed $value, Closure $fail): void {
+                        if ($this->totalUnitsExceeded) {
+                            $fail('The modules field must not contain more than 1000 units in total.');
+                        }
+
+                        if ($this->totalPrerequisiteReferencesExceeded) {
+                            $fail('The modules field must not contain more than 5000 prerequisite references in total.');
+                        }
+                    },
+                ],
+            ];
+        }
+
         $rules = [
             'modules' => ['present', 'array', 'max:200'],
             'modules.*.id' => [
@@ -104,6 +131,70 @@ final class ReplaceCourseCurriculumRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $modules = $this->input('modules');
+
+        if (! is_array($modules)) {
+            return;
+        }
+
+        $totalUnits = 0;
+        $totalPrerequisiteReferences = 0;
+
+        foreach ($modules as $module) {
+            if (! is_array($module)) {
+                continue;
+            }
+
+            $modulePrerequisites = $module['prerequisite_module_ids'] ?? null;
+
+            if (is_array($modulePrerequisites)) {
+                $totalPrerequisiteReferences += count($modulePrerequisites);
+
+                if ($totalPrerequisiteReferences > self::MAX_TOTAL_PREREQUISITE_REFERENCES) {
+                    $this->totalPrerequisiteReferencesExceeded = true;
+
+                    return;
+                }
+            }
+
+            $units = $module['units'] ?? null;
+
+            if (! is_array($units)) {
+                continue;
+            }
+
+            $totalUnits += count($units);
+
+            if ($totalUnits > self::MAX_TOTAL_UNITS) {
+                $this->totalUnitsExceeded = true;
+
+                return;
+            }
+
+            foreach ($units as $unit) {
+                if (! is_array($unit)) {
+                    continue;
+                }
+
+                $unitPrerequisites = $unit['prerequisite_unit_ids'] ?? null;
+
+                if (! is_array($unitPrerequisites)) {
+                    continue;
+                }
+
+                $totalPrerequisiteReferences += count($unitPrerequisites);
+
+                if ($totalPrerequisiteReferences > self::MAX_TOTAL_PREREQUISITE_REFERENCES) {
+                    $this->totalPrerequisiteReferencesExceeded = true;
+
+                    return;
+                }
+            }
+        }
     }
 
     /** @return list<mixed> */
