@@ -34,61 +34,6 @@ pest()
         '../modules/*/Tests/Integration',
     );
 
-final class CurriculumAwareTestCourseRepository implements CourseRepository
-{
-    /** @var array<string, Course> */
-    private array $courses = [];
-
-    /** @param list<Course> $courses */
-    public function __construct(
-        array $courses = [],
-        private readonly ?CourseRepository $delegate = null,
-    ) {
-        foreach ($courses as $course) {
-            $this->save($course);
-        }
-    }
-
-    public function save(Course $course): void
-    {
-        $this->delegate?->save($course);
-        $this->courses[$course->id()->value()] = $course;
-    }
-
-    public function findById(CourseId $id): ?Course
-    {
-        return $this->courses[$id->value()] ?? $this->delegate?->findById($id);
-    }
-
-    public function findByCode(CourseCode $code): ?Course
-    {
-        foreach ($this->courses as $course) {
-            if ($course->code()->equals($code)) {
-                return $course;
-            }
-        }
-
-        return $this->delegate?->findByCode($code);
-    }
-
-    public function existsByCode(CourseCode $code): bool
-    {
-        return $this->findByCode($code) !== null;
-    }
-
-    /** @return list<Course> */
-    public function all(): array
-    {
-        $courses = $this->courses;
-
-        foreach ($this->delegate?->all() ?? [] as $course) {
-            $courses[$course->id()->value()] ??= $course;
-        }
-
-        return array_values($courses);
-    }
-}
-
 function actingAsAuthenticatedUser(): UserModel
 {
     $repository = app(UserRepository::class);
@@ -127,7 +72,6 @@ function createDraftCourseForPublishing(string $code = 'EDU-020'): Course
     addMinimalCurriculum($course);
 
     $repository->save($course);
-    preserveCourseCurriculumInMemory($course);
 
     return $course;
 }
@@ -158,28 +102,6 @@ function addMinimalCurriculum(Course $course): void
             ],
         ),
     ]);
-}
-
-function preserveCourseCurriculumInMemory(Course $course): void
-{
-    $repository = app(CourseRepository::class);
-
-    if ($repository instanceof CurriculumAwareTestCourseRepository) {
-        $repository->save($course);
-
-        return;
-    }
-
-    $courses = array_filter(
-        $repository->all(),
-        static fn (Course $stored): bool => ! $stored->id()->equals($course->id()),
-    );
-    $courses[] = $course;
-
-    app()->instance(
-        CourseRepository::class,
-        new CurriculumAwareTestCourseRepository(array_values($courses), $repository),
-    );
 }
 
 /**

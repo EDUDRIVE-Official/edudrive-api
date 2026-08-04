@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use Modules\Academic\Domain\Repositories\CourseRepository;
+use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCourseRepository;
 use Modules\Authorization\Domain\Entities\RoleAssignment;
 use Modules\Authorization\Domain\Enums\Role;
 use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
@@ -33,7 +34,9 @@ it('publica un curso en borrador', function (): void {
     $stored = app(CourseRepository::class)->findById($course->id());
 
     expect($stored?->status()->value)->toBe('published')
-        ->and($stored?->publishedAt())->not->toBeNull();
+        ->and($stored?->publishedAt())->not->toBeNull()
+        ->and($stored?->modules())->toHaveCount(1)
+        ->and(app(CourseRepository::class))->toBeInstanceOf(EloquentCourseRepository::class);
 });
 
 it('rechaza publicar un curso que ya está publicado', function (): void {
