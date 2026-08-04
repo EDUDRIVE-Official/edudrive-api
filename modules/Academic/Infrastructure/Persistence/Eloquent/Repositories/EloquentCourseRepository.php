@@ -51,7 +51,7 @@ final class EloquentCourseRepository implements CourseRepository
                 $this->assertCurriculumOwnership($course);
                 $this->moveExistingCurriculumToTemporaryValues($course->id());
                 $this->syncModules($model, $course->modules());
-                $this->syncUnits($course->modules());
+                $this->syncUnits($model, $course->modules());
                 $this->deleteObsoleteCurriculum($course);
                 $this->applyFinalPositions($course->modules());
                 $this->syncPrerequisites($course->modules());
@@ -112,40 +112,60 @@ final class EloquentCourseRepository implements CourseRepository
     private function syncModules(CourseModel $course, array $modules): void
     {
         foreach ($modules as $index => $module) {
-            CourseModuleModel::query()->updateOrCreate(
-                ['id' => $module->id()->value()],
-                [
-                    'course_id' => $course->getKey(),
-                    'code' => $module->code()->value(),
-                    'title' => $module->title(),
-                    'description' => $module->description(),
-                    'objectives' => $module->objectives(),
-                    'duration_minutes' => $module->durationMinutes(),
-                    'position' => -1_000_000 - $index,
-                ],
-            );
+            $attributes = [
+                'course_id' => $course->getKey(),
+                'code' => $module->code()->value(),
+                'title' => $module->title(),
+                'description' => $module->description(),
+                'objectives' => $module->objectives(),
+                'duration_minutes' => $module->durationMinutes(),
+                'position' => -1_000_000 - $index,
+            ];
+            $updated = CourseModuleModel::query()
+                ->whereKey($module->id()->value())
+                ->where('course_id', $course->getKey())
+                ->update($attributes);
+
+            if ($updated === 0) {
+                CourseModuleModel::query()->create([
+                    'id' => $module->id()->value(),
+                    ...$attributes,
+                ]);
+            }
         }
     }
 
     /** @param list<CourseModule> $modules */
-    private function syncUnits(array $modules): void
+    private function syncUnits(CourseModel $course, array $modules): void
     {
         $temporaryPosition = -2_000_000;
-
         foreach ($modules as $module) {
             foreach ($module->units() as $unit) {
-                CourseUnitModel::query()->updateOrCreate(
-                    ['id' => $unit->id()->value()],
-                    [
-                        'module_id' => $module->id()->value(),
-                        'code' => $unit->code()->value(),
-                        'title' => $unit->title(),
-                        'description' => $unit->description(),
-                        'objectives' => $unit->objectives(),
-                        'duration_minutes' => $unit->durationMinutes(),
-                        'position' => $temporaryPosition--,
-                    ],
-                );
+                $attributes = [
+                    'module_id' => $module->id()->value(),
+                    'code' => $unit->code()->value(),
+                    'title' => $unit->title(),
+                    'description' => $unit->description(),
+                    'objectives' => $unit->objectives(),
+                    'duration_minutes' => $unit->durationMinutes(),
+                    'position' => $temporaryPosition--,
+                ];
+                $updated = CourseUnitModel::query()
+                    ->whereKey($unit->id()->value())
+                    ->whereIn(
+                        'module_id',
+                        CourseModuleModel::query()
+                            ->select('id')
+                            ->where('course_id', $course->getKey()),
+                    )
+                    ->update($attributes);
+
+                if ($updated === 0) {
+                    CourseUnitModel::query()->create([
+                        'id' => $unit->id()->value(),
+                        ...$attributes,
+                    ]);
+                }
             }
         }
     }
@@ -300,8 +320,13 @@ final class EloquentCourseRepository implements CourseRepository
     private function toDomain(CourseModel $model): Course
     {
         $modality = $model->getAttribute('modality');
+        $modulePositions = $model->modules
+            ->mapWithKeys(static fn (CourseModuleModel $module): array => [
+                (string) $module->getKey() => (int) $module->getAttribute('position'),
+            ])
+            ->all();
         $modules = $model->modules
-            ->map(fn (CourseModuleModel $module): CourseModule => $this->moduleToDomain($module))
+            ->map(fn (CourseModuleModel $module): CourseModule => $this->moduleToDomain($module, $modulePositions))
             ->all();
 
         return Course::restore(
@@ -320,7 +345,8 @@ final class EloquentCourseRepository implements CourseRepository
         );
     }
 
-    private function moduleToDomain(CourseModuleModel $model): CourseModule
+    /** @param array<string, int> $modulePositions */
+    private function moduleToDomain(CourseModuleModel $model, array $modulePositions): CourseModule
     {
         $prerequisiteIds = $model->prerequisiteModules
             ->sortBy('position')
@@ -328,7 +354,7 @@ final class EloquentCourseRepository implements CourseRepository
             ->values()
             ->all();
         $units = $model->units
-            ->map(fn (CourseUnitModel $unit): CourseUnit => $this->unitToDomain($unit))
+            ->map(fn (CourseUnitModel $unit): CourseUnit => $this->unitToDomain($unit, $modulePositions))
             ->all();
 
         return CourseModule::create(
@@ -344,10 +370,24 @@ final class EloquentCourseRepository implements CourseRepository
         );
     }
 
-    private function unitToDomain(CourseUnitModel $model): CourseUnit
+    /** @param array<string, int> $modulePositions */
+    private function unitToDomain(CourseUnitModel $model, array $modulePositions): CourseUnit
     {
         $prerequisiteIds = $model->prerequisiteUnits
-            ->sortBy('position')
+            ->sort(static function (CourseUnitModel $left, CourseUnitModel $right) use ($modulePositions): int {
+                $leftModuleId = (string) $left->getAttribute('module_id');
+                $rightModuleId = (string) $right->getAttribute('module_id');
+
+                return [
+                    $modulePositions[$leftModuleId] ?? PHP_INT_MAX,
+                    (int) $left->getAttribute('position'),
+                    (string) $left->getKey(),
+                ] <=> [
+                    $modulePositions[$rightModuleId] ?? PHP_INT_MAX,
+                    (int) $right->getAttribute('position'),
+                    (string) $right->getKey(),
+                ];
+            })
             ->map(static fn (CourseUnitModel $unit): CourseUnitId => CourseUnitId::fromString((string) $unit->getKey()))
             ->values()
             ->all();

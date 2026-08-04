@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\DB;
 use Modules\Academic\Application\Exceptions\CourseCurriculumIdConflict;
 use Modules\Academic\Domain\Aggregates\Course;
@@ -234,6 +235,189 @@ it('hace rollback y reporta conflicto si un UUID pertenece a otro curso', functi
     $stored = $repository->findById($firstCourse->id());
     expect($stored?->title()->value())->toBe('Curso CURR-004')
         ->and($stored?->modules()[0]->code()->value())->toBe('MOD-OWN');
+});
+
+it('no transfiere un modulo insertado por otro curso entre ownership check y sync', function (): void {
+    $repository = app(EloquentCourseRepository::class);
+    $firstCourse = persistedCourse('01981a64-8300-7b1d-b442-764ea7f91700', 'RACE-001');
+    $otherCourse = persistedCourse('01981a64-8300-7b1d-b442-764ea7f91701', 'RACE-002');
+    $racingModuleId = '01981a64-8300-7b1d-b442-764ea7f91702';
+    $repository->save($firstCourse);
+    $repository->save($otherCourse);
+
+    $firstCourse->rename(CourseTitle::fromString('Titulo que debe revertirse por carrera'));
+    $firstCourse->replaceCurriculum([
+        persistedCourseModule($racingModuleId, 'MOD-RACE', 1, [
+            persistedCourseUnit('01981a64-8300-7b1d-b442-764ea7f91703', 'UNI-RACE', 1),
+        ]),
+    ]);
+
+    $injected = false;
+    DB::listen(function (QueryExecuted $query) use (&$injected, $racingModuleId, $otherCourse): void {
+        if ($injected
+            || ! str_contains($query->sql, 'academic_course_modules')
+            || ! str_contains($query->sql, 'exists')) {
+            return;
+        }
+
+        $injected = true;
+        DB::table('academic_course_modules')->insert([
+            'id' => $racingModuleId,
+            'course_id' => $otherCourse->id()->value(),
+            'code' => 'MOD-OTHER-RACE',
+            'title' => 'Modulo concurrente',
+            'description' => 'Creado despues del ownership check.',
+            'objectives' => null,
+            'duration_minutes' => 30,
+            'position' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    });
+
+    try {
+        $repository->save($firstCourse);
+        test()->fail('Se esperaba conflicto por alta concurrente del modulo.');
+    } catch (CourseCurriculumIdConflict $exception) {
+        expect($exception->errorCode())->toBe('COURSE_CURRICULUM_ID_CONFLICT');
+    }
+
+    $stored = $repository->findById($firstCourse->id());
+    expect($injected)->toBeTrue()
+        ->and($stored?->title()->value())->toBe('Curso RACE-001')
+        ->and($stored?->modules())->toBe([]);
+});
+
+it('no transfiere una unidad insertada por otro curso entre ownership check y sync', function (): void {
+    $repository = app(EloquentCourseRepository::class);
+    $firstCourse = persistedCourse('01981a64-8300-7b1d-b442-764ea7f91710', 'RACE-003');
+    $otherCourse = persistedCourse('01981a64-8300-7b1d-b442-764ea7f91711', 'RACE-004');
+    $ownModuleId = '01981a64-8300-7b1d-b442-764ea7f91712';
+    $otherModuleId = '01981a64-8300-7b1d-b442-764ea7f91713';
+    $ownUnitId = '01981a64-8300-7b1d-b442-764ea7f91714';
+    $racingUnitId = '01981a64-8300-7b1d-b442-764ea7f91715';
+    $firstCourse->replaceCurriculum([
+        persistedCourseModule($ownModuleId, 'MOD-OWN', 1, [persistedCourseUnit($ownUnitId, 'UNI-OWN', 1)]),
+    ]);
+    $otherCourse->replaceCurriculum([
+        persistedCourseModule($otherModuleId, 'MOD-OTHER', 1, [
+            persistedCourseUnit('01981a64-8300-7b1d-b442-764ea7f91716', 'UNI-OTHER', 1),
+        ]),
+    ]);
+    $repository->save($firstCourse);
+    $repository->save($otherCourse);
+
+    $firstCourse->rename(CourseTitle::fromString('Titulo unitario que debe revertirse'));
+    $firstCourse->replaceCurriculum([
+        persistedCourseModule($ownModuleId, 'MOD-OWN', 1, [
+            persistedCourseUnit($ownUnitId, 'UNI-OWN', 1),
+            persistedCourseUnit($racingUnitId, 'UNI-RACE', 2),
+        ]),
+    ]);
+
+    $injected = false;
+    DB::listen(function (QueryExecuted $query) use (&$injected, $racingUnitId, $otherModuleId): void {
+        if ($injected
+            || ! str_contains($query->sql, 'academic_course_units')
+            || ! str_contains($query->sql, 'join')) {
+            return;
+        }
+
+        $injected = true;
+        DB::table('academic_course_units')->insert([
+            'id' => $racingUnitId,
+            'module_id' => $otherModuleId,
+            'code' => 'UNI-OTHER-RACE',
+            'title' => 'Unidad concurrente',
+            'description' => 'Creada despues del ownership check.',
+            'objectives' => null,
+            'duration_minutes' => 15,
+            'position' => 2,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    });
+
+    try {
+        $repository->save($firstCourse);
+        test()->fail('Se esperaba conflicto por alta concurrente de la unidad.');
+    } catch (CourseCurriculumIdConflict $exception) {
+        expect($exception->statusCode())->toBe(409);
+    }
+
+    $stored = $repository->findById($firstCourse->id());
+    expect($injected)->toBeTrue()
+        ->and($stored?->title()->value())->toBe('Curso RACE-003')
+        ->and($stored?->modules()[0]->units())->toHaveCount(1)
+        ->and($stored?->modules()[0]->units()[0]->id()->value())->toBe($ownUnitId);
+});
+
+it('ordena prerrequisitos de unidad por modulo posicion unidad posicion y UUID', function (): void {
+    $repository = app(EloquentCourseRepository::class);
+    $course = persistedCourse('01981a64-8300-7b1d-b442-764ea7f91720', 'ORDER-001');
+    $firstUnitId = '01981a64-8300-7b1d-b442-764ea7f91722';
+    $secondUnitId = '01981a64-8300-7b1d-b442-764ea7f91721';
+    $firstModuleId = '01981a64-8300-7b1d-b442-764ea7f91723';
+    $secondModuleId = '01981a64-8300-7b1d-b442-764ea7f91724';
+    $course->replaceCurriculum([
+        persistedCourseModule($firstModuleId, 'MOD-01', 1, [
+            persistedCourseUnit($secondUnitId, 'UNI-02', 1),
+        ]),
+        persistedCourseModule($secondModuleId, 'MOD-02', 2, [
+            persistedCourseUnit($firstUnitId, 'UNI-01', 1),
+        ]),
+    ]);
+    $repository->save($course);
+
+    $course->replaceCurriculum([
+        persistedCourseModule($firstModuleId, 'MOD-01', 1, [
+            persistedCourseUnit($firstUnitId, 'UNI-01', 1),
+        ]),
+        persistedCourseModule($secondModuleId, 'MOD-02', 2, [
+            persistedCourseUnit($secondUnitId, 'UNI-02', 1),
+        ]),
+        persistedCourseModule('01981a64-8300-7b1d-b442-764ea7f91725', 'MOD-03', 3, [
+            persistedCourseUnit(
+                '01981a64-8300-7b1d-b442-764ea7f91726',
+                'UNI-03',
+                1,
+                [$secondUnitId, $firstUnitId],
+            ),
+        ]),
+    ]);
+
+    $repository->save($course);
+    $stored = $repository->findById($course->id());
+    $prerequisites = $stored?->modules()[2]->units()[0]->prerequisiteUnitIds() ?? [];
+
+    expect(array_map(static fn (CourseUnitId $id): string => $id->value(), $prerequisites))
+        ->toBe([$firstUnitId, $secondUnitId]);
+});
+
+it('intercambia codigos al reordenar sin recrear modulos ni unidades', function (): void {
+    $repository = app(EloquentCourseRepository::class);
+    $course = persistedCourse('01981a64-8300-7b1d-b442-764ea7f91730', 'SWAP-001');
+    $firstModuleId = '01981a64-8300-7b1d-b442-764ea7f91731';
+    $secondModuleId = '01981a64-8300-7b1d-b442-764ea7f91732';
+    $firstUnitId = '01981a64-8300-7b1d-b442-764ea7f91733';
+    $secondUnitId = '01981a64-8300-7b1d-b442-764ea7f91734';
+    $course->replaceCurriculum([
+        persistedCourseModule($firstModuleId, 'MOD-A', 1, [persistedCourseUnit($firstUnitId, 'UNI-A', 1)]),
+        persistedCourseModule($secondModuleId, 'MOD-B', 2, [persistedCourseUnit($secondUnitId, 'UNI-B', 1)]),
+    ]);
+    $repository->save($course);
+
+    $course->replaceCurriculum([
+        persistedCourseModule($secondModuleId, 'MOD-A', 1, [persistedCourseUnit($secondUnitId, 'UNI-A', 1)]),
+        persistedCourseModule($firstModuleId, 'MOD-B', 2, [persistedCourseUnit($firstUnitId, 'UNI-B', 1)]),
+    ]);
+    $repository->save($course);
+    $stored = $repository->findById($course->id());
+
+    expect($stored?->modules()[0]->id()->value())->toBe($secondModuleId)
+        ->and($stored?->modules()[0]->code()->value())->toBe('MOD-A')
+        ->and($stored?->modules()[0]->units()[0]->id()->value())->toBe($secondUnitId)
+        ->and($stored?->modules()[0]->units()[0]->code()->value())->toBe('UNI-A');
 });
 
 it('restaura un curso publicado legado sin filas curriculares', function (): void {
