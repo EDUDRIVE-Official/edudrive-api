@@ -20,10 +20,11 @@ final readonly class TextContentBlock implements ContentBlock
     /** @param array<string, mixed> $payload */
     public static function fromPayload(ContentBlockId $id, int $position, array $payload): self
     {
+        self::ensureValidPosition($position);
         self::ensureKeys($payload, ['markdown', 'title']);
         $markdown = self::requiredString($payload, 'markdown');
 
-        if (preg_match('/<\s*\/?\s*[a-z][a-z0-9-]*(?:\s+[^<>]*?)?\s*\/?>/i', $markdown) === 1) {
+        if (self::containsRawHtml($markdown)) {
             throw InvalidContentBlock::create();
         }
 
@@ -51,6 +52,94 @@ final readonly class TextContentBlock implements ContentBlock
             'markdown' => $this->markdown,
             'title' => $this->title,
         ], static fn (mixed $value): bool => $value !== null);
+    }
+
+    private static function ensureValidPosition(int $position): void
+    {
+        if ($position < 1) {
+            throw InvalidContentBlock::create();
+        }
+    }
+
+    private static function containsRawHtml(string $markdown): bool
+    {
+        $outsideFences = '';
+        $fenceCharacter = null;
+        $fenceLength = 0;
+
+        foreach (preg_split('/\R/', $markdown) ?: [] as $line) {
+            if ($fenceCharacter === null && preg_match('/^[ \t]{0,3}(`{3,}|~{3,})/', $line, $match) === 1) {
+                $fenceCharacter = $match[1][0];
+                $fenceLength = strlen($match[1]);
+
+                continue;
+            }
+
+            if ($fenceCharacter !== null) {
+                $closingPattern = sprintf(
+                    '/^[ \t]{0,3}%s{%d,}[ \t]*$/',
+                    preg_quote($fenceCharacter, '/'),
+                    $fenceLength,
+                );
+
+                if (preg_match($closingPattern, $line) === 1) {
+                    $fenceCharacter = null;
+                    $fenceLength = 0;
+                }
+
+                continue;
+            }
+
+            $outsideFences .= $line."\n";
+        }
+
+        $length = strlen($outsideFences);
+
+        for ($index = 0; $index < $length; $index++) {
+            $character = $outsideFences[$index];
+
+            if ($character === '\\' && $index + 1 < $length) {
+                $index++;
+
+                continue;
+            }
+
+            if ($character === '`') {
+                $runLength = strspn($outsideFences, '`', $index);
+                $delimiter = str_repeat('`', $runLength);
+                $closingPosition = strpos($outsideFences, $delimiter, $index + $runLength);
+
+                if ($closingPosition !== false) {
+                    $index = $closingPosition + $runLength - 1;
+
+                    continue;
+                }
+            }
+
+            if ($character !== '<') {
+                continue;
+            }
+
+            $candidate = substr($outsideFences, $index);
+
+            if (preg_match('/\A<https:\/\/[^\s<>]+>/i', $candidate, $match) === 1) {
+                $index += strlen($match[0]) - 1;
+
+                continue;
+            }
+
+            if (
+                str_starts_with($candidate, '<!--')
+                || preg_match('/\A<![A-Z]/i', $candidate) === 1
+                || str_starts_with($candidate, '<?')
+                || str_starts_with($candidate, '<![CDATA[')
+                || preg_match('/\A<\s*\/?\s*[a-z][a-z0-9-]*(?:\s+[^<>]*?)?\s*\/?>/is', $candidate) === 1
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

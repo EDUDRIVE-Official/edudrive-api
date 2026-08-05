@@ -25,6 +25,7 @@ final readonly class InteractiveContentBlock implements ContentBlock
     /** @param array<string, mixed> $payload */
     public static function fromPayload(ContentBlockId $id, int $position, array $payload): self
     {
+        self::ensureValidPosition($position);
         self::ensureKeys($payload, ['url', 'accessible_text', 'accessible_url', 'title', 'description']);
         $accessibleText = self::optionalString($payload, 'accessible_text');
         $accessibleUrlValue = self::optionalString($payload, 'accessible_url');
@@ -68,6 +69,13 @@ final readonly class InteractiveContentBlock implements ContentBlock
             'title' => $this->title,
             'description' => $this->description,
         ], static fn (mixed $value): bool => $value !== null);
+    }
+
+    private static function ensureValidPosition(int $position): void
+    {
+        if ($position < 1) {
+            throw InvalidContentBlock::create();
+        }
     }
 
     /**

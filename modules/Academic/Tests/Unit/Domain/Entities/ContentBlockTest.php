@@ -2,7 +2,13 @@
 
 declare(strict_types=1);
 
+use Modules\Academic\Domain\Entities\ContentBlocks\AudioContentBlock;
 use Modules\Academic\Domain\Entities\ContentBlocks\ContentBlock;
+use Modules\Academic\Domain\Entities\ContentBlocks\DownloadContentBlock;
+use Modules\Academic\Domain\Entities\ContentBlocks\ImageContentBlock;
+use Modules\Academic\Domain\Entities\ContentBlocks\InteractiveContentBlock;
+use Modules\Academic\Domain\Entities\ContentBlocks\TextContentBlock;
+use Modules\Academic\Domain\Entities\ContentBlocks\VideoContentBlock;
 use Modules\Academic\Domain\Enums\ContentBlockType;
 use Modules\Academic\Domain\Exceptions\ContentAccessibilityRequired;
 use Modules\Academic\Domain\Exceptions\InvalidContentBlock;
@@ -13,6 +19,38 @@ use Modules\Academic\Domain\ValueObjects\ExternalContentUrl;
 function contentBlockId(string $value = '01981a64-8300-7b1d-b442-764ea7f915c0'): ContentBlockId
 {
     return ContentBlockId::fromString($value);
+}
+
+function createContentBlockDirectly(string $type, int $position): ContentBlock
+{
+    return match ($type) {
+        'text' => TextContentBlock::fromPayload(contentBlockId(), $position, [
+            'markdown' => 'Contenido',
+        ]),
+        'image' => ImageContentBlock::fromPayload(contentBlockId(), $position, [
+            'url' => 'https://cdn.example.test/senal.png',
+            'alt' => 'Señal preventiva',
+        ]),
+        'video' => VideoContentBlock::fromPayload(contentBlockId(), $position, [
+            'url' => 'https://media.example.test/video.mp4',
+            'captions_url' => 'https://media.example.test/video.vtt',
+            'transcript' => 'Transcripción',
+        ]),
+        'audio' => AudioContentBlock::fromPayload(contentBlockId(), $position, [
+            'url' => 'https://media.example.test/audio.mp3',
+            'transcript' => 'Transcripción',
+        ]),
+        'interactive' => InteractiveContentBlock::fromPayload(contentBlockId(), $position, [
+            'url' => 'https://activities.example.test/cruce',
+            'accessible_text' => 'Alternativa accesible',
+        ]),
+        'download' => DownloadContentBlock::fromPayload(contentBlockId(), $position, [
+            'url' => 'https://docs.example.test/manual.pdf',
+            'display_name' => 'Manual',
+            'mime_type' => 'application/pdf',
+        ]),
+        default => throw new LogicException('Tipo de prueba no soportado.'),
+    };
 }
 
 it('normaliza el identificador de bloque y compara por valor', function (): void {
@@ -111,6 +149,27 @@ it('admite autolinks seguros de markdown sin tratarlos como html', function (): 
     ]);
 });
 
+it('admite etiquetas literales dentro de contextos seguros de markdown', function (string $markdown): void {
+    $block = ContentBlockFactory::create(contentBlockId(), 'text', 1, [
+        'markdown' => $markdown,
+    ]);
+
+    expect($block->payload())->toBe(['markdown' => $markdown]);
+})->with([
+    'inline code' => ['Ejecuta `<script>alert(1)</script>` como ejemplo.'],
+    'fenced code' => ["```html\n<video controls></video>\n```"],
+    'escaped tag' => ['El texto \\<video> no crea un elemento.'],
+]);
+
+it('rechaza comentarios y declaraciones html crudas en markdown', function (string $markdown): void {
+    ContentBlockFactory::create(contentBlockId(), 'text', 1, [
+        'markdown' => $markdown,
+    ]);
+})->with([
+    'comment' => ['Contenido <!-- comentario --> visible.'],
+    'doctype' => ['<!DOCTYPE html>'],
+])->throws(InvalidContentBlock::class);
+
 it('rechaza texto vacio, html arbitrario o claves desconocidas', function (array $payload): void {
     ContentBlockFactory::create(contentBlockId(), 'text', 1, $payload);
 })->with([
@@ -138,6 +197,7 @@ it('exige texto alternativo para imagenes', function (array $payload): void {
     ContentBlockFactory::create(contentBlockId(), 'image', 1, $payload);
 })->with([
     [['url' => 'https://cdn.example.test/senal.png']],
+    [['url' => 'https://cdn.example.test/senal.png', 'alt' => null]],
     [['url' => 'https://cdn.example.test/senal.png', 'alt' => ' ']],
 ])->throws(ContentAccessibilityRequired::class);
 
@@ -168,6 +228,11 @@ it('exige subtitulos y transcripcion para videos', function (array $payload): vo
     ]],
     [[
         'url' => 'https://media.example.test/video.mp4',
+        'captions_url' => null,
+        'transcript' => 'Transcripción',
+    ]],
+    [[
+        'url' => 'https://media.example.test/video.mp4',
         'captions_url' => 'https://media.example.test/video.vtt',
         'transcript' => ' ',
     ]],
@@ -193,6 +258,7 @@ it('exige transcripcion para audios', function (array $payload): void {
     ContentBlockFactory::create(contentBlockId(), 'audio', 1, $payload);
 })->with([
     [['url' => 'https://media.example.test/audio.mp3']],
+    [['url' => 'https://media.example.test/audio.mp3', 'transcript' => null]],
     [['url' => 'https://media.example.test/audio.mp3', 'transcript' => '']],
 ])->throws(ContentAccessibilityRequired::class);
 
@@ -258,10 +324,63 @@ it('exige nombre visible para descargas', function (array $payload): void {
     [['url' => 'https://docs.example.test/manual.pdf', 'mime_type' => 'application/pdf']],
     [[
         'url' => 'https://docs.example.test/manual.pdf',
+        'display_name' => null,
+        'mime_type' => 'application/pdf',
+    ]],
+    [[
+        'url' => 'https://docs.example.test/manual.pdf',
         'display_name' => ' ',
         'mime_type' => 'application/pdf',
     ]],
 ])->throws(ContentAccessibilityRequired::class);
+
+it('clasifica tipos invalidos de accesibilidad como bloque invalido', function (string $type, array $payload): void {
+    try {
+        ContentBlockFactory::create(contentBlockId(), $type, 1, $payload);
+    } catch (InvalidContentBlock $exception) {
+        expect($exception->errorCode())->toBe('INVALID_CONTENT_BLOCK')
+            ->and($exception->statusCode())->toBe(422);
+
+        return;
+    }
+
+    $this->fail('Se esperaba InvalidContentBlock.');
+})->with([
+    'image alt array' => ['image', [
+        'url' => 'https://cdn.example.test/senal.png',
+        'alt' => [],
+    ]],
+    'video captions array' => ['video', [
+        'url' => 'https://media.example.test/video.mp4',
+        'captions_url' => [],
+        'transcript' => 'Transcripción',
+    ]],
+    'video transcript integer' => ['video', [
+        'url' => 'https://media.example.test/video.mp4',
+        'captions_url' => 'https://media.example.test/video.vtt',
+        'transcript' => 42,
+    ]],
+    'audio transcript integer' => ['audio', [
+        'url' => 'https://media.example.test/audio.mp3',
+        'transcript' => 42,
+    ]],
+    'download display name array' => ['download', [
+        'url' => 'https://docs.example.test/manual.pdf',
+        'display_name' => [],
+        'mime_type' => 'application/pdf',
+    ]],
+]);
+
+it('rechaza posiciones no positivas al construir cualquier bloque directamente', function (string $type, int $position): void {
+    createContentBlockDirectly($type, $position);
+})->with([
+    ['text', 0],
+    ['image', -1],
+    ['video', 0],
+    ['audio', -1],
+    ['interactive', 0],
+    ['download', -1],
+])->throws(InvalidContentBlock::class);
 
 it('rechaza estructuras invalidas en bloques con recursos externos', function (string $type, array $payload): void {
     ContentBlockFactory::create(contentBlockId(), $type, 1, $payload);

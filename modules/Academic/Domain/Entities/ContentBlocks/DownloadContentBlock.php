@@ -26,6 +26,7 @@ final readonly class DownloadContentBlock implements ContentBlock
     /** @param array<string, mixed> $payload */
     public static function fromPayload(ContentBlockId $id, int $position, array $payload): self
     {
+        self::ensureValidPosition($position);
         self::ensureKeys($payload, ['url', 'display_name', 'mime_type', 'description', 'filename', 'size_bytes']);
         $displayName = self::accessibleString($payload, 'display_name');
         $sizeBytes = $payload['size_bytes'] ?? null;
@@ -73,6 +74,13 @@ final readonly class DownloadContentBlock implements ContentBlock
         ], static fn (mixed $value): bool => $value !== null);
     }
 
+    private static function ensureValidPosition(int $position): void
+    {
+        if ($position < 1) {
+            throw InvalidContentBlock::create();
+        }
+    }
+
     /**
      * @param  array<string, mixed>  $payload
      * @param  list<string>  $allowed
@@ -97,7 +105,15 @@ final readonly class DownloadContentBlock implements ContentBlock
     /** @param array<string, mixed> $payload */
     private static function accessibleString(array $payload, string $key): string
     {
-        if (! isset($payload[$key]) || ! is_string($payload[$key]) || trim($payload[$key]) === '') {
+        if (! array_key_exists($key, $payload) || $payload[$key] === null) {
+            throw ContentAccessibilityRequired::forField($key);
+        }
+
+        if (! is_string($payload[$key])) {
+            throw InvalidContentBlock::create();
+        }
+
+        if (trim($payload[$key]) === '') {
             throw ContentAccessibilityRequired::forField($key);
         }
 
