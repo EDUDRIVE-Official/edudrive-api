@@ -171,7 +171,18 @@ it('admite html literal dentro de bloques de codigo commonmark anidados', functi
     'indented code' => ['    <script>alert(1)</script>'],
     'fence in quote' => ["> ```html\n> <video controls></video>\n> ```"],
     'fence in list' => ["- ```html\n  <video controls></video>\n  ```"],
+    'fence in multi digit list' => ["10. item\n    ```html\n    <video></video>\n    ````"],
 ]);
+
+it('preserva la sangria de codigo despues de lineas exteriores en blanco', function (): void {
+    $block = ContentBlockFactory::create(contentBlockId(), 'text', 1, [
+        'markdown' => "\n    <script>ejemplo</script>",
+    ]);
+
+    expect($block->payload())->toBe([
+        'markdown' => '    <script>ejemplo</script>',
+    ]);
+});
 
 it('mantiene el rechazo de html crudo fuera de bloques de codigo', function (string $markdown): void {
     ContentBlockFactory::create(contentBlockId(), 'text', 1, [
@@ -191,6 +202,7 @@ it('rechaza comentarios y declaraciones html crudas en markdown', function (stri
 })->with([
     'comment' => ['Contenido <!-- comentario --> visible.'],
     'doctype' => ['<!DOCTYPE html>'],
+    'unclosed html block start' => ["<script\nalert(1)"],
 ])->throws(InvalidContentBlock::class);
 
 it('rechaza texto vacio, html arbitrario o claves desconocidas', function (array $payload): void {

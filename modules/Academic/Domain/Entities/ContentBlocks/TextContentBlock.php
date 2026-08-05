@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Modules\Academic\Domain\Entities\ContentBlocks;
 
+use League\CommonMark\Environment\Environment;
+use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
+use League\CommonMark\Extension\CommonMark\Node\Block\HtmlBlock;
+use League\CommonMark\Extension\CommonMark\Node\Inline\HtmlInline;
+use League\CommonMark\Parser\MarkdownParser;
 use Modules\Academic\Domain\Enums\ContentBlockType;
 use Modules\Academic\Domain\Exceptions\InvalidContentBlock;
 use Modules\Academic\Domain\ValueObjects\ContentBlockId;
@@ -63,109 +68,23 @@ final readonly class TextContentBlock implements ContentBlock
 
     private static function containsRawHtml(string $markdown): bool
     {
-        $outsideFences = '';
-        $fenceCharacter = null;
-        $fenceLength = 0;
-        $atBlockBoundary = true;
-        $inIndentedCode = false;
+        $environment = new Environment;
+        $environment->addExtension(new CommonMarkCoreExtension);
+        $walker = (new MarkdownParser($environment))->parse($markdown)->walker();
 
-        foreach (preg_split('/\R/', $markdown) ?: [] as $line) {
-            if ($fenceCharacter === null && preg_match(self::openingFencePattern(), $line, $match) === 1) {
-                $fenceCharacter = $match[1][0];
-                $fenceLength = strlen($match[1]);
-
+        while ($event = $walker->next()) {
+            if (! $event->isEntering()) {
                 continue;
             }
 
-            if ($fenceCharacter !== null) {
-                $closingPattern = sprintf(
-                    '/^(?:[ \t]{0,3}>[ \t]?)*[ \t]{0,3}%s{%d,}[ \t]*$/',
-                    preg_quote($fenceCharacter, '/'),
-                    $fenceLength,
-                );
+            $node = $event->getNode();
 
-                if (preg_match($closingPattern, $line) === 1) {
-                    $fenceCharacter = null;
-                    $fenceLength = 0;
-                    $atBlockBoundary = true;
-                }
-
-                continue;
-            }
-
-            if (trim($line) === '') {
-                $outsideFences .= "\n";
-                $atBlockBoundary = true;
-
-                continue;
-            }
-
-            if (
-                preg_match('/^(?:[ \t]{0,3}>[ \t]?)*(?: {4}|\t)/', $line) === 1
-                && ($atBlockBoundary || $inIndentedCode)
-            ) {
-                $inIndentedCode = true;
-
-                continue;
-            }
-
-            $inIndentedCode = false;
-            $atBlockBoundary = false;
-            $outsideFences .= $line."\n";
-        }
-
-        $length = strlen($outsideFences);
-
-        for ($index = 0; $index < $length; $index++) {
-            $character = $outsideFences[$index];
-
-            if ($character === '\\' && $index + 1 < $length) {
-                $index++;
-
-                continue;
-            }
-
-            if ($character === '`') {
-                $runLength = strspn($outsideFences, '`', $index);
-                $delimiter = str_repeat('`', $runLength);
-                $closingPosition = strpos($outsideFences, $delimiter, $index + $runLength);
-
-                if ($closingPosition !== false) {
-                    $index = $closingPosition + $runLength - 1;
-
-                    continue;
-                }
-            }
-
-            if ($character !== '<') {
-                continue;
-            }
-
-            $candidate = substr($outsideFences, $index);
-
-            if (preg_match('/\A<https:\/\/[^\s<>]+>/i', $candidate, $match) === 1) {
-                $index += strlen($match[0]) - 1;
-
-                continue;
-            }
-
-            if (
-                str_starts_with($candidate, '<!--')
-                || preg_match('/\A<![A-Z]/i', $candidate) === 1
-                || str_starts_with($candidate, '<?')
-                || str_starts_with($candidate, '<![CDATA[')
-                || preg_match('/\A<\s*\/?\s*[a-z][a-z0-9-]*(?:\s+[^<>]*?)?\s*\/?>/is', $candidate) === 1
-            ) {
+            if ($node instanceof HtmlBlock || $node instanceof HtmlInline) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    private static function openingFencePattern(): string
-    {
-        return '/^(?:[ \t]{0,3}>[ \t]?)*(?:[ \t]{0,3}(?:[-+*]|\d{1,9}[.)])[ \t]+)?[ \t]{0,3}(`{3,}|~{3,})/';
     }
 
     /**
@@ -186,11 +105,14 @@ final readonly class TextContentBlock implements ContentBlock
             throw InvalidContentBlock::create();
         }
 
-        if (preg_match('/^(?: {4}|\t)/', $payload['markdown']) === 1) {
-            return rtrim($payload['markdown']);
+        $markdown = preg_replace('/\A(?:[ \t]*\R)+/', '', $payload['markdown']) ?? $payload['markdown'];
+        $markdown = preg_replace('/(?:\R[ \t]*)+\z/', '', $markdown) ?? $markdown;
+
+        if (preg_match('/^(?: {4}|\t)/', $markdown) === 1) {
+            return rtrim($markdown);
         }
 
-        return trim($payload['markdown']);
+        return trim($markdown);
     }
 
     /** @param array<string, mixed> $payload */
