@@ -11,9 +11,11 @@ use Modules\Academic\Domain\Enums\CourseStatus;
 use Modules\Academic\Domain\Exceptions\ArchivedCourseCannotBeModified;
 use Modules\Academic\Domain\Exceptions\CourseAlreadyArchived;
 use Modules\Academic\Domain\Exceptions\CourseAlreadyPublished;
+use Modules\Academic\Domain\Exceptions\CourseContentCannotBeModified;
 use Modules\Academic\Domain\Exceptions\CourseCurriculumCannotBeModified;
 use Modules\Academic\Domain\Exceptions\CourseCurriculumRequired;
 use Modules\Academic\Domain\Exceptions\CourseModuleRequiresUnits;
+use Modules\Academic\Domain\Exceptions\CourseUnitContentRequired;
 use Modules\Academic\Domain\Exceptions\DuplicateCourseModule;
 use Modules\Academic\Domain\Exceptions\DuplicateCourseUnit;
 use Modules\Academic\Domain\Exceptions\InvalidCurriculumPosition;
@@ -21,6 +23,8 @@ use Modules\Academic\Domain\Exceptions\InvalidCurriculumPrerequisite;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
+use Modules\Academic\Domain\ValueObjects\CourseUnitId;
+use Modules\Academic\Domain\ValueObjects\UnitContentCoverage;
 
 final class Course
 {
@@ -131,7 +135,7 @@ final class Course
         $this->modules = $modules;
     }
 
-    public function publish(DateTimeImmutable $publishedAt): void
+    public function publish(DateTimeImmutable $publishedAt, UnitContentCoverage $coverage): void
     {
         $this->ensureIsNotArchived();
 
@@ -144,6 +148,14 @@ final class Course
         }
 
         $this->ensureEveryModuleHasUnits();
+
+        foreach ($this->modules as $module) {
+            foreach ($module->units() as $unit) {
+                if (! $coverage->covers($unit->id())) {
+                    throw CourseUnitContentRequired::create();
+                }
+            }
+        }
 
         $this->status = CourseStatus::Published;
         $this->publishedAt = $publishedAt;
@@ -218,6 +230,26 @@ final class Course
     public function modules(): array
     {
         return $this->modules;
+    }
+
+    public function ownsUnit(CourseUnitId $unitId): bool
+    {
+        foreach ($this->modules as $module) {
+            foreach ($module->units() as $unit) {
+                if ($unit->id()->equals($unitId)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public function ensureContentCanBeModified(): void
+    {
+        if (! $this->status->isDraft()) {
+            throw CourseContentCannotBeModified::create();
+        }
     }
 
     /** @param list<CourseModule> $modules */

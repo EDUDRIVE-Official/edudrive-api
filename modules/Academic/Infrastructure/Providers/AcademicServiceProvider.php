@@ -40,9 +40,11 @@ use Modules\Academic\Application\UseCases\ReplaceProgramCoursesHandler;
 use Modules\Academic\Domain\Repositories\CompetencyRepository;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\ProgramRepository;
+use Modules\Academic\Domain\Repositories\UnitContentRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCompetencyRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCourseRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentProgramRepository;
+use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentUnitContentRepository;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
 
 final class AcademicServiceProvider extends ServiceProvider
@@ -63,6 +65,8 @@ final class AcademicServiceProvider extends ServiceProvider
             ProgramRepository::class,
             EloquentProgramRepository::class,
         );
+
+        $this->app->bind(UnitContentRepository::class, EloquentUnitContentRepository::class);
     }
 
     public function boot(

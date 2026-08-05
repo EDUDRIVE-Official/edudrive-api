@@ -20,6 +20,7 @@ use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
+use Modules\Academic\Domain\ValueObjects\UnitContentCoverage;
 use Modules\Foundation\Application\Bus\CommandBus;
 use Modules\Foundation\Application\Bus\QueryBus;
 
@@ -57,6 +58,29 @@ final class Eng027CurriculumCourseRepository implements CourseRepository
         $this->atomicUpdateCalls++;
         $candidate = clone $course;
         $mutation($candidate);
+        $this->courses[$id->value()] = $candidate;
+
+        return $candidate;
+    }
+
+    public function updateAtomicallyWithContentCoverage(CourseId $id, Closure $mutation): ?Course
+    {
+        $course = $this->findById($id);
+
+        if ($course === null) {
+            return null;
+        }
+
+        $unitIds = [];
+        foreach ($course->modules() as $module) {
+            foreach ($module->units() as $unit) {
+                $unitIds[] = $unit->id();
+            }
+        }
+
+        $this->atomicUpdateCalls++;
+        $candidate = clone $course;
+        $mutation($candidate, UnitContentCoverage::fromUnitIds($unitIds));
         $this->courses[$id->value()] = $candidate;
 
         return $candidate;

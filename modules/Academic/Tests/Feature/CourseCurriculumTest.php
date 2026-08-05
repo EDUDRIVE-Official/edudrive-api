@@ -192,6 +192,8 @@ it('reemplaza consulta publica e inmoviliza el curriculo completo de un curso', 
         ->and($stored?->modules()[1]->prerequisiteModuleIds()[0]->value())
         ->toBe($payload['modules'][0]['id']);
 
+    addCompleteContentForCourse($stored);
+
     $this->getJson("/api/v1/academic/courses/{$courseId}/curriculum")
         ->assertOk()
         ->assertJsonPath('data', $storedData);

@@ -25,6 +25,7 @@ use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Academic\Domain\ValueObjects\ProgramAudience;
 use Modules\Academic\Domain\ValueObjects\ProgramCode;
 use Modules\Academic\Domain\ValueObjects\ProgramId;
+use Modules\Academic\Domain\ValueObjects\UnitContentCoverage;
 
 final class Task5InMemoryProgramRepository implements ProgramRepository
 {
@@ -105,6 +106,20 @@ final class Task5InMemoryCourseRepository implements CourseRepository
         return $candidate;
     }
 
+    public function updateAtomicallyWithContentCoverage(CourseId $id, Closure $mutation): ?Course
+    {
+        $course = $this->findById($id);
+
+        if ($course === null) {
+            return null;
+        }
+
+        $candidate = clone $course;
+        $mutation($candidate, UnitContentCoverage::fromUnitIds([]));
+
+        return $candidate;
+    }
+
     public function findById(CourseId $id): ?Course
     {
         return $this->courses[$id->value()] ?? null;
@@ -153,7 +168,7 @@ function task5Course(string $id, string $code, CourseStatus $status): Course
 
     if ($status === CourseStatus::Published) {
         addMinimalCurriculum($course);
-        $course->publish(new DateTimeImmutable('2026-08-03 08:00:00'));
+        $course->publish(new DateTimeImmutable('2026-08-03 08:00:00'), completeCoverageForCourse($course));
     }
 
     if ($status === CourseStatus::Archived) {

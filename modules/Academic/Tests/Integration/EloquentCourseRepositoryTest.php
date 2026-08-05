@@ -127,7 +127,7 @@ it('serializa publish antes de replace y conserva el curriculo publicado', funct
     $repository->updateAtomically(
         $course->id(),
         static function (Course $locked): void {
-            $locked->publish(new DateTimeImmutable('2026-08-04T12:00:00+00:00'));
+            $locked->publish(new DateTimeImmutable('2026-08-04T12:00:00+00:00'), completeCoverageForCourse($locked));
         },
     );
 
@@ -171,7 +171,7 @@ it('serializa replace antes de publish y publica exactamente el nuevo curriculo'
     $repository->updateAtomically(
         $course->id(),
         static function (Course $locked): void {
-            $locked->publish(new DateTimeImmutable('2026-08-04T12:00:00+00:00'));
+            $locked->publish(new DateTimeImmutable('2026-08-04T12:00:00+00:00'), completeCoverageForCourse($locked));
         },
     );
 
