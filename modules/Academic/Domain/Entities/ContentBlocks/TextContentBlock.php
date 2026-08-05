@@ -22,7 +22,7 @@ final readonly class TextContentBlock implements ContentBlock
     {
         self::ensureValidPosition($position);
         self::ensureKeys($payload, ['markdown', 'title']);
-        $markdown = self::requiredString($payload, 'markdown');
+        $markdown = self::requiredMarkdown($payload);
 
         if (self::containsRawHtml($markdown)) {
             throw InvalidContentBlock::create();
@@ -66,9 +66,11 @@ final readonly class TextContentBlock implements ContentBlock
         $outsideFences = '';
         $fenceCharacter = null;
         $fenceLength = 0;
+        $atBlockBoundary = true;
+        $inIndentedCode = false;
 
         foreach (preg_split('/\R/', $markdown) ?: [] as $line) {
-            if ($fenceCharacter === null && preg_match('/^[ \t]{0,3}(`{3,}|~{3,})/', $line, $match) === 1) {
+            if ($fenceCharacter === null && preg_match(self::openingFencePattern(), $line, $match) === 1) {
                 $fenceCharacter = $match[1][0];
                 $fenceLength = strlen($match[1]);
 
@@ -77,7 +79,7 @@ final readonly class TextContentBlock implements ContentBlock
 
             if ($fenceCharacter !== null) {
                 $closingPattern = sprintf(
-                    '/^[ \t]{0,3}%s{%d,}[ \t]*$/',
+                    '/^(?:[ \t]{0,3}>[ \t]?)*[ \t]{0,3}%s{%d,}[ \t]*$/',
                     preg_quote($fenceCharacter, '/'),
                     $fenceLength,
                 );
@@ -85,11 +87,30 @@ final readonly class TextContentBlock implements ContentBlock
                 if (preg_match($closingPattern, $line) === 1) {
                     $fenceCharacter = null;
                     $fenceLength = 0;
+                    $atBlockBoundary = true;
                 }
 
                 continue;
             }
 
+            if (trim($line) === '') {
+                $outsideFences .= "\n";
+                $atBlockBoundary = true;
+
+                continue;
+            }
+
+            if (
+                preg_match('/^(?:[ \t]{0,3}>[ \t]?)*(?: {4}|\t)/', $line) === 1
+                && ($atBlockBoundary || $inIndentedCode)
+            ) {
+                $inIndentedCode = true;
+
+                continue;
+            }
+
+            $inIndentedCode = false;
+            $atBlockBoundary = false;
             $outsideFences .= $line."\n";
         }
 
@@ -142,6 +163,11 @@ final readonly class TextContentBlock implements ContentBlock
         return false;
     }
 
+    private static function openingFencePattern(): string
+    {
+        return '/^(?:[ \t]{0,3}>[ \t]?)*(?:[ \t]{0,3}(?:[-+*]|\d{1,9}[.)])[ \t]+)?[ \t]{0,3}(`{3,}|~{3,})/';
+    }
+
     /**
      * @param  array<string, mixed>  $payload
      * @param  list<string>  $allowed
@@ -154,13 +180,17 @@ final readonly class TextContentBlock implements ContentBlock
     }
 
     /** @param array<string, mixed> $payload */
-    private static function requiredString(array $payload, string $key): string
+    private static function requiredMarkdown(array $payload): string
     {
-        if (! isset($payload[$key]) || ! is_string($payload[$key]) || trim($payload[$key]) === '') {
+        if (! isset($payload['markdown']) || ! is_string($payload['markdown']) || trim($payload['markdown']) === '') {
             throw InvalidContentBlock::create();
         }
 
-        return trim($payload[$key]);
+        if (preg_match('/^(?: {4}|\t)/', $payload['markdown']) === 1) {
+            return rtrim($payload['markdown']);
+        }
+
+        return trim($payload['markdown']);
     }
 
     /** @param array<string, mixed> $payload */
