@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Database\PostgresConnection;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
@@ -17,6 +18,7 @@ use Modules\Academic\Domain\Entities\CourseUnit;
 use Modules\Academic\Domain\Entities\Lesson;
 use Modules\Academic\Domain\Exceptions\CourseContentCannotBeModified;
 use Modules\Academic\Domain\Exceptions\CourseUnitContentRequired;
+use Modules\Academic\Domain\Exceptions\InvalidContentBlock;
 use Modules\Academic\Domain\Services\ContentBlockFactory;
 use Modules\Academic\Domain\ValueObjects\ContentBlockId;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
@@ -217,18 +219,21 @@ it('rechaza unidad ajena sin revelar ownership y curso publicado sin mutar', fun
 
 it('impone duracion positiva y cascada en las tablas de contenido', function (): void {
     $courses = app(EloquentCourseRepository::class);
+    $contents = app(EloquentUnitContentRepository::class);
     $courseId = '01981a64-8300-7b1d-b442-764ea7f92050';
     $unitId = '01981a64-8300-7b1d-b442-764ea7f92051';
     $courses->save(contentCourse($courseId, 'CONTENT-06', $unitId));
-    DB::table('academic_unit_contents')->insert(['unit_id' => $unitId, 'created_at' => now(), 'updated_at' => now()]);
+    $contents->replaceAtomically(CourseId::fromString($courseId), CourseUnitId::fromString($unitId), completeUnitContent($unitId));
 
     expect(fn () => DB::table('academic_lessons')->insert([
         'id' => '01981a64-8300-7b1d-b442-764ea7f92052', 'unit_id' => $unitId, 'code' => 'LEC', 'title' => 'Leccion',
-        'summary' => null, 'duration_minutes' => 0, 'position' => 1, 'created_at' => now(), 'updated_at' => now(),
+        'summary' => null, 'duration_minutes' => 0, 'position' => 2, 'created_at' => now(), 'updated_at' => now(),
     ]))->toThrow(QueryException::class);
 
     DB::table('academic_courses')->where('id', $courseId)->delete();
-    expect(DB::table('academic_unit_contents')->where('unit_id', $unitId)->exists())->toBeFalse();
+    expect(DB::table('academic_unit_contents')->where('unit_id', $unitId)->exists())->toBeFalse()
+        ->and(DB::table('academic_lessons')->where('unit_id', $unitId)->exists())->toBeFalse()
+        ->and(DB::table('academic_lesson_blocks')->exists())->toBeFalse();
 });
 
 it('reordena lecciones y elimina nodos obsoletos preservando UUID', function (): void {
@@ -329,4 +334,253 @@ it('compila el check de lecciones con la gramatica PostgreSQL', function (): voi
 
     expect(mb_strtolower(implode(' ', $blueprint->toSql())))
         ->toContain('check (duration_minutes is null or duration_minutes > 0)');
+});
+
+it('devuelve null cuando el curso no existe en lectura y reemplazo', function (): void {
+    $contents = app(EloquentUnitContentRepository::class);
+    $courseId = CourseId::fromString('01981a64-8300-7b1d-b442-764ea7f92600');
+    $unitId = CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f92601');
+
+    expect($contents->findForCourseUnit($courseId, $unitId))->toBeNull()
+        ->and($contents->replaceAtomically($courseId, $unitId, UnitContent::create($unitId, [])))->toBeNull();
+});
+
+it('rechaza un agregado para otra unidad sin mutar contenido existente', function (): void {
+    $courses = app(EloquentCourseRepository::class);
+    $contents = app(EloquentUnitContentRepository::class);
+    $courseId = CourseId::fromString('01981a64-8300-7b1d-b442-764ea7f92610');
+    $unitId = CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f92611');
+    $courses->save(contentCourse($courseId->value(), 'CONTENT-10', $unitId->value()));
+    $previous = completeUnitContent($unitId->value());
+    $contents->replaceAtomically($courseId, $unitId, $previous);
+
+    expect(fn () => $contents->replaceAtomically(
+        $courseId,
+        $unitId,
+        UnitContent::create(CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f92612'), []),
+    ))->toThrow(CourseUnitNotFound::class);
+    expect($contents->findForCourseUnit($courseId, $unitId)?->lessons()[0]->id()->value())
+        ->toBe($previous->lessons()[0]->id()->value());
+});
+
+it('rechaza reemplazar contenido archivado y conserva las filas', function (): void {
+    $courses = app(EloquentCourseRepository::class);
+    $contents = app(EloquentUnitContentRepository::class);
+    $courseId = CourseId::fromString('01981a64-8300-7b1d-b442-764ea7f92620');
+    $unitId = CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f92621');
+    $courses->save(contentCourse($courseId->value(), 'CONTENT-11', $unitId->value()));
+    $previous = completeUnitContent($unitId->value());
+    $contents->replaceAtomically($courseId, $unitId, $previous);
+    $courses->updateAtomically($courseId, static fn (Course $course) => $course->archive(new DateTimeImmutable));
+
+    expect(fn () => $contents->replaceAtomically($courseId, $unitId, $previous))
+        ->toThrow(CourseContentCannotBeModified::class);
+    expect(DB::table('academic_lessons')->where('unit_id', $unitId->value())->count())->toBe(1);
+});
+
+it('impide transferir un ContentBlockId global y conserva ambos contenidos', function (): void {
+    $courses = app(EloquentCourseRepository::class);
+    $contents = app(EloquentUnitContentRepository::class);
+    $firstCourseId = '01981a64-8300-7b1d-b442-764ea7f92630';
+    $firstUnitId = '01981a64-8300-7b1d-b442-764ea7f92631';
+    $secondCourseId = '01981a64-8300-7b1d-b442-764ea7f92632';
+    $secondUnitId = '01981a64-8300-7b1d-b442-764ea7f92633';
+    $courses->save(contentCourse($firstCourseId, 'CONTENT-12', $firstUnitId));
+    $courses->save(contentCourse($secondCourseId, 'CONTENT-13', $secondUnitId, '01981a64-8300-7b1d-b442-764ea7f92634'));
+    $first = completeUnitContent($firstUnitId);
+    $contents->replaceAtomically(CourseId::fromString($firstCourseId), CourseUnitId::fromString($firstUnitId), $first);
+    $foreignBlock = $first->lessons()[0]->blocks()[0];
+    $candidate = UnitContent::create(CourseUnitId::fromString($secondUnitId), [Lesson::create(
+        LessonId::fromString('01981a64-8300-7b1d-b442-764ea7f92635'), CurriculumCode::fromString('LEC-X'),
+        'Leccion X', null, null, 1, [ContentBlockFactory::create($foreignBlock->id(), 'text', 1, ['markdown' => 'Transferencia'])],
+    )]);
+
+    expect(fn () => $contents->replaceAtomically(
+        CourseId::fromString($secondCourseId), CourseUnitId::fromString($secondUnitId), $candidate,
+    ))->toThrow(CourseContentIdConflict::class);
+    expect($contents->findForCourseUnit(CourseId::fromString($firstCourseId), CourseUnitId::fromString($firstUnitId))?->lessons()[0]->blocks()[0]->payload())
+        ->toBe($foreignBlock->payload())
+        ->and($contents->findForCourseUnit(CourseId::fromString($secondCourseId), CourseUnitId::fromString($secondUnitId))?->lessons())
+        ->toBe([]);
+});
+
+it('traduce una insercion competidora de LessonId y revierte el reemplazo completo', function (): void {
+    $courses = app(EloquentCourseRepository::class);
+    $contents = app(EloquentUnitContentRepository::class);
+    $courseId = '01981a64-8300-7b1d-b442-764ea7f92640';
+    $unitId = '01981a64-8300-7b1d-b442-764ea7f92641';
+    $competingUnitId = '01981a64-8300-7b1d-b442-764ea7f92644';
+    $course = contentCourse($courseId, 'CONTENT-14', $unitId);
+    $module = $course->modules()[0];
+    $course->replaceCurriculum([CourseModule::create(
+        $module->id(), $module->code(), $module->title(), $module->description(), $module->objectives(),
+        $module->durationMinutes(), 1, [], [
+            $module->units()[0],
+            CourseUnit::create(CourseUnitId::fromString($competingUnitId), CurriculumCode::fromString('UNI-02'), 'Unidad competidora', 'Descripcion', null, 20, 2, []),
+        ],
+    )]);
+    $courses->save($course);
+    DB::table('academic_unit_contents')->insert(['unit_id' => $competingUnitId, 'created_at' => now(), 'updated_at' => now()]);
+    $previous = completeUnitContent($unitId);
+    $contents->replaceAtomically(CourseId::fromString($courseId), CourseUnitId::fromString($unitId), $previous);
+    $racingId = '01981a64-8300-7b1d-b442-764ea7f92642';
+    $candidate = UnitContent::create(CourseUnitId::fromString($unitId), [Lesson::create(
+        LessonId::fromString($racingId), CurriculumCode::fromString('LEC-RACE'), 'Carrera', null, null, 1,
+        [ContentBlockFactory::create(ContentBlockId::fromString('01981a64-8300-7b1d-b442-764ea7f92643'), 'text', 1, ['markdown' => 'Carrera'])],
+    )]);
+    $injected = false;
+    DB::listen(function (QueryExecuted $query) use (&$injected, $racingId, $competingUnitId): void {
+        if ($injected || ! str_contains($query->sql, 'academic_lessons') || ! str_contains($query->sql, 'exists')) {
+            return;
+        }
+        $injected = true;
+        DB::table('academic_lessons')->insert([
+            'id' => $racingId, 'unit_id' => $competingUnitId, 'code' => 'LEC-COMPETE', 'title' => 'Competidora',
+            'summary' => null, 'duration_minutes' => null, 'position' => 2, 'created_at' => now(), 'updated_at' => now(),
+        ]);
+    });
+
+    expect(fn () => $contents->replaceAtomically(CourseId::fromString($courseId), CourseUnitId::fromString($unitId), $candidate))
+        ->toThrow(CourseContentIdConflict::class);
+    expect($injected)->toBeTrue()
+        ->and(DB::table('academic_lessons')->where('id', $racingId)->exists())->toBeFalse()
+        ->and($contents->findForCourseUnit(CourseId::fromString($courseId), CourseUnitId::fromString($unitId))?->lessons()[0]->id()->value())
+        ->toBe($previous->lessons()[0]->id()->value());
+});
+
+it('no traduce una QueryException del repositorio que no es PK global', function (): void {
+    $courses = app(EloquentCourseRepository::class);
+    $contents = app(EloquentUnitContentRepository::class);
+    $courseId = '01981a64-8300-7b1d-b442-764ea7f92650';
+    $unitId = '01981a64-8300-7b1d-b442-764ea7f92651';
+    $courses->save(contentCourse($courseId, 'CONTENT-19', $unitId));
+    $previous = completeUnitContent($unitId);
+    $contents->replaceAtomically(CourseId::fromString($courseId), CourseUnitId::fromString($unitId), $previous);
+    $candidate = UnitContent::create(CourseUnitId::fromString($unitId), [Lesson::create(
+        LessonId::fromString('01981a64-8300-7b1d-b442-764ea7f92652'), CurriculumCode::fromString('LEC-RACE'),
+        'Carrera codigo', null, null, 1,
+        [ContentBlockFactory::create(ContentBlockId::fromString('01981a64-8300-7b1d-b442-764ea7f92653'), 'text', 1, ['markdown' => 'Carrera'])],
+    )]);
+    DB::statement(<<<'SQL'
+        CREATE TRIGGER reject_non_pk_content_error
+        BEFORE UPDATE OF code ON academic_lessons
+        WHEN NEW.code = 'LEC-RACE'
+        BEGIN
+            SELECT RAISE(ABORT, 'forced non-pk content error');
+        END
+        SQL);
+
+    expect(fn () => $contents->replaceAtomically(CourseId::fromString($courseId), CourseUnitId::fromString($unitId), $candidate))
+        ->toThrow(QueryException::class);
+    expect(DB::table('academic_lessons')->where('code', 'LEC-RACE')->exists())->toBeFalse()
+        ->and($contents->findForCourseUnit(CourseId::fromString($courseId), CourseUnitId::fromString($unitId))?->lessons()[0]->id()->value())
+        ->toBe($previous->lessons()[0]->id()->value());
+});
+
+it('intercambia realmente codigos y posiciones de dos UUID persistentes', function (): void {
+    $courses = app(EloquentCourseRepository::class);
+    $contents = app(EloquentUnitContentRepository::class);
+    $courseId = '01981a64-8300-7b1d-b442-764ea7f92700';
+    $unitId = '01981a64-8300-7b1d-b442-764ea7f92701';
+    $courses->save(contentCourse($courseId, 'CONTENT-15', $unitId));
+    $make = static fn (string $id, string $code, int $position, string $blockId): Lesson => Lesson::create(
+        LessonId::fromString($id), CurriculumCode::fromString($code), $code, null, null, $position,
+        [ContentBlockFactory::create(ContentBlockId::fromString($blockId), 'text', 1, ['markdown' => $code])],
+    );
+    $firstId = '01981a64-8300-7b1d-b442-764ea7f92702';
+    $secondId = '01981a64-8300-7b1d-b442-764ea7f92703';
+    $firstBlock = '01981a64-8300-7b1d-b442-764ea7f92704';
+    $secondBlock = '01981a64-8300-7b1d-b442-764ea7f92705';
+    $contents->replaceAtomically(CourseId::fromString($courseId), CourseUnitId::fromString($unitId), UnitContent::create(
+        CourseUnitId::fromString($unitId), [$make($firstId, 'LEC-A', 1, $firstBlock), $make($secondId, 'LEC-B', 2, $secondBlock)],
+    ));
+
+    $swapped = $contents->replaceAtomically(CourseId::fromString($courseId), CourseUnitId::fromString($unitId), UnitContent::create(
+        CourseUnitId::fromString($unitId), [$make($secondId, 'LEC-A', 1, $secondBlock), $make($firstId, 'LEC-B', 2, $firstBlock)],
+    ));
+
+    expect(array_map(static fn (Lesson $lesson): string => $lesson->id()->value(), $swapped?->lessons() ?? []))->toBe([$secondId, $firstId])
+        ->and(array_map(static fn (Lesson $lesson): string => $lesson->code()->value(), $swapped?->lessons() ?? []))->toBe(['LEC-A', 'LEC-B'])
+        ->and(DB::table('academic_lessons')->whereIn('id', [$firstId, $secondId])->count())->toBe(2);
+});
+
+it('propaga payload persistido corrupto y revierte un reemplazo fallido conservando el previo', function (): void {
+    $courses = app(EloquentCourseRepository::class);
+    $contents = app(EloquentUnitContentRepository::class);
+    $courseId = '01981a64-8300-7b1d-b442-764ea7f92710';
+    $unitId = '01981a64-8300-7b1d-b442-764ea7f92711';
+    $courses->save(contentCourse($courseId, 'CONTENT-16', $unitId));
+    $previous = completeUnitContent($unitId);
+    $contents->replaceAtomically(CourseId::fromString($courseId), CourseUnitId::fromString($unitId), $previous);
+    $blockId = $previous->lessons()[0]->blocks()[0]->id()->value();
+    $candidate = UnitContent::create(CourseUnitId::fromString($unitId), [Lesson::create(
+        $previous->lessons()[0]->id(), CurriculumCode::fromString('LEC-NEW'), 'Nueva', null, null, 1,
+        [ContentBlockFactory::create(ContentBlockId::fromString($blockId), 'text', 1, ['markdown' => 'Nuevo'])],
+    )]);
+    $corrupted = false;
+    DB::listen(function (QueryExecuted $query) use (&$corrupted, $blockId): void {
+        if (
+            $corrupted
+            || ! str_contains($query->sql, 'update "academic_lesson_blocks"')
+            || ! str_contains($query->sql, '"position"')
+            || (int) ($query->bindings[0] ?? 0) !== 1
+        ) {
+            return;
+        }
+        $corrupted = true;
+        DB::table('academic_lesson_blocks')->where('id', $blockId)->update(['payload' => json_encode(['markdown' => ''])]);
+    });
+
+    expect(fn () => $contents->replaceAtomically(CourseId::fromString($courseId), CourseUnitId::fromString($unitId), $candidate))
+        ->toThrow(InvalidContentBlock::class);
+    expect($corrupted)->toBeTrue()
+        ->and($contents->findForCourseUnit(CourseId::fromString($courseId), CourseUnitId::fromString($unitId))?->lessons()[0]->code()->value())
+        ->toBe('LEC-01')
+        ->and(DB::table('academic_lesson_blocks')->where('lesson_id', $previous->lessons()[0]->id()->value())->count())->toBe(6);
+});
+
+it('no oculta corrupcion persistida al cargar un payload invalido', function (): void {
+    $courses = app(EloquentCourseRepository::class);
+    $contents = app(EloquentUnitContentRepository::class);
+    $courseId = '01981a64-8300-7b1d-b442-764ea7f92712';
+    $unitId = '01981a64-8300-7b1d-b442-764ea7f92713';
+    $courses->save(contentCourse($courseId, 'CONTENT-18', $unitId));
+    $content = completeUnitContent($unitId);
+    $contents->replaceAtomically(CourseId::fromString($courseId), CourseUnitId::fromString($unitId), $content);
+    DB::table('academic_lesson_blocks')->where('id', $content->lessons()[0]->blocks()[0]->id()->value())
+        ->update(['payload' => json_encode(['markdown' => ''])]);
+
+    expect(fn () => $contents->findForCourseUnit(CourseId::fromString($courseId), CourseUnitId::fromString($unitId)))
+        ->toThrow(InvalidContentBlock::class);
+});
+
+it('impone FK y unicidad de codigo y posiciones sin traducir QueryException directas', function (): void {
+    $courses = app(EloquentCourseRepository::class);
+    $contents = app(EloquentUnitContentRepository::class);
+    $courseId = '01981a64-8300-7b1d-b442-764ea7f92720';
+    $unitId = '01981a64-8300-7b1d-b442-764ea7f92721';
+    $courses->save(contentCourse($courseId, 'CONTENT-17', $unitId));
+    $content = completeUnitContent($unitId);
+    $contents->replaceAtomically(CourseId::fromString($courseId), CourseUnitId::fromString($unitId), $content);
+    $base = ['summary' => null, 'duration_minutes' => null, 'created_at' => now(), 'updated_at' => now()];
+
+    expect(fn () => DB::table('academic_lessons')->insert([
+        ...$base, 'id' => '01981a64-8300-7b1d-b442-764ea7f92722', 'unit_id' => $unitId,
+        'code' => 'LEC-01', 'title' => 'Duplicado codigo', 'position' => 2,
+    ]))->toThrow(QueryException::class);
+    expect(fn () => DB::table('academic_lessons')->insert([
+        ...$base, 'id' => '01981a64-8300-7b1d-b442-764ea7f92723', 'unit_id' => $unitId,
+        'code' => 'LEC-02', 'title' => 'Duplicado posicion', 'position' => 1,
+    ]))->toThrow(QueryException::class);
+    expect(fn () => DB::table('academic_lesson_blocks')->insert([
+        'id' => '01981a64-8300-7b1d-b442-764ea7f92724', 'lesson_id' => $content->lessons()[0]->id()->value(),
+        'type' => 'text', 'position' => 1, 'payload' => json_encode(['markdown' => 'Duplicado']), 'created_at' => now(), 'updated_at' => now(),
+    ]))->toThrow(QueryException::class);
+    expect(fn () => DB::table('academic_unit_contents')->insert([
+        'unit_id' => '01981a64-8300-7b1d-b442-764ea7f92990', 'created_at' => now(), 'updated_at' => now(),
+    ]))->toThrow(QueryException::class);
+    expect(fn () => DB::table('academic_lesson_blocks')->insert([
+        'id' => '01981a64-8300-7b1d-b442-764ea7f92725', 'lesson_id' => '01981a64-8300-7b1d-b442-764ea7f92991',
+        'type' => 'text', 'position' => 1, 'payload' => json_encode(['markdown' => 'Sin padre']), 'created_at' => now(), 'updated_at' => now(),
+    ]))->toThrow(QueryException::class);
 });
