@@ -109,54 +109,84 @@ final readonly class EloquentUnitContentRepository implements UnitContentReposit
 
     private function moveExistingToTemporaryValues(CourseUnitId $unitId): void
     {
-        $lessons = LessonModel::query()->where('unit_id', $unitId->value())->orderBy('id')->get();
+        LessonModel::query()->where('unit_id', $unitId->value())->update([
+            'code' => DB::raw("'__TMP__' || id"),
+            'position' => DB::raw('-1000000 - position'),
+        ]);
 
-        foreach ($lessons as $index => $lesson) {
-            $lesson->update(['code' => '__TMP__'.$lesson->getKey(), 'position' => -1 - $index]);
-        }
-
-        foreach (ContentBlockModel::query()->whereIn('lesson_id', $lessons->modelKeys())->orderBy('id')->get() as $index => $block) {
-            $block->update(['position' => -1 - $index]);
-        }
+        ContentBlockModel::query()
+            ->whereIn('lesson_id', LessonModel::query()->select('id')->where('unit_id', $unitId->value()))
+            ->update(['position' => DB::raw('-3000000 - position')]);
     }
 
     /** @param list<Lesson> $lessons */
     private function sync(CourseUnitId $unitId, array $lessons): void
     {
-        foreach ($lessons as $lessonIndex => $lesson) {
-            $lessonAttributes = [
-                'unit_id' => $unitId->value(), 'code' => '__IN__'.$lesson->id()->value(),
-                'title' => $lesson->title(), 'summary' => $lesson->summary(),
-                'duration_minutes' => $lesson->durationMinutes(), 'position' => -1000000 - $lessonIndex,
-            ];
-            $updated = LessonModel::query()->whereKey($lesson->id()->value())->where('unit_id', $unitId->value())->update($lessonAttributes);
-
-            if ($updated === 0) {
-                LessonModel::query()->create(['id' => $lesson->id()->value(), ...$lessonAttributes]);
-            }
-
-            foreach ($lesson->blocks() as $blockIndex => $block) {
-                $attributes = [
-                    'lesson_id' => $lesson->id()->value(), 'type' => $block->type()->value,
-                    'position' => -2000000 - $blockIndex, 'payload' => $block->payload(),
-                ];
-                $ownLessonIds = LessonModel::query()->select('id')->where('unit_id', $unitId->value());
-                $blockUpdated = ContentBlockModel::query()->whereKey($block->id()->value())
-                    ->whereIn('lesson_id', $ownLessonIds)->update($attributes);
-
-                if ($blockUpdated === 0) {
-                    ContentBlockModel::query()->create(['id' => $block->id()->value(), ...$attributes]);
-                }
-            }
-        }
-
         $incomingLessonIds = array_map(static fn (Lesson $lesson): string => $lesson->id()->value(), $lessons);
         $incomingBlockIds = [];
+        $timestamp = now();
+        $temporaryLessonRows = [];
+        $finalLessonRows = [];
+        $temporaryBlockRows = [];
+        $finalBlockRows = [];
+
+        $ownedLessonIds = LessonModel::query()->where('unit_id', $unitId->value())
+            ->pluck('id')->mapWithKeys(static fn (mixed $id): array => [(string) $id => true])->all();
+        $ownedBlockIds = DB::table('academic_lesson_blocks as blocks')
+            ->join('academic_lessons as lessons', 'lessons.id', '=', 'blocks.lesson_id')
+            ->where('lessons.unit_id', $unitId->value())
+            ->pluck('blocks.id')->mapWithKeys(static fn (mixed $id): array => [(string) $id => true])->all();
+
         foreach ($lessons as $lesson) {
+            $lessonRow = [
+                'id' => $lesson->id()->value(),
+                'unit_id' => $unitId->value(),
+                'code' => $lesson->code()->value(),
+                'title' => $lesson->title(),
+                'summary' => $lesson->summary(),
+                'duration_minutes' => $lesson->durationMinutes(),
+                'position' => $lesson->position(),
+                'created_at' => $timestamp,
+                'updated_at' => $timestamp,
+            ];
+            $finalLessonRows[] = $lessonRow;
+            $temporaryLessonRows[] = [
+                ...$lessonRow,
+                'code' => '__IN__'.$lesson->id()->value(),
+                'position' => -2000000 - $lesson->position(),
+            ];
+
             foreach ($lesson->blocks() as $block) {
                 $incomingBlockIds[] = $block->id()->value();
+                $blockRow = [
+                    'id' => $block->id()->value(),
+                    'lesson_id' => $lesson->id()->value(),
+                    'type' => $block->type()->value,
+                    'position' => $block->position(),
+                    'payload' => json_encode($block->payload(), JSON_THROW_ON_ERROR),
+                    'created_at' => $timestamp,
+                    'updated_at' => $timestamp,
+                ];
+                $finalBlockRows[] = $blockRow;
+                $temporaryBlockRows[] = [
+                    ...$blockRow,
+                    'position' => -4000000 - $block->position(),
+                ];
             }
         }
+
+        $this->persistPartitionedRows(
+            'academic_lessons',
+            $temporaryLessonRows,
+            $ownedLessonIds,
+            ['unit_id', 'code', 'title', 'summary', 'duration_minutes', 'position', 'updated_at'],
+        );
+        $this->persistPartitionedRows(
+            'academic_lesson_blocks',
+            $temporaryBlockRows,
+            $ownedBlockIds,
+            ['lesson_id', 'type', 'position', 'payload', 'updated_at'],
+        );
 
         $unitLessonIds = LessonModel::query()->select('id')->where('unit_id', $unitId->value());
         $obsoleteBlocks = ContentBlockModel::query()->whereIn('lesson_id', $unitLessonIds);
@@ -171,13 +201,46 @@ final readonly class EloquentUnitContentRepository implements UnitContentReposit
         }
         $obsoleteLessons->delete();
 
-        foreach ($lessons as $lesson) {
-            LessonModel::query()->whereKey($lesson->id()->value())->update([
-                'code' => $lesson->code()->value(), 'position' => $lesson->position(),
-            ]);
-            foreach ($lesson->blocks() as $block) {
-                ContentBlockModel::query()->whereKey($block->id()->value())->update(['position' => $block->position()]);
+        $this->upsertRows('academic_lessons', $finalLessonRows, [
+            'unit_id', 'code', 'title', 'summary', 'duration_minutes', 'position', 'updated_at',
+        ]);
+        $this->upsertRows('academic_lesson_blocks', $finalBlockRows, [
+            'lesson_id', 'type', 'position', 'payload', 'updated_at',
+        ]);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     * @param  array<string, bool>  $ownedIds
+     * @param  list<string>  $updateColumns
+     */
+    private function persistPartitionedRows(string $table, array $rows, array $ownedIds, array $updateColumns): void
+    {
+        $existing = [];
+        $new = [];
+
+        foreach ($rows as $row) {
+            if (isset($ownedIds[(string) $row['id']])) {
+                $existing[] = $row;
+            } else {
+                $new[] = $row;
             }
+        }
+
+        $this->upsertRows($table, $existing, $updateColumns);
+
+        foreach (array_chunk($new, 400) as $chunk) {
+            DB::table($table)->insert($chunk);
+        }
+    }
+
+    /** @param list<array<string, mixed>> $rows
+     * @param  list<string>  $updateColumns
+     */
+    private function upsertRows(string $table, array $rows, array $updateColumns): void
+    {
+        foreach (array_chunk($rows, 400) as $chunk) {
+            DB::table($table)->upsert($chunk, ['id'], $updateColumns);
         }
     }
 

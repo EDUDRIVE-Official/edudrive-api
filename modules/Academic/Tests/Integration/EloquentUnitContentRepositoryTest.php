@@ -404,7 +404,7 @@ it('impide transferir un ContentBlockId global y conserva ambos contenidos', fun
         ->toBe([]);
 });
 
-it('traduce una insercion competidora de LessonId y revierte el reemplazo completo', function (): void {
+it('simula en SQLite una inyeccion logica de LessonId y valida traduccion y rollback', function (): void {
     $courses = app(EloquentCourseRepository::class);
     $contents = app(EloquentUnitContentRepository::class);
     $courseId = '01981a64-8300-7b1d-b442-764ea7f92640';
@@ -429,6 +429,7 @@ it('traduce una insercion competidora de LessonId y revierte el reemplazo comple
         [ContentBlockFactory::create(ContentBlockId::fromString('01981a64-8300-7b1d-b442-764ea7f92643'), 'text', 1, ['markdown' => 'Carrera'])],
     )]);
     $injected = false;
+    // Inyeccion logica sobre la misma conexion SQLite; no pretende modelar MVCC PostgreSQL real.
     DB::listen(function (QueryExecuted $query) use (&$injected, $racingId, $competingUnitId): void {
         if ($injected || ! str_contains($query->sql, 'academic_lessons') || ! str_contains($query->sql, 'exists')) {
             return;
@@ -517,24 +518,18 @@ it('propaga payload persistido corrupto y revierte un reemplazo fallido conserva
         $previous->lessons()[0]->id(), CurriculumCode::fromString('LEC-NEW'), 'Nueva', null, null, 1,
         [ContentBlockFactory::create(ContentBlockId::fromString($blockId), 'text', 1, ['markdown' => 'Nuevo'])],
     )]);
-    $corrupted = false;
-    DB::listen(function (QueryExecuted $query) use (&$corrupted, $blockId): void {
-        if (
-            $corrupted
-            || ! str_contains($query->sql, 'update "academic_lesson_blocks"')
-            || ! str_contains($query->sql, '"position"')
-            || (int) ($query->bindings[0] ?? 0) !== 1
-        ) {
-            return;
-        }
-        $corrupted = true;
-        DB::table('academic_lesson_blocks')->where('id', $blockId)->update(['payload' => json_encode(['markdown' => ''])]);
-    });
+    DB::statement(sprintf(<<<'SQL'
+        CREATE TRIGGER corrupt_final_block_payload
+        AFTER UPDATE OF position ON academic_lesson_blocks
+        WHEN NEW.id = '%s' AND NEW.position = 1
+        BEGIN
+            UPDATE academic_lesson_blocks SET payload = '{"markdown":""}' WHERE id = NEW.id;
+        END
+        SQL, $blockId));
 
     expect(fn () => $contents->replaceAtomically(CourseId::fromString($courseId), CourseUnitId::fromString($unitId), $candidate))
         ->toThrow(InvalidContentBlock::class);
-    expect($corrupted)->toBeTrue()
-        ->and($contents->findForCourseUnit(CourseId::fromString($courseId), CourseUnitId::fromString($unitId))?->lessons()[0]->code()->value())
+    expect($contents->findForCourseUnit(CourseId::fromString($courseId), CourseUnitId::fromString($unitId))?->lessons()[0]->code()->value())
         ->toBe('LEC-01')
         ->and(DB::table('academic_lesson_blocks')->where('lesson_id', $previous->lessons()[0]->id()->value())->count())->toBe(6);
 });
@@ -583,4 +578,67 @@ it('impone FK y unicidad de codigo y posiciones sin traducir QueryException dire
         'id' => '01981a64-8300-7b1d-b442-764ea7f92725', 'lesson_id' => '01981a64-8300-7b1d-b442-764ea7f92991',
         'type' => 'text', 'position' => 1, 'payload' => json_encode(['markdown' => 'Sin padre']), 'created_at' => now(), 'updated_at' => now(),
     ]))->toThrow(QueryException::class);
+});
+
+it('reemplaza y reordena mil bloques con un presupuesto acotado de cuarenta queries', function (): void {
+    $courses = app(EloquentCourseRepository::class);
+    $contents = app(EloquentUnitContentRepository::class);
+    $courseId = '01981a64-8300-7b1d-b442-764ea7f92800';
+    $unitId = '01981a64-8300-7b1d-b442-764ea7f92801';
+    $courses->save(contentCourse($courseId, 'CONTENT-PERF', $unitId));
+    $lessons = [];
+
+    for ($lessonNumber = 1; $lessonNumber <= 5; $lessonNumber++) {
+        $blocks = [];
+        for ($blockNumber = 1; $blockNumber <= 200; $blockNumber++) {
+            $sequence = (($lessonNumber - 1) * 200) + $blockNumber;
+            $blocks[] = ContentBlockFactory::create(
+                ContentBlockId::fromString(sprintf('01981a64-8300-7b1d-b442-%012d', 928010000 + $sequence)),
+                'text',
+                $blockNumber,
+                ['markdown' => "Contenido {$sequence}"],
+            );
+        }
+        $lessons[] = Lesson::create(
+            LessonId::fromString(sprintf('01981a64-8300-7b1d-b442-%012d', 928000000 + $lessonNumber)),
+            CurriculumCode::fromString(sprintf('LEC-%03d', $lessonNumber)),
+            "Leccion {$lessonNumber}",
+            null,
+            30,
+            $lessonNumber,
+            $blocks,
+        );
+    }
+    $content = UnitContent::create(CourseUnitId::fromString($unitId), $lessons);
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    $stored = $contents->replaceAtomically(CourseId::fromString($courseId), CourseUnitId::fromString($unitId), $content);
+    $createQueries = count(DB::getQueryLog());
+    DB::disableQueryLog();
+
+    $reorderedLessons = [];
+    foreach (array_reverse($lessons) as $index => $lesson) {
+        $reorderedLessons[] = Lesson::create(
+            $lesson->id(), $lesson->code(), $lesson->title(), $lesson->summary(), $lesson->durationMinutes(),
+            $index + 1, $lesson->blocks(),
+        );
+    }
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    $reordered = $contents->replaceAtomically(
+        CourseId::fromString($courseId),
+        CourseUnitId::fromString($unitId),
+        UnitContent::create(CourseUnitId::fromString($unitId), $reorderedLessons),
+    );
+    $reorderQueries = count(DB::getQueryLog());
+    DB::disableQueryLog();
+
+    expect($createQueries)->toBeLessThanOrEqual(40)
+        ->and($reorderQueries)->toBeLessThanOrEqual(40)
+        ->and($stored?->lessons())->toHaveCount(5)
+        ->and(array_sum(array_map(static fn (Lesson $lesson): int => count($lesson->blocks()), $stored?->lessons() ?? [])))->toBe(1000)
+        ->and($stored?->lessons()[0]->blocks()[0]->payload())->toBe(['markdown' => 'Contenido 1'])
+        ->and($stored?->lessons()[4]->blocks()[199]->payload())->toBe(['markdown' => 'Contenido 1000'])
+        ->and($reordered?->lessons()[0]->id()->value())->toBe($lessons[4]->id()->value());
 });
