@@ -9,6 +9,7 @@ use Modules\Academic\Domain\Exceptions\ContentAccessibilityRequired;
 use Modules\Academic\Domain\Exceptions\InvalidContentBlock;
 use Modules\Academic\Domain\ValueObjects\ContentBlockId;
 use Modules\Academic\Domain\ValueObjects\ExternalContentUrl;
+use Modules\Academic\Domain\ValueObjects\MimeType;
 
 final readonly class DownloadContentBlock implements ContentBlock
 {
@@ -17,7 +18,7 @@ final readonly class DownloadContentBlock implements ContentBlock
         private int $position,
         private ExternalContentUrl $url,
         private string $displayName,
-        private string $mimeType,
+        private MimeType $mimeType,
         private ?string $description,
         private ?string $filename,
         private ?int $sizeBytes,
@@ -40,7 +41,7 @@ final readonly class DownloadContentBlock implements ContentBlock
             $position,
             ExternalContentUrl::fromString(self::requiredString($payload, 'url')),
             $displayName,
-            self::requiredString($payload, 'mime_type'),
+            MimeType::fromString(self::requiredString($payload, 'mime_type')),
             self::optionalString($payload, 'description'),
             self::optionalString($payload, 'filename'),
             $sizeBytes,
@@ -67,7 +68,7 @@ final readonly class DownloadContentBlock implements ContentBlock
         return array_filter([
             'url' => $this->url->value(),
             'display_name' => $this->displayName,
-            'mime_type' => $this->mimeType,
+            'mime_type' => $this->mimeType->value(),
             'description' => $this->description,
             'filename' => $this->filename,
             'size_bytes' => $this->sizeBytes,

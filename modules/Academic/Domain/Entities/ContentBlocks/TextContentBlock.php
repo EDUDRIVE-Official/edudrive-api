@@ -8,10 +8,13 @@ use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\Extension\CommonMark\Node\Block\HtmlBlock;
 use League\CommonMark\Extension\CommonMark\Node\Inline\HtmlInline;
+use League\CommonMark\Extension\CommonMark\Node\Inline\Image;
+use League\CommonMark\Extension\CommonMark\Node\Inline\Link;
 use League\CommonMark\Parser\MarkdownParser;
 use Modules\Academic\Domain\Enums\ContentBlockType;
 use Modules\Academic\Domain\Exceptions\InvalidContentBlock;
 use Modules\Academic\Domain\ValueObjects\ContentBlockId;
+use Modules\Academic\Domain\ValueObjects\ExternalContentUrl;
 
 final readonly class TextContentBlock implements ContentBlock
 {
@@ -82,9 +85,37 @@ final readonly class TextContentBlock implements ContentBlock
             if ($node instanceof HtmlBlock || $node instanceof HtmlInline) {
                 return true;
             }
+
+            if ($node instanceof Image && ! self::isValidExternalTarget($node->getUrl())) {
+                return true;
+            }
+
+            if (
+                $node instanceof Link
+                && ! self::isValidLocalAnchor($node->getUrl())
+                && ! self::isValidExternalTarget($node->getUrl())
+            ) {
+                return true;
+            }
         }
 
         return false;
+    }
+
+    private static function isValidExternalTarget(string $target): bool
+    {
+        try {
+            ExternalContentUrl::fromString($target);
+
+            return true;
+        } catch (InvalidContentBlock) {
+            return false;
+        }
+    }
+
+    private static function isValidLocalAnchor(string $target): bool
+    {
+        return str_starts_with($target, '#') && strlen($target) > 1;
     }
 
     /**

@@ -15,6 +15,7 @@ use Modules\Academic\Domain\Exceptions\InvalidContentBlock;
 use Modules\Academic\Domain\Services\ContentBlockFactory;
 use Modules\Academic\Domain\ValueObjects\ContentBlockId;
 use Modules\Academic\Domain\ValueObjects\ExternalContentUrl;
+use Modules\Academic\Domain\ValueObjects\MimeType;
 
 function contentBlockId(string $value = '01981a64-8300-7b1d-b442-764ea7f915c0'): ContentBlockId
 {
@@ -148,6 +149,60 @@ it('admite autolinks seguros de markdown sin tratarlos como html', function (): 
         'markdown' => 'Consulta <https://seguridad-vial.example.test/guia>.',
     ]);
 });
+
+it('admite destinos https y anclas locales en links markdown', function (string $markdown): void {
+    $block = ContentBlockFactory::create(contentBlockId(), 'text', 1, [
+        'markdown' => $markdown,
+    ]);
+
+    expect($block->payload())->toBe(['markdown' => $markdown]);
+})->with([
+    'https link' => ['Consulta la [guía](https://docs.example.test/guia).'],
+    'local anchor' => ['Ir a [seguridad](#seguridad).'],
+]);
+
+it('rechaza destinos inseguros o no externos en links markdown', function (string $destination): void {
+    ContentBlockFactory::create(contentBlockId(), 'text', 1, [
+        'markdown' => sprintf('[destino](%s)', $destination),
+    ]);
+})->with([
+    'javascript' => ['javascript:alert(1)'],
+    'data' => ['data:text/plain;base64,SGVsbG8='],
+    'file' => ['file:///etc/passwd'],
+    'http' => ['http://docs.example.test/guia'],
+    'mailto' => ['mailto:persona@example.test'],
+    'relative' => ['/docs/guia'],
+    'empty' => [''],
+    'empty anchor' => ['#'],
+    'credentials' => ['https://user:secret@docs.example.test/guia'],
+    'invalid url' => ['https://'],
+])->throws(InvalidContentBlock::class);
+
+it('admite solo destinos https validos en imagenes markdown', function (): void {
+    $markdown = '![Señal preventiva](https://cdn.example.test/senal.png)';
+    $block = ContentBlockFactory::create(contentBlockId(), 'text', 1, [
+        'markdown' => $markdown,
+    ]);
+
+    expect($block->payload())->toBe(['markdown' => $markdown]);
+});
+
+it('rechaza destinos no https o invalidos en imagenes markdown', function (string $destination): void {
+    ContentBlockFactory::create(contentBlockId(), 'text', 1, [
+        'markdown' => sprintf('![Recurso](%s)', $destination),
+    ]);
+})->with([
+    'javascript' => ['javascript:alert(1)'],
+    'data' => ['data:image/png;base64,SGVsbG8='],
+    'file' => ['file:///tmp/image.png'],
+    'http' => ['http://cdn.example.test/image.png'],
+    'mailto' => ['mailto:persona@example.test'],
+    'relative' => ['/images/senal.png'],
+    'empty' => [''],
+    'anchor' => ['#senal'],
+    'credentials' => ['https://user:secret@cdn.example.test/image.png'],
+    'invalid url' => ['https://'],
+])->throws(InvalidContentBlock::class);
 
 it('admite etiquetas literales dentro de contextos seguros de markdown', function (string $markdown): void {
     $block = ContentBlockFactory::create(contentBlockId(), 'text', 1, [
@@ -364,6 +419,40 @@ it('crea una descarga accesible con payload canonico', function (): void {
         'filename' => 'manual.pdf',
         'size_bytes' => 1024,
     ]);
+});
+
+it('normaliza tipos mime validos como value object', function (string $value, string $expected): void {
+    $mimeType = MimeType::fromString($value);
+
+    expect($mimeType->value())->toBe($expected)
+        ->and((string) $mimeType)->toBe($expected);
+})->with([
+    [' application/pdf ', 'application/pdf'],
+    ['TEXT/CSV', 'text/csv'],
+    ['Application/Vnd.Api+Json', 'application/vnd.api+json'],
+]);
+
+it('rechaza tipos mime invalidos', function (string $value): void {
+    MimeType::fromString($value);
+})->with([
+    '',
+    'not a mime',
+    'textplain',
+    'text /plain',
+    'text/ plain',
+    "text/plain\r\nX-Test: value",
+    'text/plain; charset=utf-8',
+    str_repeat('a', 250).'/plain',
+])->throws(InvalidContentBlock::class);
+
+it('expone el tipo mime canonico en descargas', function (): void {
+    $block = ContentBlockFactory::create(contentBlockId(), 'download', 1, [
+        'url' => 'https://docs.example.test/manual.pdf',
+        'display_name' => 'Manual',
+        'mime_type' => ' Application/PDF ',
+    ]);
+
+    expect($block->payload()['mime_type'])->toBe('application/pdf');
 });
 
 it('exige nombre visible para descargas', function (array $payload): void {
