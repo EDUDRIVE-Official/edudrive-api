@@ -44,8 +44,6 @@ final readonly class ReplaceUnitContentHandler
             throw CourseUnitNotFound::create();
         }
 
-        $course->ensureContentCanBeModified();
-
         $candidate = UnitContent::create(
             $unitId,
             array_map(

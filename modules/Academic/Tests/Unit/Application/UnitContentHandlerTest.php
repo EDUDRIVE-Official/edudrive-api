@@ -363,7 +363,11 @@ it('rechaza reemplazar contenido de cursos no editables', function (CourseStatus
         eng028LessonInputs(),
     )))->toThrow(CourseContentCannotBeModified::class);
 
-    expect($contents->replaceCalls)->toBe(0);
+    expect($contents->replaceCalls)->toBe(1)
+        ->and($contents->findForCourseUnit(
+            $course->id(),
+            CourseUnitId::fromString('019c2c00-0000-7000-8000-000000000100'),
+        )?->lessons())->toBe([]);
 })->with([
     'published' => CourseStatus::Published,
     'archived' => CourseStatus::Archived,
