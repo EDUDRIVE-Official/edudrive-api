@@ -86,7 +86,7 @@ final readonly class TextContentBlock implements ContentBlock
                 return true;
             }
 
-            if ($node instanceof Image && ! self::isValidExternalTarget($node->getUrl())) {
+            if ($node instanceof Image) {
                 return true;
             }
 

@@ -178,14 +178,14 @@ it('rechaza destinos inseguros o no externos en links markdown', function (strin
     'invalid url' => ['https://'],
 ])->throws(InvalidContentBlock::class);
 
-it('admite solo destinos https validos en imagenes markdown', function (): void {
-    $markdown = '![Señal preventiva](https://cdn.example.test/senal.png)';
-    $block = ContentBlockFactory::create(contentBlockId(), 'text', 1, [
+it('exige bloques de imagen tipados para imagenes markdown', function (string $markdown): void {
+    ContentBlockFactory::create(contentBlockId(), 'text', 1, [
         'markdown' => $markdown,
     ]);
-
-    expect($block->payload())->toBe(['markdown' => $markdown]);
-});
+})->with([
+    'sin texto alternativo' => ['![](https://cdn.example.test/senal.png)'],
+    'con texto alternativo' => ['![Señal preventiva](https://cdn.example.test/senal.png)'],
+])->throws(InvalidContentBlock::class);
 
 it('rechaza destinos no https o invalidos en imagenes markdown', function (string $destination): void {
     ContentBlockFactory::create(contentBlockId(), 'text', 1, [
