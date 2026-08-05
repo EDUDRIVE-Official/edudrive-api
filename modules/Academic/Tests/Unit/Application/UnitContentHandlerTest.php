@@ -20,6 +20,7 @@ use Modules\Academic\Domain\Entities\CourseUnit;
 use Modules\Academic\Domain\Enums\CourseStatus;
 use Modules\Academic\Domain\Exceptions\CourseContentCannotBeModified;
 use Modules\Academic\Domain\Exceptions\InvalidContentBlock;
+use Modules\Academic\Domain\ReadModels\UnitContentSnapshot;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\UnitContentRepository;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
@@ -46,6 +47,11 @@ final class Eng028ContentCourseRepository implements CourseRepository
     }
 
     public function save(Course $course): void
+    {
+        $this->courses[$course->id()->value()] = $course;
+    }
+
+    public function replaceSnapshot(Course $course): void
     {
         $this->courses[$course->id()->value()] = $course;
     }
@@ -113,6 +119,8 @@ final class Eng028UnitContentRepository implements UnitContentRepository
 
     public bool $courseDisappearsDuringReplace = false;
 
+    public ?Closure $beforeFind = null;
+
     /** @var array<string, UnitContent> */
     private array $contents = [];
 
@@ -120,6 +128,16 @@ final class Eng028UnitContentRepository implements UnitContentRepository
 
     public function findForCourseUnit(CourseId $courseId, CourseUnitId $unitId): ?UnitContent
     {
+        return $this->findSnapshotForCourseUnit($courseId, $unitId)?->content();
+    }
+
+    public function findSnapshotForCourseUnit(CourseId $courseId, CourseUnitId $unitId): ?UnitContentSnapshot
+    {
+        if ($this->beforeFind !== null) {
+            ($this->beforeFind)();
+            $this->beforeFind = null;
+        }
+
         $course = $this->courses->findById($courseId);
 
         if ($course === null) {
@@ -130,7 +148,10 @@ final class Eng028UnitContentRepository implements UnitContentRepository
             throw CourseUnitNotFound::create();
         }
 
-        return $this->contents[$unitId->value()] ?? UnitContent::create($unitId, []);
+        return new UnitContentSnapshot(
+            $course->status(),
+            $this->contents[$unitId->value()] ?? UnitContent::create($unitId, []),
+        );
     }
 
     public function replaceAtomically(CourseId $courseId, CourseUnitId $unitId, UnitContent $content): ?UnitContent
@@ -293,7 +314,7 @@ it('consulta una unidad valida sin contenido como una lista vacia', function ():
     $courses = new Eng028ContentCourseRepository([$course]);
     $contents = new Eng028UnitContentRepository($courses);
 
-    $response = (new GetUnitContentHandler($courses, $contents))->handle(new GetUnitContentQuery(
+    $response = (new GetUnitContentHandler($contents))->handle(new GetUnitContentQuery(
         courseId: $course->id()->value(),
         unitId: '019c2c00-0000-7000-8000-000000000100',
     ));
@@ -306,6 +327,25 @@ it('consulta una unidad valida sin contenido como una lista vacia', function ():
     ]);
 });
 
+it('consulta status y contenido desde un unico snapshot autoritativo', function (): void {
+    $course = eng028ContentCourse();
+    $courses = new Eng028ContentCourseRepository([$course]);
+    $contents = new Eng028UnitContentRepository($courses);
+    $contents->beforeFind = static fn () => $courses->replaceSnapshot(eng028ContentCourse(CourseStatus::Archived));
+
+    $response = (new GetUnitContentHandler($contents))->handle(new GetUnitContentQuery(
+        courseId: $course->id()->value(),
+        unitId: '019c2c00-0000-7000-8000-000000000100',
+    ));
+
+    expect($response->toArray())->toBe([
+        'course_id' => $course->id()->value(),
+        'unit_id' => '019c2c00-0000-7000-8000-000000000100',
+        'course_status' => 'archived',
+        'lessons' => [],
+    ]);
+});
+
 it('rechaza consultar o reemplazar contenido de un curso inexistente', function (): void {
     $courses = new Eng028ContentCourseRepository;
     $contents = new Eng028UnitContentRepository($courses);
@@ -313,7 +353,7 @@ it('rechaza consultar o reemplazar contenido de un curso inexistente', function 
     $unitId = '019c2c00-0000-7000-8000-000000000100';
 
     foreach ([
-        fn () => (new GetUnitContentHandler($courses, $contents))->handle(new GetUnitContentQuery($courseId, $unitId)),
+        fn () => (new GetUnitContentHandler($contents))->handle(new GetUnitContentQuery($courseId, $unitId)),
         fn () => (new ReplaceUnitContentHandler($courses, $contents))->handle(new ReplaceUnitContentCommand($courseId, $unitId, eng028LessonInputs())),
     ] as $operation) {
         try {
@@ -334,7 +374,7 @@ it('oculta por igual una unidad inexistente y una unidad ajena', function (strin
     $contents = new Eng028UnitContentRepository($courses);
 
     foreach ([
-        fn () => (new GetUnitContentHandler($courses, $contents))->handle(new GetUnitContentQuery($course->id()->value(), $unitId)),
+        fn () => (new GetUnitContentHandler($contents))->handle(new GetUnitContentQuery($course->id()->value(), $unitId)),
         fn () => (new ReplaceUnitContentHandler($courses, $contents))->handle(new ReplaceUnitContentCommand($course->id()->value(), $unitId, eng028LessonInputs())),
     ] as $operation) {
         try {

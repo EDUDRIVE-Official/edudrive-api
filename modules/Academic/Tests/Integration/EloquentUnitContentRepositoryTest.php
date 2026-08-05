@@ -121,6 +121,22 @@ it('devuelve contenido vacio para una unidad existente sin fila', function (): v
         ->and($content?->lessons())->toBe([]);
 });
 
+it('devuelve status y contenido como un unico snapshot autoritativo', function (): void {
+    $courses = app(EloquentCourseRepository::class);
+    $contents = app(EloquentUnitContentRepository::class);
+    $courseId = CourseId::fromString('01981a64-8300-7b1d-b442-764ea7f92012');
+    $unitId = CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f92013');
+    $courses->save(contentCourse($courseId->value(), 'CONTENT-SNAPSHOT', $unitId->value()));
+    $courses->updateAtomically($courseId, static fn (Course $course) => $course->archive(new DateTimeImmutable));
+
+    $snapshot = $contents->findSnapshotForCourseUnit($courseId, $unitId);
+
+    expect($snapshot)->not->toBeNull()
+        ->and($snapshot?->courseStatus()->value)->toBe('archived')
+        ->and($snapshot?->content()->unitId()->value())->toBe($unitId->value())
+        ->and($snapshot?->content()->lessons())->toBe([]);
+});
+
 it('persiste y restaura bloques tipados en orden mediante payload canonico', function (): void {
     $courses = app(EloquentCourseRepository::class);
     $contents = app(EloquentUnitContentRepository::class);

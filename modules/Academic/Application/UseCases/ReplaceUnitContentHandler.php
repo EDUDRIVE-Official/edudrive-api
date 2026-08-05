@@ -14,6 +14,7 @@ use Modules\Academic\Domain\Aggregates\UnitContent;
 use Modules\Academic\Domain\Entities\ContentBlocks\ContentBlock;
 use Modules\Academic\Domain\Entities\Lesson;
 use Modules\Academic\Domain\Enums\CourseStatus;
+use Modules\Academic\Domain\ReadModels\UnitContentSnapshot;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\UnitContentRepository;
 use Modules\Academic\Domain\Services\ContentBlockFactory;
@@ -74,6 +75,9 @@ final readonly class ReplaceUnitContentHandler
             throw CourseNotFound::withId($command->courseId);
         }
 
-        return UnitContentResponse::fromUnitContent($courseId, CourseStatus::Draft, $content);
+        return UnitContentResponse::fromSnapshot(
+            $courseId,
+            new UnitContentSnapshot(CourseStatus::Draft, $content),
+        );
     }
 }

@@ -11,6 +11,8 @@ use Modules\Academic\Application\Exceptions\CourseContentIdConflict;
 use Modules\Academic\Application\Exceptions\CourseUnitNotFound;
 use Modules\Academic\Domain\Aggregates\UnitContent;
 use Modules\Academic\Domain\Entities\Lesson;
+use Modules\Academic\Domain\Enums\CourseStatus;
+use Modules\Academic\Domain\ReadModels\UnitContentSnapshot;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\UnitContentRepository;
 use Modules\Academic\Domain\Services\ContentBlockFactory;
@@ -30,23 +32,36 @@ final readonly class EloquentUnitContentRepository implements UnitContentReposit
 
     public function findForCourseUnit(CourseId $courseId, CourseUnitId $unitId): ?UnitContent
     {
-        if (! CourseModel::query()->whereKey($courseId->value())->exists()) {
-            return null;
-        }
+        return $this->findSnapshotForCourseUnit($courseId, $unitId)?->content();
+    }
 
-        $ownsUnit = DB::table('academic_course_units as units')
-            ->join('academic_course_modules as modules', 'modules.id', '=', 'units.module_id')
-            ->where('units.id', $unitId->value())
-            ->where('modules.course_id', $courseId->value())
-            ->exists();
+    public function findSnapshotForCourseUnit(CourseId $courseId, CourseUnitId $unitId): ?UnitContentSnapshot
+    {
+        return DB::transaction(function () use ($courseId, $unitId): ?UnitContentSnapshot {
+            $locked = CourseModel::query()->whereKey($courseId->value())->lockForUpdate()->first();
 
-        if (! $ownsUnit) {
-            throw CourseUnitNotFound::create();
-        }
+            if ($locked === null) {
+                return null;
+            }
 
-        $model = $this->queryContent()->find($unitId->value());
+            $ownsUnit = DB::table('academic_course_units as units')
+                ->join('academic_course_modules as modules', 'modules.id', '=', 'units.module_id')
+                ->where('units.id', $unitId->value())
+                ->where('modules.course_id', $courseId->value())
+                ->exists();
 
-        return $model === null ? UnitContent::create($unitId, []) : $this->toDomain($model);
+            if (! $ownsUnit) {
+                throw CourseUnitNotFound::create();
+            }
+
+            $model = $this->queryContent()->find($unitId->value());
+            $content = $model === null ? UnitContent::create($unitId, []) : $this->toDomain($model);
+
+            return new UnitContentSnapshot(
+                CourseStatus::from((string) $locked->getAttribute('status')),
+                $content,
+            );
+        });
     }
 
     public function replaceAtomically(CourseId $courseId, CourseUnitId $unitId, UnitContent $content): ?UnitContent

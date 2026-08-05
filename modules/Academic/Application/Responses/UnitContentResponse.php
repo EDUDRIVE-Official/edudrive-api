@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Modules\Academic\Application\Responses;
 
-use Modules\Academic\Domain\Aggregates\UnitContent;
 use Modules\Academic\Domain\Entities\ContentBlocks\ContentBlock;
 use Modules\Academic\Domain\Entities\Lesson;
-use Modules\Academic\Domain\Enums\CourseStatus;
+use Modules\Academic\Domain\ReadModels\UnitContentSnapshot;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 
 final readonly class UnitContentResponse
@@ -35,15 +34,16 @@ final readonly class UnitContentResponse
         private array $lessons,
     ) {}
 
-    public static function fromUnitContent(
+    public static function fromSnapshot(
         CourseId $courseId,
-        CourseStatus $courseStatus,
-        UnitContent $content,
+        UnitContentSnapshot $snapshot,
     ): self {
+        $content = $snapshot->content();
+
         return new self(
             courseId: $courseId->value(),
             unitId: $content->unitId()->value(),
-            courseStatus: $courseStatus->value,
+            courseStatus: $snapshot->courseStatus()->value,
             lessons: array_map(
                 static fn (Lesson $lesson): array => [
                     'id' => $lesson->id()->value(),
