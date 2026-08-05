@@ -108,11 +108,34 @@ final readonly class TextContentBlock implements ContentBlock
         $markdown = preg_replace('/\A(?:[ \t]*\R)+/', '', $payload['markdown']) ?? $payload['markdown'];
         $markdown = preg_replace('/(?:\R[ \t]*)+\z/', '', $markdown) ?? $markdown;
 
-        if (preg_match('/^(?: {4}|\t)/', $markdown) === 1) {
+        if (self::initialIndentationColumns($markdown) >= 4) {
             return rtrim($markdown);
         }
 
         return trim($markdown);
+    }
+
+    private static function initialIndentationColumns(string $markdown): int
+    {
+        $columns = 0;
+
+        for ($index = 0, $length = strlen($markdown); $index < $length; $index++) {
+            if ($markdown[$index] === ' ') {
+                $columns++;
+
+                continue;
+            }
+
+            if ($markdown[$index] === "\t") {
+                $columns += 4 - ($columns % 4);
+
+                continue;
+            }
+
+            break;
+        }
+
+        return $columns;
     }
 
     /** @param array<string, mixed> $payload */

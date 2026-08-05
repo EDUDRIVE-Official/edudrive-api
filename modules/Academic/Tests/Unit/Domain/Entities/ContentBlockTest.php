@@ -184,6 +184,18 @@ it('preserva la sangria de codigo despues de lineas exteriores en blanco', funct
     ]);
 });
 
+it('preserva tabs que alcanzan una sangria commonmark de cuatro columnas', function (string $markdown): void {
+    $block = ContentBlockFactory::create(contentBlockId(), 'text', 1, [
+        'markdown' => $markdown,
+    ]);
+
+    expect($block->payload())->toBe(['markdown' => $markdown]);
+})->with([
+    'one space and tab' => [" \t<script>ejemplo</script>"],
+    'two spaces and tab' => ["  \t<script>ejemplo</script>"],
+    'three spaces and tab' => ["   \t<script>ejemplo</script>"],
+]);
+
 it('mantiene el rechazo de html crudo fuera de bloques de codigo', function (string $markdown): void {
     ContentBlockFactory::create(contentBlockId(), 'text', 1, [
         'markdown' => $markdown,
@@ -192,6 +204,7 @@ it('mantiene el rechazo de html crudo fuera de bloques de codigo', function (str
     'root' => ['<script>alert(1)</script>'],
     'quote' => ['> <script>alert(1)</script>'],
     'list' => ['- <script>alert(1)</script>'],
+    'three spaces without tab' => ['   <script>alert(1)</script>'],
     'indented paragraph continuation' => ["Texto introductorio\n    <script>alert(1)</script>"],
 ])->throws(InvalidContentBlock::class);
 
