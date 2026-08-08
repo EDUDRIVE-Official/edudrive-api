@@ -9,8 +9,8 @@
 | Proyecto | EDUDRIVE |
 | Componente | edudrive-api |
 | Estado | Activo |
-| Versión | 1.7.0 |
-| Fecha | 2026-08-04 |
+| Versión | 1.8.0 |
+| Fecha | 2026-08-08 |
 | Responsable | Equipo de Ingeniería EDUDRIVE |
 
 ---
@@ -532,7 +532,9 @@ Requisitos de avance.
 Contenido asociado.
 ENG-028 — Lecciones
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-08): se completó la incorporación de lecciones y bloques de contenido accesible ordenados y tipados (texto, imagen, video, audio, interactivos y descargas) asociados a las unidades de curso. El backend expone la consulta y el reemplazo atómico del contenido de una unidad protegidos por los permisos `courses.view`/`courses.manage`. El contenido se valida atómicamente contra las invariantes de accesibilidad, URLs HTTPS y posiciones secuenciales consecutivas. La publicación del curso ahora exige contenido completo en todas sus unidades. Detalle completo en `docs/plans/2026-08-05-lecciones-contenido.md` y `docs/engineering/ENG-LOG.md`.
 
 Incluye:
 
@@ -1299,7 +1301,9 @@ Actualizado 2026-08-03: se completó ENG-025 (Programas educativos) — ver la n
 
 Actualizado 2026-08-04: se completó ENG-027 (Módulos y unidades) — ver la nota de la sección 11 y `docs/engineering/ENG-LOG.md` (IMP-027). El incremento entrega una estructura curricular regional ordenada, transaccional y controlada por el agregado `Course`, sin adelantar lecciones, versionado ni seguimiento de progreso.
 
-La historia técnica activa queda nuevamente **Pendiente de decisión** entre ENG-028, ENG-029 o volver a Fase 4 — Perfiles.
+Actualizado 2026-08-08: se completó ENG-028 (Lecciones y contenido accesible) — ver la nota de la sección 11, `docs/engineering/ENG-LOG.md` y el plan de diseño `docs/plans/2026-08-05-lecciones-contenido.md`. El incremento entrega lecciones y bloques tipados con metadatos de accesibilidad validados, persistencia normalizada y atomicidad transaccional.
+
+La historia técnica activa queda **Pendiente de decisión** entre ENG-029 o volver a Fase 4 — Perfiles.
 26. Definición de terminado
 
 Una historia se considera terminada cuando cumple:
@@ -1343,3 +1347,4 @@ Versión	Fecha	Descripción
 1.5.0	2026-08-03	Cierre de ENG-024 (Catálogo de competencias): agregado jerárquico, persistencia, casos de uso, API protegida y permisos competencies.manage/competencies.view (IMP-025 en ENG-LOG.md); alcance futuro diferido explícitamente
 1.6.0	2026-08-03	Cierre de ENG-025 (Programas educativos): plantillas regionales, audiencia combinable, cursos ordenados, ciclo de vida, persistencia normalizada, API protegida y permisos programs.manage/programs.view (IMP-026 en ENG-LOG.md); alcance futuro diferido explícitamente
 1.7.0	2026-08-04	Cierre de ENG-027 (Módulos y unidades): currículo regional jerárquico dentro del agregado Course, persistencia transaccional, prerrequisitos, API protegida con courses.view/courses.manage y compatibilidad con cursos publicados legacy (IMP-027 en ENG-LOG.md); alcance futuro diferido explícitamente
+1.8.0	2026-08-08	Cierre de ENG-028 (Lecciones y contenido accesible): incorporación de lecciones y bloques de contenido accesible tipados (texto, imagen, video, audio, interactivos, descargas), consulta/reemplazo atómico por unidad, y validación de cobertura de lecciones al publicar.

@@ -935,7 +935,54 @@ ENG-020
 - `composer format` ✅ (345 archivos, sin cambios de estilo pendientes).
 - `composer quality` final ✅ sobre `db2879d`: Pint 345 archivos; PHPStan 264 archivos, sin errores; 312 pruebas y 1013 aserciones. Este HEAD incluye los fixes de concurrencia entre publicación y reemplazo, canonicalización de prerrequisitos, límites agregados tempranos y restricciones `CHECK` de duración.
 - Cobertura de persistencia ejecutada con SQLite real y compilación del SQL de la restricción `CHECK` mediante la gramática PostgreSQL; no se ejecutó PostgreSQL real. Una prueba de contención sobre PostgreSQL real queda como validación futura no bloqueante.
-- Warning no bloqueante y ajeno a ENG-027: importación no compuesta de `DateTimeImmutable` sin efecto en `modules/Identity/Tests/Feature/LoginWebTest.php:5`.
-- `php artisan route:list --path=api/v1/academic/courses -v --except-vendor` ✅ (6 rutas registradas; todas protegidas por Sanctum y `courses.view`/`courses.manage` según lectura o escritura).
+- `php artisan route:list --path=api/v1/academic/courses -v --except-vendor` ✅ (6 rutas registradas; todas protegidas por Sanctum y `courses.view`/`courses.manage` according to reading or writing).
 
 **Estado:** Finalizado.
+
+---
+
+## 2026-08-08 — IMP-028 (Cierre de ENG-028 — Lecciones y contenido accesible)
+
+### Completado
+
+- **Modelo de Dominio**:
+  - Nuevo agregado `UnitContent` dentro del módulo `Academic`, identificado por el UUID global de la unidad de curso (`CourseUnit`).
+  - Entidad `Lesson` que contiene un título obligatorio, resumen opcional, duración estimada en minutos y un conjunto ordenado de bloques de contenido.
+  - Entidad `ContentBlock` estructurada y tipada para 6 formatos de contenido con requisitos específicos de accesibilidad y validaciones de datos obligatorios por tipo:
+    - `text`: texto Markdown seguro (sin HTML arbitrario).
+    - `image`: URL HTTPS y texto alternativo obligatorio.
+    - `video`: URL HTTPS, URL de subtítulos HTTPS y transcripción obligatoria.
+    - `audio`: URL HTTPS y transcripción obligatoria.
+    - `interactive`: URL HTTPS y texto o enlace alternativo accesible obligatorio.
+    - `download`: URL HTTPS, nombre visible y tipo MIME obligatorio.
+- **Validación de Invariantes**:
+  - Posiciones secuenciales y consecutivas desde 1 para lecciones y bloques de contenido.
+  - Unicidad global de UUID de lecciones y bloques.
+  - Unicidad del código de lección dentro de la unidad de curso.
+  - URLs externas restringidas a protocolo HTTPS y longitud máxima de 2048 caracteres.
+  - Restricción de mutación atómica: solo los cursos en estado `draft` permiten reemplazo del contenido.
+  - Validación de publicación del curso: publicar un curso exige cobertura completa (al menos una lección por unidad y al menos un bloque por lección).
+- **Persistencia PostgreSQL**:
+  - Creación de tres tablas normalizadas: `academic_unit_contents`, `academic_lessons` y `academic_lesson_blocks` con llaves foráneas y eliminación en cascada.
+  - Repositorio `EloquentUnitContentRepository` que realiza sincronizaciones transaccionales atómicas, preservando UUID estables en reordenamientos y eliminando elementos huérfanos.
+- **Casos de Uso y Capa de Aplicación**:
+  - Caso de uso `ReplaceUnitContent` para reemplazo completo y atómico del contenido de una unidad.
+  - Caso de uso `GetUnitContent` para consultar la estructura de lecciones y bloques de una unidad.
+  - Registro de los comandos y consultas correspondientes en los buses de mensajes (`CommandBus` y `QueryBus`).
+- **Controladores e Integración HTTP**:
+  - Endpoint `PUT /api/v1/academic/courses/{courseId}/units/{unitId}/content` para reemplazo del contenido.
+  - Endpoint `GET /api/v1/academic/courses/{courseId}/units/{unitId}/content` para consulta del contenido.
+  - Ambos endpoints protegidos mediante `auth:sanctum` y los permisos `courses.manage` y `courses.view` respectivamente.
+- **Suite de Pruebas**:
+  - Pruebas unitarias de dominio para bloques de contenido, lecciones, e invariantes del agregado.
+  - Pruebas de integración del repositorio de persistencia con transacciones, reordenamiento, y control de duplicados concurrentes.
+  - Pruebas Feature de la API HTTP cubriendo autenticación, permisos, validación de payloads, y límites de tamaño.
+
+### Validaciones
+
+- `composer format` ✅ (355 archivos en formato de estilo correcto)
+- `composer quality` final ✅ (375 pruebas, 1132 aserciones aprobadas y análisis estático con PHPStan sin errores en nivel 8)
+- `docker compose exec app php artisan migrate` ✅ (todas las migraciones ejecutadas con éxito)
+
+**Estado:** Finalizado.
+
