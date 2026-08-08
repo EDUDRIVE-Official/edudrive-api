@@ -24,6 +24,7 @@ use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Academic\Domain\ValueObjects\ProgramAudience;
 use Modules\Academic\Domain\ValueObjects\ProgramCode;
 use Modules\Academic\Domain\ValueObjects\ProgramId;
+use Modules\Academic\Domain\ValueObjects\UnitContentCoverage;
 
 final class Task4InMemoryProgramRepository implements ProgramRepository
 {
@@ -100,6 +101,20 @@ final class Task4InMemoryCourseRepository implements CourseRepository
 
         $candidate = clone $course;
         $mutation($candidate);
+
+        return $candidate;
+    }
+
+    public function updateAtomicallyWithContentCoverage(CourseId $id, Closure $mutation): ?Course
+    {
+        $course = $this->findById($id);
+
+        if ($course === null) {
+            return null;
+        }
+
+        $candidate = clone $course;
+        $mutation($candidate, UnitContentCoverage::fromUnitIds([]));
 
         return $candidate;
     }
@@ -259,8 +274,8 @@ it('permite reordenar un programa publicado cuando todos los cursos siguen publi
     $secondCourse = task4Course('019c2600-0000-7000-8000-000000000002', 'COURSE-02');
     addMinimalCurriculum($firstCourse);
     addMinimalCurriculum($secondCourse);
-    $firstCourse->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'));
-    $secondCourse->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'));
+    $firstCourse->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'), completeCoverageForCourse($firstCourse));
+    $secondCourse->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'), completeCoverageForCourse($secondCourse));
     $program = task4Program();
     $program->replaceCourses([$firstCourse->id(), $secondCourse->id()]);
     $program->publish(new DateTimeImmutable('2026-08-03T13:00:00+00:00'));
@@ -284,7 +299,7 @@ it('permite reordenar un programa publicado cuando todos los cursos siguen publi
 it('rechaza dejar vacio un programa publicado sin guardar ni mutar', function (): void {
     $course = task4Course('019c2600-0000-7000-8000-000000000001', 'COURSE-01');
     addMinimalCurriculum($course);
-    $course->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'));
+    $course->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'), completeCoverageForCourse($course));
     $program = task4Program();
     $program->replaceCourses([$course->id()]);
     $program->publish(new DateTimeImmutable('2026-08-03T13:00:00+00:00'));
@@ -310,7 +325,7 @@ it('rechaza incorporar un curso no publicado a un programa publicado sin guardar
     $publishedCourse = task4Course('019c2600-0000-7000-8000-000000000001', 'COURSE-01');
     $draftCourse = task4Course('019c2600-0000-7000-8000-000000000002', 'COURSE-02');
     addMinimalCurriculum($publishedCourse);
-    $publishedCourse->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'));
+    $publishedCourse->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'), completeCoverageForCourse($publishedCourse));
     $program = task4Program();
     $program->replaceCourses([$publishedCourse->id()]);
     $program->publish(new DateTimeImmutable('2026-08-03T13:00:00+00:00'));

@@ -17,7 +17,9 @@ use Modules\Academic\Application\Commands\PublishCourseCommand;
 use Modules\Academic\Application\Commands\PublishProgramCommand;
 use Modules\Academic\Application\Commands\ReplaceCourseCurriculumCommand;
 use Modules\Academic\Application\Commands\ReplaceProgramCoursesCommand;
+use Modules\Academic\Application\Commands\ReplaceUnitContentCommand;
 use Modules\Academic\Application\Queries\GetCourseCurriculumQuery;
+use Modules\Academic\Application\Queries\GetUnitContentQuery;
 use Modules\Academic\Application\Queries\ListCompetenciesQuery;
 use Modules\Academic\Application\Queries\ListCoursesQuery;
 use Modules\Academic\Application\Queries\ListProgramsQuery;
@@ -30,6 +32,7 @@ use Modules\Academic\Application\UseCases\CreateCompetencyHandler;
 use Modules\Academic\Application\UseCases\CreateCourseHandler;
 use Modules\Academic\Application\UseCases\CreateProgramHandler;
 use Modules\Academic\Application\UseCases\GetCourseCurriculumHandler;
+use Modules\Academic\Application\UseCases\GetUnitContentHandler;
 use Modules\Academic\Application\UseCases\ListCompetenciesHandler;
 use Modules\Academic\Application\UseCases\ListCoursesHandler;
 use Modules\Academic\Application\UseCases\ListProgramsHandler;
@@ -37,12 +40,15 @@ use Modules\Academic\Application\UseCases\PublishCourseHandler;
 use Modules\Academic\Application\UseCases\PublishProgramHandler;
 use Modules\Academic\Application\UseCases\ReplaceCourseCurriculumHandler;
 use Modules\Academic\Application\UseCases\ReplaceProgramCoursesHandler;
+use Modules\Academic\Application\UseCases\ReplaceUnitContentHandler;
 use Modules\Academic\Domain\Repositories\CompetencyRepository;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\ProgramRepository;
+use Modules\Academic\Domain\Repositories\UnitContentRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCompetencyRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCourseRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentProgramRepository;
+use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentUnitContentRepository;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
 
 final class AcademicServiceProvider extends ServiceProvider
@@ -63,6 +69,8 @@ final class AcademicServiceProvider extends ServiceProvider
             ProgramRepository::class,
             EloquentProgramRepository::class,
         );
+
+        $this->app->bind(UnitContentRepository::class, EloquentUnitContentRepository::class);
     }
 
     public function boot(
@@ -74,6 +82,8 @@ final class AcademicServiceProvider extends ServiceProvider
         $registry->register(ListCompetenciesQuery::class, ListCompetenciesHandler::class);
         $registry->register(ReplaceCourseCurriculumCommand::class, ReplaceCourseCurriculumHandler::class);
         $registry->register(GetCourseCurriculumQuery::class, GetCourseCurriculumHandler::class);
+        $registry->register(ReplaceUnitContentCommand::class, ReplaceUnitContentHandler::class);
+        $registry->register(GetUnitContentQuery::class, GetUnitContentHandler::class);
         $registry->register(CreateProgramCommand::class, CreateProgramHandler::class);
         $registry->register(ListProgramsQuery::class, ListProgramsHandler::class);
         $registry->register(ChangeProgramAudienceCommand::class, ChangeProgramAudienceHandler::class);

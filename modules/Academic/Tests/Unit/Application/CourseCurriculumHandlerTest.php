@@ -15,11 +15,14 @@ use Modules\Academic\Application\UseCases\GetCourseCurriculumHandler;
 use Modules\Academic\Application\UseCases\PublishCourseHandler;
 use Modules\Academic\Application\UseCases\ReplaceCourseCurriculumHandler;
 use Modules\Academic\Domain\Aggregates\Course;
+use Modules\Academic\Domain\Exceptions\CourseUnitContentRequired;
 use Modules\Academic\Domain\Exceptions\InvalidCurriculumPosition;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
+use Modules\Academic\Domain\ValueObjects\CourseUnitId;
+use Modules\Academic\Domain\ValueObjects\UnitContentCoverage;
 use Modules\Foundation\Application\Bus\CommandBus;
 use Modules\Foundation\Application\Bus\QueryBus;
 
@@ -31,6 +34,9 @@ final class Eng027CurriculumCourseRepository implements CourseRepository
 
     /** @var array<string, Course> */
     private array $courses = [];
+
+    /** @var array<string, array<string, CourseUnitId>> */
+    private array $completeUnitIds = [];
 
     /** @param list<Course> $courses */
     public function __construct(array $courses = [])
@@ -60,6 +66,34 @@ final class Eng027CurriculumCourseRepository implements CourseRepository
         $this->courses[$id->value()] = $candidate;
 
         return $candidate;
+    }
+
+    public function updateAtomicallyWithContentCoverage(CourseId $id, Closure $mutation): ?Course
+    {
+        $course = $this->findById($id);
+
+        if ($course === null) {
+            return null;
+        }
+
+        $this->atomicUpdateCalls++;
+        $candidate = clone $course;
+        $mutation($candidate, UnitContentCoverage::fromUnitIds(array_values($this->completeUnitIds[$id->value()] ?? [])));
+        $this->courses[$id->value()] = $candidate;
+
+        return $candidate;
+    }
+
+    public function markAllUnitsComplete(CourseId $id): void
+    {
+        $course = $this->findById($id);
+        $this->completeUnitIds[$id->value()] = [];
+
+        foreach ($course?->modules() ?? [] as $module) {
+            foreach ($module->units() as $unit) {
+                $this->completeUnitIds[$id->value()][$unit->id()->value()] = $unit->id();
+            }
+        }
     }
 
     public function findById(CourseId $id): ?Course
@@ -233,9 +267,13 @@ it('publica y archiva cursos mediante mutaciones atomicas', function (): void {
         modules: eng027CurriculumInputs(),
     ));
 
-    $published = (new PublishCourseHandler($publishableCourses))->handle(
+    expect(fn () => (new PublishCourseHandler($publishableCourses))->handle(
         new PublishCourseCommand($publishable->id()->value()),
-    );
+    ))->toThrow(CourseUnitContentRequired::class);
+    expect($publishableCourses->findById($publishable->id())?->status()->value)->toBe('draft');
+
+    $publishableCourses->markAllUnitsComplete($publishable->id());
+    $published = (new PublishCourseHandler($publishableCourses))->handle(new PublishCourseCommand($publishable->id()->value()));
 
     $archivable = Course::create(
         id: CourseId::fromString('019c2b00-0000-7000-8000-000000000002'),
@@ -248,7 +286,7 @@ it('publica y archiva cursos mediante mutaciones atomicas', function (): void {
     );
 
     expect($published->toArray()['status'])->toBe('published')
-        ->and($publishableCourses->atomicUpdateCalls)->toBe(2)
+        ->and($publishableCourses->atomicUpdateCalls)->toBe(3)
         ->and($publishableCourses->saveCalls)->toBe(0)
         ->and($archived->toArray()['status'])->toBe('archived')
         ->and($archivableCourses->atomicUpdateCalls)->toBe(1)

@@ -10,9 +10,11 @@ use Modules\Academic\Domain\Enums\CourseStatus;
 use Modules\Academic\Domain\Exceptions\ArchivedCourseCannotBeModified;
 use Modules\Academic\Domain\Exceptions\CourseAlreadyArchived;
 use Modules\Academic\Domain\Exceptions\CourseAlreadyPublished;
+use Modules\Academic\Domain\Exceptions\CourseContentCannotBeModified;
 use Modules\Academic\Domain\Exceptions\CourseCurriculumCannotBeModified;
 use Modules\Academic\Domain\Exceptions\CourseCurriculumRequired;
 use Modules\Academic\Domain\Exceptions\CourseModuleRequiresUnits;
+use Modules\Academic\Domain\Exceptions\CourseUnitContentRequired;
 use Modules\Academic\Domain\Exceptions\DuplicateCourseModule;
 use Modules\Academic\Domain\Exceptions\DuplicateCourseUnit;
 use Modules\Academic\Domain\Exceptions\InvalidCurriculumPosition;
@@ -23,6 +25,7 @@ use Modules\Academic\Domain\ValueObjects\CourseModuleId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Academic\Domain\ValueObjects\CourseUnitId;
 use Modules\Academic\Domain\ValueObjects\CurriculumCode;
+use Modules\Academic\Domain\ValueObjects\UnitContentCoverage;
 
 function createAcademicCourse(): Course
 {
@@ -107,6 +110,14 @@ function validAggregateCurriculum(): array
     ];
 }
 
+function validAggregateCoverage(): UnitContentCoverage
+{
+    return UnitContentCoverage::fromUnitIds([
+        CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f91601'),
+        CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f91602'),
+    ]);
+}
+
 it('crea un curso en estado borrador', function (): void {
     $course = createAcademicCourse();
 
@@ -131,7 +142,7 @@ it('publica un curso', function (): void {
     $publishedAt = new DateTimeImmutable('2026-07-29 08:00:00');
     $course->replaceCurriculum(validAggregateCurriculum());
 
-    $course->publish($publishedAt);
+    $course->publish($publishedAt, validAggregateCoverage());
 
     expect($course->status())
         ->toBe(CourseStatus::Published)
@@ -143,8 +154,8 @@ it('impide publicar dos veces el mismo curso', function (): void {
     $course = createAcademicCourse();
     $course->replaceCurriculum(validAggregateCurriculum());
 
-    $course->publish(new DateTimeImmutable('2026-07-29 08:00:00'));
-    $course->publish(new DateTimeImmutable('2026-07-29 09:00:00'));
+    $course->publish(new DateTimeImmutable('2026-07-29 08:00:00'), validAggregateCoverage());
+    $course->publish(new DateTimeImmutable('2026-07-29 09:00:00'), validAggregateCoverage());
 })->throws(
     CourseAlreadyPublished::class,
     'El curso ya está publicado.',
@@ -437,7 +448,7 @@ it('exige modulos y al menos una unidad por modulo antes de publicar', function 
     $course->replaceCurriculum($curriculum);
 
     try {
-        $course->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'));
+        $course->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'), validAggregateCoverage());
 
         test()->fail("Se esperaba {$exceptionClass}.");
     } catch (Throwable $exception) {
@@ -465,7 +476,7 @@ it('publica un curso con curriculo completo', function (): void {
     $course = createAcademicCourse();
     $course->replaceCurriculum(validAggregateCurriculum());
 
-    $course->publish($publishedAt = new DateTimeImmutable('2026-08-03T12:00:00+00:00'));
+    $course->publish($publishedAt = new DateTimeImmutable('2026-08-03T12:00:00+00:00'), validAggregateCoverage());
 
     expect($course->status())->toBe(CourseStatus::Published)
         ->and($course->publishedAt())->toBe($publishedAt);
@@ -477,7 +488,7 @@ it('prioriza el ciclo de vida y rechaza reemplazar el curriculo publicado o arch
     $course->replaceCurriculum($curriculum);
 
     if ($status === CourseStatus::Published) {
-        $course->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'));
+        $course->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'), validAggregateCoverage());
     } else {
         $course->archive(new DateTimeImmutable('2026-08-03T12:00:00+00:00'));
     }
@@ -547,3 +558,78 @@ it('rechaza restaurar un curso publicado con modulos sin unidades', function ():
         ],
     );
 })->throws(CourseModuleRequiresUnits::class);
+
+it('reconoce solamente unidades que pertenecen al curriculo actual', function (): void {
+    $course = createAcademicCourse();
+    $course->replaceCurriculum(validAggregateCurriculum());
+
+    expect($course->ownsUnit(CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f91601')))->toBeTrue()
+        ->and($course->ownsUnit(CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f91999')))->toBeFalse();
+});
+
+it('permite modificar contenido solo mientras el curso es borrador', function (CourseStatus $status): void {
+    $course = createAcademicCourse();
+
+    if ($status === CourseStatus::Published) {
+        $course->replaceCurriculum(validAggregateCurriculum());
+        $course->publish(
+            new DateTimeImmutable('2026-08-05T12:00:00+00:00'),
+            UnitContentCoverage::fromUnitIds([
+                CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f91601'),
+                CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f91602'),
+            ]),
+        );
+    } elseif ($status === CourseStatus::Archived) {
+        $course->archive(new DateTimeImmutable('2026-08-05T12:00:00+00:00'));
+    }
+
+    if ($status === CourseStatus::Draft) {
+        $course->ensureContentCanBeModified();
+        expect(true)->toBeTrue();
+
+        return;
+    }
+
+    expect(fn () => $course->ensureContentCanBeModified())
+        ->toThrow(CourseContentCannotBeModified::class, 'El contenido del curso solo puede modificarse en estado borrador.');
+})->with([
+    'borrador' => CourseStatus::Draft,
+    'publicado' => CourseStatus::Published,
+    'archivado' => CourseStatus::Archived,
+]);
+
+it('exige cobertura de contenido para todas las unidades antes de publicar sin mutar estado', function (): void {
+    $course = createAcademicCourse();
+    $course->replaceCurriculum(validAggregateCurriculum());
+
+    try {
+        $course->publish(
+            new DateTimeImmutable('2026-08-05T12:00:00+00:00'),
+            UnitContentCoverage::fromUnitIds([
+                CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f91601'),
+            ]),
+        );
+        test()->fail('Se esperaba cobertura incompleta.');
+    } catch (CourseUnitContentRequired $exception) {
+        expect($exception->errorCode())->toBe('COURSE_UNIT_CONTENT_REQUIRED')
+            ->and($exception->statusCode())->toBe(422)
+            ->and($course->status())->toBe(CourseStatus::Draft)
+            ->and($course->publishedAt())->toBeNull();
+    }
+});
+
+it('deduplica cobertura y publica cuando cubre cada unidad', function (): void {
+    $course = createAcademicCourse();
+    $course->replaceCurriculum(validAggregateCurriculum());
+    $coverage = UnitContentCoverage::fromUnitIds([
+        CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f91601'),
+        CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f91601'),
+        CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f91602'),
+    ]);
+
+    expect($coverage->unitIds())->toHaveCount(2);
+    $course->publish($publishedAt = new DateTimeImmutable('2026-08-05T12:00:00+00:00'), $coverage);
+
+    expect($course->status())->toBe(CourseStatus::Published)
+        ->and($course->publishedAt())->toBe($publishedAt);
+});

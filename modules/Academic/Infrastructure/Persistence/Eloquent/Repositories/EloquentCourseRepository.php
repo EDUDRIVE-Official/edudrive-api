@@ -23,6 +23,7 @@ use Modules\Academic\Domain\ValueObjects\CourseModuleId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Academic\Domain\ValueObjects\CourseUnitId;
 use Modules\Academic\Domain\ValueObjects\CurriculumCode;
+use Modules\Academic\Domain\ValueObjects\UnitContentCoverage;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\CourseModel;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\CourseModuleModel;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\CourseUnitModel;
@@ -55,6 +56,51 @@ final class EloquentCourseRepository implements CourseRepository
 
                 $course = $this->toDomain($model);
                 $mutation($course);
+                $this->persist($course, $model);
+
+                $canonical = $this->queryWithCurriculum()->find($id->value());
+
+                return $canonical === null ? null : $this->toDomain($canonical);
+            });
+        } catch (QueryException $exception) {
+            $this->rethrowPersistenceException($exception);
+        }
+    }
+
+    public function updateAtomicallyWithContentCoverage(CourseId $id, Closure $mutation): ?Course
+    {
+        try {
+            return DB::transaction(function () use ($id, $mutation): ?Course {
+                $model = $this->queryWithCurriculum()
+                    ->whereKey($id->value())
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($model === null) {
+                    return null;
+                }
+
+                $completeUnitIds = DB::table('academic_course_units as units')
+                    ->join('academic_course_modules as modules', 'modules.id', '=', 'units.module_id')
+                    ->where('modules.course_id', $id->value())
+                    ->whereExists(static function ($query): void {
+                        $query->selectRaw('1')->from('academic_lessons as lessons')
+                            ->whereColumn('lessons.unit_id', 'units.id');
+                    })
+                    ->whereNotExists(static function ($query): void {
+                        $query->selectRaw('1')->from('academic_lessons as lessons')
+                            ->whereColumn('lessons.unit_id', 'units.id')
+                            ->whereNotExists(static function ($blocks): void {
+                                $blocks->selectRaw('1')->from('academic_lesson_blocks as blocks')
+                                    ->whereColumn('blocks.lesson_id', 'lessons.id');
+                            });
+                    })
+                    ->pluck('units.id')
+                    ->map(static fn (mixed $unitId): CourseUnitId => CourseUnitId::fromString((string) $unitId))
+                    ->all();
+
+                $course = $this->toDomain($model);
+                $mutation($course, UnitContentCoverage::fromUnitIds(array_values($completeUnitIds)));
                 $this->persist($course, $model);
 
                 $canonical = $this->queryWithCurriculum()->find($id->value());

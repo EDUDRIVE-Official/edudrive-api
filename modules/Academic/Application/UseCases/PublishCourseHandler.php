@@ -11,6 +11,7 @@ use Modules\Academic\Application\Responses\PublishCourseResponse;
 use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\ValueObjects\CourseId;
+use Modules\Academic\Domain\ValueObjects\UnitContentCoverage;
 
 final readonly class PublishCourseHandler
 {
@@ -23,10 +24,10 @@ final readonly class PublishCourseHandler
     ): PublishCourseResponse {
         $courseId = CourseId::fromString($command->courseId);
 
-        $course = $this->courses->updateAtomically(
+        $course = $this->courses->updateAtomicallyWithContentCoverage(
             $courseId,
-            static function (Course $course): void {
-                $course->publish(new DateTimeImmutable);
+            static function (Course $course, UnitContentCoverage $coverage): void {
+                $course->publish(new DateTimeImmutable, $coverage);
             },
         );
 

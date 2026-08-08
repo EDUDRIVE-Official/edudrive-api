@@ -10,18 +10,25 @@ use Illuminate\Database\Schema\Grammars\PostgresGrammar;
 use Illuminate\Support\Facades\DB;
 use Modules\Academic\Application\Exceptions\CourseCurriculumIdConflict;
 use Modules\Academic\Domain\Aggregates\Course;
+use Modules\Academic\Domain\Aggregates\UnitContent;
 use Modules\Academic\Domain\Entities\CourseModule;
 use Modules\Academic\Domain\Entities\CourseUnit;
+use Modules\Academic\Domain\Entities\Lesson;
 use Modules\Academic\Domain\Enums\CourseModality;
 use Modules\Academic\Domain\Enums\CourseStatus;
-use Modules\Academic\Domain\Exceptions\CourseCurriculumCannotBeModified;
+use Modules\Academic\Domain\Exceptions\CourseContentCannotBeModified;
+use Modules\Academic\Domain\Services\ContentBlockFactory;
+use Modules\Academic\Domain\ValueObjects\ContentBlockId;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\CourseModuleId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Academic\Domain\ValueObjects\CourseUnitId;
 use Modules\Academic\Domain\ValueObjects\CurriculumCode;
+use Modules\Academic\Domain\ValueObjects\LessonId;
+use Modules\Academic\Domain\ValueObjects\UnitContentCoverage;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCourseRepository;
+use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentUnitContentRepository;
 
 /** @param list<string> $prerequisiteUnitIds */
 function persistedCourseUnit(
@@ -81,6 +88,14 @@ function persistedCourse(string $id, string $code): Course
     );
 }
 
+function persistedSimpleContent(string $unitId, string $lessonId, string $blockId, string $markdown): UnitContent
+{
+    return UnitContent::create(CourseUnitId::fromString($unitId), [Lesson::create(
+        LessonId::fromString($lessonId), CurriculumCode::fromString('LEC-01'), 'Leccion', null, 10, 1,
+        [ContentBlockFactory::create(ContentBlockId::fromString($blockId), 'text', 1, ['markdown' => $markdown])],
+    )]);
+}
+
 it('guarda y recupera un curso por identificador', function (): void {
     $repository = app(EloquentCourseRepository::class);
 
@@ -113,72 +128,83 @@ it('guarda y recupera un curso por identificador', function (): void {
         ->toBe(CourseStatus::Draft);
 });
 
-it('serializa publish antes de replace y conserva el curriculo publicado', function (): void {
+it('publica con cobertura real antes de replace y conserva contenido y estado publicado', function (): void {
     $repository = app(EloquentCourseRepository::class);
+    $contents = app(EloquentUnitContentRepository::class);
     $course = persistedCourse('01981a64-8300-7b1d-b442-764ea7f91800', 'ATOMIC-001');
     $originalModuleId = '01981a64-8300-7b1d-b442-764ea7f91801';
+    $unitId = '01981a64-8300-7b1d-b442-764ea7f91802';
     $course->replaceCurriculum([
         persistedCourseModule($originalModuleId, 'MOD-OLD', 1, [
-            persistedCourseUnit('01981a64-8300-7b1d-b442-764ea7f91802', 'UNI-OLD', 1),
+            persistedCourseUnit($unitId, 'UNI-OLD', 1),
         ]),
     ]);
     $repository->save($course);
+    $original = persistedSimpleContent(
+        $unitId,
+        '01981a64-8300-7b1d-b442-764ea7f91803',
+        '01981a64-8300-7b1d-b442-764ea7f91804',
+        'Original',
+    );
+    $contents->replaceAtomically($course->id(), CourseUnitId::fromString($unitId), $original);
 
-    $repository->updateAtomically(
+    $repository->updateAtomicallyWithContentCoverage(
         $course->id(),
-        static function (Course $locked): void {
-            $locked->publish(new DateTimeImmutable('2026-08-04T12:00:00+00:00'));
+        static function (Course $locked, UnitContentCoverage $coverage): void {
+            $locked->publish(new DateTimeImmutable('2026-08-04T12:00:00+00:00'), $coverage);
         },
     );
 
-    expect(fn () => $repository->updateAtomically(
+    $changed = persistedSimpleContent(
+        $unitId,
+        $original->lessons()[0]->id()->value(),
+        $original->lessons()[0]->blocks()[0]->id()->value(),
+        'Cambio no permitido',
+    );
+    expect(fn () => $contents->replaceAtomically(
         $course->id(),
-        static function (Course $locked): void {
-            $locked->replaceCurriculum([
-                persistedCourseModule('01981a64-8300-7b1d-b442-764ea7f91803', 'MOD-NEW', 1, [
-                    persistedCourseUnit('01981a64-8300-7b1d-b442-764ea7f91804', 'UNI-NEW', 1),
-                ]),
-            ]);
-        },
-    ))->toThrow(CourseCurriculumCannotBeModified::class);
+        CourseUnitId::fromString($unitId),
+        $changed,
+    ))->toThrow(CourseContentCannotBeModified::class);
 
     $stored = $repository->findById($course->id());
     expect($stored?->status())->toBe(CourseStatus::Published)
-        ->and($stored?->modules()[0]->id()->value())->toBe($originalModuleId);
+        ->and($stored?->modules()[0]->id()->value())->toBe($originalModuleId)
+        ->and($contents->findForCourseUnit($course->id(), CourseUnitId::fromString($unitId))?->lessons()[0]->blocks()[0]->payload())
+        ->toBe(['markdown' => 'Original']);
 });
 
-it('serializa replace antes de publish y publica exactamente el nuevo curriculo', function (): void {
+it('reemplaza contenido antes de publish y publica exactamente la version nueva desde cobertura DB', function (): void {
     $repository = app(EloquentCourseRepository::class);
+    $contents = app(EloquentUnitContentRepository::class);
     $course = persistedCourse('01981a64-8300-7b1d-b442-764ea7f91810', 'ATOMIC-002');
+    $unitId = '01981a64-8300-7b1d-b442-764ea7f91812';
     $course->replaceCurriculum([
         persistedCourseModule('01981a64-8300-7b1d-b442-764ea7f91811', 'MOD-OLD', 1, [
-            persistedCourseUnit('01981a64-8300-7b1d-b442-764ea7f91812', 'UNI-OLD', 1),
+            persistedCourseUnit($unitId, 'UNI-OLD', 1),
         ]),
     ]);
     $repository->save($course);
-    $newModuleId = '01981a64-8300-7b1d-b442-764ea7f91813';
-
-    $updated = $repository->updateAtomically(
-        $course->id(),
-        static function (Course $locked) use ($newModuleId): void {
-            $locked->replaceCurriculum([
-                persistedCourseModule($newModuleId, 'MOD-NEW', 1, [
-                    persistedCourseUnit('01981a64-8300-7b1d-b442-764ea7f91814', 'UNI-NEW', 1),
-                ]),
-            ]);
-        },
+    $original = persistedSimpleContent($unitId, '01981a64-8300-7b1d-b442-764ea7f91813', '01981a64-8300-7b1d-b442-764ea7f91814', 'Anterior');
+    $contents->replaceAtomically($course->id(), CourseUnitId::fromString($unitId), $original);
+    $newContent = persistedSimpleContent(
+        $unitId,
+        $original->lessons()[0]->id()->value(),
+        $original->lessons()[0]->blocks()[0]->id()->value(),
+        'Contenido nuevo exacto',
     );
-    $repository->updateAtomically(
+    $contents->replaceAtomically($course->id(), CourseUnitId::fromString($unitId), $newContent);
+    $repository->updateAtomicallyWithContentCoverage(
         $course->id(),
-        static function (Course $locked): void {
-            $locked->publish(new DateTimeImmutable('2026-08-04T12:00:00+00:00'));
+        static function (Course $locked, UnitContentCoverage $coverage): void {
+            $locked->publish(new DateTimeImmutable('2026-08-04T12:00:00+00:00'), $coverage);
         },
     );
 
     $stored = $repository->findById($course->id());
-    expect($updated?->modules()[0]->id()->value())->toBe($newModuleId)
-        ->and($stored?->status())->toBe(CourseStatus::Published)
-        ->and($stored?->modules()[0]->id()->value())->toBe($newModuleId);
+    expect($stored?->status())->toBe(CourseStatus::Published)
+        ->and($contents->findForCourseUnit($course->id(), CourseUnitId::fromString($unitId))?->lessons()[0]->blocks()[0]->payload())
+        ->toBe(['markdown' => 'Contenido nuevo exacto']);
 });
 
 it('reconstruye dos modulos con unidades y prerrequisitos en un round trip', function (): void {

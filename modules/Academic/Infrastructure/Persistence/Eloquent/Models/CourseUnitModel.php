@@ -6,6 +6,7 @@ namespace Modules\Academic\Infrastructure\Persistence\Eloquent\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 final class CourseUnitModel extends Model
 {
@@ -18,6 +19,12 @@ final class CourseUnitModel extends Model
     protected $keyType = 'string';
 
     protected $guarded = [];
+
+    /** @return HasOne<UnitContentModel, $this> */
+    public function content(): HasOne
+    {
+        return $this->hasOne(UnitContentModel::class, 'unit_id');
+    }
 
     /** @return BelongsToMany<CourseUnitModel, $this> */
     public function prerequisiteUnits(): BelongsToMany

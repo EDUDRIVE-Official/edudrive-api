@@ -6,15 +6,22 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use Modules\Academic\Domain\Aggregates\Course;
+use Modules\Academic\Domain\Aggregates\UnitContent;
 use Modules\Academic\Domain\Entities\CourseModule;
 use Modules\Academic\Domain\Entities\CourseUnit;
+use Modules\Academic\Domain\Entities\Lesson;
 use Modules\Academic\Domain\Repositories\CourseRepository;
+use Modules\Academic\Domain\Repositories\UnitContentRepository;
+use Modules\Academic\Domain\Services\ContentBlockFactory;
+use Modules\Academic\Domain\ValueObjects\ContentBlockId;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\CourseModuleId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Academic\Domain\ValueObjects\CourseUnitId;
 use Modules\Academic\Domain\ValueObjects\CurriculumCode;
+use Modules\Academic\Domain\ValueObjects\LessonId;
+use Modules\Academic\Domain\ValueObjects\UnitContentCoverage;
 use Modules\Authorization\Domain\Entities\RoleAssignment;
 use Modules\Authorization\Domain\Enums\Role;
 use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
@@ -72,8 +79,51 @@ function createDraftCourseForPublishing(string $code = 'EDU-020'): Course
     addMinimalCurriculum($course);
 
     $repository->save($course);
+    addCompleteContentForCourse($course);
 
     return $course;
+}
+
+function addCompleteContentForCourse(Course $course): void
+{
+    $contents = app(UnitContentRepository::class);
+
+    foreach ($course->modules() as $module) {
+        foreach ($module->units() as $unit) {
+            $contents->replaceAtomically(
+                $course->id(),
+                $unit->id(),
+                UnitContent::create($unit->id(), [
+                    Lesson::create(
+                        LessonId::fromString((string) Str::uuid()),
+                        CurriculumCode::fromString('LEC-01'),
+                        'Leccion de prueba',
+                        null,
+                        10,
+                        1,
+                        [ContentBlockFactory::create(
+                            ContentBlockId::fromString((string) Str::uuid()),
+                            'text',
+                            1,
+                            ['markdown' => 'Contenido accesible de prueba.'],
+                        )],
+                    ),
+                ]),
+            );
+        }
+    }
+}
+
+function completeCoverageForCourse(Course $course): UnitContentCoverage
+{
+    $unitIds = [];
+    foreach ($course->modules() as $module) {
+        foreach ($module->units() as $unit) {
+            $unitIds[] = $unit->id();
+        }
+    }
+
+    return UnitContentCoverage::fromUnitIds($unitIds);
 }
 
 function addMinimalCurriculum(Course $course): void
