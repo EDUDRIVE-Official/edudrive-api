@@ -2,22 +2,32 @@
 
 declare(strict_types=1);
 
+use Modules\Academic\Application\Commands\ApproveCourseCommand;
 use Modules\Academic\Application\Commands\ArchiveCourseCommand;
 use Modules\Academic\Application\Commands\PublishCourseCommand;
 use Modules\Academic\Application\Commands\ReplaceCourseCurriculumCommand;
+use Modules\Academic\Application\Commands\SubmitCourseForReviewCommand;
 use Modules\Academic\Application\DTO\CourseModuleInput;
 use Modules\Academic\Application\DTO\CourseUnitInput;
 use Modules\Academic\Application\Exceptions\CourseNotFound;
 use Modules\Academic\Application\Queries\GetCourseCurriculumQuery;
 use Modules\Academic\Application\Responses\CourseCurriculumResponse;
+use Modules\Academic\Application\Services\CourseSnapshotBuilder;
+use Modules\Academic\Application\UseCases\ApproveCourseHandler;
 use Modules\Academic\Application\UseCases\ArchiveCourseHandler;
 use Modules\Academic\Application\UseCases\GetCourseCurriculumHandler;
 use Modules\Academic\Application\UseCases\PublishCourseHandler;
 use Modules\Academic\Application\UseCases\ReplaceCourseCurriculumHandler;
+use Modules\Academic\Application\UseCases\SubmitCourseForReviewHandler;
 use Modules\Academic\Domain\Aggregates\Course;
+use Modules\Academic\Domain\Aggregates\UnitContent;
+use Modules\Academic\Domain\Entities\CourseVersion;
 use Modules\Academic\Domain\Exceptions\CourseUnitContentRequired;
 use Modules\Academic\Domain\Exceptions\InvalidCurriculumPosition;
+use Modules\Academic\Domain\ReadModels\UnitContentSnapshot;
 use Modules\Academic\Domain\Repositories\CourseRepository;
+use Modules\Academic\Domain\Repositories\CourseVersionRepository;
+use Modules\Academic\Domain\Repositories\UnitContentRepository;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
@@ -120,6 +130,59 @@ final class Eng027CurriculumCourseRepository implements CourseRepository
     public function all(): array
     {
         return array_values($this->courses);
+    }
+}
+
+final class Eng027CourseVersionRepository implements CourseVersionRepository
+{
+    /** @var array<string, list<CourseVersion>> */
+    private array $versions = [];
+
+    public function save(CourseVersion $version): void
+    {
+        $courseId = $version->courseId()->value();
+        $this->versions[$courseId] ??= [];
+        $this->versions[$courseId][] = $version;
+    }
+
+    /** @return list<CourseVersion> */
+    public function allForCourse(CourseId $id): array
+    {
+        return $this->versions[$id->value()] ?? [];
+    }
+
+    public function findByNumber(CourseId $id, int $versionNumber): ?CourseVersion
+    {
+        foreach ($this->allForCourse($id) as $version) {
+            if ($version->versionNumber() === $versionNumber) {
+                return $version;
+            }
+        }
+
+        return null;
+    }
+
+    public function nextVersionNumber(CourseId $id): int
+    {
+        return count($this->allForCourse($id)) + 1;
+    }
+}
+
+final class Eng027NullUnitContentRepository implements UnitContentRepository
+{
+    public function findForCourseUnit(CourseId $courseId, CourseUnitId $unitId): ?UnitContent
+    {
+        return null;
+    }
+
+    public function findSnapshotForCourseUnit(CourseId $courseId, CourseUnitId $unitId): ?UnitContentSnapshot
+    {
+        return null;
+    }
+
+    public function replaceAtomically(CourseId $courseId, CourseUnitId $unitId, UnitContent $content): ?UnitContent
+    {
+        return null;
     }
 }
 
@@ -267,13 +330,24 @@ it('publica y archiva cursos mediante mutaciones atomicas', function (): void {
         modules: eng027CurriculumInputs(),
     ));
 
-    expect(fn () => (new PublishCourseHandler($publishableCourses))->handle(
+    (new SubmitCourseForReviewHandler($publishableCourses))->handle(
+        new SubmitCourseForReviewCommand($publishable->id()->value()),
+    );
+    (new ApproveCourseHandler($publishableCourses))->handle(
+        new ApproveCourseCommand($publishable->id()->value()),
+    );
+
+    $versions = new Eng027CourseVersionRepository;
+    $snapshotBuilder = new CourseSnapshotBuilder(new Eng027NullUnitContentRepository);
+
+    expect(fn () => (new PublishCourseHandler($publishableCourses, $versions, $snapshotBuilder))->handle(
         new PublishCourseCommand($publishable->id()->value()),
     ))->toThrow(CourseUnitContentRequired::class);
-    expect($publishableCourses->findById($publishable->id())?->status()->value)->toBe('draft');
+    expect($publishableCourses->findById($publishable->id())?->status()->value)->toBe('approved')
+        ->and($versions->allForCourse($publishable->id()))->toHaveCount(0);
 
     $publishableCourses->markAllUnitsComplete($publishable->id());
-    $published = (new PublishCourseHandler($publishableCourses))->handle(new PublishCourseCommand($publishable->id()->value()));
+    $published = (new PublishCourseHandler($publishableCourses, $versions, $snapshotBuilder))->handle(new PublishCourseCommand($publishable->id()->value()));
 
     $archivable = Course::create(
         id: CourseId::fromString('019c2b00-0000-7000-8000-000000000002'),
@@ -286,8 +360,10 @@ it('publica y archiva cursos mediante mutaciones atomicas', function (): void {
     );
 
     expect($published->toArray()['status'])->toBe('published')
-        ->and($publishableCourses->atomicUpdateCalls)->toBe(3)
+        ->and($publishableCourses->atomicUpdateCalls)->toBe(5)
         ->and($publishableCourses->saveCalls)->toBe(0)
+        ->and($versions->allForCourse($publishable->id()))->toHaveCount(1)
+        ->and($versions->findByNumber($publishable->id(), 1)?->snapshot()['course']['id'])->toBe($publishable->id()->value())
         ->and($archived->toArray()['status'])->toBe('archived')
         ->and($archivableCourses->atomicUpdateCalls)->toBe(1)
         ->and($archivableCourses->saveCalls)->toBe(0);

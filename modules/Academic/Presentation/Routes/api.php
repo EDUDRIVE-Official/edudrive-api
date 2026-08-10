@@ -37,6 +37,13 @@ Route::prefix('api/v1/academic')
                 Route::get('/courses/{courseId}/curriculum', [CourseController::class, 'curriculum'])
                     ->whereUuid('courseId')
                     ->name('courses.curriculum.show');
+                Route::get('/courses/{courseId}/versions', [CourseController::class, 'versions'])
+                    ->whereUuid('courseId')
+                    ->name('courses.versions.index');
+                Route::get('/courses/{courseId}/versions/{versionNumber}', [CourseController::class, 'version'])
+                    ->whereUuid('courseId')
+                    ->whereNumber('versionNumber')
+                    ->name('courses.versions.show');
                 Route::get('/courses/{courseId}/units/{unitId}/content', [CourseController::class, 'unitContent'])
                     ->whereUuid('courseId')
                     ->whereUuid('unitId')
@@ -50,6 +57,22 @@ Route::prefix('api/v1/academic')
                 Route::post('/courses/{courseId}/publish', [CourseController::class, 'publish'])
                     ->whereUuid('courseId')
                     ->name('courses.publish');
+
+                Route::post('/courses/{courseId}/submit-for-review', [CourseController::class, 'submitForReview'])
+                    ->whereUuid('courseId')
+                    ->name('courses.submit-for-review');
+
+                Route::post('/courses/{courseId}/approve', [CourseController::class, 'approve'])
+                    ->whereUuid('courseId')
+                    ->name('courses.approve');
+
+                Route::post('/courses/{courseId}/send-back-to-draft', [CourseController::class, 'sendBackToDraft'])
+                    ->whereUuid('courseId')
+                    ->name('courses.send-back-to-draft');
+
+                Route::post('/courses/{courseId}/reopen', [CourseController::class, 'reopen'])
+                    ->whereUuid('courseId')
+                    ->name('courses.reopen');
 
                 Route::post('/courses/{courseId}/archive', [CourseController::class, 'archive'])
                     ->whereUuid('courseId')

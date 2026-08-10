@@ -7,6 +7,7 @@ namespace Modules\Academic\Infrastructure\Providers;
 use Illuminate\Support\ServiceProvider;
 use Modules\Academic\Application\Commands\AddCompetencyIndicatorCommand;
 use Modules\Academic\Application\Commands\AddSubcompetencyCommand;
+use Modules\Academic\Application\Commands\ApproveCourseCommand;
 use Modules\Academic\Application\Commands\ArchiveCourseCommand;
 use Modules\Academic\Application\Commands\ArchiveProgramCommand;
 use Modules\Academic\Application\Commands\ChangeProgramAudienceCommand;
@@ -15,16 +16,22 @@ use Modules\Academic\Application\Commands\CreateCourseCommand;
 use Modules\Academic\Application\Commands\CreateProgramCommand;
 use Modules\Academic\Application\Commands\PublishCourseCommand;
 use Modules\Academic\Application\Commands\PublishProgramCommand;
+use Modules\Academic\Application\Commands\ReopenCourseCommand;
 use Modules\Academic\Application\Commands\ReplaceCourseCurriculumCommand;
 use Modules\Academic\Application\Commands\ReplaceProgramCoursesCommand;
 use Modules\Academic\Application\Commands\ReplaceUnitContentCommand;
+use Modules\Academic\Application\Commands\SendCourseBackToDraftCommand;
+use Modules\Academic\Application\Commands\SubmitCourseForReviewCommand;
 use Modules\Academic\Application\Queries\GetCourseCurriculumQuery;
+use Modules\Academic\Application\Queries\GetCourseVersionQuery;
 use Modules\Academic\Application\Queries\GetUnitContentQuery;
 use Modules\Academic\Application\Queries\ListCompetenciesQuery;
 use Modules\Academic\Application\Queries\ListCoursesQuery;
+use Modules\Academic\Application\Queries\ListCourseVersionsQuery;
 use Modules\Academic\Application\Queries\ListProgramsQuery;
 use Modules\Academic\Application\UseCases\AddCompetencyIndicatorHandler;
 use Modules\Academic\Application\UseCases\AddSubcompetencyHandler;
+use Modules\Academic\Application\UseCases\ApproveCourseHandler;
 use Modules\Academic\Application\UseCases\ArchiveCourseHandler;
 use Modules\Academic\Application\UseCases\ArchiveProgramHandler;
 use Modules\Academic\Application\UseCases\ChangeProgramAudienceHandler;
@@ -32,21 +39,28 @@ use Modules\Academic\Application\UseCases\CreateCompetencyHandler;
 use Modules\Academic\Application\UseCases\CreateCourseHandler;
 use Modules\Academic\Application\UseCases\CreateProgramHandler;
 use Modules\Academic\Application\UseCases\GetCourseCurriculumHandler;
+use Modules\Academic\Application\UseCases\GetCourseVersionHandler;
 use Modules\Academic\Application\UseCases\GetUnitContentHandler;
 use Modules\Academic\Application\UseCases\ListCompetenciesHandler;
 use Modules\Academic\Application\UseCases\ListCoursesHandler;
+use Modules\Academic\Application\UseCases\ListCourseVersionsHandler;
 use Modules\Academic\Application\UseCases\ListProgramsHandler;
 use Modules\Academic\Application\UseCases\PublishCourseHandler;
 use Modules\Academic\Application\UseCases\PublishProgramHandler;
+use Modules\Academic\Application\UseCases\ReopenCourseHandler;
 use Modules\Academic\Application\UseCases\ReplaceCourseCurriculumHandler;
 use Modules\Academic\Application\UseCases\ReplaceProgramCoursesHandler;
 use Modules\Academic\Application\UseCases\ReplaceUnitContentHandler;
+use Modules\Academic\Application\UseCases\SendCourseBackToDraftHandler;
+use Modules\Academic\Application\UseCases\SubmitCourseForReviewHandler;
 use Modules\Academic\Domain\Repositories\CompetencyRepository;
 use Modules\Academic\Domain\Repositories\CourseRepository;
+use Modules\Academic\Domain\Repositories\CourseVersionRepository;
 use Modules\Academic\Domain\Repositories\ProgramRepository;
 use Modules\Academic\Domain\Repositories\UnitContentRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCompetencyRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCourseRepository;
+use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCourseVersionRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentProgramRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentUnitContentRepository;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
@@ -63,6 +77,11 @@ final class AcademicServiceProvider extends ServiceProvider
         $this->app->bind(
             CourseRepository::class,
             EloquentCourseRepository::class,
+        );
+
+        $this->app->bind(
+            CourseVersionRepository::class,
+            EloquentCourseVersionRepository::class,
         );
 
         $this->app->bind(
@@ -99,6 +118,36 @@ final class AcademicServiceProvider extends ServiceProvider
         $registry->register(
             PublishCourseCommand::class,
             PublishCourseHandler::class,
+        );
+
+        $registry->register(
+            SubmitCourseForReviewCommand::class,
+            SubmitCourseForReviewHandler::class,
+        );
+
+        $registry->register(
+            ApproveCourseCommand::class,
+            ApproveCourseHandler::class,
+        );
+
+        $registry->register(
+            SendCourseBackToDraftCommand::class,
+            SendCourseBackToDraftHandler::class,
+        );
+
+        $registry->register(
+            ReopenCourseCommand::class,
+            ReopenCourseHandler::class,
+        );
+
+        $registry->register(
+            ListCourseVersionsQuery::class,
+            ListCourseVersionsHandler::class,
+        );
+
+        $registry->register(
+            GetCourseVersionQuery::class,
+            GetCourseVersionHandler::class,
         );
 
         $registry->register(

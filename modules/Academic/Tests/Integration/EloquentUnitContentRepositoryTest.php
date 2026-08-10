@@ -225,7 +225,10 @@ it('rechaza unidad ajena sin revelar ownership y curso publicado sin mutar', fun
     $contents->replaceAtomically(CourseId::fromString($courseId), CourseUnitId::fromString($unitId), completeUnitContent($unitId));
     $courses->updateAtomicallyWithContentCoverage(
         CourseId::fromString($courseId),
-        static fn (Course $course, UnitContentCoverage $coverage) => $course->publish(new DateTimeImmutable('2026-08-05T12:00:00+00:00'), $coverage),
+        static function (Course $course, UnitContentCoverage $coverage): void {
+            approveCourseForPublishing($course);
+            $course->publish(new DateTimeImmutable('2026-08-05T12:00:00+00:00'), $coverage);
+        },
     );
 
     expect(fn () => $contents->replaceAtomically(
@@ -303,7 +306,10 @@ it('calcula cobertura parcial y completa bajo la publicacion atomica', function 
 
     expect(fn () => $courses->updateAtomicallyWithContentCoverage(
         CourseId::fromString($courseId),
-        static fn (Course $locked, UnitContentCoverage $coverage) => $locked->publish(new DateTimeImmutable, $coverage),
+        static function (Course $locked, UnitContentCoverage $coverage): void {
+            approveCourseForPublishing($locked);
+            $locked->publish(new DateTimeImmutable, $coverage);
+        },
     ))->toThrow(CourseUnitContentRequired::class);
     expect($courses->findById(CourseId::fromString($courseId))?->status()->value)->toBe('draft');
 
@@ -316,7 +322,10 @@ it('calcula cobertura parcial y completa bajo la publicacion atomica', function 
     $contents->replaceAtomically(CourseId::fromString($courseId), CourseUnitId::fromString($secondUnitId), $secondContent);
     $published = $courses->updateAtomicallyWithContentCoverage(
         CourseId::fromString($courseId),
-        static fn (Course $locked, UnitContentCoverage $coverage) => $locked->publish(new DateTimeImmutable, $coverage),
+        static function (Course $locked, UnitContentCoverage $coverage): void {
+            approveCourseForPublishing($locked);
+            $locked->publish(new DateTimeImmutable, $coverage);
+        },
     );
 
     expect($published?->status()->value)->toBe('published');

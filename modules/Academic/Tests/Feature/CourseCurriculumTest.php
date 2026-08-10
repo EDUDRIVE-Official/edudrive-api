@@ -198,6 +198,8 @@ it('reemplaza consulta publica e inmoviliza el curriculo completo de un curso', 
         ->assertOk()
         ->assertJsonPath('data', $storedData);
 
+    approveCourseThroughReviewFlow($this, $courseId);
+
     $this->postJson("/api/v1/academic/courses/{$courseId}/publish")
         ->assertOk()
         ->assertJsonPath('data.status', 'published');
@@ -426,6 +428,7 @@ it('rechaza publicar un modulo sin unidades', function (): void {
 
     $this->putJson("/api/v1/academic/courses/{$course->id()->value()}/curriculum", $payload)
         ->assertOk();
+    approveCourseThroughReviewFlow($this, $course->id()->value());
     $this->postJson("/api/v1/academic/courses/{$course->id()->value()}/publish")
         ->assertUnprocessable()
         ->assertJsonPath('code', 'COURSE_MODULE_REQUIRES_UNITS');
@@ -452,6 +455,7 @@ it('rechaza publicar un curso con curriculo vacio', function (): void {
     $this->putJson("/api/v1/academic/courses/{$course->id()->value()}/curriculum", [
         'modules' => [],
     ])->assertOk();
+    approveCourseThroughReviewFlow($this, $course->id()->value());
     $this->postJson("/api/v1/academic/courses/{$course->id()->value()}/publish")
         ->assertUnprocessable()
         ->assertJsonPath('code', 'COURSE_CURRICULUM_REQUIRED');

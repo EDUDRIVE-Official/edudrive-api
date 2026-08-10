@@ -143,10 +143,15 @@ it('impide reemplazar contenido publicado y preserva lo almacenado', function ()
     $secondUrl = "/api/v1/academic/courses/{$course->id()->value()}/units/{$secondUnitId}/content";
     $payload = validUnitContentPayload();
     $stored = $this->putJson($firstUrl, $payload)->assertOk()->json('data');
+    approveCourseThroughReviewFlow($this, $course->id()->value());
 
     $this->postJson("/api/v1/academic/courses/{$course->id()->value()}/publish")
         ->assertUnprocessable()->assertJsonPath('code', 'COURSE_UNIT_CONTENT_REQUIRED');
+
+    $this->postJson("/api/v1/academic/courses/{$course->id()->value()}/send-back-to-draft")
+        ->assertOk()->assertJsonPath('data.status', 'draft');
     $this->putJson($secondUrl, validUnitContentPayload())->assertOk();
+    approveCourseThroughReviewFlow($this, $course->id()->value());
     $this->postJson("/api/v1/academic/courses/{$course->id()->value()}/publish")->assertOk();
     $this->putJson($firstUrl, ['lessons' => []])->assertUnprocessable();
     $this->getJson($firstUrl)->assertOk()->assertJsonPath('data.lessons', $stored['lessons']);
@@ -278,6 +283,7 @@ it('mantiene compatible la lectura de un curso publicado legado sin filas de con
     /** @var TestCase $this */
     actingAsSuperAdminUser();
     [$course, $unitId] = createCourseForUnitContent('CONTENT-LEGACY');
+    approveCourseForPublishing($course);
     $course->publish(new DateTimeImmutable, completeCoverageForCourse($course));
     app(CourseRepository::class)->save($course);
 

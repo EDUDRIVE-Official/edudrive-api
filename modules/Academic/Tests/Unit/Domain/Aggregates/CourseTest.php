@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 use Modules\Academic\Domain\Aggregates\Course;
-use Modules\Academic\Domain\Entities\CourseModule;
-use Modules\Academic\Domain\Entities\CourseUnit;
 use Modules\Academic\Domain\Enums\CourseModality;
 use Modules\Academic\Domain\Enums\CourseStatus;
 use Modules\Academic\Domain\Exceptions\ArchivedCourseCannotBeModified;
@@ -21,102 +19,9 @@ use Modules\Academic\Domain\Exceptions\InvalidCurriculumPosition;
 use Modules\Academic\Domain\Exceptions\InvalidCurriculumPrerequisite;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
-use Modules\Academic\Domain\ValueObjects\CourseModuleId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Academic\Domain\ValueObjects\CourseUnitId;
-use Modules\Academic\Domain\ValueObjects\CurriculumCode;
 use Modules\Academic\Domain\ValueObjects\UnitContentCoverage;
-
-function createAcademicCourse(): Course
-{
-    return Course::create(
-        id: CourseId::fromString('01981a64-8300-7b1d-b442-764ea7f915c0'),
-        code: CourseCode::fromString('EDU-001'),
-        title: CourseTitle::fromString('Introducción a la seguridad vial'),
-        description: 'Curso introductorio de EDUDRIVE.',
-    );
-}
-
-/** @param list<string> $prerequisiteIds */
-function aggregateCourseUnit(
-    string $id,
-    string $code,
-    int $position,
-    array $prerequisiteIds = [],
-): CourseUnit {
-    return CourseUnit::create(
-        id: CourseUnitId::fromString($id),
-        code: CurriculumCode::fromString($code),
-        title: "Unidad {$code}",
-        description: "Descripcion {$code}",
-        objectives: null,
-        durationMinutes: 20,
-        position: $position,
-        prerequisiteUnitIds: array_map(
-            static fn (string $prerequisiteId): CourseUnitId => CourseUnitId::fromString($prerequisiteId),
-            $prerequisiteIds,
-        ),
-    );
-}
-
-/**
- * @param  list<CourseUnit>  $units
- * @param  list<string>  $prerequisiteIds
- */
-function aggregateCourseModule(
-    string $id,
-    string $code,
-    int $position,
-    array $units,
-    array $prerequisiteIds = [],
-): CourseModule {
-    return CourseModule::create(
-        id: CourseModuleId::fromString($id),
-        code: CurriculumCode::fromString($code),
-        title: "Modulo {$code}",
-        description: "Descripcion {$code}",
-        objectives: null,
-        durationMinutes: 60,
-        position: $position,
-        prerequisiteModuleIds: array_map(
-            static fn (string $prerequisiteId): CourseModuleId => CourseModuleId::fromString($prerequisiteId),
-            $prerequisiteIds,
-        ),
-        units: $units,
-    );
-}
-
-/** @return list<CourseModule> */
-function validAggregateCurriculum(): array
-{
-    $firstUnitId = '01981a64-8300-7b1d-b442-764ea7f91601';
-    $secondUnitId = '01981a64-8300-7b1d-b442-764ea7f91602';
-    $firstModuleId = '01981a64-8300-7b1d-b442-764ea7f91701';
-
-    return [
-        aggregateCourseModule(
-            $firstModuleId,
-            'MOD-01',
-            1,
-            [aggregateCourseUnit($firstUnitId, 'UNI-01', 1)],
-        ),
-        aggregateCourseModule(
-            '01981a64-8300-7b1d-b442-764ea7f91702',
-            'MOD-02',
-            2,
-            [aggregateCourseUnit($secondUnitId, 'UNI-01', 1, [$firstUnitId])],
-            [$firstModuleId],
-        ),
-    ];
-}
-
-function validAggregateCoverage(): UnitContentCoverage
-{
-    return UnitContentCoverage::fromUnitIds([
-        CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f91601'),
-        CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f91602'),
-    ]);
-}
 
 it('crea un curso en estado borrador', function (): void {
     $course = createAcademicCourse();
@@ -141,6 +46,7 @@ it('publica un curso', function (): void {
     $course = createAcademicCourse();
     $publishedAt = new DateTimeImmutable('2026-07-29 08:00:00');
     $course->replaceCurriculum(validAggregateCurriculum());
+    approveAcademicCourse($course);
 
     $course->publish($publishedAt, validAggregateCoverage());
 
@@ -153,6 +59,7 @@ it('publica un curso', function (): void {
 it('impide publicar dos veces el mismo curso', function (): void {
     $course = createAcademicCourse();
     $course->replaceCurriculum(validAggregateCurriculum());
+    approveAcademicCourse($course);
 
     $course->publish(new DateTimeImmutable('2026-07-29 08:00:00'), validAggregateCoverage());
     $course->publish(new DateTimeImmutable('2026-07-29 09:00:00'), validAggregateCoverage());
@@ -446,6 +353,7 @@ it('conserva exactamente el curriculo anterior cuando el reemplazo candidato es 
 it('exige modulos y al menos una unidad por modulo antes de publicar', function (array $curriculum, string $exceptionClass, string $errorCode): void {
     $course = createAcademicCourse();
     $course->replaceCurriculum($curriculum);
+    approveAcademicCourse($course);
 
     try {
         $course->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'), validAggregateCoverage());
@@ -455,7 +363,7 @@ it('exige modulos y al menos una unidad por modulo antes de publicar', function 
         expect($exception)->toBeInstanceOf($exceptionClass)
             ->and($exception->statusCode())->toBe(422)
             ->and($exception->errorCode())->toBe($errorCode)
-            ->and($course->status())->toBe(CourseStatus::Draft)
+            ->and($course->status())->toBe(CourseStatus::Approved)
             ->and($course->publishedAt())->toBeNull();
     }
 })->with([
@@ -475,6 +383,7 @@ it('exige modulos y al menos una unidad por modulo antes de publicar', function 
 it('publica un curso con curriculo completo', function (): void {
     $course = createAcademicCourse();
     $course->replaceCurriculum(validAggregateCurriculum());
+    approveAcademicCourse($course);
 
     $course->publish($publishedAt = new DateTimeImmutable('2026-08-03T12:00:00+00:00'), validAggregateCoverage());
 
@@ -488,6 +397,7 @@ it('prioriza el ciclo de vida y rechaza reemplazar el curriculo publicado o arch
     $course->replaceCurriculum($curriculum);
 
     if ($status === CourseStatus::Published) {
+        approveAcademicCourse($course);
         $course->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'), validAggregateCoverage());
     } else {
         $course->archive(new DateTimeImmutable('2026-08-03T12:00:00+00:00'));
@@ -572,6 +482,7 @@ it('permite modificar contenido solo mientras el curso es borrador', function (C
 
     if ($status === CourseStatus::Published) {
         $course->replaceCurriculum(validAggregateCurriculum());
+        approveAcademicCourse($course);
         $course->publish(
             new DateTimeImmutable('2026-08-05T12:00:00+00:00'),
             UnitContentCoverage::fromUnitIds([
@@ -601,6 +512,7 @@ it('permite modificar contenido solo mientras el curso es borrador', function (C
 it('exige cobertura de contenido para todas las unidades antes de publicar sin mutar estado', function (): void {
     $course = createAcademicCourse();
     $course->replaceCurriculum(validAggregateCurriculum());
+    approveAcademicCourse($course);
 
     try {
         $course->publish(
@@ -613,7 +525,7 @@ it('exige cobertura de contenido para todas las unidades antes de publicar sin m
     } catch (CourseUnitContentRequired $exception) {
         expect($exception->errorCode())->toBe('COURSE_UNIT_CONTENT_REQUIRED')
             ->and($exception->statusCode())->toBe(422)
-            ->and($course->status())->toBe(CourseStatus::Draft)
+            ->and($course->status())->toBe(CourseStatus::Approved)
             ->and($course->publishedAt())->toBeNull();
     }
 });
@@ -621,6 +533,7 @@ it('exige cobertura de contenido para todas las unidades antes de publicar sin m
 it('deduplica cobertura y publica cuando cubre cada unidad', function (): void {
     $course = createAcademicCourse();
     $course->replaceCurriculum(validAggregateCurriculum());
+    approveAcademicCourse($course);
     $coverage = UnitContentCoverage::fromUnitIds([
         CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f91601'),
         CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f91601'),

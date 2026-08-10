@@ -274,7 +274,9 @@ it('permite reordenar un programa publicado cuando todos los cursos siguen publi
     $secondCourse = task4Course('019c2600-0000-7000-8000-000000000002', 'COURSE-02');
     addMinimalCurriculum($firstCourse);
     addMinimalCurriculum($secondCourse);
+    approveCourseForPublishing($firstCourse);
     $firstCourse->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'), completeCoverageForCourse($firstCourse));
+    approveCourseForPublishing($secondCourse);
     $secondCourse->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'), completeCoverageForCourse($secondCourse));
     $program = task4Program();
     $program->replaceCourses([$firstCourse->id(), $secondCourse->id()]);
@@ -299,6 +301,7 @@ it('permite reordenar un programa publicado cuando todos los cursos siguen publi
 it('rechaza dejar vacio un programa publicado sin guardar ni mutar', function (): void {
     $course = task4Course('019c2600-0000-7000-8000-000000000001', 'COURSE-01');
     addMinimalCurriculum($course);
+    approveCourseForPublishing($course);
     $course->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'), completeCoverageForCourse($course));
     $program = task4Program();
     $program->replaceCourses([$course->id()]);
@@ -325,6 +328,7 @@ it('rechaza incorporar un curso no publicado a un programa publicado sin guardar
     $publishedCourse = task4Course('019c2600-0000-7000-8000-000000000001', 'COURSE-01');
     $draftCourse = task4Course('019c2600-0000-7000-8000-000000000002', 'COURSE-02');
     addMinimalCurriculum($publishedCourse);
+    approveCourseForPublishing($publishedCourse);
     $publishedCourse->publish(new DateTimeImmutable('2026-08-03T12:00:00+00:00'), completeCoverageForCourse($publishedCourse));
     $program = task4Program();
     $program->replaceCourses([$publishedCourse->id()]);

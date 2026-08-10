@@ -547,7 +547,9 @@ Recursos descargables.
 Accesibilidad.
 ENG-029 — Publicación y versionado curricular
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-10): se completó el ciclo de vida de publicación del agregado `Course` con los estados intermedios `under_review` y `approved` entre el borrador y la publicación, y un historial de versiones inmutables en la tabla `academic_course_versions`. `publish()` del dominio exige `approved`; cada publicación congela un snapshot completo (datos generales + currículo + contenido por unidad) dentro del mismo lock de fila. Reabrir (`reopen`) devuelve el curso a `draft` para construir la siguiente versión sin borrar las publicadas. La API expone 4 mutaciones nuevas y 2 consultas de historial protegidas por `courses.manage`/`courses.view`, con errores públicos `COURSE_REVIEW_STATE_INVALID`, `COURSE_CANNOT_BE_REOPENED` y `COURSE_VERSION_NOT_FOUND`. Detalle completo en `docs/plans/2026-08-10-publicacion-versionado-curricular-design.md` y `docs/engineering/ENG-LOG.md`.
 
 Incluye:
 
@@ -1303,7 +1305,9 @@ Actualizado 2026-08-04: se completó ENG-027 (Módulos y unidades) — ver la no
 
 Actualizado 2026-08-08: se completó ENG-028 (Lecciones y contenido accesible) — ver la nota de la sección 11, `docs/engineering/ENG-LOG.md` y el plan de diseño `docs/plans/2026-08-05-lecciones-contenido.md`. El incremento entrega lecciones y bloques tipados con metadatos de accesibilidad validados, persistencia normalizada y atomicidad transaccional.
 
-La historia técnica activa queda **Pendiente de decisión** entre ENG-029 o volver a Fase 4 — Perfiles.
+Actualizado 2026-08-10: se completó ENG-029 (Publicación y versionado curricular) — ver la nota de la sección 11, `docs/engineering/ENG-LOG.md` y el plan de diseño `docs/plans/2026-08-10-publicacion-versionado-curricular-design.md`. El incremento entrega el ciclo de vida draft → under_review → approved → published con snapshots inmutables por publicación, reapertura para construir la siguiente versión y endpoints de historial protegidos.
+
+La historia técnica activa queda **Pendiente de decisión** entre volver a Fase 4 — Perfiles o iniciar ENG-030 (Banco de preguntas).
 26. Definición de terminado
 
 Una historia se considera terminada cuando cumple:
@@ -1348,3 +1352,4 @@ Versión	Fecha	Descripción
 1.6.0	2026-08-03	Cierre de ENG-025 (Programas educativos): plantillas regionales, audiencia combinable, cursos ordenados, ciclo de vida, persistencia normalizada, API protegida y permisos programs.manage/programs.view (IMP-026 en ENG-LOG.md); alcance futuro diferido explícitamente
 1.7.0	2026-08-04	Cierre de ENG-027 (Módulos y unidades): currículo regional jerárquico dentro del agregado Course, persistencia transaccional, prerrequisitos, API protegida con courses.view/courses.manage y compatibilidad con cursos publicados legacy (IMP-027 en ENG-LOG.md); alcance futuro diferido explícitamente
 1.8.0	2026-08-08	Cierre de ENG-028 (Lecciones y contenido accesible): incorporación de lecciones y bloques de contenido accesible tipados (texto, imagen, video, audio, interactivos, descargas), consulta/reemplazo atómico por unidad, y validación de cobertura de lecciones al publicar.
+1.9.0	2026-08-10	Cierre de ENG-029 (Publicación y versionado curricular): estados `under_review`/`approved`, `publish` exige aprobación, snapshots inmutables por publicación en `academic_course_versions`, `reopen` para la siguiente versión, API de ciclo de vida e historial protegida por `courses.manage`/`courses.view`, y errores públicos de transición, reapertura y versión inexistente (IMP-029 en ENG-LOG.md)

@@ -66,6 +66,7 @@ function createPublishedCourseForProgram(TestCase $test, string $code): array
     addMinimalCurriculum($course);
     app(CourseRepository::class)->save($course);
     addCompleteContentForCourse($course);
+    approveCourseThroughReviewFlow($test, $id);
 
     $test->postJson("/api/v1/academic/courses/{$id}/publish")
         ->assertOk()

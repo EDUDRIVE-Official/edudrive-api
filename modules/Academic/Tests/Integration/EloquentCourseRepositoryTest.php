@@ -151,6 +151,7 @@ it('publica con cobertura real antes de replace y conserva contenido y estado pu
     $repository->updateAtomicallyWithContentCoverage(
         $course->id(),
         static function (Course $locked, UnitContentCoverage $coverage): void {
+            approveCourseForPublishing($locked);
             $locked->publish(new DateTimeImmutable('2026-08-04T12:00:00+00:00'), $coverage);
         },
     );
@@ -197,6 +198,7 @@ it('reemplaza contenido antes de publish y publica exactamente la version nueva 
     $repository->updateAtomicallyWithContentCoverage(
         $course->id(),
         static function (Course $locked, UnitContentCoverage $coverage): void {
+            approveCourseForPublishing($locked);
             $locked->publish(new DateTimeImmutable('2026-08-04T12:00:00+00:00'), $coverage);
         },
     );

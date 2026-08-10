@@ -126,6 +126,127 @@ function completeCoverageForCourse(Course $course): UnitContentCoverage
     return UnitContentCoverage::fromUnitIds($unitIds);
 }
 
+/**
+ * Puts a course through the review workflow so it can be published: it sends
+ * the course for review and then approves it, ending in `CourseStatus::Approved`.
+ */
+function approveCourseForPublishing(Course $course): void
+{
+    $course->submitForReview();
+    $course->approve();
+}
+
+/**
+ * Drives an existing course through the review endpoints (`submit-for-review`
+ * and `approve`) so feature tests can publish it over HTTP.
+ */
+function approveCourseThroughReviewFlow(TestCase $test, string $courseId): void
+{
+    $test->postJson("/api/v1/academic/courses/{$courseId}/submit-for-review")
+        ->assertOk()
+        ->assertJsonPath('data.status', 'under_review');
+    $test->postJson("/api/v1/academic/courses/{$courseId}/approve")
+        ->assertOk()
+        ->assertJsonPath('data.status', 'approved');
+}
+
+function createAcademicCourse(): Course
+{
+    return Course::create(
+        id: CourseId::fromString('01981a64-8300-7b1d-b442-764ea7f915c0'),
+        code: CourseCode::fromString('EDU-001'),
+        title: CourseTitle::fromString('Introducción a la seguridad vial'),
+        description: 'Curso introductorio de EDUDRIVE.',
+    );
+}
+
+/** @param list<string> $prerequisiteIds */
+function aggregateCourseUnit(
+    string $id,
+    string $code,
+    int $position,
+    array $prerequisiteIds = [],
+): CourseUnit {
+    return CourseUnit::create(
+        id: CourseUnitId::fromString($id),
+        code: CurriculumCode::fromString($code),
+        title: "Unidad {$code}",
+        description: "Descripcion {$code}",
+        objectives: null,
+        durationMinutes: 20,
+        position: $position,
+        prerequisiteUnitIds: array_map(
+            static fn (string $prerequisiteId): CourseUnitId => CourseUnitId::fromString($prerequisiteId),
+            $prerequisiteIds,
+        ),
+    );
+}
+
+/**
+ * @param  list<CourseUnit>  $units
+ * @param  list<string>  $prerequisiteIds
+ */
+function aggregateCourseModule(
+    string $id,
+    string $code,
+    int $position,
+    array $units,
+    array $prerequisiteIds = [],
+): CourseModule {
+    return CourseModule::create(
+        id: CourseModuleId::fromString($id),
+        code: CurriculumCode::fromString($code),
+        title: "Modulo {$code}",
+        description: "Descripcion {$code}",
+        objectives: null,
+        durationMinutes: 60,
+        position: $position,
+        prerequisiteModuleIds: array_map(
+            static fn (string $prerequisiteId): CourseModuleId => CourseModuleId::fromString($prerequisiteId),
+            $prerequisiteIds,
+        ),
+        units: $units,
+    );
+}
+
+/** @return list<CourseModule> */
+function validAggregateCurriculum(): array
+{
+    $firstUnitId = '01981a64-8300-7b1d-b442-764ea7f91601';
+    $secondUnitId = '01981a64-8300-7b1d-b442-764ea7f91602';
+    $firstModuleId = '01981a64-8300-7b1d-b442-764ea7f91701';
+
+    return [
+        aggregateCourseModule(
+            $firstModuleId,
+            'MOD-01',
+            1,
+            [aggregateCourseUnit($firstUnitId, 'UNI-01', 1)],
+        ),
+        aggregateCourseModule(
+            '01981a64-8300-7b1d-b442-764ea7f91702',
+            'MOD-02',
+            2,
+            [aggregateCourseUnit($secondUnitId, 'UNI-01', 1, [$firstUnitId])],
+            [$firstModuleId],
+        ),
+    ];
+}
+
+function validAggregateCoverage(): UnitContentCoverage
+{
+    return UnitContentCoverage::fromUnitIds([
+        CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f91601'),
+        CourseUnitId::fromString('01981a64-8300-7b1d-b442-764ea7f91602'),
+    ]);
+}
+
+function approveAcademicCourse(Course $course): void
+{
+    $course->submitForReview();
+    $course->approve();
+}
+
 function addMinimalCurriculum(Course $course): void
 {
     $course->replaceCurriculum([
@@ -152,6 +273,39 @@ function addMinimalCurriculum(Course $course): void
             ],
         ),
     ]);
+}
+
+/**
+ * Acts as a user holding the given single role, for endpoints gated behind a
+ * `permission:...` middleware that grants that role the required permission.
+ */
+function actingAsRole(Role $role): UserModel
+{
+    $repository = app(UserRepository::class);
+
+    $user = User::register(
+        id: (string) Str::uuid(),
+        name: 'Usuario de prueba',
+        email: Email::fromString(sprintf('%s@edudrive.cr', Str::uuid())),
+        passwordHash: 'hashed-password',
+    );
+
+    $repository->save($user);
+
+    $model = UserModel::query()->findOrFail($user->id());
+
+    app(RoleAssignmentRepository::class)->save(
+        RoleAssignment::assign(
+            id: (string) Str::uuid(),
+            userId: $user->id(),
+            role: $role,
+            organizationId: null,
+        ),
+    );
+
+    Sanctum::actingAs($model);
+
+    return $model;
 }
 
 /**

@@ -18,11 +18,12 @@ use function Pest\Laravel\postJson;
 
 use Tests\TestCase;
 
-it('publica un curso en borrador', function (): void {
+it('publica un curso aprobado', function (): void {
     /** @var TestCase $this */
     actingAsSuperAdminUser();
 
     $course = createDraftCourseForPublishing();
+    approveCourseThroughReviewFlow($this, $course->id()->value());
 
     $response = postJson("/api/v1/academic/courses/{$course->id()->value()}/publish");
 
@@ -44,6 +45,7 @@ it('rechaza publicar un curso que ya está publicado', function (): void {
     actingAsSuperAdminUser();
 
     $course = createDraftCourseForPublishing('EDU-021');
+    approveCourseThroughReviewFlow($this, $course->id()->value());
 
     postJson("/api/v1/academic/courses/{$course->id()->value()}/publish")->assertOk();
 

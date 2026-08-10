@@ -989,3 +989,40 @@ ENG-020
 
 **Estado:** Finalizado.
 
+## 2026-08-10 — IMP-029 (Cierre de ENG-029 — Publicación y versionado curricular)
+
+### Completado
+
+- **Modelo de Dominio**:
+  - `CourseStatus` gana los estados intermedios `UnderReview` y `Approved` entre el borrador y la publicación.
+  - Transiciones nuevas del agregado `Course`: `submitForReview()` (`draft` → `under_review`), `approve()` (`under_review` → `approved`), `sendBackToDraft()` (`under_review`/`approved` → `draft`) y `reopen()` (`published` → `draft`, conservando el historial y limpiando `publishedAt`).
+  - `Course::publish()` ahora exige que el curso esté `approved`, conservando la validación de currículo completo y cobertura de contenido de ENG-028.
+  - Entidad inmutable `CourseVersion` (identidad UUID técnica, `courseId`, `versionNumber` secuencial desde 1, `status` published/archived y snapshot canónico) y enumeración `CourseVersionStatus`.
+  - Repositorio de dominio `CourseVersionRepository` (`save`, `allForCourse`, `findByNumber`, `nextVersionNumber`).
+  - Excepciones públicas: `CourseReviewStateInvalid` (422, `COURSE_REVIEW_STATE_INVALID`) y `CourseCannotBeReopened` (422, `COURSE_CANNOT_BE_REOPENED`).
+- **Persistencia PostgreSQL**:
+  - Tabla `academic_course_versions` con `snapshot jsonb`, unicidad `(course_id, version_number)`, FK a `academic_courses` con `ON DELETE CASCADE` y PK UUID.
+  - `CourseVersionModel` con casts (`snapshot` array, fechas inmutables) y `EloquentCourseVersionRepository` con historial ordenado por número de versión y siguiente número como máximo + 1.
+- **Capa de Aplicación**:
+  - Comandos y handlers `SubmitCourseForReview`, `Approve`, `SendBackToDraft` y `Reopen`, todos mediante mutaciones atómicas (`updateAtomically`) con curso inexistente traducido a 404.
+  - `PublishCourseHandler` ampliado: captura el snapshot completo dentro del mismo lock de fila usado por `updateAtomicallyWithContentCoverage`, creando una `CourseVersion` con `nextVersionNumber` y `published_at`.
+  - `CourseSnapshotBuilder` serializa datos generales del curso, módulos/unidades con prerrequisitos y lecciones/bloques de contenido por unidad.
+  - Consultas `ListCourseVersions` y `GetCourseVersion` con `CourseVersionNotFound` (404, `COURSE_VERSION_NOT_FOUND`) para curso o versión inexistentes, más las respuestas `CourseStatusResponse`, `CourseVersionListItemResponse` y `CourseVersionResponse`.
+- **Presentación e Integración HTTP**:
+  - `POST /courses/{courseId}/submit-for-review`, `/approve`, `/send-back-to-draft` y `/reopen` bajo `auth:sanctum` + `courses.manage`.
+  - `GET /courses/{courseId}/versions` y `GET /courses/{courseId}/versions/{versionNumber}` bajo `courses.view`.
+  - Los endpoints de consulta existentes (currículo, contenido por unidad) siguen leyendo el borrador mutable.
+- **Pruebas**:
+  - Dominio: `CourseLifecycleTest` (transiciones válidas e inválidas, `publish` exige `approved`, reapertura y republicación) y `CourseVersionTest`.
+  - Aplicación: `CourseLifecycleHandlerTest` (transiciones, 404/422, historial y snapshot) y ampliación de `CourseCurriculumHandlerTest` para verificar el snapshot capturado dentro de la mutación atómica.
+  - Persistencia: `EloquentCourseVersionRepositoryTest` (ida y vuelta del snapshot, orden, siguiente número, unicidad, cascada, ausencia de N+1).
+  - Feature HTTP: `CourseVersioningTest` (ciclo submit → approve → publish → reopen → publish v2, historial, snapshot detallado, casos 401/403/404/422 y lectura del borrador), con ajuste de los tests existentes `PublishCourseTest`, `ArchiveCourseTest`, `CourseCurriculumTest`, `CourseUnitContentTest` y `EducationalProgramTest` al flujo `approved` previo a publicación.
+
+### Validaciones
+
+- `composer format` ✅ (419 archivos en formato de estilo correcto, 0 pendientes)
+- `composer quality` final ✅ (571 pruebas, 1635 aserciones aprobadas y análisis estático con PHPStan sin errores en nivel 8)
+- `php artisan route:list` ✅ (14 rutas de cursos registradas, incluidas las 6 nuevas del ciclo de vida e historial)
+
+**Estado:** Finalizado.
+

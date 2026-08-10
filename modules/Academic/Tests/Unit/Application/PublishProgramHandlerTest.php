@@ -168,6 +168,7 @@ function task5Course(string $id, string $code, CourseStatus $status): Course
 
     if ($status === CourseStatus::Published) {
         addMinimalCurriculum($course);
+        approveCourseForPublishing($course);
         $course->publish(new DateTimeImmutable('2026-08-03 08:00:00'), completeCoverageForCourse($course));
     }
 

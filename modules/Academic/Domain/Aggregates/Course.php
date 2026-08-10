@@ -11,10 +11,12 @@ use Modules\Academic\Domain\Enums\CourseStatus;
 use Modules\Academic\Domain\Exceptions\ArchivedCourseCannotBeModified;
 use Modules\Academic\Domain\Exceptions\CourseAlreadyArchived;
 use Modules\Academic\Domain\Exceptions\CourseAlreadyPublished;
+use Modules\Academic\Domain\Exceptions\CourseCannotBeReopened;
 use Modules\Academic\Domain\Exceptions\CourseContentCannotBeModified;
 use Modules\Academic\Domain\Exceptions\CourseCurriculumCannotBeModified;
 use Modules\Academic\Domain\Exceptions\CourseCurriculumRequired;
 use Modules\Academic\Domain\Exceptions\CourseModuleRequiresUnits;
+use Modules\Academic\Domain\Exceptions\CourseReviewStateInvalid;
 use Modules\Academic\Domain\Exceptions\CourseUnitContentRequired;
 use Modules\Academic\Domain\Exceptions\DuplicateCourseModule;
 use Modules\Academic\Domain\Exceptions\DuplicateCourseUnit;
@@ -135,12 +137,53 @@ final class Course
         $this->modules = $modules;
     }
 
+    public function submitForReview(): void
+    {
+        if (! $this->status->isDraft()) {
+            throw CourseReviewStateInvalid::create();
+        }
+
+        $this->status = CourseStatus::UnderReview;
+    }
+
+    public function approve(): void
+    {
+        if (! $this->status->isUnderReview()) {
+            throw CourseReviewStateInvalid::create();
+        }
+
+        $this->status = CourseStatus::Approved;
+    }
+
+    public function sendBackToDraft(): void
+    {
+        if (! $this->status->isUnderReview() && ! $this->status->isApproved()) {
+            throw CourseReviewStateInvalid::create();
+        }
+
+        $this->status = CourseStatus::Draft;
+    }
+
+    public function reopen(): void
+    {
+        if (! $this->status->isPublished()) {
+            throw CourseCannotBeReopened::create();
+        }
+
+        $this->status = CourseStatus::Draft;
+        $this->publishedAt = null;
+    }
+
     public function publish(DateTimeImmutable $publishedAt, UnitContentCoverage $coverage): void
     {
         $this->ensureIsNotArchived();
 
         if ($this->status->isPublished()) {
             throw CourseAlreadyPublished::create();
+        }
+
+        if (! $this->status->isApproved()) {
+            throw CourseReviewStateInvalid::create();
         }
 
         if ($this->modules === []) {

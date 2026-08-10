@@ -41,6 +41,7 @@ it('archiva un curso publicado', function (): void {
     actingAsSuperAdminUser();
 
     $course = createDraftCourseForPublishing('EDU-031');
+    approveCourseThroughReviewFlow($this, $course->id()->value());
 
     postJson("/api/v1/academic/courses/{$course->id()->value()}/publish")->assertOk();
 

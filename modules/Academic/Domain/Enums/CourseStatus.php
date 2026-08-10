@@ -7,12 +7,24 @@ namespace Modules\Academic\Domain\Enums;
 enum CourseStatus: string
 {
     case Draft = 'draft';
+    case UnderReview = 'under_review';
+    case Approved = 'approved';
     case Published = 'published';
     case Archived = 'archived';
 
     public function isDraft(): bool
     {
         return $this === self::Draft;
+    }
+
+    public function isUnderReview(): bool
+    {
+        return $this === self::UnderReview;
+    }
+
+    public function isApproved(): bool
+    {
+        return $this === self::Approved;
     }
 
     public function isPublished(): bool

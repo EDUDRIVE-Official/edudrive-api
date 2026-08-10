@@ -5,21 +5,30 @@ declare(strict_types=1);
 namespace Modules\Academic\Presentation\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Modules\Academic\Application\Commands\ApproveCourseCommand;
 use Modules\Academic\Application\Commands\ArchiveCourseCommand;
 use Modules\Academic\Application\Commands\CreateCourseCommand;
 use Modules\Academic\Application\Commands\PublishCourseCommand;
+use Modules\Academic\Application\Commands\ReopenCourseCommand;
 use Modules\Academic\Application\Commands\ReplaceCourseCurriculumCommand;
 use Modules\Academic\Application\Commands\ReplaceUnitContentCommand;
+use Modules\Academic\Application\Commands\SendCourseBackToDraftCommand;
+use Modules\Academic\Application\Commands\SubmitCourseForReviewCommand;
 use Modules\Academic\Application\DTO\ContentBlockInput;
 use Modules\Academic\Application\DTO\CourseModuleInput;
 use Modules\Academic\Application\DTO\CourseUnitInput;
 use Modules\Academic\Application\DTO\LessonInput;
 use Modules\Academic\Application\Queries\GetCourseCurriculumQuery;
+use Modules\Academic\Application\Queries\GetCourseVersionQuery;
 use Modules\Academic\Application\Queries\GetUnitContentQuery;
 use Modules\Academic\Application\Queries\ListCoursesQuery;
+use Modules\Academic\Application\Queries\ListCourseVersionsQuery;
 use Modules\Academic\Application\Responses\ArchiveCourseResponse;
 use Modules\Academic\Application\Responses\CourseCurriculumResponse;
 use Modules\Academic\Application\Responses\CourseListItemResponse;
+use Modules\Academic\Application\Responses\CourseStatusResponse;
+use Modules\Academic\Application\Responses\CourseVersionListItemResponse;
+use Modules\Academic\Application\Responses\CourseVersionResponse;
 use Modules\Academic\Application\Responses\CreateCourseResponse;
 use Modules\Academic\Application\Responses\PublishCourseResponse;
 use Modules\Academic\Application\Responses\UnitContentResponse;
@@ -99,6 +108,103 @@ final class CourseController
         );
 
         assert($result instanceof PublishCourseResponse);
+
+        return response()->json([
+            'data' => $result->toArray(),
+        ]);
+    }
+
+    public function submitForReview(
+        string $courseId,
+        CommandBus $commandBus,
+    ): JsonResponse {
+        $result = $commandBus->dispatch(
+            new SubmitCourseForReviewCommand(courseId: $courseId),
+        );
+
+        assert($result instanceof CourseStatusResponse);
+
+        return response()->json([
+            'data' => $result->toArray(),
+        ]);
+    }
+
+    public function approve(
+        string $courseId,
+        CommandBus $commandBus,
+    ): JsonResponse {
+        $result = $commandBus->dispatch(
+            new ApproveCourseCommand(courseId: $courseId),
+        );
+
+        assert($result instanceof CourseStatusResponse);
+
+        return response()->json([
+            'data' => $result->toArray(),
+        ]);
+    }
+
+    public function sendBackToDraft(
+        string $courseId,
+        CommandBus $commandBus,
+    ): JsonResponse {
+        $result = $commandBus->dispatch(
+            new SendCourseBackToDraftCommand(courseId: $courseId),
+        );
+
+        assert($result instanceof CourseStatusResponse);
+
+        return response()->json([
+            'data' => $result->toArray(),
+        ]);
+    }
+
+    public function reopen(
+        string $courseId,
+        CommandBus $commandBus,
+    ): JsonResponse {
+        $result = $commandBus->dispatch(
+            new ReopenCourseCommand(courseId: $courseId),
+        );
+
+        assert($result instanceof CourseStatusResponse);
+
+        return response()->json([
+            'data' => $result->toArray(),
+        ]);
+    }
+
+    public function versions(
+        string $courseId,
+        QueryBus $queryBus,
+    ): JsonResponse {
+        $result = $queryBus->ask(
+            new ListCourseVersionsQuery(courseId: $courseId),
+        );
+
+        assert(is_array($result));
+
+        /** @var list<CourseVersionListItemResponse> $result */
+        $data = array_map(
+            static fn (CourseVersionListItemResponse $version): array => $version->toArray(),
+            $result,
+        );
+
+        return response()->json([
+            'data' => $data,
+        ]);
+    }
+
+    public function version(
+        string $courseId,
+        int $versionNumber,
+        QueryBus $queryBus,
+    ): JsonResponse {
+        $result = $queryBus->ask(
+            new GetCourseVersionQuery(courseId: $courseId, versionNumber: $versionNumber),
+        );
+
+        assert($result instanceof CourseVersionResponse);
 
         return response()->json([
             'data' => $result->toArray(),
