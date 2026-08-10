@@ -9,17 +9,23 @@ use Modules\Academic\Application\Commands\ArchiveCourseCommand;
 use Modules\Academic\Application\Commands\CreateCourseCommand;
 use Modules\Academic\Application\Commands\PublishCourseCommand;
 use Modules\Academic\Application\Commands\ReplaceCourseCurriculumCommand;
+use Modules\Academic\Application\Commands\ReplaceUnitContentCommand;
+use Modules\Academic\Application\DTO\ContentBlockInput;
 use Modules\Academic\Application\DTO\CourseModuleInput;
 use Modules\Academic\Application\DTO\CourseUnitInput;
+use Modules\Academic\Application\DTO\LessonInput;
 use Modules\Academic\Application\Queries\GetCourseCurriculumQuery;
+use Modules\Academic\Application\Queries\GetUnitContentQuery;
 use Modules\Academic\Application\Queries\ListCoursesQuery;
 use Modules\Academic\Application\Responses\ArchiveCourseResponse;
 use Modules\Academic\Application\Responses\CourseCurriculumResponse;
 use Modules\Academic\Application\Responses\CourseListItemResponse;
 use Modules\Academic\Application\Responses\CreateCourseResponse;
 use Modules\Academic\Application\Responses\PublishCourseResponse;
+use Modules\Academic\Application\Responses\UnitContentResponse;
 use Modules\Academic\Presentation\Http\Requests\CreateCourseRequest;
 use Modules\Academic\Presentation\Http\Requests\ReplaceCourseCurriculumRequest;
+use Modules\Academic\Presentation\Http\Requests\ReplaceUnitContentRequest;
 use Modules\Foundation\Application\Bus\CommandBus;
 use Modules\Foundation\Application\Bus\QueryBus;
 use Symfony\Component\HttpFoundation\Response;
@@ -158,6 +164,64 @@ final class CourseController
         return response()->json([
             'data' => $result->toArray(),
         ]);
+    }
+
+    public function unitContent(
+        string $courseId,
+        string $unitId,
+        QueryBus $queryBus,
+    ): JsonResponse {
+        $result = $queryBus->ask(new GetUnitContentQuery($courseId, $unitId));
+        assert($result instanceof UnitContentResponse);
+
+        return response()->json(['data' => $result->toArray()]);
+    }
+
+    public function replaceUnitContent(
+        string $courseId,
+        string $unitId,
+        ReplaceUnitContentRequest $request,
+        CommandBus $commandBus,
+    ): JsonResponse {
+        $validated = $request->validated();
+        $lessonValues = $validated['lessons'];
+        assert(is_array($lessonValues));
+        $lessons = [];
+
+        foreach ($lessonValues as $lesson) {
+            assert(is_array($lesson));
+            $blockValues = $lesson['blocks'];
+            assert(is_array($blockValues));
+            $blocks = [];
+
+            foreach ($blockValues as $block) {
+                assert(is_array($block));
+                $payload = $block['payload'];
+                assert(is_array($payload));
+                /** @var array<string, mixed> $payload */
+                $blocks[] = new ContentBlockInput(
+                    (string) $block['id'],
+                    (string) $block['type'],
+                    (int) $block['position'],
+                    $payload,
+                );
+            }
+
+            $lessons[] = new LessonInput(
+                (string) $lesson['id'],
+                (string) $lesson['code'],
+                (string) $lesson['title'],
+                isset($lesson['summary']) ? (string) $lesson['summary'] : null,
+                isset($lesson['duration_minutes']) ? (int) $lesson['duration_minutes'] : null,
+                (int) $lesson['position'],
+                $blocks,
+            );
+        }
+
+        $result = $commandBus->dispatch(new ReplaceUnitContentCommand($courseId, $unitId, $lessons));
+        assert($result instanceof UnitContentResponse);
+
+        return response()->json(['data' => $result->toArray()]);
     }
 
     /** @param array<string, mixed> $module */

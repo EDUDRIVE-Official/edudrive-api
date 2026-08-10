@@ -37,6 +37,10 @@ Route::prefix('api/v1/academic')
                 Route::get('/courses/{courseId}/curriculum', [CourseController::class, 'curriculum'])
                     ->whereUuid('courseId')
                     ->name('courses.curriculum.show');
+                Route::get('/courses/{courseId}/units/{unitId}/content', [CourseController::class, 'unitContent'])
+                    ->whereUuid('courseId')
+                    ->whereUuid('unitId')
+                    ->name('courses.units.content.show');
             });
 
             Route::middleware('permission:courses.manage')->group(function (): void {
@@ -54,6 +58,10 @@ Route::prefix('api/v1/academic')
                 Route::put('/courses/{courseId}/curriculum', [CourseController::class, 'replaceCurriculum'])
                     ->whereUuid('courseId')
                     ->name('courses.curriculum.update');
+                Route::put('/courses/{courseId}/units/{unitId}/content', [CourseController::class, 'replaceUnitContent'])
+                    ->whereUuid('courseId')
+                    ->whereUuid('unitId')
+                    ->name('courses.units.content.update');
             });
 
             Route::middleware('permission:programs.view')->group(function (): void {
