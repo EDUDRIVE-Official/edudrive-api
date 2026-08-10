@@ -973,6 +973,8 @@ ENG-020
   - Endpoint `PUT /api/v1/academic/courses/{courseId}/units/{unitId}/content` para reemplazo del contenido.
   - Endpoint `GET /api/v1/academic/courses/{courseId}/units/{unitId}/content` para consulta del contenido.
   - Ambos endpoints protegidos mediante `auth:sanctum` y los permisos `courses.manage` y `courses.view` respectivamente.
+  - Validación temprana en `ReplaceUnitContentRequest`: topes agregados (100 lecciones, 200 bloques por lección, 1.000 bloques totales), URLs HTTPS, tipos discriminados por bloque y duplicados por casing.
+  - Nota de integración: el merge original `aff9a3a` no incorporó esta capa de presentación; quedó recuperada e integrada en `aligned-active-main` en el commit `ee2fdc3`.
 - **Suite de Pruebas**:
   - Pruebas unitarias de dominio para bloques de contenido, lecciones, e invariantes del agregado.
   - Pruebas de integración del repositorio de persistencia con transacciones, reordenamiento, y control de duplicados concurrentes.
@@ -980,9 +982,10 @@ ENG-020
 
 ### Validaciones
 
-- `composer format` ✅ (355 archivos en formato de estilo correcto)
-- `composer quality` final ✅ (375 pruebas, 1132 aserciones aprobadas y análisis estático con PHPStan sin errores en nivel 8)
+- `composer format` ✅ (389 archivos en formato de estilo correcto)
+- `composer quality` final ✅ (512 pruebas, 1387 aserciones aprobadas y análisis estático con PHPStan sin errores en nivel 8)
 - `docker compose exec app php artisan migrate` ✅ (todas las migraciones ejecutadas con éxito)
+- `php artisan route:list` ✅ (8 rutas de cursos registradas, incluidas las dos de contenido)
 
 **Estado:** Finalizado.
 
