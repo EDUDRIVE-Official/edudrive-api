@@ -7,6 +7,7 @@ use Modules\Academic\Presentation\Http\Controllers\AcademicStatusController;
 use Modules\Academic\Presentation\Http\Controllers\CompetencyController;
 use Modules\Academic\Presentation\Http\Controllers\CourseController;
 use Modules\Academic\Presentation\Http\Controllers\ProgramController;
+use Modules\Academic\Presentation\Http\Controllers\QuestionController;
 
 Route::prefix('api/v1/academic')
     ->name('api.v1.academic.')
@@ -107,6 +108,25 @@ Route::prefix('api/v1/academic')
                 Route::post('/programs/{programId}/archive', [ProgramController::class, 'archive'])
                     ->whereUuid('programId')
                     ->name('programs.archive');
+            });
+
+            Route::middleware('permission:questions.view')->group(function (): void {
+                Route::get('/questions', [QuestionController::class, 'index'])
+                    ->name('questions.index');
+                Route::get('/questions/{questionId}', [QuestionController::class, 'show'])
+                    ->whereUuid('questionId')
+                    ->name('questions.show');
+            });
+
+            Route::middleware('permission:questions.manage')->group(function (): void {
+                Route::post('/questions', [QuestionController::class, 'store'])
+                    ->name('questions.store');
+                Route::put('/questions/{questionId}', [QuestionController::class, 'update'])
+                    ->whereUuid('questionId')
+                    ->name('questions.update');
+                Route::delete('/questions/{questionId}', [QuestionController::class, 'destroy'])
+                    ->whereUuid('questionId')
+                    ->name('questions.destroy');
             });
         });
     });
