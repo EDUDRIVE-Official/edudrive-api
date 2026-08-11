@@ -276,6 +276,27 @@ function addMinimalCurriculum(Course $course): void
 }
 
 /**
+ * Persists a competency for question tests, returning its id. Shared by the
+ * question application, integration and feature tests so they can anchor
+ * questions to an existing competency.
+ */
+function persistedQuestionCompetencyId(): string
+{
+    $repository = app(Modules\Academic\Domain\Repositories\CompetencyRepository::class);
+    $id = Modules\Academic\Domain\ValueObjects\CompetencyId::fromString((string) Str::uuid());
+    $repository->save(Modules\Academic\Domain\Aggregates\Competency::create(
+        $id,
+        Modules\Academic\Domain\ValueObjects\CompetencyCode::fromString('CQ-'.strtoupper((string) Str::random(4))),
+        'Competencia de prueba para preguntas',
+        'Competencia utilizada únicamente en pruebas de preguntas.',
+        Modules\Academic\Domain\Enums\CompetencyCategory::RoadRules,
+        Modules\Academic\Domain\Enums\MasteryLevel::Foundation,
+    ));
+
+    return $id->value();
+}
+
+/**
  * Acts as a user holding the given single role, for endpoints gated behind a
  * `permission:...` middleware that grants that role the required permission.
  */
