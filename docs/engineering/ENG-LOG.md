@@ -1065,3 +1065,38 @@ ENG-020
 
 **Estado:** Finalizado.
 
+## 2026-08-11 — IMP-031 (Cierre de ENG-031 — Exámenes y cuestionarios)
+
+### Completado
+
+- **Modelo de Dominio**:
+  - Enumeración `ExamFeedbackMode` con `none`, `after_submission` e `immediate`.
+  - Value object `ExamId` (UUID) y entidad hija `ExamQuestion` (posición, `questionId`, puntaje).
+  - Agregado `Exam` anclado a un curso, plantilla reutilizable sin estados de ciclo de vida, que valida título (≤180), descripción (≤2000), duración (≥1 o nula), intentos (≥1), puntaje de aprobación (1–100), al menos una pregunta, sin preguntas duplicadas y posiciones secuenciales 1..n. `create`/`restore`/`replace`.
+  - Excepción pública `InvalidExam` (422, `INVALID_EXAM`) y contrato `ExamRepository` (`save`, `findById`, `all(?courseId)`, `delete`).
+- **Persistencia PostgreSQL**:
+  - Tablas `academic_exams` y `academic_exam_questions` (pivot normalizado con `position`/`points`), PK UUID, FKs con `ON DELETE CASCADE` y únicos `(exam_id, position)` y `(exam_id, question_id)`.
+  - `ExamModel`/`ExamQuestionModel` con casts, y `EloquentExamRepository` con reemplazo atómico de preguntas en transacción, carga anticipada (sin N+1) y reconstrucción vía `Exam::restore`.
+- **Capa de Aplicación**:
+  - Comandos `CreateExam`, `UpdateExam`, `DeleteExam` y consultas `GetExam`, `ListExams` con sus handlers, y respuestas `ExamResponse`/`ExamListItemResponse` (el listado omite preguntas).
+  - `CreateExamHandler` valida curso (`CourseNotFound`) y preguntas (`QuestionNotFound`); `ExamResponse::fromExam` enriquece cada pregunta con `ref_id`/`type` desde el banco. Bus registra los 5 mensajes en `AcademicServiceProvider`.
+- **Presentación e Integración HTTP**:
+  - `ExamController` con `index` (filtro por `course_id`), `store`, `show`, `update` y `destroy`; requests `CreateExamRequest`/`UpdateExamRequest` con validación temprana (`Enum` para `feedback_mode`, rangos para duración/intentos/puntaje), normalización `question_id` → `questionId` en el controller y `shuffle_questions` vía `$request->boolean` (sin inversión de strings).
+  - 5 rutas bajo `auth:sanctum`: `GET /exams` y `GET /exams/{examId}` bajo `exams.view`; `POST`, `PUT` y `DELETE` bajo `exams.manage`. `store` → 201, `destroy` → 204.
+  - Permisos nuevos `exams.manage`/`exams.view`, con grant de gestión para SuperAdmin y de consulta para todos los roles.
+- **Pruebas**:
+  - Agregado: `ExamTest` (creación con configuración, rechazos de invariantes y `replace` conservando id/curso).
+  - Aplicación: `ExamHandlerTest` (ciclo de vida completo, 404 de curso/pregunta/examen, filtrado por curso).
+  - Persistencia: `EloquentExamRepositoryTest` (ida y vuelta con preguntas ordenadas, valores nulos, reemplazo atómico al re-guardar, filtrado y borrado en cascada).
+  - Feature HTTP: `ExamTest` (14 casos: creación, curso inexistente → 404, pregunta inexistente → 404, validación de rangos → 422, sin preguntas y sin clave `questions` → 422 `INVALID_EXAM`, duplicados → `INVALID_EXAM`, listado filtrado 3/2, detalle con preguntas en orden y `type`, update, delete 204, 404 sobre examen inexistente, 401 sin token, Student lista pero 403 al crear).
+
+### Validaciones
+
+- Pint ✅ (todos los archivos en formato de estilo correcto)
+- PHPStan nivel 8 ✅ (sin errores; `vendor/bin/phpstan analyse --no-progress --memory-limit=1G`)
+- Suite completa ✅ (root: 10 pruebas/28 aserciones; Academic: 584 pruebas/1704 aserciones; Authorization e Identity/Organization/Audit/Foundation: 82 pruebas/214 aserciones)
+- `php artisan route:list --path=academic/exams` ✅ (5 rutas en `api/v1/academic/exams`)
+- `php artisan migrate --force` + `migrate:status` ✅ (migración `create_academic_exams_tables` en estado `Ran`)
+
+**Estado:** Finalizado.
+

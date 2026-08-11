@@ -577,16 +577,19 @@ Preguntas situacionales.
 Recursos multimedia.
 ENG-031 — Exámenes y cuestionarios
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-11): se completó el agregado `Exam` anclado a un curso, con plantilla reutilizable de examen (sin estados de ciclo de vida), lista ordenada de preguntas del banco (posición + puntos), configuración de duración, intentos máximos, regla de aprobación, barajado y modo de retroalimentación, y CQRS completo (create/update/delete/get/list). La API expone 5 endpoints bajo `auth:sanctum`: listado/detalle protegidos por `exams.view` y creación/actualización/eliminación por `exams.manage`. La respuesta de detalle enriquece cada pregunta con `ref_id`/`type` desde el banco. Los errores públicos son `INVALID_EXAM` (422) y `EXAM_NOT_FOUND` (404), reutilizando `COURSE_NOT_FOUND`/`QUESTION_NOT_FOUND` para referencias inválidas. Solo la definición del examen; los intentos (ENG-032), el motor de calificación (ENG-033) y el examen teórico (ENG-034) quedan diferidos. Detalle completo en `docs/plans/2026-08-11-examenes-cuestionarios-eng031-implementation.md` y `docs/engineering/ENG-LOG.md`.
 
 Incluye:
 
-Plantillas.
-Aleatorización.
-Tiempo límite.
-Intentos.
+Plantillas de examen por curso.
+Lista explícita de preguntas con puntaje.
+Aleatorización configurable.
+Tiempo límite configurable.
+Intentos máximos.
 Reglas de aprobación.
-Retroalimentación.
+Retroalimentación configurable.
 ENG-032 — Intentos de evaluación
 
 Estado: Pendiente
@@ -1314,6 +1317,8 @@ La historia técnica activa queda **Pendiente de decisión** entre volver a Fase
 Actualizado 2026-08-10: se completó ENG-030 (Banco de preguntas) — ver la nota de la sección 12, `docs/engineering/ENG-LOG.md` y el plan de implementación `docs/plans/2026-08-10-banco-preguntas-eng030-implementation.md`. El incremento entrega el agregado `Question` con respuesta tipada por tipo, persistencia en `academic_questions`/`academic_question_options` y API protegida por los permisos `questions.manage`/`questions.view`.
 
 La historia técnica activa queda **Pendiente de decisión** entre volver a Fase 4 — Perfiles o iniciar ENG-031 (Exámenes y cuestionarios).
+
+Actualizado 2026-08-11: se completó ENG-031 (Exámenes y cuestionarios) — ver la nota de la sección 12, `docs/engineering/ENG-LOG.md` y el plan de implementación `docs/plans/2026-08-11-examenes-cuestionarios-eng031-implementation.md`. El incremento entrega el agregado `Exam` anclado a un curso con lista ordenada de preguntas del banco, configuración completa (duración, intentos, aprobación, barajado, retroalimentación) y API protegida por los permisos `exams.manage`/`exams.view`. Intentos, calificación y examen teórico quedan diferidos a ENG-032/033/034.
 26. Definición de terminado
 
 Una historia se considera terminada cuando cumple:
@@ -1360,3 +1365,4 @@ Versión	Fecha	Descripción
 1.8.0	2026-08-08	Cierre de ENG-028 (Lecciones y contenido accesible): incorporación de lecciones y bloques de contenido accesible tipados (texto, imagen, video, audio, interactivos, descargas), consulta/reemplazo atómico por unidad, y validación de cobertura de lecciones al publicar.
 1.9.0	2026-08-10	Cierre de ENG-029 (Publicación y versionado curricular): estados `under_review`/`approved`, `publish` exige aprobación, snapshots inmutables por publicación en `academic_course_versions`, `reopen` para la siguiente versión, API de ciclo de vida e historial protegida por `courses.manage`/`courses.view`, y errores públicos de transición, reapertura y versión inexistente (IMP-029 en ENG-LOG.md)
 1.10.0	2026-08-10	Cierre de ENG-030 (Banco de preguntas): agregado `Question` con respuesta tipada por tipo (single_choice, multi_select, true_false, matching, ordering, situacional), persistencia en `academic_questions`/`academic_question_options`, CQRS completo, media estrictamente `https` y API protegida por los permisos `questions.manage`/`questions.view` (IMP-030 en ENG-LOG.md)
+1.11.0	2026-08-11	Cierre de ENG-031 (Exámenes y cuestionarios): agregado `Exam` anclado a un curso, lista ordenada de preguntas del banco con puntaje, configuración de duración/intentos/regla de aprobación/barajado/retroalimentación, CQRS completo (create/update/delete/get/list), respuesta de detalle enriquecida con `ref_id`/`type` y API protegida por los permisos `exams.manage`/`exams.view` (IMP-031 en ENG-LOG.md)
