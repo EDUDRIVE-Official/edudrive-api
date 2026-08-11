@@ -53,3 +53,60 @@ it('rechaza posiciones y puntos inválidos en una pregunta del intento', functio
         SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a']),
     ))->toThrow(InvalidExamAttempt::class);
 });
+
+it('rechaza un prompt vacío o con solo espacios en una pregunta del intento', function (): void {
+    expect(fn () => AttemptQuestion::create(
+        AttemptQuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92101'),
+        1,
+        QuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92102'),
+        10,
+        '',
+        QuestionType::SingleChoice,
+        [],
+        SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a']),
+    ))->toThrow(InvalidExamAttempt::class);
+
+    expect(fn () => AttemptQuestion::create(
+        AttemptQuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92101'),
+        1,
+        QuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92102'),
+        10,
+        '   ',
+        QuestionType::SingleChoice,
+        [],
+        SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a']),
+    ))->toThrow(InvalidExamAttempt::class);
+});
+
+it('guarda el prompt recortado en una pregunta del intento', function (): void {
+    $attemptQuestion = AttemptQuestion::create(
+        AttemptQuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92101'),
+        1,
+        QuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92102'),
+        10,
+        '  ¿Pregunta?  ',
+        QuestionType::SingleChoice,
+        [],
+        SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a']),
+    );
+
+    expect($attemptQuestion->prompt())->toBe('¿Pregunta?');
+});
+
+it('restaura una pregunta del intento con los mismos accesores', function (): void {
+    $attemptQuestion = AttemptQuestion::restore(
+        AttemptQuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92101'),
+        1,
+        QuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92102'),
+        10,
+        '¿Pregunta?',
+        QuestionType::SingleChoice,
+        [['refId' => 'opt-a', 'id' => '01981a64-8300-7b1d-b442-764ea7f92103', 'label' => 'A', 'position' => 1, 'side' => null]],
+        SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a']),
+    );
+
+    expect($attemptQuestion->position())->toBe(1)
+        ->and($attemptQuestion->points())->toBe(10)
+        ->and($attemptQuestion->prompt())->toBe('¿Pregunta?')
+        ->and($attemptQuestion->userResponse())->toBeNull();
+});
