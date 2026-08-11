@@ -40,7 +40,7 @@ final readonly class OrderingResponse implements QuestionResponse
             throw InvalidQuestion::create();
         }
 
-        return new self(array_values($ids));
+        return new self($ids);
     }
 
     /** @return array{type: string, itemIds: list<string>} */

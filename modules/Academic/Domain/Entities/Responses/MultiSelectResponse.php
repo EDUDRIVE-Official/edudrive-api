@@ -36,7 +36,7 @@ final readonly class MultiSelectResponse implements QuestionResponse
             throw InvalidQuestion::create();
         }
 
-        return new self(array_values($ids));
+        return new self($ids);
     }
 
     /** @return array{type: string, optionIds: list<string>} */

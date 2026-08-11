@@ -89,7 +89,7 @@ final class QuestionController
 
     /**
      * @param  list<array<string, mixed>>  $options
-     * @return list<array<string, mixed>>
+     * @return list<array{refId: string, label: string, side?: string|null}>
      */
     private static function normalizeOptions(array $options): array
     {

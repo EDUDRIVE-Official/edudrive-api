@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Str;
 use Modules\Academic\Application\Commands\CreateQuestionCommand;
 use Modules\Academic\Application\Commands\DeleteQuestionCommand;
 use Modules\Academic\Application\Commands\UpdateQuestionCommand;
@@ -16,10 +17,9 @@ use Modules\Academic\Application\UseCases\GetQuestionHandler;
 use Modules\Academic\Application\UseCases\ListQuestionsHandler;
 use Modules\Academic\Application\UseCases\UpdateQuestionHandler;
 use Modules\Academic\Domain\Aggregates\Question;
-use Modules\Academic\Domain\Entities\Responses\MultiSelectResponse;
-use Modules\Academic\Domain\Entities\Responses\SingleChoiceResponse;
 use Modules\Academic\Domain\Exceptions\InvalidQuestion;
 use Modules\Academic\Domain\Exceptions\InvalidQuestionScore;
+use Modules\Academic\Domain\Repositories\CompetencyRepository;
 use Modules\Academic\Domain\Repositories\QuestionRepository;
 use Modules\Academic\Domain\ValueObjects\CompetencyId;
 use Modules\Academic\Domain\ValueObjects\QuestionId;
@@ -28,6 +28,7 @@ final class InMemoryQuestionRepository implements QuestionRepository
 {
     /** @var array<string, Question> */
     public array $questions = [];
+
     public int $saveCalls = 0;
 
     public function save(Question $question): void
@@ -62,7 +63,7 @@ function createCompetencyIdForQuestion(): string
 }
 
 it('crea una pregunta de seleccion unica exitosamente', function (): void {
-    $relations = app(\Modules\Academic\Domain\Repositories\CompetencyRepository::class);
+    $relations = app(CompetencyRepository::class);
     $competencyId = persistedQuestionCompetencyId();
     $repository = new InMemoryQuestionRepository;
     $handler = new CreateQuestionHandler($repository, $relations);
@@ -86,12 +87,12 @@ it('crea una pregunta de seleccion unica exitosamente', function (): void {
 });
 
 it('rechaza crear una pregunta con competencia inexistente', function (): void {
-    $relations = app(\Modules\Academic\Domain\Repositories\CompetencyRepository::class);
+    $relations = app(CompetencyRepository::class);
     $repository = new InMemoryQuestionRepository;
     $handler = new CreateQuestionHandler($repository, $relations);
 
     expect(fn () => $handler->handle(new CreateQuestionCommand(
-        competencyId: (string) Illuminate\Support\Str::uuid(),
+        competencyId: (string) Str::uuid(),
         type: 'single_choice',
         prompt: 'Prompt',
         score: 1,
@@ -105,7 +106,7 @@ it('rechaza crear una pregunta con competencia inexistente', function (): void {
 });
 
 it('rechaza crear una pregunta con puntaje invalido sin guardar', function (): void {
-    $relations = app(\Modules\Academic\Domain\Repositories\CompetencyRepository::class);
+    $relations = app(CompetencyRepository::class);
     $competencyId = persistedQuestionCompetencyId();
     $repository = new InMemoryQuestionRepository;
     $handler = new CreateQuestionHandler($repository, $relations);
@@ -125,7 +126,7 @@ it('rechaza crear una pregunta con puntaje invalido sin guardar', function (): v
 });
 
 it('propaga errores de dominio del agregado sin guardar', function (): void {
-    $relations = app(\Modules\Academic\Domain\Repositories\CompetencyRepository::class);
+    $relations = app(CompetencyRepository::class);
     $competencyId = persistedQuestionCompetencyId();
     $repository = new InMemoryQuestionRepository;
     $handler = new CreateQuestionHandler($repository, $relations);
@@ -145,7 +146,7 @@ it('propaga errores de dominio del agregado sin guardar', function (): void {
 });
 
 it('actualiza una pregunta existente', function (): void {
-    $relations = app(\Modules\Academic\Domain\Repositories\CompetencyRepository::class);
+    $relations = app(CompetencyRepository::class);
     $competencyId = persistedQuestionCompetencyId();
     $repository = new InMemoryQuestionRepository;
     $handler = new CreateQuestionHandler($repository, $relations);
@@ -187,7 +188,7 @@ it('rechaza actualizar una pregunta inexistente', function (): void {
     $handler = new UpdateQuestionHandler($repository);
 
     expect(fn () => $handler->handle(new UpdateQuestionCommand(
-        questionId: (string) Illuminate\Support\Str::uuid(),
+        questionId: (string) Str::uuid(),
         type: 'single_choice',
         prompt: 'Prompt',
         score: 1,
@@ -200,7 +201,7 @@ it('rechaza actualizar una pregunta inexistente', function (): void {
 });
 
 it('elimina una pregunta existente', function (): void {
-    $relations = app(\Modules\Academic\Domain\Repositories\CompetencyRepository::class);
+    $relations = app(CompetencyRepository::class);
     $competencyId = persistedQuestionCompetencyId();
     $repository = new InMemoryQuestionRepository;
     $handler = new CreateQuestionHandler($repository, $relations);
@@ -228,12 +229,12 @@ it('rechaza eliminar una pregunta inexistente', function (): void {
     $handler = new DeleteQuestionHandler($repository);
 
     expect(fn () => $handler->handle(new DeleteQuestionCommand(
-        questionId: (string) Illuminate\Support\Str::uuid(),
+        questionId: (string) Str::uuid(),
     )))->toThrow(QuestionNotFound::class);
 });
 
 it('lista preguntas con y sin filtro por competencia', function (): void {
-    $relations = app(\Modules\Academic\Domain\Repositories\CompetencyRepository::class);
+    $relations = app(CompetencyRepository::class);
     $firstCompetency = persistedQuestionCompetencyId();
     $secondCompetency = persistedQuestionCompetencyId();
     $repository = new InMemoryQuestionRepository;
@@ -268,7 +269,7 @@ it('lista preguntas con y sin filtro por competencia', function (): void {
 });
 
 it('obtiene el detalle de una pregunta', function (): void {
-    $relations = app(\Modules\Academic\Domain\Repositories\CompetencyRepository::class);
+    $relations = app(CompetencyRepository::class);
     $competencyId = persistedQuestionCompetencyId();
     $repository = new InMemoryQuestionRepository;
     $handler = new CreateQuestionHandler($repository, $relations);
@@ -295,6 +296,6 @@ it('rechaza obtener el detalle de una pregunta inexistente', function (): void {
     $repository = new InMemoryQuestionRepository;
     $handler = new GetQuestionHandler($repository);
 
-    expect(fn () => $handler->handle(new GetQuestionQuery((string) Illuminate\Support\Str::uuid())))
+    expect(fn () => $handler->handle(new GetQuestionQuery((string) Str::uuid())))
         ->toThrow(QuestionNotFound::class);
 });

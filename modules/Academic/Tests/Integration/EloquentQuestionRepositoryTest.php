@@ -10,13 +10,14 @@ use Modules\Academic\Domain\Entities\QuestionOption;
 use Modules\Academic\Domain\Entities\Responses\MatchingResponse;
 use Modules\Academic\Domain\Entities\Responses\MultiSelectResponse;
 use Modules\Academic\Domain\Entities\Responses\SingleChoiceResponse;
+use Modules\Academic\Domain\Entities\Responses\TrueFalseResponse;
 use Modules\Academic\Domain\Enums\QuestionType;
 use Modules\Academic\Domain\Exceptions\InvalidQuestion;
 use Modules\Academic\Domain\ValueObjects\CompetencyId;
 use Modules\Academic\Domain\ValueObjects\QuestionId;
-use Modules\Academic\Domain\ValueObjects\QuestionMedia;
 use Modules\Academic\Domain\ValueObjects\QuestionOptionId;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\QuestionModel;
+use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\QuestionOptionModel;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentQuestionRepository;
 
 /** @return list<QuestionOption> */
@@ -106,7 +107,7 @@ it('lista preguntas ordenadas y filtra por competencia', function (): void {
         $firstCompetency,
         'Primera',
         1,
-        \Modules\Academic\Domain\Entities\Responses\TrueFalseResponse::fromArray(['type' => 'true_false', 'correct' => true]),
+        TrueFalseResponse::fromArray(['type' => 'true_false', 'correct' => true]),
         [],
     ));
     $repository->save(Question::create(
@@ -143,7 +144,7 @@ it('elimina en cascada las opciones al borrar la pregunta', function (): void {
 
     expect($repository->findById($question->id()))->toBeNull()
         ->and(QuestionModel::query()->find($question->id()->value()))->toBeNull()
-        ->and(\Modules\Academic\Infrastructure\Persistence\Eloquent\Models\QuestionOptionModel::query()
+        ->and(QuestionOptionModel::query()
             ->where('question_id', $question->id()->value())->count())->toBe(0);
 });
 
@@ -155,7 +156,7 @@ it('lanza un QueryException al guardar una pregunta con competencia inexistente'
         CompetencyId::fromString((string) Str::uuid()),
         'Prompt',
         1,
-        \Modules\Academic\Domain\Entities\Responses\TrueFalseResponse::fromArray(['type' => 'true_false', 'correct' => true]),
+        TrueFalseResponse::fromArray(['type' => 'true_false', 'correct' => true]),
         [],
     );
 

@@ -21,6 +21,7 @@ use Modules\Academic\Domain\ValueObjects\QuestionMedia;
 final class Question
 {
     private const int MAX_PROMPT_LENGTH = 1000;
+
     private const int MAX_EXPLANATION_LENGTH = 2000;
 
     /** @param list<QuestionOption> $options

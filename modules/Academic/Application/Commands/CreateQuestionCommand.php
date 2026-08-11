@@ -9,9 +9,9 @@ use Modules\Foundation\Application\Commands\Command;
 final readonly class CreateQuestionCommand implements Command
 {
     /**
-     * @param array<string, mixed> $response
-     * @param list<array{refId: string, label: string, side?: string|null}> $options
-     * @param list<array{type: string, url: string}> $media
+     * @param  array<string, mixed>  $response
+     * @param  list<array{refId: string, label: string, side?: string|null}>  $options
+     * @param  list<array{type: string, url: string}>  $media
      */
     public function __construct(
         public string $competencyId,

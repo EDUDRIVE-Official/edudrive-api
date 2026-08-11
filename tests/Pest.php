@@ -5,14 +5,20 @@ declare(strict_types=1);
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
+use Modules\Academic\Domain\Aggregates\Competency;
 use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Aggregates\UnitContent;
 use Modules\Academic\Domain\Entities\CourseModule;
 use Modules\Academic\Domain\Entities\CourseUnit;
 use Modules\Academic\Domain\Entities\Lesson;
+use Modules\Academic\Domain\Enums\CompetencyCategory;
+use Modules\Academic\Domain\Enums\MasteryLevel;
+use Modules\Academic\Domain\Repositories\CompetencyRepository;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\UnitContentRepository;
 use Modules\Academic\Domain\Services\ContentBlockFactory;
+use Modules\Academic\Domain\ValueObjects\CompetencyCode;
+use Modules\Academic\Domain\ValueObjects\CompetencyId;
 use Modules\Academic\Domain\ValueObjects\ContentBlockId;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
@@ -282,15 +288,15 @@ function addMinimalCurriculum(Course $course): void
  */
 function persistedQuestionCompetencyId(): string
 {
-    $repository = app(Modules\Academic\Domain\Repositories\CompetencyRepository::class);
-    $id = Modules\Academic\Domain\ValueObjects\CompetencyId::fromString((string) Str::uuid());
-    $repository->save(Modules\Academic\Domain\Aggregates\Competency::create(
+    $repository = app(CompetencyRepository::class);
+    $id = CompetencyId::fromString((string) Str::uuid());
+    $repository->save(Competency::create(
         $id,
-        Modules\Academic\Domain\ValueObjects\CompetencyCode::fromString('CQ-'.strtoupper((string) Str::random(4))),
+        CompetencyCode::fromString('CQ-'.strtoupper((string) Str::random(4))),
         'Competencia de prueba para preguntas',
         'Competencia utilizada únicamente en pruebas de preguntas.',
-        Modules\Academic\Domain\Enums\CompetencyCategory::RoadRules,
-        Modules\Academic\Domain\Enums\MasteryLevel::Foundation,
+        CompetencyCategory::RoadRules,
+        MasteryLevel::Foundation,
     ));
 
     return $id->value();

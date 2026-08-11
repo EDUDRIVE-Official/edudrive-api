@@ -49,7 +49,7 @@ final readonly class CreateQuestionHandler
         return QuestionResponse::fromQuestion($question);
     }
 
-    /** @return callable(array{refId: string, label: string, side?: string|null}): QuestionOption */
+    /** @return callable(array{refId: string, label: string, side?: string|null}, int): QuestionOption */
     private function optionMapper(): callable
     {
         return static fn (array $option, int $index): QuestionOption => QuestionOption::create(

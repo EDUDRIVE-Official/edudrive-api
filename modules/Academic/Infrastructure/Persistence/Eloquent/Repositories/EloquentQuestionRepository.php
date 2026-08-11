@@ -89,6 +89,14 @@ final readonly class EloquentQuestionRepository implements QuestionRepository
         /** @var list<array{type: string, url: string}> $media */
         $media = $model->getAttribute('media') ?? [];
 
+        $options = array_values($model->options->map(fn (QuestionOptionModel $option): QuestionOption => QuestionOption::create(
+            refId: (string) $option->getAttribute('ref_id'),
+            id: QuestionOptionId::fromString((string) $option->getAttribute('id')),
+            position: (int) $option->getAttribute('position'),
+            label: (string) $option->getAttribute('label'),
+            side: $option->getAttribute('side') === null ? null : (string) $option->getAttribute('side'),
+        ))->all());
+
         return Question::restore(
             QuestionId::fromString((string) $model->getAttribute('id')),
             QuestionType::from((string) $model->getAttribute('type')),
@@ -96,13 +104,7 @@ final readonly class EloquentQuestionRepository implements QuestionRepository
             (string) $model->getAttribute('prompt'),
             (int) $model->getAttribute('score'),
             QuestionResponseFactory::fromPayload((string) $model->getAttribute('type'), $response),
-            $model->options->map(fn (QuestionOptionModel $option): QuestionOption => QuestionOption::create(
-                refId: (string) $option->getAttribute('ref_id'),
-                id: QuestionOptionId::fromString((string) $option->getAttribute('id')),
-                position: (int) $option->getAttribute('position'),
-                label: (string) $option->getAttribute('label'),
-                side: $option->getAttribute('side') === null ? null : (string) $option->getAttribute('side'),
-            ))->all(),
+            $options,
             $model->getAttribute('explanation') === null ? null : (string) $model->getAttribute('explanation'),
             array_map(static fn (array $m): QuestionMedia => QuestionMedia::fromArray($m), $media),
         );
