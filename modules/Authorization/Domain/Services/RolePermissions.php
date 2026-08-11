@@ -32,6 +32,8 @@ final class RolePermissions
                 Permission::ViewPrograms,
                 Permission::ManageQuestions,
                 Permission::ViewQuestions,
+                Permission::ManageExams,
+                Permission::ViewExams,
             ],
             Role::InstitutionalAdmin, Role::Teacher, Role::Student => [
                 Permission::ViewOrganizations,
@@ -39,6 +41,7 @@ final class RolePermissions
                 Permission::ViewCompetencies,
                 Permission::ViewPrograms,
                 Permission::ViewQuestions,
+                Permission::ViewExams,
             ],
         };
     }

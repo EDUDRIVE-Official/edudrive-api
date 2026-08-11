@@ -79,3 +79,17 @@ it('solo otorga consulta de preguntas a los demás roles', function (): void {
         ->and(RolePermissions::grants(Role::Student, Permission::ViewQuestions))->toBeTrue()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageQuestions))->toBeFalse();
 });
+
+it('otorga gestión y consulta de exámenes al superadministrador', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageExams))->toBeTrue()
+        ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewExams))->toBeTrue();
+});
+
+it('solo otorga consulta de exámenes a los demás roles', function (): void {
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewExams))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageExams))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ViewExams))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageExams))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ViewExams))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageExams))->toBeFalse();
+});
