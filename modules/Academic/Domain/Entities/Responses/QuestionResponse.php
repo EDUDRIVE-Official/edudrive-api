@@ -9,4 +9,6 @@ interface QuestionResponse
 {
     /** @return array<string, mixed> */
     public function toArray(): array;
+
+    public function matches(self $other): bool;
 }

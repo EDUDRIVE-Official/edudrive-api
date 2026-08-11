@@ -30,6 +30,11 @@ final readonly class TrueFalseResponse implements QuestionResponse
         return new self($correct);
     }
 
+    public function matches(QuestionResponse $other): bool
+    {
+        return $other instanceof self && $this->correct === $other->correct;
+    }
+
     /** @return array{type: string, correct: bool} */
     public function toArray(): array
     {

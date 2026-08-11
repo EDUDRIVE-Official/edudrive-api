@@ -39,6 +39,20 @@ final readonly class MultiSelectResponse implements QuestionResponse
         return new self($ids);
     }
 
+    public function matches(QuestionResponse $other): bool
+    {
+        if (! $other instanceof self) {
+            return false;
+        }
+
+        $mine = $this->optionIds;
+        $theirs = $other->optionIds;
+        sort($mine);
+        sort($theirs);
+
+        return $mine === $theirs;
+    }
+
     /** @return array{type: string, optionIds: list<string>} */
     public function toArray(): array
     {

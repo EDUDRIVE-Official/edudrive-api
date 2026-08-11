@@ -43,6 +43,11 @@ final readonly class OrderingResponse implements QuestionResponse
         return new self($ids);
     }
 
+    public function matches(QuestionResponse $other): bool
+    {
+        return $other instanceof self && $this->itemIds === $other->itemIds;
+    }
+
     /** @return array{type: string, itemIds: list<string>} */
     public function toArray(): array
     {

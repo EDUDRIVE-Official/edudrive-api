@@ -124,3 +124,42 @@ it('rechaza respuestas con tipo incorrecto', function (): void {
     expect(fn () => SingleChoiceResponse::fromArray(['type' => 'multi_select', 'optionId' => '1']))
         ->toThrow(InvalidQuestion::class);
 });
+
+it('compara respuestas de selección única', function (): void {
+    $correct = SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a']);
+    expect($correct->matches(SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a'])))->toBeTrue()
+        ->and($correct->matches(SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-b'])))->toBeFalse();
+});
+
+it('compara respuestas de selección múltiple como conjunto', function (): void {
+    $correct = MultiSelectResponse::fromArray(['type' => 'multi_select', 'optionIds' => ['a', 'b']]);
+    expect($correct->matches(MultiSelectResponse::fromArray(['type' => 'multi_select', 'optionIds' => ['b', 'a']])))->toBeTrue()
+        ->and($correct->matches(MultiSelectResponse::fromArray(['type' => 'multi_select', 'optionIds' => ['a', 'c']])))->toBeFalse();
+});
+
+it('compara respuestas verdadero/falso', function (): void {
+    $correct = TrueFalseResponse::fromArray(['type' => 'true_false', 'correct' => true]);
+    expect($correct->matches(TrueFalseResponse::fromArray(['type' => 'true_false', 'correct' => true])))->toBeTrue()
+        ->and($correct->matches(TrueFalseResponse::fromArray(['type' => 'true_false', 'correct' => false])))->toBeFalse();
+});
+
+it('compara respuestas de asociación sin importar el orden de pares', function (): void {
+    $correct = MatchingResponse::fromArray(['type' => 'matching', 'pairs' => [
+        ['leftId' => 'l1', 'rightId' => 'r1'],
+        ['leftId' => 'l2', 'rightId' => 'r2'],
+    ]]);
+    expect($correct->matches(MatchingResponse::fromArray(['type' => 'matching', 'pairs' => [
+        ['leftId' => 'l2', 'rightId' => 'r2'],
+        ['leftId' => 'l1', 'rightId' => 'r1'],
+    ]])))->toBeTrue()
+        ->and($correct->matches(MatchingResponse::fromArray(['type' => 'matching', 'pairs' => [
+            ['leftId' => 'l1', 'rightId' => 'r1'],
+            ['leftId' => 'l2', 'rightId' => 'r9'],
+        ]])))->toBeFalse();
+});
+
+it('compara respuestas de ordenamiento por orden exacto', function (): void {
+    $correct = OrderingResponse::fromArray(['type' => 'ordering', 'itemIds' => ['a', 'b', 'c']]);
+    expect($correct->matches(OrderingResponse::fromArray(['type' => 'ordering', 'itemIds' => ['a', 'b', 'c']])))->toBeTrue()
+        ->and($correct->matches(OrderingResponse::fromArray(['type' => 'ordering', 'itemIds' => ['a', 'c', 'b']])))->toBeFalse();
+});

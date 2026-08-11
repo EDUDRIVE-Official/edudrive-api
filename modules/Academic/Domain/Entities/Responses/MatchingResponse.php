@@ -52,6 +52,28 @@ final readonly class MatchingResponse implements QuestionResponse
         return new self($normalized);
     }
 
+    public function matches(QuestionResponse $other): bool
+    {
+        if (! $other instanceof self || count($this->pairs) !== count($other->pairs)) {
+            return false;
+        }
+
+        return $this->normalizedPairs($this->pairs) === $this->normalizedPairs($other->pairs);
+    }
+
+    /** @param  list<array{leftId: string, rightId: string}>  $pairs
+     *  @return array<int, string> */
+    private static function normalizedPairs(array $pairs): array
+    {
+        $normalized = array_map(
+            static fn (array $pair): string => $pair['leftId'].':'.$pair['rightId'],
+            $pairs,
+        );
+        sort($normalized);
+
+        return $normalized;
+    }
+
     /** @return array{type: string, pairs: list<array{leftId: string, rightId: string}>} */
     public function toArray(): array
     {

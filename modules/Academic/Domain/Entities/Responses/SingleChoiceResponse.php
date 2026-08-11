@@ -26,6 +26,11 @@ final readonly class SingleChoiceResponse implements QuestionResponse
         return new self(trim($optionId));
     }
 
+    public function matches(QuestionResponse $other): bool
+    {
+        return $other instanceof self && $this->optionId === $other->optionId;
+    }
+
     /** @return array{type: string, optionId: string} */
     public function toArray(): array
     {
