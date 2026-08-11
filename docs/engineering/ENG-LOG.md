@@ -1026,3 +1026,42 @@ ENG-020
 
 **Estado:** Finalizado.
 
+## 2026-08-10 — IMP-030 (Cierre de ENG-030 — Banco de preguntas)
+
+### Completado
+
+- **Modelo de Dominio**:
+  - Enumeración `QuestionType` con los tipos `single_choice`, `multi_select`, `true_false`, `matching`, `ordering` y `situational`.
+  - Sistema de respuesta tipada: interfaz `QuestionResponse` y cinco implementaciones (`SingleChoiceResponse`, `MultiSelectResponse`, `TrueFalseResponse`, `MatchingResponse`, `OrderingResponse`), todas rechazando claves desconocidas.
+  - `QuestionResponseFactory` (aplicación) que construye la respuesta tipada desde un payload por tipo; para `situational` exige un tipo interno válido y media no vacía.
+  - Agregado `Question` con valor propio `QuestionMedia` (tipo image/video/audio y URL estrictamente `https`), validación de consistencia entre respuesta y opciones (`ref_id` estable para referencias), puntaje ≥ 1 y prompt/explanation con límites.
+  - Entidad `QuestionOption` con `refId`, posición y lado opcional (para asociación).
+  - El agregado impide re-anclar la pregunta a otra competencia en la actualización.
+  - Excepciones públicas: `InvalidQuestion` (422, `INVALID_QUESTION`), `InvalidQuestionScore`, más `QuestionNotFound` (404, `QUESTION_NOT_FOUND`) en capa de aplicación.
+- **Persistencia PostgreSQL**:
+  - Tablas `academic_questions` y `academic_question_options` con `response`/`media` JSON, `ref_id` único por pregunta en las opciones (para referencias estables de la respuesta), FK con `ON DELETE CASCADE` y PK UUID.
+  - `QuestionModel`/`QuestionOptionModel` con casts, y `EloquentQuestionRepository` (`save`, `findById`, `all(competencyId)`, `delete`) con carga de opciones y desnormalización de `response`/`media`.
+- **Capa de Aplicación**:
+  - Comandos `CreateQuestion`, `UpdateQuestion`, `DeleteQuestion` y consultas `GetQuestion`, `ListQuestions` con sus handlers, y respuestas `QuestionResponse`/`QuestionListItemResponse` (el listado omite el detalle de la respuesta correcta).
+  - `CreateQuestionHandler` valida que la competencia exista (404 si no), y el bus registra los 5 mensajes en `AcademicServiceProvider`.
+- **Presentación e Integración HTTP**:
+  - `QuestionController` con `index` (filtro por `competency_id`), `store`, `show`, `update` y `destroy`; requests `CreateQuestionRequest`/`UpdateQuestionRequest` con validación temprana y normalización `ref_id` → `refId` en el controller (patrón `min_age` → `minAge`).
+  - 5 rutas bajo `auth:sanctum`: `GET /questions` y `GET /questions/{questionId}` bajo `questions.view`; `POST`, `PUT` y `DELETE` bajo `questions.manage`. `store` → 201, `destroy` → 204.
+  - Permisos nuevos `questions.manage`/`questions.view`, con grant de gestión para SuperAdmin y de consulta para todos los roles.
+- **Pruebas**:
+  - Dominio: `QuestionResponseTest` y `QuestionOptionTest`.
+  - Agregado: `QuestionTest` (creación por tipo, validación de respuesta/opciones/media, puntaje y límites).
+  - Aplicación: `QuestionHandlerTest` (ciclo de vida completo, 404/422, filtrado por competencia).
+  - Persistencia: `EloquentQuestionRepositoryTest` (ida y vuelta de todos los tipos, orden de opciones, filtrado, borrado y ausencia de N+1).
+  - Feature HTTP: `QuestionTest` (12 casos: creación por tipo, true_false sin opciones, score 0 → 422, competencia inexistente → 404, listado filtrado, detalle, update, delete 204, 404 sobre pregunta inexistente, 401 sin token, Student lista pero 403 al crear, media no https → `INVALID_QUESTION`).
+
+### Validaciones
+
+- Pint ✅ (todos los archivos en formato de estilo correcto)
+- PHPStan nivel 8 ✅ (sin errores; `vendor/bin/phpstan analyse --no-progress --memory-limit=1G`)
+- Suite completa ✅ (root: 10 pruebas/28 aserciones; Academic: 551 pruebas/1578 aserciones; Authorization e Identity/Organization/Audit/Foundation: 80 pruebas/206 aserciones)
+- `php artisan route:list --path=academic/questions` ✅ (5 rutas en `api/v1/academic/questions`)
+- `php artisan migrate --force` + `migrate:status` ✅ (migración `create_academic_questions_tables` en estado `Ran`)
+
+**Estado:** Finalizado.
+

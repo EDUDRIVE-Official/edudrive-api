@@ -562,7 +562,9 @@ Historial curricular.
 12. Fase 6 — Evaluaciones
 ENG-030 — Banco de preguntas
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-10): se completó el agregado `Question` con respuesta tipada por tipo de pregunta, persistencia normalizada (tabla única + opciones con `response` JSONB) y CQRS completo (create/update/delete/get/list). La API expone 5 endpoints bajo `auth:sanctum`: listado/detalle protegidos por `questions.view` y creación/actualización/eliminación por `questions.manage`. Los tipos cubiertos son selección única, selección múltiple, verdadero/falso, asociación, ordenamiento y situacional (que además exige media). Las URLs de media son estrictamente `https`, y los errores públicos son `INVALID_QUESTION` (422) y `QUESTION_NOT_FOUND` (404). Detalle completo en `docs/plans/2026-08-10-banco-preguntas-eng030-implementation.md` y `docs/engineering/ENG-LOG.md`.
 
 Incluye:
 
@@ -1307,7 +1309,11 @@ Actualizado 2026-08-08: se completó ENG-028 (Lecciones y contenido accesible) �
 
 Actualizado 2026-08-10: se completó ENG-029 (Publicación y versionado curricular) — ver la nota de la sección 11, `docs/engineering/ENG-LOG.md` y el plan de diseño `docs/plans/2026-08-10-publicacion-versionado-curricular-design.md`. El incremento entrega el ciclo de vida draft → under_review → approved → published con snapshots inmutables por publicación, reapertura para construir la siguiente versión y endpoints de historial protegidos.
 
-La historia técnica activa queda **Pendiente de decisión** entre volver a Fase 4 — Perfiles o iniciar ENG-030 (Banco de preguntas).
+La historia técnica activa queda **Pendiente de decisión** entre volver a Fase 4 — Perfiles o iniciar ENG-031 (Exámenes y cuestionarios).
+
+Actualizado 2026-08-10: se completó ENG-030 (Banco de preguntas) — ver la nota de la sección 12, `docs/engineering/ENG-LOG.md` y el plan de implementación `docs/plans/2026-08-10-banco-preguntas-eng030-implementation.md`. El incremento entrega el agregado `Question` con respuesta tipada por tipo, persistencia en `academic_questions`/`academic_question_options` y API protegida por los permisos `questions.manage`/`questions.view`.
+
+La historia técnica activa queda **Pendiente de decisión** entre volver a Fase 4 — Perfiles o iniciar ENG-031 (Exámenes y cuestionarios).
 26. Definición de terminado
 
 Una historia se considera terminada cuando cumple:
@@ -1353,3 +1359,4 @@ Versión	Fecha	Descripción
 1.7.0	2026-08-04	Cierre de ENG-027 (Módulos y unidades): currículo regional jerárquico dentro del agregado Course, persistencia transaccional, prerrequisitos, API protegida con courses.view/courses.manage y compatibilidad con cursos publicados legacy (IMP-027 en ENG-LOG.md); alcance futuro diferido explícitamente
 1.8.0	2026-08-08	Cierre de ENG-028 (Lecciones y contenido accesible): incorporación de lecciones y bloques de contenido accesible tipados (texto, imagen, video, audio, interactivos, descargas), consulta/reemplazo atómico por unidad, y validación de cobertura de lecciones al publicar.
 1.9.0	2026-08-10	Cierre de ENG-029 (Publicación y versionado curricular): estados `under_review`/`approved`, `publish` exige aprobación, snapshots inmutables por publicación en `academic_course_versions`, `reopen` para la siguiente versión, API de ciclo de vida e historial protegida por `courses.manage`/`courses.view`, y errores públicos de transición, reapertura y versión inexistente (IMP-029 en ENG-LOG.md)
+1.10.0	2026-08-10	Cierre de ENG-030 (Banco de preguntas): agregado `Question` con respuesta tipada por tipo (single_choice, multi_select, true_false, matching, ordering, situacional), persistencia en `academic_questions`/`academic_question_options`, CQRS completo, media estrictamente `https` y API protegida por los permisos `questions.manage`/`questions.view` (IMP-030 en ENG-LOG.md)
