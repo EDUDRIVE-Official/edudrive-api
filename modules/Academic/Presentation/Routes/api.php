@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Academic\Presentation\Http\Controllers\AcademicStatusController;
 use Modules\Academic\Presentation\Http\Controllers\CompetencyController;
 use Modules\Academic\Presentation\Http\Controllers\CourseController;
+use Modules\Academic\Presentation\Http\Controllers\ExamController;
 use Modules\Academic\Presentation\Http\Controllers\ProgramController;
 use Modules\Academic\Presentation\Http\Controllers\QuestionController;
 
@@ -127,6 +128,25 @@ Route::prefix('api/v1/academic')
                 Route::delete('/questions/{questionId}', [QuestionController::class, 'destroy'])
                     ->whereUuid('questionId')
                     ->name('questions.destroy');
+            });
+
+            Route::middleware('permission:exams.view')->group(function (): void {
+                Route::get('/exams', [ExamController::class, 'index'])
+                    ->name('exams.index');
+                Route::get('/exams/{examId}', [ExamController::class, 'show'])
+                    ->whereUuid('examId')
+                    ->name('exams.show');
+            });
+
+            Route::middleware('permission:exams.manage')->group(function (): void {
+                Route::post('/exams', [ExamController::class, 'store'])
+                    ->name('exams.store');
+                Route::put('/exams/{examId}', [ExamController::class, 'update'])
+                    ->whereUuid('examId')
+                    ->name('exams.update');
+                Route::delete('/exams/{examId}', [ExamController::class, 'destroy'])
+                    ->whereUuid('examId')
+                    ->name('exams.destroy');
             });
         });
     });
