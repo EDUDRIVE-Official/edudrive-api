@@ -15,4 +15,6 @@ enum Permission: string
     case ViewCompetencies = 'competencies.view';
     case ManagePrograms = 'programs.manage';
     case ViewPrograms = 'programs.view';
+    case ManageQuestions = 'questions.manage';
+    case ViewQuestions = 'questions.view';
 }
