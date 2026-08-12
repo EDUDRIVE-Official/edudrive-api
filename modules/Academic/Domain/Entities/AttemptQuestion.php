@@ -68,6 +68,22 @@ final class AttemptQuestion
         return self::create($id, $position, $questionId, $points, $prompt, $type, $options, $correctResponse, $explanation, $userResponse, $isCorrect, $answeredAt);
     }
 
+    public function withPosition(int $position): self
+    {
+        if ($position < 1) {
+            throw InvalidExamAttempt::create();
+        }
+
+        return new self($this->id, $position, $this->questionId, $this->points, $this->prompt, $this->type, $this->options, $this->correctResponse, $this->explanation, $this->userResponse, $this->isCorrect, $this->answeredAt);
+    }
+
+    public function answer(QuestionResponse $response, \DateTimeImmutable $answeredAt): void
+    {
+        $this->userResponse = $response;
+        $this->isCorrect = $this->correctResponse->matches($response);
+        $this->answeredAt = $answeredAt;
+    }
+
     public function id(): AttemptQuestionId
     {
         return $this->id;
