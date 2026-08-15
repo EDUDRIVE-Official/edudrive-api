@@ -197,5 +197,14 @@ Route::prefix('api/v1/academic')
                     ->whereUuid('enrollmentId')
                     ->name('enrollments.show');
             });
+
+            Route::middleware('permission:enrollments.manage')->group(function (): void {
+                Route::post('/enrollments', [EnrollmentController::class, 'store'])
+                    ->name('enrollments.store');
+                Route::post('/enrollments/bulk', [EnrollmentController::class, 'bulk'])
+                    ->name('enrollments.bulk');
+                Route::post('/enrollments/institutional', [EnrollmentController::class, 'institutional'])
+                    ->name('enrollments.institutional');
+            });
         });
     });
