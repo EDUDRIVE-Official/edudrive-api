@@ -93,3 +93,27 @@ it('solo otorga consulta de exámenes a los demás roles', function (): void {
         ->and(RolePermissions::grants(Role::Student, Permission::ViewExams))->toBeTrue()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageExams))->toBeFalse();
 });
+
+it('otorga consulta de intentos de evaluación al superadministrador', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ViewExamAttempts))->toBeTrue();
+});
+
+it('otorga consulta de intentos de evaluación a administradores institucionales y docentes, pero no a estudiantes', function (): void {
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewExamAttempts))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ViewExamAttempts))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Student, Permission::ViewExamAttempts))->toBeFalse();
+});
+
+it('otorga permisos de enrollments al superadministrador', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageEnrollments))->toBeTrue()
+        ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewEnrollments))->toBeTrue();
+});
+
+it('otorga manage y view de enrollments al administrador institucional, solo view al docente y ninguno al estudiante', function (): void {
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageEnrollments))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewEnrollments))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageEnrollments))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ViewEnrollments))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageEnrollments))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ViewEnrollments))->toBeFalse();
+});
