@@ -40,7 +40,7 @@ final readonly class LessonCompletion
         return $this->timeSpentMinutes;
     }
 
-    public function withCompletedAt(DateTimeImmutable $completedAt, ?int $timeSpentMinutes): self
+    public function withCompletion(DateTimeImmutable $completedAt, ?int $timeSpentMinutes): self
     {
         return self::create($this->lessonId, $completedAt, $timeSpentMinutes);
     }

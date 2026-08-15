@@ -33,8 +33,15 @@ it('actualiza completedAt y tiempo invertido preservando el lessonId', function 
     $lessonId = LessonId::fromString((string) Str::uuid());
     $completion = LessonCompletion::create($lessonId, new DateTimeImmutable('2026-08-15T09:00:00+00:00'), 5);
 
-    $updated = $completion->withCompletedAt(new DateTimeImmutable('2026-08-15T10:00:00+00:00'), 20);
+    $updated = $completion->withCompletion(new DateTimeImmutable('2026-08-15T10:00:00+00:00'), 20);
 
     expect($updated->lessonId()->equals($lessonId))->toBeTrue()
         ->and($updated->timeSpentMinutes())->toBe(20);
+});
+
+it('rechaza tiempo invertido negativo al actualizar', function (): void {
+    $completion = LessonCompletion::create(LessonId::fromString((string) Str::uuid()), new DateTimeImmutable('now'), 5);
+
+    expect(fn () => $completion->withCompletion(new DateTimeImmutable('now'), -1))
+        ->toThrow(InvalidLessonCompletion::class);
 });
