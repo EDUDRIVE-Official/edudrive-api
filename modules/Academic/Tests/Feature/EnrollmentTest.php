@@ -256,7 +256,7 @@ it('rechaza completar una inscripcion cancelada', function (): void {
     $enrollment = persistedEnrollmentForFeature(status: 'canceled');
 
     $this->postJson("/api/v1/academic/enrollments/{$enrollment->id()->value()}/complete")
-        ->assertStatus(409)
+        ->assertUnprocessable()
         ->assertJsonPath('code', 'INVALID_ENROLLMENT');
 });
 

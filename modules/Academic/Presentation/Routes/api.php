@@ -205,6 +205,16 @@ Route::prefix('api/v1/academic')
                     ->name('enrollments.bulk');
                 Route::post('/enrollments/institutional', [EnrollmentController::class, 'institutional'])
                     ->name('enrollments.institutional');
+
+                Route::post('/enrollments/{enrollmentId}/activate', [EnrollmentController::class, 'activate'])
+                    ->whereUuid('enrollmentId')
+                    ->name('enrollments.activate');
+                Route::post('/enrollments/{enrollmentId}/complete', [EnrollmentController::class, 'complete'])
+                    ->whereUuid('enrollmentId')
+                    ->name('enrollments.complete');
+                Route::post('/enrollments/{enrollmentId}/cancel', [EnrollmentController::class, 'cancel'])
+                    ->whereUuid('enrollmentId')
+                    ->name('enrollments.cancel');
             });
         });
     });

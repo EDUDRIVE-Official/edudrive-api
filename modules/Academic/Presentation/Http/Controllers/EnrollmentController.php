@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Modules\Academic\Presentation\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Modules\Academic\Application\Commands\ActivateEnrollmentCommand;
+use Modules\Academic\Application\Commands\CancelEnrollmentCommand;
+use Modules\Academic\Application\Commands\CompleteEnrollmentCommand;
 use Modules\Academic\Application\Commands\CreateBulkEnrollmentsCommand;
 use Modules\Academic\Application\Commands\CreateEnrollmentCommand;
 use Modules\Academic\Application\Commands\CreateInstitutionalEnrollmentCommand;
@@ -96,5 +99,29 @@ final class EnrollmentController
         assert($result instanceof EnrollmentResponse);
 
         return response()->json(['data' => $result->toArray()], Response::HTTP_CREATED);
+    }
+
+    public function activate(string $enrollmentId, CommandBus $commandBus): JsonResponse
+    {
+        $result = $commandBus->dispatch(new ActivateEnrollmentCommand(enrollmentId: $enrollmentId));
+        assert($result instanceof EnrollmentResponse);
+
+        return response()->json(['data' => $result->toArray()]);
+    }
+
+    public function complete(string $enrollmentId, CommandBus $commandBus): JsonResponse
+    {
+        $result = $commandBus->dispatch(new CompleteEnrollmentCommand(enrollmentId: $enrollmentId));
+        assert($result instanceof EnrollmentResponse);
+
+        return response()->json(['data' => $result->toArray()]);
+    }
+
+    public function cancel(string $enrollmentId, CommandBus $commandBus): JsonResponse
+    {
+        $result = $commandBus->dispatch(new CancelEnrollmentCommand(enrollmentId: $enrollmentId));
+        assert($result instanceof EnrollmentResponse);
+
+        return response()->json(['data' => $result->toArray()]);
     }
 }
