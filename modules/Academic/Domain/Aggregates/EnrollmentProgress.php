@@ -6,6 +6,7 @@ namespace Modules\Academic\Domain\Aggregates;
 
 use DateTimeImmutable;
 use Modules\Academic\Domain\Entities\LessonCompletion;
+use Modules\Academic\Domain\Exceptions\InvalidLessonCompletion;
 use Modules\Academic\Domain\ValueObjects\EnrollmentId;
 use Modules\Academic\Domain\ValueObjects\LessonId;
 
@@ -24,12 +25,16 @@ final class EnrollmentProgress
 
     public static function create(EnrollmentId $enrollmentId): self
     {
+        self::assertNoDuplicateLessons([]);
+
         return new self($enrollmentId, []);
     }
 
     /** @param list<LessonCompletion> $lessonCompletions */
     public static function restore(EnrollmentId $enrollmentId, array $lessonCompletions): self
     {
+        self::assertNoDuplicateLessons($lessonCompletions);
+
         return new self($enrollmentId, $lessonCompletions);
     }
 
@@ -88,5 +93,18 @@ final class EnrollmentProgress
         }
 
         return $latest;
+    }
+
+    /** @param list<LessonCompletion> $lessonCompletions */
+    private static function assertNoDuplicateLessons(array $lessonCompletions): void
+    {
+        $seen = [];
+        foreach ($lessonCompletions as $completion) {
+            $lessonId = $completion->lessonId()->value();
+            if (isset($seen[$lessonId])) {
+                throw InvalidLessonCompletion::duplicateLesson();
+            }
+            $seen[$lessonId] = true;
+        }
     }
 }

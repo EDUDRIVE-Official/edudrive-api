@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Str;
 use Modules\Academic\Domain\Aggregates\EnrollmentProgress;
 use Modules\Academic\Domain\Entities\LessonCompletion;
+use Modules\Academic\Domain\Exceptions\InvalidLessonCompletion;
 use Modules\Academic\Domain\ValueObjects\EnrollmentId;
 use Modules\Academic\Domain\ValueObjects\LessonId;
 
@@ -61,4 +62,23 @@ it('restaura desde persistencia con las completitudes dadas', function (): void 
 
     expect($progress->enrollmentId()->equals($enrollmentId))->toBeTrue()
         ->and($progress->lessonCompletions())->toHaveCount(1);
+});
+
+it('rechaza restaurar con completitudes duplicadas para la misma leccion', function (): void {
+    $enrollmentId = EnrollmentId::fromString((string) Str::uuid());
+    $lessonId = LessonId::fromString((string) Str::uuid());
+
+    $first = LessonCompletion::create($lessonId, new DateTimeImmutable('2026-08-15T09:00:00+00:00'), 5);
+    $second = LessonCompletion::create($lessonId, new DateTimeImmutable('2026-08-15T10:00:00+00:00'), 10);
+
+    EnrollmentProgress::restore($enrollmentId, [$first, $second]);
+})->throws(InvalidLessonCompletion::class);
+
+it('calcula la ultima completitud como el maximo y no la ultima agregada', function (): void {
+    $progress = EnrollmentProgress::create(EnrollmentId::fromString((string) Str::uuid()));
+
+    $progress->completeLesson(LessonId::fromString((string) Str::uuid()), new DateTimeImmutable('2026-08-15T11:00:00+00:00'), 10);
+    $progress->completeLesson(LessonId::fromString((string) Str::uuid()), new DateTimeImmutable('2026-08-15T09:00:00+00:00'), 5);
+
+    expect($progress->lastCompletedAt())->toEqual(new DateTimeImmutable('2026-08-15T11:00:00+00:00'));
 });

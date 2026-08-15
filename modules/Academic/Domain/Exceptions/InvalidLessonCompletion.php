@@ -16,4 +16,13 @@ final class InvalidLessonCompletion extends DomainException
             statusCode: 422,
         );
     }
+
+    public static function duplicateLesson(): self
+    {
+        return new self(
+            message: 'No puede haber mas de una completitud para la misma leccion.',
+            errorCode: 'INVALID_LESSON_COMPLETION',
+            statusCode: 422,
+        );
+    }
 }
