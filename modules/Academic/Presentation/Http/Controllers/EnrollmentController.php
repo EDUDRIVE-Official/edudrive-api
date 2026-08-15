@@ -74,7 +74,7 @@ final class EnrollmentController
         $data = $request->validated();
         $result = $commandBus->dispatch(new CreateBulkEnrollmentsCommand(
             courseId: (string) $data['course_id'],
-            userIds: (array) $data['user_ids'],
+            userIds: array_values(array_map(static fn (mixed $userId): string => (string) $userId, (array) $data['user_ids'])),
             status: (string) $data['status'],
             source: 'bulk',
             startsAt: isset($data['starts_at']) ? (string) $data['starts_at'] : null,
