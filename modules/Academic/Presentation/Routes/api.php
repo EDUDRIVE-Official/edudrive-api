@@ -6,9 +6,12 @@ use Illuminate\Support\Facades\Route;
 use Modules\Academic\Presentation\Http\Controllers\AcademicStatusController;
 use Modules\Academic\Presentation\Http\Controllers\CompetencyController;
 use Modules\Academic\Presentation\Http\Controllers\CourseController;
+use Modules\Academic\Presentation\Http\Controllers\EnrollmentController;
+use Modules\Academic\Presentation\Http\Controllers\ExamAttemptController;
 use Modules\Academic\Presentation\Http\Controllers\ExamController;
 use Modules\Academic\Presentation\Http\Controllers\ProgramController;
 use Modules\Academic\Presentation\Http\Controllers\QuestionController;
+use Modules\Academic\Presentation\Http\Controllers\TheoryExamController;
 
 Route::prefix('api/v1/academic')
     ->name('api.v1.academic.')
@@ -136,6 +139,12 @@ Route::prefix('api/v1/academic')
                 Route::get('/exams/{examId}', [ExamController::class, 'show'])
                     ->whereUuid('examId')
                     ->name('exams.show');
+
+                Route::get('/theory-exams', [TheoryExamController::class, 'index'])
+                    ->name('theory-exams.index');
+                Route::get('/theory-exams/{examId}', [TheoryExamController::class, 'show'])
+                    ->whereUuid('examId')
+                    ->name('theory-exams.show');
             });
 
             Route::middleware('permission:exams.manage')->group(function (): void {
@@ -147,6 +156,46 @@ Route::prefix('api/v1/academic')
                 Route::delete('/exams/{examId}', [ExamController::class, 'destroy'])
                     ->whereUuid('examId')
                     ->name('exams.destroy');
+            });
+
+            Route::middleware('permission:exam_attempts.view')->group(function (): void {
+                Route::get('/exam-attempts', [ExamAttemptController::class, 'index'])
+                    ->name('exam-attempts.index');
+            });
+
+            Route::get('/theory-attempts', [TheoryExamController::class, 'attempts'])
+                ->name('theory-attempts.index');
+
+            Route::get('/exam-attempts/{attemptId}', [ExamAttemptController::class, 'show'])
+                ->whereUuid('attemptId')
+                ->name('exam-attempts.show');
+
+            Route::post('/exam-attempts', [ExamAttemptController::class, 'start'])
+                ->name('exam-attempts.store');
+
+            Route::post('/theory-exams/{examId}/start', [TheoryExamController::class, 'start'])
+                ->whereUuid('examId')
+                ->name('theory-exams.start');
+
+            Route::put('/exam-attempts/{attemptId}/questions/{position}', [ExamAttemptController::class, 'answer'])
+                ->whereUuid('attemptId')
+                ->whereNumber('position')
+                ->name('exam-attempts.questions.update');
+
+            Route::post('/exam-attempts/{attemptId}/submit', [ExamAttemptController::class, 'submit'])
+                ->whereUuid('attemptId')
+                ->name('exam-attempts.submit');
+
+            Route::post('/exam-attempts/{attemptId}/cancel', [ExamAttemptController::class, 'cancel'])
+                ->whereUuid('attemptId')
+                ->name('exam-attempts.cancel');
+
+            Route::middleware('permission:enrollments.view')->group(function (): void {
+                Route::get('/enrollments', [EnrollmentController::class, 'index'])
+                    ->name('enrollments.index');
+                Route::get('/enrollments/{enrollmentId}', [EnrollmentController::class, 'show'])
+                    ->whereUuid('enrollmentId')
+                    ->name('enrollments.show');
             });
         });
     });
