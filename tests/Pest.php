@@ -335,6 +335,26 @@ function actingAsRole(Role $role): UserModel
     return $model;
 }
 
+function actingAsUserId(string $userId): UserModel
+{
+    $repository = app(UserRepository::class);
+
+    $user = User::register(
+        id: $userId,
+        name: 'Usuario de prueba',
+        email: Email::fromString(sprintf('%s@edudrive.cr', Str::uuid())),
+        passwordHash: 'hashed-password',
+    );
+
+    $repository->save($user);
+
+    $model = UserModel::query()->findOrFail($user->id());
+
+    Sanctum::actingAs($model);
+
+    return $model;
+}
+
 /**
  * Like `actingAsAuthenticatedUser()`, but the acting user additionally holds
  * the `SuperAdmin` role, for endpoints gated behind a `permission:...`

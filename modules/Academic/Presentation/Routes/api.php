@@ -7,6 +7,7 @@ use Modules\Academic\Presentation\Http\Controllers\AcademicStatusController;
 use Modules\Academic\Presentation\Http\Controllers\CompetencyController;
 use Modules\Academic\Presentation\Http\Controllers\CourseController;
 use Modules\Academic\Presentation\Http\Controllers\EnrollmentController;
+use Modules\Academic\Presentation\Http\Controllers\EnrollmentProgressController;
 use Modules\Academic\Presentation\Http\Controllers\ExamAttemptController;
 use Modules\Academic\Presentation\Http\Controllers\ExamController;
 use Modules\Academic\Presentation\Http\Controllers\ProgramController;
@@ -216,5 +217,14 @@ Route::prefix('api/v1/academic')
                     ->whereUuid('enrollmentId')
                     ->name('enrollments.cancel');
             });
+
+            Route::post('/enrollments/{enrollmentId}/lessons/{lessonId}/complete', [EnrollmentProgressController::class, 'complete'])
+                ->whereUuid('enrollmentId')
+                ->whereUuid('lessonId')
+                ->name('enrollments.lessons.complete');
+
+            Route::get('/enrollments/{enrollmentId}/progress', [EnrollmentProgressController::class, 'show'])
+                ->whereUuid('enrollmentId')
+                ->name('enrollments.progress.show');
         });
     });
