@@ -8,6 +8,7 @@ use Modules\Audit\Infrastructure\Providers\AuditServiceProvider;
 use Modules\Authorization\Infrastructure\Providers\AuthorizationServiceProvider;
 use Modules\Foundation\Providers\FoundationServiceProvider;
 use Modules\Identity\Providers\IdentityServiceProvider;
+use Modules\Learning\Infrastructure\Providers\LearningServiceProvider;
 use Modules\Organization\Infrastructure\Providers\OrganizationServiceProvider;
 
 return [
@@ -16,6 +17,7 @@ return [
     IdentityServiceProvider::class,
     AuditServiceProvider::class,
     AcademicServiceProvider::class,
+    LearningServiceProvider::class,
     OrganizationServiceProvider::class,
     AuthorizationServiceProvider::class,
 ];
