@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\Academic\Domain\Aggregates\EnrollmentProgress;
 use Modules\Academic\Domain\Entities\LessonCompletion;
@@ -17,31 +16,25 @@ final readonly class EloquentEnrollmentProgressRepository implements EnrollmentP
 {
     public function save(EnrollmentProgress $progress): void
     {
-        DB::transaction(function () use ($progress): void {
-            foreach ($progress->lessonCompletions() as $completion) {
-                $model = EnrollmentLessonCompletionModel::query()
-                    ->where('enrollment_id', $progress->enrollmentId()->value())
-                    ->where('lesson_id', $completion->lessonId()->value())
-                    ->first();
+        $rows = array_map(static fn (LessonCompletion $completion): array => [
+            'id' => (string) Str::uuid(),
+            'enrollment_id' => $progress->enrollmentId()->value(),
+            'lesson_id' => $completion->lessonId()->value(),
+            'completed_at' => $completion->completedAt(),
+            'time_spent_minutes' => $completion->timeSpentMinutes(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ], $progress->lessonCompletions());
 
-                if ($model !== null) {
-                    $model->update([
-                        'completed_at' => $completion->completedAt(),
-                        'time_spent_minutes' => $completion->timeSpentMinutes(),
-                    ]);
+        if ($rows === []) {
+            return;
+        }
 
-                    continue;
-                }
-
-                EnrollmentLessonCompletionModel::query()->create([
-                    'id' => (string) Str::uuid(),
-                    'enrollment_id' => $progress->enrollmentId()->value(),
-                    'lesson_id' => $completion->lessonId()->value(),
-                    'completed_at' => $completion->completedAt(),
-                    'time_spent_minutes' => $completion->timeSpentMinutes(),
-                ]);
-            }
-        });
+        EnrollmentLessonCompletionModel::query()->upsert(
+            $rows,
+            ['enrollment_id', 'lesson_id'],
+            ['completed_at', 'time_spent_minutes', 'updated_at'],
+        );
     }
 
     public function findByEnrollmentId(EnrollmentId $enrollmentId): EnrollmentProgress

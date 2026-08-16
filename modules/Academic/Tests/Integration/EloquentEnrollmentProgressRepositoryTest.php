@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Aggregates\Enrollment;
 use Modules\Academic\Domain\Aggregates\EnrollmentProgress;
 use Modules\Academic\Domain\Enums\EnrollmentSource;
@@ -14,6 +15,7 @@ use Modules\Academic\Domain\ValueObjects\EnrollmentId;
 use Modules\Academic\Domain\ValueObjects\LessonId;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\EnrollmentLessonCompletionModel;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\EnrollmentModel;
+use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\LessonModel;
 use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Repositories\UserRepository;
 use Modules\Identity\Domain\ValueObjects\Email;
@@ -33,7 +35,28 @@ function enrollmentProgressUser(): string
     return $user->id();
 }
 
-function persistedEnrollmentForProgress(): Enrollment
+/**
+ * `academic_enrollment_lesson_completions.lesson_id` has a foreign key onto
+ * `academic_lessons`, so tests must reference a lesson that was actually
+ * persisted for the course (via `createDraftCourseForPublishing`), not an
+ * arbitrary UUID.
+ */
+function firstLessonIdForCourse(Course $course): LessonId
+{
+    $unitIds = [];
+    foreach ($course->modules() as $module) {
+        foreach ($module->units() as $unit) {
+            $unitIds[] = $unit->id()->value();
+        }
+    }
+
+    $lesson = LessonModel::query()->whereIn('unit_id', $unitIds)->firstOrFail();
+
+    return LessonId::fromString((string) $lesson->getAttribute('id'));
+}
+
+/** @return array{enrollment: Enrollment, lessonId: LessonId} */
+function persistedEnrollmentForProgress(): array
 {
     $course = createDraftCourseForPublishing('PRG-REPO-'.strtoupper((string) Str::random(4)));
     $enrollment = Enrollment::create(
@@ -45,12 +68,14 @@ function persistedEnrollmentForProgress(): Enrollment
     );
     app(EnrollmentRepository::class)->save($enrollment);
 
-    return $enrollment;
+    return [
+        'enrollment' => $enrollment,
+        'lessonId' => firstLessonIdForCourse($course),
+    ];
 }
 
 it('guarda y recupera lecciones completadas', function (): void {
-    $enrollment = persistedEnrollmentForProgress();
-    $lessonId = LessonId::fromString((string) Str::uuid());
+    ['enrollment' => $enrollment, 'lessonId' => $lessonId] = persistedEnrollmentForProgress();
 
     $progress = EnrollmentProgress::create($enrollment->id());
     $progress->completeLesson($lessonId, new DateTimeImmutable('2026-08-15T10:00:00+00:00'), 12);
@@ -65,8 +90,7 @@ it('guarda y recupera lecciones completadas', function (): void {
 });
 
 it('actualiza la fila existente en vez de duplicar al completar de nuevo', function (): void {
-    $enrollment = persistedEnrollmentForProgress();
-    $lessonId = LessonId::fromString((string) Str::uuid());
+    ['enrollment' => $enrollment, 'lessonId' => $lessonId] = persistedEnrollmentForProgress();
     $repository = app(EnrollmentProgressRepository::class);
 
     $progress = EnrollmentProgress::create($enrollment->id());
@@ -84,7 +108,7 @@ it('actualiza la fila existente en vez de duplicar al completar de nuevo', funct
 });
 
 it('devuelve un progreso vacio para un enrollment sin completitudes', function (): void {
-    $enrollment = persistedEnrollmentForProgress();
+    ['enrollment' => $enrollment] = persistedEnrollmentForProgress();
 
     $restored = app(EnrollmentProgressRepository::class)->findByEnrollmentId($enrollment->id());
 
@@ -92,11 +116,11 @@ it('devuelve un progreso vacio para un enrollment sin completitudes', function (
 });
 
 it('borra en cascada las completitudes al eliminar el enrollment', function (): void {
-    $enrollment = persistedEnrollmentForProgress();
+    ['enrollment' => $enrollment, 'lessonId' => $lessonId] = persistedEnrollmentForProgress();
     $repository = app(EnrollmentProgressRepository::class);
 
     $progress = EnrollmentProgress::create($enrollment->id());
-    $progress->completeLesson(LessonId::fromString((string) Str::uuid()), new DateTimeImmutable('now'), 5);
+    $progress->completeLesson($lessonId, new DateTimeImmutable('now'), 5);
     $repository->save($progress);
 
     EnrollmentModel::query()->where('id', $enrollment->id()->value())->delete();

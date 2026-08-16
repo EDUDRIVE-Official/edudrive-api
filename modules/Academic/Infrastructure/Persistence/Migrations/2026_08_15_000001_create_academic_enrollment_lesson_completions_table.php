@@ -23,6 +23,11 @@ return new class extends Migration
                 ->on('academic_enrollments')
                 ->cascadeOnDelete();
 
+            $table->foreign('lesson_id')
+                ->references('id')
+                ->on('academic_lessons')
+                ->cascadeOnDelete();
+
             $table->unique(['enrollment_id', 'lesson_id']);
         });
     }
