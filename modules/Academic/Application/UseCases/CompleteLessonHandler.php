@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Modules\Academic\Application\Commands\CompleteLessonCommand;
 use Modules\Academic\Application\Exceptions\EnrollmentNotFound;
 use Modules\Academic\Application\Exceptions\LessonNotFound;
+use Modules\Academic\Application\Exceptions\UnitLocked;
 use Modules\Academic\Application\Responses\EnrollmentProgressResponse;
 use Modules\Academic\Application\Services\EnrollmentProgressCalculator;
 use Modules\Academic\Domain\Aggregates\Course;
@@ -16,6 +17,7 @@ use Modules\Academic\Domain\Exceptions\InvalidEnrollment;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\EnrollmentProgressRepository;
 use Modules\Academic\Domain\Repositories\EnrollmentRepository;
+use Modules\Academic\Domain\Services\CourseCurriculumUnlockCalculator;
 use Modules\Academic\Domain\Services\CourseLessonCatalog;
 use Modules\Academic\Domain\ValueObjects\EnrollmentId;
 use Modules\Academic\Domain\ValueObjects\LessonId;
@@ -27,6 +29,7 @@ final readonly class CompleteLessonHandler
         private EnrollmentProgressRepository $progressRepository,
         private CourseRepository $courses,
         private CourseLessonCatalog $lessonCatalog,
+        private CourseCurriculumUnlockCalculator $unlockCalculator,
         private EnrollmentProgressCalculator $calculator,
     ) {}
 
@@ -50,6 +53,13 @@ final readonly class CompleteLessonHandler
         }
 
         $progress = $this->progressRepository->findByEnrollmentId($enrollment->id());
+
+        $unlockStatus = $this->unlockCalculator->statusFor($course, $progress);
+        $unitId = $unlockStatus->unitIdForLesson($lessonId);
+        if ($unitId !== null && ! $unlockStatus->isUnitUnlocked($unitId)) {
+            throw UnitLocked::withId($unitId->value());
+        }
+
         $progress->completeLesson($lessonId, new DateTimeImmutable('now'), $command->timeSpentMinutes);
         $this->progressRepository->save($progress);
 
