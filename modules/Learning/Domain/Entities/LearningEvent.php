@@ -17,6 +17,7 @@ final readonly class LearningEvent
         private string $userId,
         private string $courseId,
         private LearningVerb $verb,
+        // lessonId o examAttemptId, segun el verbo
         private string $subjectId,
         private DateTimeImmutable $occurredAt,
         private array $evidence,
@@ -29,6 +30,7 @@ final readonly class LearningEvent
         string $userId,
         string $courseId,
         LearningVerb $verb,
+        // lessonId o examAttemptId, segun el verbo
         string $subjectId,
         DateTimeImmutable $occurredAt,
         array $evidence,
