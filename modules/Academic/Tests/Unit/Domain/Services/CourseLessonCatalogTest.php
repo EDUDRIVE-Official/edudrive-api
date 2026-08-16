@@ -49,7 +49,7 @@ it('aplana los ids de leccion de multiples modulos y unidades, omitiendo las que
         title: CourseTitle::fromString('Curso con multiples modulos'),
     );
 
-    $unitWithContent = CourseUnit::create(
+    $firstUnitWithContent = CourseUnit::create(
         id: CourseUnitId::fromString((string) Str::uuid()),
         code: CurriculumCode::fromString('UNI-01'),
         title: 'Introduccion',
@@ -60,11 +60,22 @@ it('aplana los ids de leccion de multiples modulos y unidades, omitiendo las que
         prerequisiteUnitIds: [],
     );
 
-    $unitWithoutContent = CourseUnit::create(
+    $secondUnitWithContent = CourseUnit::create(
         id: CourseUnitId::fromString((string) Str::uuid()),
         code: CurriculumCode::fromString('UNI-02'),
         title: 'Avanzado',
         description: 'Segunda unidad curricular de prueba.',
+        objectives: null,
+        durationMinutes: 15,
+        position: 1,
+        prerequisiteUnitIds: [],
+    );
+
+    $unitWithoutContent = CourseUnit::create(
+        id: CourseUnitId::fromString((string) Str::uuid()),
+        code: CurriculumCode::fromString('UNI-03'),
+        title: 'Sin contenido',
+        description: 'Tercera unidad curricular de prueba.',
         objectives: null,
         durationMinutes: 15,
         position: 1,
@@ -81,7 +92,7 @@ it('aplana los ids de leccion de multiples modulos y unidades, omitiendo las que
             durationMinutes: 30,
             position: 1,
             prerequisiteModuleIds: [],
-            units: [$unitWithContent],
+            units: [$firstUnitWithContent],
         ),
         CourseModule::create(
             id: CourseModuleId::fromString((string) Str::uuid()),
@@ -92,6 +103,17 @@ it('aplana los ids de leccion de multiples modulos y unidades, omitiendo las que
             durationMinutes: 30,
             position: 2,
             prerequisiteModuleIds: [],
+            units: [$secondUnitWithContent],
+        ),
+        CourseModule::create(
+            id: CourseModuleId::fromString((string) Str::uuid()),
+            code: CurriculumCode::fromString('MOD-03'),
+            title: 'Sin contenido',
+            description: 'Tercer modulo curricular de prueba.',
+            objectives: null,
+            durationMinutes: 30,
+            position: 3,
+            prerequisiteModuleIds: [],
             units: [$unitWithoutContent],
         ),
     ]);
@@ -99,15 +121,16 @@ it('aplana los ids de leccion de multiples modulos y unidades, omitiendo las que
     app(CourseRepository::class)->save($course);
 
     $contents = app(UnitContentRepository::class);
-    $lessonId = LessonId::fromString((string) Str::uuid());
+
+    $firstLessonId = LessonId::fromString((string) Str::uuid());
     $contents->replaceAtomically(
         $course->id(),
-        $unitWithContent->id(),
-        UnitContent::create($unitWithContent->id(), [
+        $firstUnitWithContent->id(),
+        UnitContent::create($firstUnitWithContent->id(), [
             Lesson::create(
-                $lessonId,
+                $firstLessonId,
                 CurriculumCode::fromString('LEC-01'),
-                'Leccion de prueba',
+                'Leccion de prueba 1',
                 null,
                 10,
                 1,
@@ -115,7 +138,29 @@ it('aplana los ids de leccion de multiples modulos y unidades, omitiendo las que
                     ContentBlockId::fromString((string) Str::uuid()),
                     'text',
                     1,
-                    ['markdown' => 'Contenido accesible de prueba.'],
+                    ['markdown' => 'Contenido accesible de prueba 1.'],
+                )],
+            ),
+        ]),
+    );
+
+    $secondLessonId = LessonId::fromString((string) Str::uuid());
+    $contents->replaceAtomically(
+        $course->id(),
+        $secondUnitWithContent->id(),
+        UnitContent::create($secondUnitWithContent->id(), [
+            Lesson::create(
+                $secondLessonId,
+                CurriculumCode::fromString('LEC-02'),
+                'Leccion de prueba 2',
+                null,
+                10,
+                1,
+                [ContentBlockFactory::create(
+                    ContentBlockId::fromString((string) Str::uuid()),
+                    'text',
+                    1,
+                    ['markdown' => 'Contenido accesible de prueba 2.'],
                 )],
             ),
         ]),
@@ -123,5 +168,6 @@ it('aplana los ids de leccion de multiples modulos y unidades, omitiendo las que
 
     $catalog = new CourseLessonCatalog($contents);
 
-    expect($catalog->lessonIdsFor($course))->toBe([$lessonId->value()]);
+    expect($catalog->lessonIdsFor($course))
+        ->toEqualCanonicalizing([$firstLessonId->value(), $secondLessonId->value()]);
 });
