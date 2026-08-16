@@ -592,7 +592,9 @@ Reglas de aprobación.
 Retroalimentación configurable.
 ENG-032 — Intentos de evaluación
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-12): se completó el agregado `ExamAttempt` como snapshot inmutable del examen al iniciar cada intento, con estados `in_progress`/`submitted`/`canceled`, respuestas por pregunta, guardado progresivo, resultado básico (`score`, `total_points`, `percentage`, `passed`) y prevención de duplicados por intento activo y `max_attempts`. La persistencia quedó normalizada en `academic_exam_attempts` y `academic_exam_attempt_questions`, con CQRS completo (start/answer/submit/cancel/get/list), API HTTP bajo `auth:sanctum` y permiso nuevo `exam_attempts.view` para listar o revisar intentos de terceros. Los errores públicos incluyen `EXAM_ATTEMPT_NOT_FOUND` (404), `EXAM_ATTEMPT_LIMIT_REACHED` (409) y `EXAM_ATTEMPT_ALREADY_SUBMITTED` (409). El motor de calificación fina (ENG-033) y el examen teórico (ENG-034) quedan diferidos. Detalle completo en `docs/plans/2026-08-12-intentos-evaluacion-eng032-implementation.md` y `docs/engineering/ENG-LOG.md`.
 
 Incluye:
 
@@ -605,7 +607,9 @@ Estado del intento.
 Prevención de duplicados.
 ENG-033 — Motor de calificación
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-12): se completó el motor de calificación sobre `ExamAttempt`, reemplazando el scoring básico inline por un servicio de dominio `ExamAttemptGrader` con `GradingPolicy`, `GradingResult`, breakdown por pregunta y por competencia, y persistencia JSON en `academic_exam_attempts` (`grading_breakdown`, `competency_results`). El snapshot del intento se enriqueció con `competency_id`, se habilitó partial credit para `multi_select`, `matching` y `ordering`, y se mantuvo `single_choice` / `true_false` como todo-o-nada. La API existente de intentos ahora devuelve grading detallado en `submit` y lo expone en `show` solo cuando el intento quedó `submitted` y además pasa las reglas de visibilidad (`feedback_mode` / permisos). El examen teórico de conducción (ENG-034) queda diferido y ya puede reutilizar este motor. Detalle completo en `docs/plans/2026-08-12-motor-calificacion-eng033-implementation.md` y `docs/engineering/ENG-LOG.md`.
 
 Incluye:
 
@@ -617,7 +621,9 @@ Resultados parciales.
 Reglas configurables.
 ENG-034 — Examen teórico de conducción
 
-Estado: Pendiente
+Estado: En validación
+
+Nota (2026-08-13): la primera versión backend de examen teórico de conducción ya quedó implementada sobre `Modules\Academic`, reutilizando `Question`, `Exam`, `ExamAttempt` y `ExamAttemptGrader`. El incremento cubre metadata teórica en preguntas y exámenes, validación de banco oficial y categoría, reglas configurables de grading por examen, recomendaciones básicas de estudio, endpoints especializados `theory-exams`, e historial teórico filtrable por categoría. La validación técnica focalizada ya quedó en verde (`129 passed / 533 assertions`, `phpstan` sin errores, `pint` aplicado), pero el estado se mantiene en **En validación** porque el trabajo aún no está consolidado en commits locales. Ver `docs/plans/2026-08-12-examen-teorico-conduccion-eng034-implementation.md` y `docs/engineering/ENG-LOG.md` (IMP-034).
 
 Incluye:
 
@@ -641,7 +647,9 @@ Fechas de inicio y cierre.
 Estados de matrícula.
 ENG-036 — Seguimiento de progreso
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-16): se completó el seguimiento de progreso del estudiante sobre `Enrollment`, con el nuevo agregado `EnrollmentProgress` (1:1 con la inscripción) respaldado por la tabla `academic_enrollment_lesson_completions` (una fila por lección completada, única por `enrollment_id`+`lesson_id`, con FK en cascada a `academic_enrollments` y a `academic_lessons`). El porcentaje de avance, el tiempo invertido y la última actividad se calculan en `EnrollmentProgressCalculator`, combinando las lecciones completadas con el catálogo de lecciones del curso (`CourseLessonCatalog`) y los intentos de examen enviados para ese curso (cruce con `Exam`/`ExamAttempt` vía `courseId`). CQRS completo (`CompleteLessonCommand`/`GetEnrollmentProgressQuery`), expuesto en `POST /enrollments/{enrollmentId}/lessons/{lessonId}/complete` y `GET /enrollments/{enrollmentId}/progress` bajo `auth:sanctum`, con autorización por pertenencia (dueño del enrollment) o por el permiso ya existente `enrollments.view` para terceros. Errores públicos: `ENROLLMENT_NOT_FOUND` (404, reutilizado), `INVALID_ENROLLMENT` (422, reutilizado) y `LESSON_NOT_FOUND` (404, nuevo). Detalle completo en `docs/plans/2026-08-15-seguimiento-progreso-eng036-design.md`, `docs/plans/2026-08-15-seguimiento-progreso-eng036-implementation.md` y `docs/engineering/ENG-LOG.md` (IMP-036).
 
 Incluye:
 
@@ -1318,7 +1326,9 @@ Actualizado 2026-08-10: se completó ENG-030 (Banco de preguntas) — ver la not
 
 La historia técnica activa queda **Pendiente de decisión** entre volver a Fase 4 — Perfiles o iniciar ENG-031 (Exámenes y cuestionarios).
 
-Actualizado 2026-08-11: se completó ENG-031 (Exámenes y cuestionarios) — ver la nota de la sección 12, `docs/engineering/ENG-LOG.md` y el plan de implementación `docs/plans/2026-08-11-examenes-cuestionarios-eng031-implementation.md`. El incremento entrega el agregado `Exam` anclado a un curso con lista ordenada de preguntas del banco, configuración completa (duración, intentos, aprobación, barajado, retroalimentación) y API protegida por los permisos `exams.manage`/`exams.view`. Intentos, calificación y examen teórico quedan diferidos a ENG-032/033/034.
+Actualizado 2026-08-12: se completó ENG-033 (Motor de calificación) — ver la nota de la sección 12, `docs/engineering/ENG-LOG.md` y el plan de implementación `docs/plans/2026-08-12-motor-calificacion-eng033-implementation.md`. El incremento incorpora `ExamAttemptGrader`, `GradingPolicy`, `GradingResult`, breakdown por pregunta y por competencia, partial credit por tipo, penalizaciones acotadas y persistencia JSON del grading sobre el intento. ENG-034 (examen teórico de conducción) queda diferido y ya puede construirse sobre este motor.
+
+Actualizado 2026-08-13: ENG-034 (Examen teórico de conducción) quedó implementado y verificado técnicamente sobre la base de `ENG-031` + `ENG-032` + `ENG-033`. El incremento entrega metadatos teóricos en `Question` y `Exam`, validación de banco oficial/categoría, política de grading derivada del examen, recomendaciones de estudio, endpoints `theory-exams` y `theory-attempts`, e historial teórico por usuario/categoría. Se mantiene en **En validación** hasta consolidar commits. Ver la nota de la sección 12, `docs/engineering/ENG-LOG.md` (IMP-034) y `docs/plans/2026-08-12-examen-teorico-conduccion-eng034-implementation.md`.
 26. Definición de terminado
 
 Una historia se considera terminada cuando cumple:
@@ -1366,3 +1376,7 @@ Versión	Fecha	Descripción
 1.9.0	2026-08-10	Cierre de ENG-029 (Publicación y versionado curricular): estados `under_review`/`approved`, `publish` exige aprobación, snapshots inmutables por publicación en `academic_course_versions`, `reopen` para la siguiente versión, API de ciclo de vida e historial protegida por `courses.manage`/`courses.view`, y errores públicos de transición, reapertura y versión inexistente (IMP-029 en ENG-LOG.md)
 1.10.0	2026-08-10	Cierre de ENG-030 (Banco de preguntas): agregado `Question` con respuesta tipada por tipo (single_choice, multi_select, true_false, matching, ordering, situacional), persistencia en `academic_questions`/`academic_question_options`, CQRS completo, media estrictamente `https` y API protegida por los permisos `questions.manage`/`questions.view` (IMP-030 en ENG-LOG.md)
 1.11.0	2026-08-11	Cierre de ENG-031 (Exámenes y cuestionarios): agregado `Exam` anclado a un curso, lista ordenada de preguntas del banco con puntaje, configuración de duración/intentos/regla de aprobación/barajado/retroalimentación, CQRS completo (create/update/delete/get/list), respuesta de detalle enriquecida con `ref_id`/`type` y API protegida por los permisos `exams.manage`/`exams.view` (IMP-031 en ENG-LOG.md)
+1.12.0	2026-08-12	Cierre de ENG-032 (Intentos de evaluación): agregado `ExamAttempt` con snapshot inmutable, estados y resultado básico, persistencia normalizada, CQRS start/answer/submit/cancel/get/list, API HTTP de intentos y permiso `exam_attempts.view` para lectura ampliada (IMP-032 en ENG-LOG.md)
+1.13.0	2026-08-12	Cierre de ENG-033 (Motor de calificación): `ExamAttemptGrader`, `GradingPolicy`, `GradingResult`, breakdown por pregunta y competencia, partial credit/penalizaciones por tipo, persistencia JSON del grading y exposición controlada en submit/show (IMP-033 en ENG-LOG.md)
+1.14.0	2026-08-13	ENG-034 pasa a En validación: metadata teórica en preguntas/exámenes, validación de banco oficial y categoría, grading derivado del examen, recomendaciones de estudio, endpoints `theory-exams`/`theory-attempts` e historial teórico; validación técnica focalizada completa en verde, pendiente consolidación de commits (IMP-034 en ENG-LOG.md)
+1.15.0	2026-08-16	Cierre de ENG-036 (Seguimiento de progreso): agregado `EnrollmentProgress` con completitud de lecciones, `EnrollmentProgressCalculator` (porcentaje, tiempo invertido, evaluaciones y última actividad), CQRS completo (`CompleteLessonCommand`/`GetEnrollmentProgressQuery`) y API HTTP protegida por pertenencia o `enrollments.view` (IMP-036 en ENG-LOG.md)

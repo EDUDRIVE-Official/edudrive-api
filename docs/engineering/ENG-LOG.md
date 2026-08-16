@@ -736,6 +736,182 @@ ENG-020
 
 **Estado:** Finalizado.
 
+## 2026-08-12 — IMP-032 (Cierre de ENG-032 — Intentos de evaluación)
+
+### Completado
+
+- **Modelo de Dominio**:
+  - Se incorporó el agregado `ExamAttempt` como snapshot inmutable del `Exam` al iniciar cada intento, con configuración copiada (`title`, `duration_minutes`, `passing_score`, `shuffle_questions`, `feedback_mode`) y lista embebida de `AttemptQuestion`.
+  - El intento maneja estados `in_progress`, `submitted` y `canceled`, respuestas por posición, cálculo básico de `score`, `total_points`, `percentage` y `passed`, prevención de doble envío, cancelación manual y timeout al `submit()` cuando expira `duration_minutes`.
+  - Se añadieron `AttemptQuestion`, `ExamAttemptId`, `AttemptQuestionId`, `ExamAttemptStatus`, la excepción `InvalidExamAttempt`, y soporte `matches()` en respuestas tipadas para selección única, múltiple, verdadero/falso, asociación y ordenamiento.
+- **Persistencia**:
+  - Se creó la migración `2026_08_12_000001_create_academic_exam_attempt_tables` con tablas `academic_exam_attempts` y `academic_exam_attempt_questions`, índice parcial único para evitar dos intentos activos por `(exam_id, user_id)` y borrado en cascada de preguntas del intento.
+  - Se implementaron `ExamAttemptModel`, `ExamAttemptQuestionModel` y `EloquentExamAttemptRepository`, con guardado transaccional (`delete + create` para el snapshot de preguntas) y rehidratación tipada de `correct_response` y `user_response` vía `QuestionResponseFactory`.
+- **Capa de Aplicación**:
+  - Se añadieron los comandos `StartExamAttempt`, `AnswerAttemptQuestion`, `SubmitExamAttempt` y `CancelExamAttempt`, las consultas `GetExamAttempt` y `ListExamAttempts`, y las respuestas `ExamAttemptResponse` / `ExamAttemptListItemResponse`.
+  - Los handlers validan examen inexistente (`EXAM_NOT_FOUND`), límite de intentos (`EXAM_ATTEMPT_LIMIT_REACHED`), intento inexistente o ajeno (`EXAM_ATTEMPT_NOT_FOUND`) y doble envío (`EXAM_ATTEMPT_ALREADY_SUBMITTED`).
+  - `AcademicServiceProvider` registra el repositorio `ExamAttemptRepository` y los 6 mensajes nuevos en `MessageHandlerRegistry`.
+- **Presentación, permisos e integración HTTP**:
+  - Se añadió `Permission::ViewExamAttempts`; `SuperAdmin`, `InstitutionalAdmin` y `Teacher` pueden listar o ver intentos de terceros, mientras que `Student` conserva acceso solo a sus propios intentos.
+  - Se incorporó `ExamAttemptController`, requests `StartExamAttemptRequest` / `AnswerAttemptQuestionRequest` y 6 rutas bajo `auth:sanctum`: `GET /exam-attempts`, `GET /exam-attempts/{attemptId}`, `POST /exam-attempts`, `PUT /exam-attempts/{attemptId}/questions/{position}`, `POST /exam-attempts/{attemptId}/submit` y `POST /exam-attempts/{attemptId}/cancel`.
+  - La respuesta de detalle oculta `is_correct`, `correct_response` y `explanation` cuando el usuario no tiene permiso ampliado y el examen usa `feedback_mode = none`.
+- **Pruebas**:
+  - Dominio/aplicación: `ExamAttemptHandlerTest` cubre inicio, respuestas, envío, ocultamiento para terceros, límite por intento activo y por `max_attempts`.
+  - Persistencia: `EloquentExamAttemptRepositoryTest` valida ida y vuelta del agregado, conteo de completados, intento activo, filtrado y cascada.
+  - Integración del contenedor: `AcademicServiceProviderExamAttemptTest` verifica el bind de `ExamAttemptRepository` y el registro de los handlers/queries.
+  - Feature HTTP: `ExamAttemptTest` cubre start, answer, submit, rechazo de examen inexistente, acceso de terceros, feedback oculto, listado con permiso y autenticación requerida.
+
+### Validaciones
+
+- Pint ✅ (`php vendor/bin/pint`) — 529 archivos revisados; corrigió estilo en `ExamAttemptController` y `ExamAttemptHandlerTest`, y luego se revalidó la suite focalizada.
+- PHPStan nivel 8 ✅ (`php vendor/bin/phpstan analyse --no-progress --memory-limit=1G modules/Academic/Presentation`) — sin errores tras explicitar el usuario autenticado no nulo en `ExamAttemptController`.
+- Suites focalizadas ✅
+  - `modules/Authorization/Tests/Unit/Domain/Services/RolePermissionsTest.php` → 14 pruebas / 56 aserciones.
+  - `modules/Academic/Tests/Unit/Application/ExamAttemptHandlerTest.php` → 10 pruebas / 19 aserciones.
+  - `modules/Academic/Tests/Integration/EloquentExamAttemptRepositoryTest.php` → 4 pruebas / 15 aserciones.
+  - `modules/Academic/Tests/Feature/ExamAttemptTest.php` → 9 pruebas / 43 aserciones.
+  - Revalidación posterior a Pint: `ExamAttemptHandlerTest` + `EloquentExamAttemptRepositoryTest` + `ExamAttemptTest` → PASS.
+- `php artisan route:list --path=academic/exam-attempts` ✅ (6 rutas registradas en `api/v1/academic/exam-attempts`).
+- `php artisan migrate --force` + `migrate:status` ✅ (migración `2026_08_12_000001_create_academic_exam_attempt_tables` en estado `Ran`, batch 10).
+- `php artisan test` (suite raíz) ✅ — 10 pruebas / 28 aserciones; la cobertura específica de ENG-032 se validó adicionalmente en las suites focalizadas anteriores.
+
+**Estado:** Finalizado.
+
+## 2026-08-12 — IMP-033 (Cierre de ENG-033 — Motor de calificación)
+
+### Completado
+
+- **Modelo de Dominio**:
+  - Se introdujeron los objetos de grading `AttemptQuestionGrade`, `CompetencyGrade`, `GradingPolicy` y `GradingResult`, con invariantes explícitas para score, total de puntos, porcentaje y coherencia entre breakdowns y totales agregados.
+  - Se implementó `ExamAttemptGrader` como servicio de dominio puro, capaz de calcular `score`, `total_points`, `percentage`, `passed`, breakdown por pregunta y breakdown por competencia a partir del snapshot del intento.
+  - El grading quedó soportado por tipo de respuesta: `single_choice` y `true_false` siguen todo-o-nada; `multi_select`, `matching` y `ordering` admiten partial credit cuando la política lo permite; las penalizaciones quedan limitadas para no generar score negativo.
+  - El snapshot `AttemptQuestion` se enriqueció con `competency_id`, permitiendo calificar el intento completo sin depender del banco vivo como fuente primaria de grading.
+- **Persistencia**:
+  - Se añadieron las migraciones `2026_08_12_000002_add_grading_breakdown_to_academic_exam_attempts` y `2026_08_12_000003_add_competency_id_to_academic_exam_attempt_questions`.
+  - `academic_exam_attempts` ahora persiste `grading_breakdown` y `competency_results` como JSON materializado del resultado final.
+  - `EloquentExamAttemptRepository` serializa y rehidrata `AttemptQuestionGrade` / `CompetencyGrade`, mantiene compatibilidad legacy cuando los JSON vienen `NULL`, y conserva un fallback seguro por lote para `competency_id` en snapshots históricos.
+- **Capa de Aplicación**:
+  - `SubmitExamAttemptHandler` ya no depende del cálculo inline básico; ahora construye `GradingPolicy`, invoca `ExamAttemptGrader` y aplica el `GradingResult` al agregado `ExamAttempt`.
+  - El agregado `ExamAttempt` pasó a materializar `questionBreakdown()` y `competencyBreakdown()` al enviar el intento, preservando la cancelación por timeout como decisión semántica previa al grading.
+  - La integración respeta que `is_correct` sigue significando corrección exacta, mientras el score parcial proviene del grader; esto evita confundir “recibió puntos” con “respuesta exacta”.
+- **Presentación, permisos e integración HTTP**:
+  - `ExamAttemptResponse` expone `grading_breakdown` y `competency_results` sin abrir endpoints nuevos.
+  - `submit` devuelve grading detallado solo cuando el intento queda `submitted`; si termina `canceled` por timeout, no expone feedback ni breakdowns.
+  - `show` expone grading y feedback ampliado solo cuando el intento está `submitted` y además pasa las reglas de visibilidad existentes (`feedback_mode` y/o permiso de lectura ampliada). Se documentó y blindó por pruebas la asimetría intencional entre `submit` y `show`.
+- **Pruebas**:
+  - Unidad de dominio: `ExamAttemptGraderTest` cubre todo-o-nada, partial credit por tipo, penalizaciones, deduplicación defensiva y clamp a `0`.
+  - Dominio/agregado: `ExamAttemptTest` cubre aplicación de `GradingResult`, timeout, estados y score final.
+  - Aplicación: `ExamAttemptHandlerTest` cubre integración del grader en submit, conservación de breakdowns y el path de timeout sin invocar grading.
+  - Persistencia: `EloquentExamAttemptRepositoryTest` valida roundtrip del grading JSON, fallback legacy de `competency_id` y rehidratación segura del agregado.
+  - Feature HTTP: `ExamAttemptTest` cubre grading en `submit`, ocultamiento en `show`, timeout, permisos y la asimetría `submit`/`show`.
+
+### Validaciones
+
+- Pint ✅ (`php vendor/bin/pint modules/Academic modules/Authorization`) — corrigió 7 archivos; luego se revalidó la suite focalizada completa.
+- PHPStan nivel 8 ✅ (`php vendor/bin/phpstan analyse --no-progress --memory-limit=1G modules/Academic modules/Authorization`) — sin errores tras ajustar tipado de `ExamAttemptResponse`, `GradingResult` y el repositorio Eloquent de intentos.
+- Suites focalizadas ENG-033 ✅ — `53 passed (284 assertions)`:
+  - `modules/Academic/Tests/Unit/Domain/Services/ExamAttemptGraderTest.php`
+  - `modules/Academic/Tests/Unit/Domain/Aggregates/ExamAttemptTest.php`
+  - `modules/Academic/Tests/Unit/Application/ExamAttemptHandlerTest.php`
+  - `modules/Academic/Tests/Integration/EloquentExamAttemptRepositoryTest.php`
+  - `modules/Academic/Tests/Feature/ExamAttemptTest.php`
+- `php artisan migrate --force` ✅ — sin migraciones pendientes tras aplicar las migraciones de ENG-033.
+- `php artisan route:list --path=academic/exam-attempts` ✅ — 6 rutas registradas y funcionales.
+- `php artisan test` (suite raíz) ✅ — 10 pruebas / 28 aserciones; la cobertura específica de ENG-033 se validó adicionalmente en las suites focalizadas anteriores.
+
+**Estado:** Finalizado.
+
+## 2026-08-13 — IMP-034 (Implementación de ENG-034 — Examen teórico de conducción)
+
+### Completado
+
+- **Especialización sobre Academic, sin módulo paralelo**:
+  - `ENG-034` se implementó reutilizando `Question`, `Exam`, `ExamAttempt` y `ExamAttemptGrader`, sin crear agregados nuevos para intentos o calificación.
+  - Se mantuvo la arquitectura CQRS y la integración mediante `CommandBus` / `QueryBus` / `MessageHandlerRegistry`.
+- **Banco teórico oficial**:
+  - `Question` ahora soporta `source_kind`, `source_reference` y `license_categories`, con persistencia Eloquent, respuesta HTTP y validación de requests.
+  - Las preguntas oficiales del banco teórico se filtran por categoría de licencia autorizada.
+- **Examen teórico**:
+  - `Exam` ahora soporta `kind`, `license_category`, `allow_partial_credit` y `apply_penalties`, con migración, roundtrip Eloquent, CQRS y exposición HTTP.
+  - Los exámenes `theory` exigen `license_category`, mientras que los `standard` conservan el comportamiento previo.
+- **Reglas de negocio teóricas**:
+  - `CreateExamHandler` y `UpdateExamHandler` rechazan exámenes `theory` que incluyan preguntas `custom` o preguntas oficiales sin la categoría requerida.
+  - Se añadió el error público `INVALID_THEORY_EXAM` (422) para estos rechazos.
+- **Calificación por configuración del examen**:
+  - `SubmitExamAttemptHandler` ya no construye una `GradingPolicy` fija para todos los casos.
+  - Los exámenes `standard` conservan la política previa (`allowPartialCredit = true`, `applyPenalties = true`).
+  - Los exámenes `theory` derivan la política desde `allow_partial_credit` y `apply_penalties` del examen asociado.
+- **Recomendaciones de estudio**:
+  - Se incorporaron `StudyRecommendationResponse` y `TheoryStudyRecommendationService`.
+  - `ExamAttemptResponse` ahora puede exponer `study_recommendations` cuando el intento pertenece a un examen `theory`, está `submitted` y dispone de grading materializado.
+  - Las recomendaciones se derivan de `competency_results` y `grading_breakdown`, ordenadas por peor desempeño y con evidencia mínima (`question_ids`).
+- **API especializada**:
+  - Se agregaron queries/handlers/controlador/rutas para:
+    - `GET /api/v1/academic/theory-exams`
+    - `GET /api/v1/academic/theory-exams/{examId}`
+    - `POST /api/v1/academic/theory-exams/{examId}/start`
+    - `GET /api/v1/academic/theory-attempts`
+  - El inicio de simulación teórica delega al flujo ya existente de `ExamAttempt`, validando previamente que el examen sea `theory`.
+  - El historial teórico filtra solo intentos asociados a exámenes `kind = theory` y soporta filtro por `license_category`; los usuarios con permiso ampliado pueden consultar terceros.
+
+### Validaciones
+
+- Pint ✅ (`php vendor/bin/pint modules/Academic modules/Authorization`) — 408 archivos revisados; 13 ajustes de estilo aplicados y revalidados después.
+- PHPStan nivel 8 ✅ (`php vendor/bin/phpstan analyse --no-progress --memory-limit=1G modules/Academic modules/Authorization`) — sin errores tras ajustar tipado de `Question`, `QuestionResponse` y `StartTheoryExamSimulationRequest`.
+- Suite focalizada ENG-034 ✅ — `129 passed (533 assertions)`:
+  - `modules/Academic/Tests/Feature/QuestionTest.php`
+  - `modules/Academic/Tests/Feature/ExamTest.php`
+  - `modules/Academic/Tests/Feature/ExamAttemptTest.php`
+  - `modules/Academic/Tests/Feature/TheoryExamTest.php`
+  - `modules/Academic/Tests/Unit/Domain/Aggregates/QuestionTest.php`
+  - `modules/Academic/Tests/Unit/Domain/Aggregates/ExamTest.php`
+  - `modules/Academic/Tests/Unit/Application/ExamHandlerTest.php`
+  - `modules/Academic/Tests/Unit/Application/ExamAttemptHandlerTest.php`
+  - `modules/Academic/Tests/Unit/Application/ListTheoryExamAttemptsHandlerTest.php`
+  - `modules/Academic/Tests/Integration/EloquentQuestionRepositoryTest.php`
+  - `modules/Academic/Tests/Integration/EloquentExamRepositoryTest.php`
+  - `modules/Academic/Tests/Integration/AcademicServiceProviderTheoryExamTest.php`
+
+### Estado
+
+- Implementado y verificado técnicamente en el árbol local.
+- Pendiente de consolidación en commits coherentes junto al resto del trabajo local no versionado de `ENG-032` y `ENG-033`.
+
+## 2026-08-16 — IMP-036 (Cierre de ENG-036 — Seguimiento de progreso)
+
+### Completado
+
+- **Modelo de dominio**:
+  - Se agregó la entidad `LessonCompletion` (lección, fecha de completitud, tiempo invertido opcional, con validación de tiempo no negativo vía `InvalidLessonCompletion`).
+  - Se agregó el agregado `EnrollmentProgress`, 1:1 con `Enrollment`, con `completeLesson()` idempotente (upsert por lección, sin duplicados) y accesores derivados (`completedLessonIds`, `totalTimeSpentMinutes`, `lastCompletedAt`).
+  - Se agregó el servicio de dominio `CourseLessonCatalog`, que enumera los ids de lección de todas las unidades de un curso reutilizando `UnitContentRepository`, sin nuevos métodos de repositorio.
+- **Persistencia**:
+  - Se creó la migración `2026_08_15_000001_create_academic_enrollment_lesson_completions_table` con la tabla `academic_enrollment_lesson_completions` (una fila por lección completada, única por `enrollment_id`+`lesson_id`, FK en cascada a `academic_enrollments` y a `academic_lessons`).
+  - Se implementaron `EnrollmentLessonCompletionModel` y `EloquentEnrollmentProgressRepository`, con `save()` como upsert masivo (`Model::upsert`) en vez de un loop por fila, evitando N+1 queries.
+- **Capa de aplicación**:
+  - Se añadió `EnrollmentProgressCalculator`, que combina `EnrollmentProgress` con el total de lecciones del curso (`CourseLessonCatalog`) y los intentos de examen enviados para ese curso (cruce `Exam`/`ExamAttempt` por `courseId`, sin N+1) para calcular porcentaje de avance, tiempo invertido, evaluaciones realizadas y última actividad.
+  - Se añadieron `CompleteLessonCommand`/`CompleteLessonHandler` (valida enrollment propio y activo, lección perteneciente al curso, registra la completitud) y `GetEnrollmentProgressQuery`/`GetEnrollmentProgressHandler` (autorización por pertenencia o por el permiso ya existente `enrollments.view`).
+  - `AcademicServiceProvider` registra el repositorio `EnrollmentProgressRepository` y los 2 mensajes nuevos en `MessageHandlerRegistry`.
+- **Presentación e integración HTTP**:
+  - Se agregó `EnrollmentProgressController` con 2 rutas bajo `auth:sanctum`: `POST /enrollments/{enrollmentId}/lessons/{lessonId}/complete` y `GET /enrollments/{enrollmentId}/progress`, sin middleware de permiso adicional (la autorización por pertenencia vive en los handlers, igual que `ExamAttemptController`).
+  - No se agregó ningún permiso nuevo: se reutiliza `Permission::ViewEnrollments` para que terceros con acceso ampliado consulten el progreso de otro usuario.
+  - Errores públicos: `ENROLLMENT_NOT_FOUND` (404, reutilizado), `INVALID_ENROLLMENT` (422, reutilizado) y `LESSON_NOT_FOUND` (404, nuevo).
+- **Pruebas**:
+  - Dominio: `LessonCompletionTest`, `EnrollmentProgressTest` (incluye guarda contra duplicados en `restore()` y prueba de máximo cronológico en `lastCompletedAt()`), `CourseLessonCatalogTest` (incluye traversal multi-módulo).
+  - Persistencia: `EloquentEnrollmentProgressRepositoryTest` (roundtrip, upsert sin duplicar, progreso vacío, cascada al borrar el enrollment) y `AcademicServiceProviderEnrollmentProgressTest` (binding del repositorio y registro CQRS).
+  - Aplicación: `EnrollmentProgressCalculatorTest`, `CompleteLessonHandlerTest`, `GetEnrollmentProgressHandlerTest`.
+  - Feature HTTP: `EnrollmentProgressTest` (10 casos: autenticación, completar lección propia/ajena/inexistente/con enrollment inactivo, validación de `time_spent_minutes`, consulta de progreso propio/ajeno con y sin `enrollments.view`, enrollment inexistente).
+
+### Validaciones
+
+- Suite focalizada ENG-036 ✅ — `42 passed (81 assertions)` en los 9 archivos de test de dominio/persistencia/aplicación/feature listados arriba.
+- Pint ✅ sobre los archivos de ENG-036 (sin issues; los 4 issues detectados en `pint --test modules/Academic tests/Pest.php` pertenecen a trabajo no relacionado de ENG-034/035 aún sin consolidar).
+- PHPStan nivel 8 ✅ sobre los 17 archivos de código fuente de ENG-036 — sin errores.
+- `php artisan route:list --path=academic/enrollments` ✅ — 10 rutas registradas (8 de ENG-035 + 2 nuevas de progreso).
+- Implementado mediante subagent-driven-development: cada tarea del plan pasó por revisión de conformidad con la especificación y revisión de calidad de código independientes, con correcciones aplicadas donde se detectaron problemas (guarda contra duplicados en `EnrollmentProgress::restore()`, FK de `lesson_id` a `academic_lessons`, upsert masivo en vez de N+1 en `save()` y en `EnrollmentProgressCalculator::evaluationsFor()`).
+
+**Estado:** Finalizado.
+
 ## 2026-07-29 — IMP-021 (Bloque 1)
 
 ### Completado
@@ -1099,4 +1275,3 @@ ENG-020
 - `php artisan migrate --force` + `migrate:status` ✅ (migración `create_academic_exams_tables` en estado `Ran`)
 
 **Estado:** Finalizado.
-
