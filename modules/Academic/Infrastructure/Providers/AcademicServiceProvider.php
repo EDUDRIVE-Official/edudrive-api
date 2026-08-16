@@ -112,6 +112,7 @@ use Modules\Academic\Application\UseCases\UpdateQuestionHandler;
 use Modules\Academic\Domain\Repositories\CompetencyRepository;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\CourseVersionRepository;
+use Modules\Academic\Domain\Repositories\EnrollmentProgressRepository;
 use Modules\Academic\Domain\Repositories\EnrollmentRepository;
 use Modules\Academic\Domain\Repositories\ExamAttemptRepository;
 use Modules\Academic\Domain\Repositories\ExamRepository;
@@ -121,6 +122,7 @@ use Modules\Academic\Domain\Repositories\UnitContentRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCompetencyRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCourseRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentCourseVersionRepository;
+use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentEnrollmentProgressRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentEnrollmentRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentExamAttemptRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentExamRepository;
@@ -151,6 +153,11 @@ final class AcademicServiceProvider extends ServiceProvider
         $this->app->bind(
             EnrollmentRepository::class,
             EloquentEnrollmentRepository::class,
+        );
+
+        $this->app->bind(
+            EnrollmentProgressRepository::class,
+            EloquentEnrollmentProgressRepository::class,
         );
 
         $this->app->bind(
