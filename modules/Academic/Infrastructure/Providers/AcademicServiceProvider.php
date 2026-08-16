@@ -16,6 +16,7 @@ use Modules\Academic\Application\Commands\CancelEnrollmentCommand;
 use Modules\Academic\Application\Commands\CancelExamAttemptCommand;
 use Modules\Academic\Application\Commands\ChangeProgramAudienceCommand;
 use Modules\Academic\Application\Commands\CompleteEnrollmentCommand;
+use Modules\Academic\Application\Commands\CompleteLessonCommand;
 use Modules\Academic\Application\Commands\CreateBulkEnrollmentsCommand;
 use Modules\Academic\Application\Commands\CreateCompetencyCommand;
 use Modules\Academic\Application\Commands\CreateCourseCommand;
@@ -41,6 +42,7 @@ use Modules\Academic\Application\Commands\UpdateExamCommand;
 use Modules\Academic\Application\Commands\UpdateQuestionCommand;
 use Modules\Academic\Application\Queries\GetCourseCurriculumQuery;
 use Modules\Academic\Application\Queries\GetCourseVersionQuery;
+use Modules\Academic\Application\Queries\GetEnrollmentProgressQuery;
 use Modules\Academic\Application\Queries\GetEnrollmentQuery;
 use Modules\Academic\Application\Queries\GetExamAttemptQuery;
 use Modules\Academic\Application\Queries\GetExamQuery;
@@ -68,6 +70,7 @@ use Modules\Academic\Application\UseCases\CancelEnrollmentHandler;
 use Modules\Academic\Application\UseCases\CancelExamAttemptHandler;
 use Modules\Academic\Application\UseCases\ChangeProgramAudienceHandler;
 use Modules\Academic\Application\UseCases\CompleteEnrollmentHandler;
+use Modules\Academic\Application\UseCases\CompleteLessonHandler;
 use Modules\Academic\Application\UseCases\CreateBulkEnrollmentsHandler;
 use Modules\Academic\Application\UseCases\CreateCompetencyHandler;
 use Modules\Academic\Application\UseCases\CreateCourseHandler;
@@ -81,6 +84,7 @@ use Modules\Academic\Application\UseCases\DeleteQuestionHandler;
 use Modules\Academic\Application\UseCases\GetCourseCurriculumHandler;
 use Modules\Academic\Application\UseCases\GetCourseVersionHandler;
 use Modules\Academic\Application\UseCases\GetEnrollmentHandler;
+use Modules\Academic\Application\UseCases\GetEnrollmentProgressHandler;
 use Modules\Academic\Application\UseCases\GetExamAttemptHandler;
 use Modules\Academic\Application\UseCases\GetExamHandler;
 use Modules\Academic\Application\UseCases\GetQuestionHandler;
@@ -244,6 +248,16 @@ final class AcademicServiceProvider extends ServiceProvider
         $registry->register(
             ListEnrollmentsQuery::class,
             ListEnrollmentsHandler::class,
+        );
+
+        $registry->register(
+            CompleteLessonCommand::class,
+            CompleteLessonHandler::class,
+        );
+
+        $registry->register(
+            GetEnrollmentProgressQuery::class,
+            GetEnrollmentProgressHandler::class,
         );
 
         $registry->register(
