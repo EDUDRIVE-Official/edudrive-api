@@ -193,3 +193,44 @@ it('permite consultar el progreso de un enrollment cancelado', function (): void
         ->assertOk()
         ->assertJsonPath('data.enrollment_id', $enrollment->id()->value());
 });
+
+it('consulta el estado de curriculo propio', function (): void {
+    /** @var TestCase $this */
+    $userId = (string) Str::uuid();
+    actingAsUserId($userId);
+    $enrollment = activeEnrollmentForProgressFeature($userId);
+
+    $this->getJson("/api/v1/academic/enrollments/{$enrollment->id()->value()}/curriculum")
+        ->assertOk()
+        ->assertJsonPath('data.enrollment_id', $enrollment->id()->value())
+        ->assertJsonPath('data.modules.0.unlocked', true);
+});
+
+it('rechaza consultar el curriculo ajeno sin permiso ampliado', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::Student);
+    $enrollment = activeEnrollmentForProgressFeature();
+
+    $this->getJson("/api/v1/academic/enrollments/{$enrollment->id()->value()}/curriculum")
+        ->assertNotFound()
+        ->assertJsonPath('code', 'ENROLLMENT_NOT_FOUND');
+});
+
+it('permite consultar el curriculo ajeno con enrollments.view', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::Teacher);
+    $enrollment = activeEnrollmentForProgressFeature();
+
+    $this->getJson("/api/v1/academic/enrollments/{$enrollment->id()->value()}/curriculum")
+        ->assertOk()
+        ->assertJsonPath('data.enrollment_id', $enrollment->id()->value());
+});
+
+it('responde 404 al consultar el curriculo de un enrollment inexistente', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::Teacher);
+
+    $this->getJson('/api/v1/academic/enrollments/'.Str::uuid().'/curriculum')
+        ->assertNotFound()
+        ->assertJsonPath('code', 'ENROLLMENT_NOT_FOUND');
+});
