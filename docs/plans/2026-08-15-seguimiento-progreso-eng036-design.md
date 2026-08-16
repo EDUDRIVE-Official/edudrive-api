@@ -61,7 +61,7 @@ Migración nueva: tabla `academic_enrollment_lesson_completions`.
 
 - `id` (uuid, PK) — fila técnica.
 - `enrollment_id` (uuid, FK a `academic_enrollments`, `cascadeOnDelete`, index).
-- `lesson_id` (uuid, index) — sin FK física, porque `Lesson` vive embebida en `UnitContent`, no en tabla propia (igual que el resto del módulo con IDs de value objects embebidos).
+- `lesson_id` (uuid, index, FK a `academic_lessons` con `cascadeOnDelete`) — nota: este diseño asumía originalmente que `Lesson` vivía embebida en `UnitContent` sin tabla propia; durante la implementación se confirmó que `academic_lessons` **sí** es una tabla real (`LessonModel`), por lo que se agregó la FK física en cascada. Efecto secundario documentado: si un docente elimina una lección del currículo de una unidad (acción ya existente de `courses.manage`), las filas de completitud de esa lección para todos los estudiantes se borran en cascada silenciosamente, perdiendo el historial de avance sin aviso. Se acepta como comportamiento por defecto para este incremento; queda pendiente de decisión de producto si se prefiere soft-delete o bloquear la eliminación de lecciones con completitudes registradas.
 - `completed_at` (timestamp).
 - `time_spent_minutes` (integer, nullable).
 - `timestamps`.
