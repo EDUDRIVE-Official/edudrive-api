@@ -912,6 +912,41 @@ ENG-020
 
 **Estado:** Finalizado.
 
+## 2026-08-16 — IMP-037 (Cierre de ENG-037 — Reglas de avance)
+
+### Completado
+
+- **Modelo de dominio**:
+  - Se agregaron los value objects `UnitUnlockStatus` (unidad, completitud, desbloqueo y sus lecciones), `ModuleUnlockStatus` (módulo, completitud, desbloqueo y sus unidades) y `CurriculumUnlockStatus` (lista de módulos, con `isUnitUnlocked()` y `unitIdForLesson()`).
+  - Se agregó el servicio de dominio `CourseCurriculumUnlockCalculator`, que deriva (sin persistir) el estado de todo el currículo de un curso combinando `Course` (prerrequisitos de módulo/unidad ya existentes) con `EnrollmentProgress` (lecciones completadas, ENG-036), reutilizando `UnitContentRepository` igual que `CourseLessonCatalog`. Reglas: un módulo se desbloquea si todos sus módulos prerrequisito están completos; una unidad se desbloquea si su módulo padre está desbloqueado y todas sus unidades prerrequisito están completas (pueden pertenecer a un módulo anterior); una unidad sin lecciones publicadas cuenta como completada.
+- **Capa de aplicación**:
+  - Se agregó la excepción `UnitLocked` (422, `UNIT_LOCKED`).
+  - Se extendió `CompleteLessonHandler` (ENG-036): tras confirmar que la lección pertenece al curso, calcula el estado de desbloqueo y rechaza completar la lección si su unidad todavía está bloqueada.
+  - Se añadieron `GetEnrollmentCurriculumStatusQuery`/`GetEnrollmentCurriculumStatusHandler` (misma autorización que `GetEnrollmentProgressHandler`: dueño del enrollment o permiso ya existente `enrollments.view`) y `CurriculumUnlockResponse`.
+  - `AcademicServiceProvider` registra el nuevo query/handler en `MessageHandlerRegistry`.
+- **Presentación e integración HTTP**:
+  - Se agregó el método `curriculum` a `EnrollmentProgressController` y la ruta `GET /enrollments/{enrollmentId}/curriculum` bajo `auth:sanctum`, sin middleware de permiso adicional.
+  - No se agregó ningún permiso nuevo: se reutiliza `Permission::ViewEnrollments`.
+  - Errores públicos: `ENROLLMENT_NOT_FOUND` (404, reutilizado), `INVALID_ENROLLMENT` (422, reutilizado), `UNIT_LOCKED` (422, nuevo).
+- **Pruebas**:
+  - Dominio: `CourseCurriculumUnlockCalculatorTest` (4 casos: módulo/unidad sin prerrequisitos, desbloqueo de módulo dependiente de completitud del anterior, resolución de unidad por lección, unidad sin lecciones publicadas cuenta como completada).
+  - Aplicación: extensión de `CompleteLessonHandlerTest` con el caso de unidad bloqueada; nuevo `GetEnrollmentCurriculumStatusHandlerTest` (4 casos: dueño, ajeno sin permiso, ajeno con permiso, enrollment inexistente).
+  - Feature HTTP: extensión de `EnrollmentProgressTest` con 4 casos (consulta propia, ajena sin/con `enrollments.view`, enrollment inexistente).
+
+### Correcciones sobre el plan original
+
+- El plan referenciaba `ContentBlockFactory` en `Modules\Academic\Domain\Entities\ContentBlocks`; la clase real vive en `Modules\Academic\Domain\Services\ContentBlockFactory`. Se corrigió el import en los tests nuevos.
+- El caso de test de `CompleteLessonHandlerTest` para unidad bloqueada, tal como estaba escrito en el plan, no habría reproducido el bloqueo: la unidad 1 no tenía ninguna lección publicada, por lo que se consideraba completada automáticamente (regla de "unidad sin lecciones = completada"), completando el módulo 1 y desbloqueando el módulo 2 sin que el estudiante completara nada. Se agregó una lección real (sin completar) a la unidad 1 para que el prerrequisito de módulo bloquee de verdad.
+
+### Validaciones
+
+- Suite focalizada ENG-037 ✅ — `32 passed (59 assertions)` en los 5 archivos de test de dominio/aplicación/integración/feature listados arriba.
+- Pint ✅ sobre los 17 archivos de ENG-037 (sin issues; los 4 issues detectados en `pint --test modules/Academic` restantes pertenecen a trabajo no relacionado de ENG-034/035 aún sin consolidar).
+- PHPStan nivel 8 ✅ sobre los 11 archivos de código fuente de ENG-037 — sin errores.
+- `php artisan route:list --path=academic/enrollments` ✅ — 11 rutas registradas (10 de ENG-035/036 + 1 nueva de currículo).
+
+**Estado:** Finalizado.
+
 ## 2026-07-29 — IMP-021 (Bloque 1)
 
 ### Completado

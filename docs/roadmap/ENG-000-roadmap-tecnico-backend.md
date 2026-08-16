@@ -660,14 +660,19 @@ Porcentaje de avance.
 Última actividad.
 ENG-037 — Reglas de avance
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-16): se implementó el bloqueo/desbloqueo de módulos y unidades de un curso para un estudiante inscrito, según los prerrequisitos ya modelados en `Course` (`prerequisiteModuleIds`/`prerequisiteUnitIds`). Nuevo servicio de dominio `CourseCurriculumUnlockCalculator` que deriva (sin persistir) el estado completo/desbloqueado de cada módulo y unidad, combinando `Course` con `EnrollmentProgress` (ENG-036). Un módulo se desbloquea cuando todos sus módulos prerrequisito están completos; una unidad se desbloquea cuando su módulo padre está desbloqueado y todas sus unidades prerrequisito están completas (una unidad sin lecciones publicadas cuenta como completada). Se expone en `GET /enrollments/{enrollmentId}/curriculum` (misma autorización que el resto de ENG-036: dueño del enrollment o permiso `enrollments.view`) y se aplica como gate en `CompleteLessonHandler`, que ahora rechaza completar una lección de una unidad todavía bloqueada (`422 UNIT_LOCKED`, nuevo). Fuera de alcance de este incremento: puntaje mínimo de examen (requeriría anclar `Exam` a una unidad/módulo), distinción de actividad obligatoria/opcional, y rutas adaptativas (probablemente solapa con ENG-039). Detalle completo en `docs/plans/2026-08-16-reglas-avance-eng037-design.md`, `docs/plans/2026-08-16-reglas-avance-eng037-implementation.md` y `docs/engineering/ENG-LOG.md` (IMP-037).
 
 Incluye:
 
 Prerrequisitos.
+Bloqueo y desbloqueo.
+
+Diferido:
+
 Puntaje mínimo.
 Actividades obligatorias.
-Bloqueo y desbloqueo.
 Rutas adaptativas.
 ENG-038 — Learning Record Store interno
 
