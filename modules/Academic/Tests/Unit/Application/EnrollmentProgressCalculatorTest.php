@@ -9,6 +9,7 @@ use Modules\Academic\Application\Commands\StartExamAttemptCommand;
 use Modules\Academic\Application\Commands\SubmitExamAttemptCommand;
 use Modules\Academic\Application\Responses\ExamAttemptResponse;
 use Modules\Academic\Application\Services\EnrollmentProgressCalculator;
+use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Aggregates\Enrollment;
 use Modules\Academic\Domain\Aggregates\EnrollmentProgress;
 use Modules\Academic\Domain\Aggregates\Exam;
@@ -27,6 +28,9 @@ use Modules\Academic\Domain\Repositories\QuestionRepository;
 use Modules\Academic\Domain\Repositories\UnitContentRepository;
 use Modules\Academic\Domain\Services\CourseLessonCatalog;
 use Modules\Academic\Domain\ValueObjects\CompetencyId;
+use Modules\Academic\Domain\ValueObjects\CourseCode;
+use Modules\Academic\Domain\ValueObjects\CourseId;
+use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Academic\Domain\ValueObjects\EnrollmentId;
 use Modules\Academic\Domain\ValueObjects\ExamId;
 use Modules\Academic\Domain\ValueObjects\LessonId;
@@ -162,4 +166,49 @@ it('cuenta evaluaciones enviadas del curso y las usa como ultima actividad si so
     $lastActivityAt = new DateTimeImmutable((string) $response->lastActivityAt);
     expect($lastActivityAt->getTimestamp())->toBeGreaterThanOrEqual($before->getTimestamp())
         ->and($lastActivityAt->getTimestamp())->toBeLessThanOrEqual($after->getTimestamp());
+});
+
+it('calcula 0% de progreso para un curso sin lecciones', function (): void {
+    $course = Course::create(
+        id: CourseId::fromString((string) Str::uuid()),
+        code: CourseCode::fromString('PRG-CALC-'.strtoupper((string) Str::random(4))),
+        title: CourseTitle::fromString('Curso sin contenido'),
+    );
+    addMinimalCurriculum($course);
+    app(CourseRepository::class)->save($course);
+
+    $enrollment = Enrollment::create(
+        id: EnrollmentId::fromString((string) Str::uuid()),
+        courseId: $course->id(),
+        userId: persistedCalculatorUserId(),
+        status: EnrollmentStatus::Active,
+        source: EnrollmentSource::Individual,
+    );
+    app(EnrollmentRepository::class)->save($enrollment);
+
+    $response = progressCalculator()->calculate($enrollment, EnrollmentProgress::create($enrollment->id()));
+
+    expect($response->totalLessons)->toBe(0)
+        ->and($response->progressPercentage)->toBe(0);
+});
+
+it('no cuenta evaluaciones enviadas para el examen de otro curso del mismo usuario', function (): void {
+    $enrollmentA = enrollmentForCalculator();
+    $userId = $enrollmentA->userId();
+
+    $courseB = createDraftCourseForPublishing('PRG-CALC-'.strtoupper((string) Str::random(4)));
+    $enrollmentB = Enrollment::create(
+        id: EnrollmentId::fromString((string) Str::uuid()),
+        courseId: $courseB->id(),
+        userId: $userId,
+        status: EnrollmentStatus::Active,
+        source: EnrollmentSource::Individual,
+    );
+    app(EnrollmentRepository::class)->save($enrollmentB);
+
+    submitExamAttemptFor($enrollmentB);
+
+    $response = progressCalculator()->calculate($enrollmentA, EnrollmentProgress::create($enrollmentA->id()));
+
+    expect($response->evaluationsCompleted)->toBe(0);
 });

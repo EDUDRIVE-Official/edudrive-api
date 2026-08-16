@@ -70,6 +70,14 @@ it('requires authentication to complete a lesson', function (): void {
         ->assertUnauthorized();
 });
 
+it('requires authentication to view progress', function (): void {
+    /** @var TestCase $this */
+    $enrollment = activeEnrollmentForProgressFeature();
+
+    $this->getJson("/api/v1/academic/enrollments/{$enrollment->id()->value()}/progress")
+        ->assertUnauthorized();
+});
+
 it('completa una leccion propia', function (): void {
     /** @var TestCase $this */
     $userId = (string) Str::uuid();
@@ -171,4 +179,17 @@ it('responde 404 al consultar el progreso de un enrollment inexistente', functio
     $this->getJson('/api/v1/academic/enrollments/'.Str::uuid().'/progress')
         ->assertNotFound()
         ->assertJsonPath('code', 'ENROLLMENT_NOT_FOUND');
+});
+
+it('permite consultar el progreso de un enrollment cancelado', function (): void {
+    /** @var TestCase $this */
+    $userId = (string) Str::uuid();
+    actingAsUserId($userId);
+    $enrollment = activeEnrollmentForProgressFeature($userId);
+    $enrollment->cancel();
+    app(EnrollmentRepository::class)->save($enrollment);
+
+    $this->getJson("/api/v1/academic/enrollments/{$enrollment->id()->value()}/progress")
+        ->assertOk()
+        ->assertJsonPath('data.enrollment_id', $enrollment->id()->value());
 });
