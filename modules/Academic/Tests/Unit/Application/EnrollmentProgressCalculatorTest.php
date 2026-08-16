@@ -148,13 +148,18 @@ it('calcula 100% al completar la unica leccion del curso', function (): void {
 
 it('cuenta evaluaciones enviadas del curso y las usa como ultima actividad si son mas recientes', function (): void {
     $enrollment = enrollmentForCalculator();
+    $before = new DateTimeImmutable('now');
     submitExamAttemptFor($enrollment);
+    $after = new DateTimeImmutable('now');
 
     $progress = EnrollmentProgress::create($enrollment->id());
     $progress->completeLesson(LessonId::fromString((string) Str::uuid()), new DateTimeImmutable('2020-01-01T00:00:00+00:00'), 1);
 
     $response = progressCalculator()->calculate($enrollment, $progress);
 
-    expect($response->evaluationsCompleted)->toBe(1)
-        ->and($response->lastActivityAt)->not->toBe('2020-01-01T00:00:00+00:00');
+    expect($response->evaluationsCompleted)->toBe(1);
+
+    $lastActivityAt = new DateTimeImmutable((string) $response->lastActivityAt);
+    expect($lastActivityAt->getTimestamp())->toBeGreaterThanOrEqual($before->getTimestamp())
+        ->and($lastActivityAt->getTimestamp())->toBeLessThanOrEqual($after->getTimestamp());
 });

@@ -9,6 +9,7 @@ use Modules\Academic\Application\Responses\EnrollmentProgressResponse;
 use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Aggregates\Enrollment;
 use Modules\Academic\Domain\Aggregates\EnrollmentProgress;
+use Modules\Academic\Domain\Aggregates\Exam;
 use Modules\Academic\Domain\Enums\ExamAttemptStatus;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\ExamAttemptRepository;
@@ -54,12 +55,16 @@ final readonly class EnrollmentProgressCalculator
     /** @return array{0: int, 1: ?DateTimeImmutable} */
     private function evaluationsFor(Enrollment $enrollment): array
     {
+        $examIds = array_map(
+            static fn (Exam $exam): string => $exam->id()->value(),
+            $this->exams->all($enrollment->courseId()),
+        );
+
         $count = 0;
         $lastSubmittedAt = null;
 
         foreach ($this->examAttempts->all(userId: $enrollment->userId(), status: ExamAttemptStatus::Submitted) as $attempt) {
-            $exam = $this->exams->findById($attempt->examId());
-            if ($exam === null || ! $exam->courseId()->equals($enrollment->courseId())) {
+            if (! in_array($attempt->examId()->value(), $examIds, true)) {
                 continue;
             }
 
