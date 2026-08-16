@@ -77,6 +77,7 @@ it('registra y recupera eventos de aprendizaje ordenados del mas reciente al mas
     expect($events)->toHaveCount(2)
         ->and($events[0]->verb())->toBe(LearningVerb::ExamAttemptSubmitted)
         ->and($events[0]->evidence())->toBe(['score' => 8, 'total_points' => 10, 'percentage' => 80, 'passed' => true])
+        ->and($events[0]->occurredAt()->format(DATE_ATOM))->toBe('2026-08-16T10:00:00+00:00')
         ->and($events[1]->verb())->toBe(LearningVerb::LessonCompleted);
 });
 

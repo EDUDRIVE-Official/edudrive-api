@@ -19,13 +19,13 @@ return new class extends Migration
                 ->on('academic_enrollments')
                 ->cascadeOnDelete();
 
-            $table->uuid('user_id');
+            $table->uuid('user_id')->index();
             $table->foreign('user_id')
                 ->references('id')
                 ->on('users')
                 ->cascadeOnDelete();
 
-            $table->uuid('course_id');
+            $table->uuid('course_id')->index();
             $table->foreign('course_id')
                 ->references('id')
                 ->on('academic_courses')

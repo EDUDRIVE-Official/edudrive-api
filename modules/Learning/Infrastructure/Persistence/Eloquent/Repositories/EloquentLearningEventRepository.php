@@ -30,6 +30,7 @@ final class EloquentLearningEventRepository implements LearningEventRepository
     /** @return list<LearningEvent> */
     public function findByEnrollmentId(string $enrollmentId): array
     {
+        // array_values() ensures a list<> return type for PHPStan
         return array_values(
             LearningEventModel::query()
                 ->where('enrollment_id', $enrollmentId)
