@@ -754,7 +754,9 @@ Evidencias externas autorizadas (no existe ningún mecanismo de ingesta externa;
 Cálculo automático de confianza/nivel a partir de la evidencia acumulada (ENG-042).
 ENG-042 — Competency Trust Model
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): servicio de dominio puro `RoadPassportTrustCalculator::calculate(RoadPassport, DateTimeImmutable): int` (sin dependencias de infraestructura, mismo espíritu que `CourseCurriculumUnlockCalculator` en Academic), que calcula un `trust_score` (0-100) global para todo el pasaporte a partir de su evidencia acumulada (ENG-041) — no se persiste, se recalcula al vuelo en cada consulta. Combina: peso fijo por fuente (`exam_passed` = 15, `course_completed` = 10 — un examen aprobado pesa más que un curso completado); decaimiento lineal por recencia (factor 1.0 hasta 90 días, decae a un piso de 0.2 a partir de 365 días — reglas de degradación temporal, la evidencia vieja nunca llega a pesar cero); y un multiplicador de consistencia creciente con la cantidad de evidencia independiente pero acotado (`min(1.0, 0.5 + 0.1 × cantidad)`, tope en 5+ piezas). Expuesto como campo `trust_score` en `RoadPassportResponse` (`GET /road-passport/me` y `/{id}`), sin endpoint ni permiso nuevo. Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-competency-trust-model-eng042-design.md`.
 
 Incluye:
 
@@ -762,8 +764,13 @@ Nivel de confianza.
 Fuente de evidencia.
 Recencia de la evidencia.
 Consistencia.
-Validez.
 Reglas de degradación temporal.
+
+Diferido:
+
+Validez/expiración de evidencia individual (sigue diferida desde ENG-040; toda evidencia es válida indefinidamente en este alcance).
+Desagregación del trust score por competencia individual (la evidencia actual es a nivel de curso/examen, no tiene desglose por competencia todavía — extender `Evidence` con eso sería un incremento propio).
+Persistencia o historial del trust score (se recalcula siempre al vuelo).
 ENG-043 — Credenciales y certificaciones
 
 Estado: Pendiente
@@ -1420,3 +1427,4 @@ Versión	Fecha	Descripción
 1.17.0	2026-08-26	Cierre de ENG-039 (Recomendaciones de aprendizaje): `EnrollmentLearningRecommendationService` (próxima lección, refuerzo de competencias agregado por curso, exámenes para reintentar) y `GET /enrollments/{enrollmentId}/recommendations` protegido por pertenencia o `enrollments.view`; SIMUDRIVE y recomendaciones por pregunta individual diferidas explícitamente
 1.18.0	2026-08-26	Cierre de ENG-040 (Núcleo del Pasaporte Vial): nuevo módulo `Modules\RoadPassport` con el agregado `RoadPassport` (identidad, estado, nivel, historial propio), CQRS completo y API HTTP en `/api/v1/road-passport` protegida por pertenencia o los permisos nuevos `road_passports.manage`/`road_passports.view`; vigencia, agregación de evidencias (ENG-041) y cálculo de confianza (ENG-042) diferidos explícitamente
 1.19.0	2026-08-26	Cierre de ENG-041 (Evidencias del Pasaporte Vial): `RoadPassport::recordEvidence()` idempotente y registro reactivo de evidencia `course_completed`/`exam_passed` desde `Academic` (`CompleteEnrollmentHandler`/`SubmitExamAttemptHandler`), expuesta en `RoadPassportResponse`; prácticas/simulaciones (SIMUDRIVE), certificaciones y cálculo de confianza (ENG-042) diferidos explícitamente
+1.20.0	2026-08-26	Cierre de ENG-042 (Competency Trust Model): `RoadPassportTrustCalculator` calcula un `trust_score` (0-100) global por pasaporte a partir de su evidencia (peso por fuente, decaimiento por recencia con piso mínimo, multiplicador de consistencia acotado), expuesto en `RoadPassportResponse` sin persistirse; desagregación por competencia, validez/expiración de evidencia y persistencia del score diferidos explícitamente

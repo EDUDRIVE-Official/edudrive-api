@@ -1454,3 +1454,27 @@ Solo dos tipos de evidencia con modelo de dominio real hoy: `course_completed` (
 - Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-042 (Cierre de ENG-042 — Competency Trust Model)
+
+### Alcance acordado con el usuario
+
+Un `trust_score` global para todo el pasaporte (no por competencia — la evidencia actual es a nivel de curso/examen, sin desagregación por competencia). Diferido explícitamente: desagregación por competencia individual, validez/expiración de evidencia individual (sigue diferida desde ENG-040) y persistencia/historial del score (se recalcula siempre al vuelo). Detalle en `docs/plans/2026-08-26-competency-trust-model-eng042-design.md`.
+
+### Completado
+
+- **Servicio de dominio puro `RoadPassportTrustCalculator`** (`modules/RoadPassport/Domain/Services`), sin dependencias de infraestructura — mismo espíritu que `CourseCurriculumUnlockCalculator` en Academic. `calculate(RoadPassport $passport, DateTimeImmutable $now): int`:
+  - **Fuente de evidencia**: peso base fijo por `EvidenceType` (`exam_passed` = 15, `course_completed` = 10).
+  - **Recencia / degradación temporal**: factor de decaimiento 1.0 si la antigüedad es ≤ 90 días; decae linealmente hasta un piso de 0.2 a partir de 365 días (nunca llega a cero — evidencia vieja sigue contando algo).
+  - **Consistencia**: multiplicador `min(1.0, 0.5 + 0.1 × cantidad de evidencia)` — una sola pieza da 0.6, cinco o más piezas topan en 1.0 (retornos decrecientes, no suma lineal sin límite).
+  - Resultado: `min(100, round(Σ pesos ponderados × multiplicador))`; sin evidencia, `0`.
+- **Exposición**: `RoadPassportResponse::fromRoadPassport()` recibe un `?DateTimeImmutable $now = null` opcional y calcula `trust_score` internamente instanciando `new RoadPassportTrustCalculator` (puro, sin inyección por contenedor — mismo patrón que `new ExamAttemptGrader`/`new TheoryStudyRecommendationService` como valores por defecto en otros handlers). Campo `trust_score` agregado a la respuesta existente, visible en `GET /road-passport/me` y `/{id}`, sin endpoint ni permiso nuevo.
+- **Pruebas**: `RoadPassportTrustCalculatorTest` (7 casos: cero sin evidencia, fuente exam > curso, sin degradar hasta 90 días, degradación lineal a mitad de camino, piso mínimo a partir de un año, multiplicador de consistencia con retornos decrecientes, tope en 100); extensión de `RoadPassportHandlerTest` (trust_score en 0 al emitir sin evidencia, y mayor que 0 tras registrar evidencia).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `57 passed (135 assertions)`.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=road-passport` ✅ — 8 rutas registradas (sin cambios, no se agregó ningún endpoint nuevo).
+
+**Estado:** Finalizado.
