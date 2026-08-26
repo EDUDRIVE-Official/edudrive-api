@@ -35,4 +35,6 @@ enum Permission: string
     case ManageBadges = 'badges.manage';
     case ViewBadges = 'badges.view';
     case ManageExperience = 'experience.manage';
+    case ManageChallenges = 'challenges.manage';
+    case ViewChallenges = 'challenges.view';
 }

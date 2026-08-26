@@ -50,6 +50,8 @@ final class RolePermissions
                 Permission::ManageBadges,
                 Permission::ViewBadges,
                 Permission::ManageExperience,
+                Permission::ManageChallenges,
+                Permission::ViewChallenges,
             ],
             Role::InstitutionalAdmin => [
                 Permission::ViewOrganizations,
@@ -74,6 +76,8 @@ final class RolePermissions
                 Permission::ManageBadges,
                 Permission::ViewBadges,
                 Permission::ManageExperience,
+                Permission::ManageChallenges,
+                Permission::ViewChallenges,
             ],
             Role::Teacher => [
                 Permission::ViewOrganizations,
@@ -90,6 +94,7 @@ final class RolePermissions
                 Permission::ViewSimulationSessions,
                 Permission::ViewAchievements,
                 Permission::ViewBadges,
+                Permission::ViewChallenges,
             ],
             Role::Student => [
                 Permission::ViewOrganizations,
@@ -100,6 +105,7 @@ final class RolePermissions
                 Permission::ViewExams,
                 Permission::ViewAchievements,
                 Permission::ViewBadges,
+                Permission::ViewChallenges,
             ],
         };
     }
