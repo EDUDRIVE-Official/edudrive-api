@@ -935,7 +935,9 @@ Resolución de conflictos más allá de la ventana temporal (ej. fusionar lectur
 16. Fase 10 — Gamificación
 ENG-051 — Logros
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): primera historia de la Fase 10 (Gamificación) — nuevo módulo `Modules\Gamification` con el agregado `Achievement` (catálogo con código único `AchievementCode` en mayúsculas, regla de obtención en texto libre, ciclo de vida `active`/`retired` sin reversión — sin lista de historial dedicada, a diferencia de `Simulator`/`RoadPassport`/`Certificate`, porque solo existe una transición posible) y la entidad `UserAchievement` (otorgamiento inmutable de solo-append: usuario, evidencia en texto libre, fecha de obtención). Otorgamiento manual vía `achievements.manage` (mismo criterio que `Certificate` en ENG-043) en vez de evaluación automática de reglas; el otorgamiento exige que el logro esté `active` y rechaza duplicados por usuario+logro. CQRS completo y API HTTP en `/api/v1/gamification/achievements`: catálogo (`achievements.view`) y gestión/otorgamiento (`achievements.manage`) igual que módulos previos, pero `achievements.view` se otorgó también a `Student` (a diferencia de `road_passports`/`certifications`/`simulators`) porque el catálogo es de navegación abierta, equivalente a `courses.view`; autoservicio en `GET /achievements/me` sin permiso nuevo. Campo `registeredAt` (no `createdAt`) para evitar colisión con las columnas de auditoría automáticas de Eloquent, mismo criterio que `Simulator::registeredAt()` (ENG-045). Revocación de un logro otorgado, consulta de los logros de otro usuario y evaluación automática de reglas diferidas explícitamente. Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-logros-eng051-design.md`.
 
 Incluye:
 
@@ -944,6 +946,12 @@ Reglas de obtención.
 Evidencias.
 Estado.
 Fecha de obtención.
+
+Diferido:
+
+Revocación de un logro ya otorgado.
+Consulta de los logros obtenidos por otro usuario (solo autoservicio).
+Evaluación automática de reglas de obtención (el otorgamiento es manual, vía `achievements.manage`).
 ENG-052 — Insignias
 
 Estado: Pendiente
@@ -1499,3 +1507,4 @@ Versión	Fecha	Descripción
 1.26.0	2026-08-26	Cierre de ENG-048 (Resultados prácticos): servicio de dominio puro `PracticalResultCalculator` deriva un resultado `passed`/`failed` (puntaje 0-100, penalización por tipo de `TelemetryEvent`) en cada consulta a partir de la telemetría ya persistida de una sesión `Completed`, sin tabla ni migración nueva (mismo espíritu que `RoadPassportTrustCalculator`); competencias demostradas (texto libre) y evidencias asociadas (los propios errores) autocontenidos en `Modules\Simulation`; API HTTP en `GET /api/v1/simulation/sessions/{sessionId}/result` reutilizando `simulation_sessions.view`; registro manual, integración con el Pasaporte Vial y referencias a `Competency` de Academic diferidos explícitamente (IMP-048 en ENG-LOG.md)
 1.27.0	2026-08-26	Cierre de ENG-049 (SIMUDRIVE Decision Engine): entidad `DecisionPoint` (solo-append, reacción del conductor como conjunto cerrado para permitir evaluación determinística) y servicio de dominio puro `DecisionEngineCalculator` que evalúa apropiación por riesgo, genera retroalimentación fija y calcula consistencia agrupando por riesgo dentro de la sesión, sin persistir el resultado (mismo patrón que ENG-048); envío por lotes autenticado con `simulator.auth` (ENG-047), consulta bajo `auth:sanctum` reutilizando `simulation_sessions.view`; consistencia entre sesiones y evaluación delegada a SIMUDRIVE diferidas explícitamente (IMP-049 en ENG-LOG.md)
 1.28.0	2026-08-26	Cierre de ENG-050 (Sincronización offline) — última historia de la Fase 9: `POST /sessions/{id}/telemetry` y `POST /sessions/{id}/decisions` aceptan reenvíos idempotentes (id por ítem generado por el simulador, `insertOrIgnore()` en vez de `insert()`, conteo de filas realmente insertadas en la respuesta) y toleran datos tardíos (`SimulationSession::wasInProgressAt()` compara la marca de tiempo del dato contra `startedAt`/`endedAt` en vez de exigir que la sesión esté `InProgress` en el momento de la petición); la cola local es responsabilidad del simulador, fuera de alcance; modelar la sesión offline como concepto propio y una tabla de llaves de idempotencia por lote diferidos explícitamente (IMP-050 en ENG-LOG.md). Con esto cierra por completo la Fase 9 — Integración con SIMUDRIVE (ENG-045 a ENG-050)
+1.29.0	2026-08-26	Cierre de ENG-051 (Logros), primera historia de la Fase 10 (Gamificación): nuevo módulo `Modules\Gamification` con el agregado `Achievement` (catálogo, código único, ciclo de vida `active`/`retired` sin reversión) y la entidad de solo-append `UserAchievement` (otorgamiento manual con evidencia y fecha); otorgamiento vía `achievements.manage` (mismo criterio que `Certificate`), CQRS completo y API HTTP en `/api/v1/gamification/achievements` con `achievements.view` extendido a `Student` por ser catálogo de navegación abierta (a diferencia de módulos previos); revocación de logros, consulta de logros de otro usuario y evaluación automática de reglas diferidas explícitamente (IMP-051 en ENG-LOG.md)

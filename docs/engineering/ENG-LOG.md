@@ -1663,3 +1663,26 @@ La cola local y el manejo de la desconexión son responsabilidad del simulador (
 - Sin cambios en rutas registradas (20, mismas de ENG-049).
 
 **Estado:** Finalizado. Con esto cierra por completo la **Fase 9 — Integración con SIMUDRIVE** (ENG-045 a ENG-050).
+
+## 2026-08-26 — IMP-051 (Cierre de ENG-051 — Logros)
+
+### Alcance acordado con el usuario
+
+Primera historia de la **Fase 10 — Gamificación**. Otorgamiento manual de logros vía `achievements.manage`, en vez de evaluación automática de reglas — la "regla de obtención" queda como texto libre descriptivo, sin motor de evaluación (mismo criterio que la emisión manual de `Certificate` en ENG-043). Ciclo de vida del catálogo limitado a `active`/`retired` sin reversión, sin lista de historial dedicada (a diferencia de `Simulator`/`RoadPassport`/`Certificate`) porque solo existe una transición posible. `achievements.view` se extiende también a `Student` — desviación deliberada del criterio usado en `road_passports`/`certifications`/`simulators` (donde solo administración e instructor pueden ver), porque el catálogo de logros es de navegación abierta y motivacional, equivalente a `courses.view`, no un registro personal. Diferido explícitamente: revocación de un logro ya otorgado, consulta de los logros obtenidos por otro usuario (solo autoservicio vía `/achievements/me`), evaluación automática de reglas de obtención. Detalle en `docs/plans/2026-08-26-logros-eng051-design.md`.
+
+### Completado
+
+- **Dominio**: nuevo módulo `Modules\Gamification`. `AchievementId` (VO UUID, mismo patrón que `SimulatorId`); `AchievementCode` (VO, mismo patrón que `CourseCode`: máximo 50 caracteres, normalizado a mayúsculas, regex `^[A-Z0-9]+(?:-[A-Z0-9]+)*$`); `AchievementStatus` (enum `Active`/`Retired`). Agregado `Achievement` (constructor privado, `create()`/`restore()`, método `retire(?string $reason, DateTimeImmutable $at)` que lanza `InvalidAchievementTransition` si ya está retirado). Campo `registeredAt` (no `createdAt`) para evitar colisión con las columnas de auditoría automáticas de Eloquent, mismo criterio que `Simulator::registeredAt()` (ENG-045). Entidad `UserAchievement` (otorgamiento inmutable de solo-append, mismo espíritu que `TelemetryEvent`/`DecisionPoint`: `grant()` estático, sin métodos de ciclo de vida).
+- **Persistencia**: tablas `achievements` (código único) y `user_achievements` (FK cascada a `achievements` y a `users`, único por `achievement_id`+`user_id`). `AchievementRepository`/`UserAchievementRepository` con sus implementaciones Eloquent (`updateOrCreate`).
+- **CQRS**: `CreateAchievementCommand`/`RetireAchievementCommand`/`GrantAchievementCommand` y `GetAchievementQuery`/`ListAchievementsQuery`/`GetMyAchievementsQuery`, con sus handlers. `GrantAchievementHandler` exige que el logro esté `active` (`AchievementNotAvailable`, 422) y rechaza un otorgamiento duplicado por usuario+logro (`AchievementAlreadyGranted`, 409). Excepciones uniformes `AchievementNotFound` (404) y `AchievementAlreadyExists` (409, código duplicado).
+- **Autorización**: nuevos permisos `achievements.manage`/`achievements.view` en `Modules\Authorization`. `achievements.manage`: SuperAdmin e InstitutionalAdmin. `achievements.view`: SuperAdmin, InstitutionalAdmin, Teacher y **Student** (primera vez que Student recibe un permiso de una historia de Fase 8/9/10).
+- **API HTTP**: `/api/v1/gamification/achievements` — `POST`/`POST {id}/retire`/`POST {id}/grant` bajo `achievements.manage`; `GET`/`GET {id}` bajo `achievements.view`; `GET /achievements/me` bajo `auth:sanctum` sin permiso adicional (autoservicio).
+- **Pruebas**: 44 tests repartidos en dominio (`Achievement`, `UserAchievement`, `AchievementCode`), persistencia (ambos repositorios Eloquent), aplicación (handlers con repositorios en memoria), proveedor de servicios y feature (API HTTP completa, incluyendo el criterio `achievements.view` extendido a Student y el autoservicio de `/achievements/me`).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `44 passed (96 assertions)`.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos de esta historia.
+- `php artisan route:list --path=gamification` ✅ — 7 rutas registradas.
+
+**Estado:** Finalizado.
