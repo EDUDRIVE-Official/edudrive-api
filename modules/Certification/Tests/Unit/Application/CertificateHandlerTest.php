@@ -46,6 +46,17 @@ final class InMemoryCertificateRepository implements CertificateRepository
         return null;
     }
 
+    public function findByValidationCode(ValidationCode $validationCode): ?Certificate
+    {
+        foreach ($this->items as $certificate) {
+            if ($certificate->validationCode()->equals($validationCode)) {
+                return $certificate;
+            }
+        }
+
+        return null;
+    }
+
     /** @return list<Certificate> */
     public function allForUser(string $userId): array
     {

@@ -78,6 +78,24 @@ it('guarda y recupera la vigencia y el historial', function (): void {
         ->and($found?->history()[0]->reason)->toBe('Motivo');
 });
 
+it('encuentra un certificado por codigo de validacion', function (): void {
+    $course = createDraftCourseForPublishing('CRT-'.strtoupper((string) Str::random(4)));
+    $userId = persistedCertificateUserId();
+    $validationCode = ValidationCode::generate();
+    $certificate = Certificate::create(
+        id: CertificateId::fromString((string) Str::uuid()),
+        userId: $userId,
+        courseId: $course->id()->value(),
+        validationCode: $validationCode,
+    );
+    app(CertificateRepository::class)->save($certificate);
+
+    $found = app(CertificateRepository::class)->findByValidationCode($validationCode);
+
+    expect($found?->id()->equals($certificate->id()))->toBeTrue();
+    expect(app(CertificateRepository::class)->findByValidationCode(ValidationCode::generate()))->toBeNull();
+});
+
 it('encuentra un certificado por usuario y curso', function (): void {
     $course = createDraftCourseForPublishing('CRT-'.strtoupper((string) Str::random(4)));
     $userId = persistedCertificateUserId();

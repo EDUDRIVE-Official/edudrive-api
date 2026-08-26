@@ -65,6 +65,15 @@ final readonly class EloquentCertificateRepository implements CertificateReposit
         return $model === null ? null : $this->toDomain($model);
     }
 
+    public function findByValidationCode(ValidationCode $validationCode): ?Certificate
+    {
+        $model = CertificateModel::query()->with('historyEntries')
+            ->where('validation_code', $validationCode->value())
+            ->first();
+
+        return $model === null ? null : $this->toDomain($model);
+    }
+
     /** @return list<Certificate> */
     public function allForUser(string $userId): array
     {
