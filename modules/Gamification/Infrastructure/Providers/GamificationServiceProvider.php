@@ -19,9 +19,13 @@ use Modules\Gamification\Application\UseCases\GrantAchievementHandler;
 use Modules\Gamification\Application\UseCases\ListAchievementsHandler;
 use Modules\Gamification\Application\UseCases\RetireAchievementHandler;
 use Modules\Gamification\Domain\Repositories\AchievementRepository;
+use Modules\Gamification\Domain\Repositories\BadgeRepository;
 use Modules\Gamification\Domain\Repositories\UserAchievementRepository;
+use Modules\Gamification\Domain\Repositories\UserBadgeRepository;
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentAchievementRepository;
+use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentBadgeRepository;
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentUserAchievementRepository;
+use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentUserBadgeRepository;
 
 final class GamificationServiceProvider extends ServiceProvider
 {
@@ -29,6 +33,8 @@ final class GamificationServiceProvider extends ServiceProvider
     {
         $this->app->bind(AchievementRepository::class, EloquentAchievementRepository::class);
         $this->app->bind(UserAchievementRepository::class, EloquentUserAchievementRepository::class);
+        $this->app->bind(BadgeRepository::class, EloquentBadgeRepository::class);
+        $this->app->bind(UserBadgeRepository::class, EloquentUserBadgeRepository::class);
     }
 
     public function boot(MessageHandlerRegistry $registry): void
