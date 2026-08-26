@@ -1598,3 +1598,24 @@ El simulador mismo reporta la telemetría, autenticado con su llave de integraci
 - `php artisan route:list --path=simulation` ✅ — 17 rutas registradas (las 15 previas + 2 de telemetría).
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-048 (Cierre de ENG-048 — Resultados prácticos)
+
+### Alcance acordado con el usuario
+
+Cálculo automático desde la telemetría (sin intervención humana): un servicio de dominio puro cuenta los `TelemetryEvent` ya registrados de una sesión `Completed` y deriva puntaje y resultado general. Sin persistencia nueva — se recalcula en cada consulta a partir de telemetría inmutable, mismo espíritu que el `trust_score` de ENG-042. "Competencias demostradas" es texto libre derivado del escenario (sin depender de `Competency` de Academic). "Evidencias asociadas" son los propios errores del resultado (referencian el `TelemetryEvent` concreto), sin integración con el Pasaporte Vial. Diferido explícitamente: registro manual por un evaluador humano, integración con `RoadPassport::recordEvidence()`, referencias reales a `Competency` de Academic. Detalle en `docs/plans/2026-08-26-resultados-practicos-eng048-design.md`.
+
+### Completado
+
+- **Dominio**: `PracticalResultOutcome` (enum `Passed`/`Failed`); `PracticalResultError` (VO: `type`, `occurredAt`, `penaltyPoints`, `details` — es la evidencia del error); `PracticalResult` (VO: `sessionId`, `outcome`, `score`, `totalPenaltyPoints`, `errors`, `competenciesDemonstrated`, `recommendations`). `PracticalResultCalculator` (servicio de dominio puro, mismo espíritu que `RoadPassportTrustCalculator`/`ExamAttemptGrader`): penaliza colisión -30, infracción -10, evento crítico -20 (`SignalUsage` no penaliza), puntaje con piso en 0, aprueba con ≥ 70; competencia demostrada solo si `Passed`; una recomendación fija por cada tipo de error presente, sin duplicados (`match` exhaustivo sobre `TelemetryEventType`).
+- **CQRS**: `GetPracticalResultQuery`/`GetPracticalResultHandler`, mismo criterio de propiedad que `GetSimulationSessionHandler`/`GetSessionTelemetryHandler` (dueño o `simulation_sessions.view`, sin permiso nuevo). Exige `status = Completed` (`PracticalResultNotAvailable`, 422, nueva excepción, si se consulta antes); carga la sesión y su telemetría, invoca el calculador y devuelve `PracticalResultResponse`.
+- **API HTTP**: `GET /api/v1/simulation/sessions/{sessionId}/result` bajo `auth:sanctum`, agregado como método `result()` en el `SimulationSessionController` existente (no se creó un controlador nuevo, dado que es una sola consulta de solo lectura).
+- **Pruebas**: 16 tests nuevos repartidos en dominio (`PracticalResultCalculator`, 6 casos incluyendo piso en 0 y deduplicación de recomendaciones), aplicación (handler con repositorios en memoria) y feature (API HTTP completa, incluyendo el error 422 de sesión no finalizada).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `141 passed (345 assertions)`.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=simulation` ✅ — 18 rutas registradas (las 17 previas + `result`).
+
+**Estado:** Finalizado.

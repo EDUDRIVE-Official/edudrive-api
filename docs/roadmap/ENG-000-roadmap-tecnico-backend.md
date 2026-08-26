@@ -875,7 +875,9 @@ Límites de tamaño de lote o límite de tasa del endpoint (preocupación de inf
 Reintentos/idempotencia ante envíos duplicados del mismo lote.
 ENG-048 — Resultados prácticos
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): sin persistencia nueva — un servicio de dominio puro `PracticalResultCalculator` (mismo espíritu que `RoadPassportTrustCalculator`/`ExamAttemptGrader`) cuenta los `TelemetryEvent` (ENG-047) de una sesión `Completed` y deriva, en cada consulta, un puntaje (100 menos penalización por evento: colisión -30, infracción -10, evento crítico -20, `SignalUsage` no penaliza; piso en 0) y un resultado general `passed`/`failed` (umbral 70). "Competencias demostradas" es una lista de texto libre derivada del escenario, solo si `passed` (sin depender de `Competency` de Academic). "Evidencias asociadas" son los propios `errors` del resultado (tipo + marca de tiempo + detalle del `TelemetryEvent` que los originó), autocontenido dentro de `Modules\Simulation`. "Recomendaciones" son mensajes fijos, uno por cada tipo de error presente, sin duplicados. Solo disponible cuando la sesión está `Completed` (`PRACTICAL_RESULT_NOT_AVAILABLE`, 422, si se consulta antes). API HTTP en `GET /api/v1/simulation/sessions/{sessionId}/result`, dueño de la sesión o `simulation_sessions.view` (sin permiso nuevo). Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-resultados-practicos-eng048-design.md`.
 
 Incluye:
 
@@ -885,6 +887,12 @@ Penalizaciones.
 Competencias demostradas.
 Recomendaciones.
 Evidencias asociadas.
+
+Diferido:
+
+Registro manual de resultados por un evaluador humano.
+Integración con el Pasaporte Vial (`RoadPassport::recordEvidence()`) a partir de un resultado práctico aprobado.
+Referencias reales a `Competency` de Academic.
 ENG-049 — SIMUDRIVE Decision Engine
 
 Estado: Pendiente
@@ -1472,3 +1480,4 @@ Versión	Fecha	Descripción
 1.23.0	2026-08-26	Cierre de ENG-045 (Registro de simuladores), primera historia de la Fase 9 (Integración con SIMUDRIVE): nuevo módulo `Modules\Simulation` con el agregado `Simulator` (identificador de dispositivo único, versión de software, ubicación opcional, estado `active`/`suspended`/`retired`, historial), llave de integración generada al registrar/rotar y devuelta una única vez (solo se persiste su hash SHA-256), CQRS completo y API HTTP en `/api/v1/simulation/simulators` protegida por `simulators.manage`/`simulators.view`; validación de sesiones/telemetría contra el simulador (ENG-046/047) diferida explícitamente (IMP-045 en ENG-LOG.md)
 1.24.0	2026-08-26	Cierre de ENG-046 (Sesiones de simulación): nuevo agregado `SimulationSession` en `Modules\Simulation` (usuario, simulador, vehículo y escenario en texto libre, ciclo de vida `scheduled`/`in_progress`/`completed`/`cancelled`, duración planeada y efectiva), programación en autoservicio validando que el simulador esté `active`, criterio de propiedad extendido por primera vez a mutaciones (no solo consultas), CQRS completo y API HTTP en `/api/v1/simulation/sessions` protegida por pertenencia o `simulation_sessions.manage`/`simulation_sessions.view`; detección de conflictos de horario e integración con telemetría (ENG-047) diferidas explícitamente (IMP-046 en ENG-LOG.md)
 1.25.0	2026-08-26	Cierre de ENG-047 (Telemetría): entidades `TelemetrySample`/`TelemetryEvent` (solo-append, sin invariantes de agregado) en `Modules\Simulation`; primer mecanismo de autenticación máquina-a-máquina del backend (`AuthenticateSimulator`, alias `simulator.auth`, llave de integración por *bearer token* contra el hash SHA-256 almacenado); envío por lotes validado contra sesión↔simulador y estado `InProgress`; consulta para humanos bajo `auth:sanctum` reutilizando `simulation_sessions.view` sin permiso nuevo; procesamiento/agregación (ENG-048) diferido explícitamente (IMP-047 en ENG-LOG.md)
+1.26.0	2026-08-26	Cierre de ENG-048 (Resultados prácticos): servicio de dominio puro `PracticalResultCalculator` deriva un resultado `passed`/`failed` (puntaje 0-100, penalización por tipo de `TelemetryEvent`) en cada consulta a partir de la telemetría ya persistida de una sesión `Completed`, sin tabla ni migración nueva (mismo espíritu que `RoadPassportTrustCalculator`); competencias demostradas (texto libre) y evidencias asociadas (los propios errores) autocontenidos en `Modules\Simulation`; API HTTP en `GET /api/v1/simulation/sessions/{sessionId}/result` reutilizando `simulation_sessions.view`; registro manual, integración con el Pasaporte Vial y referencias a `Competency` de Academic diferidos explícitamente (IMP-048 en ENG-LOG.md)
