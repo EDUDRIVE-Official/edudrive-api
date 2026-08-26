@@ -14,7 +14,9 @@ use Modules\Certification\Application\Commands\IssueCertificateCommand;
 use Modules\Certification\Application\Commands\RevokeCertificateCommand;
 use Modules\Certification\Application\Queries\GetCertificateQuery;
 use Modules\Certification\Application\Queries\GetMyCertificatesQuery;
+use Modules\Certification\Application\Queries\VerifyCertificateQuery;
 use Modules\Certification\Application\Responses\CertificateResponse;
+use Modules\Certification\Application\Responses\CertificateVerificationResponse;
 use Modules\Certification\Presentation\Http\Requests\IssueCertificateRequest;
 use Modules\Certification\Presentation\Http\Requests\RevokeCertificateRequest;
 use Modules\Foundation\Application\Bus\CommandBus;
@@ -73,6 +75,14 @@ final class CertificateController
             reason: isset($data['reason']) ? (string) $data['reason'] : null,
         ));
         assert($result instanceof CertificateResponse);
+
+        return response()->json(['data' => $result->toArray()]);
+    }
+
+    public function verify(string $validationCode, QueryBus $queryBus): JsonResponse
+    {
+        $result = $queryBus->ask(new VerifyCertificateQuery(validationCode: $validationCode));
+        assert($result instanceof CertificateVerificationResponse);
 
         return response()->json(['data' => $result->toArray()]);
     }
