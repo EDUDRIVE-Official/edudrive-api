@@ -292,7 +292,7 @@ final class EnrollmentProgress
     {
         foreach ($this->lessonCompletions as $index => $completion) {
             if ($completion->lessonId()->equals($lessonId)) {
-                $this->lessonCompletions[$index] = $completion->withCompletedAt($completedAt, $timeSpentMinutes);
+                $this->lessonCompletions[$index] = $completion->withCompletion($completedAt, $timeSpentMinutes);
 
                 return;
             }
