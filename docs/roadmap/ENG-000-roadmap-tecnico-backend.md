@@ -773,7 +773,9 @@ Desagregación del trust score por competencia individual (la evidencia actual e
 Persistencia o historial del trust score (se recalcula siempre al vuelo).
 ENG-043 — Credenciales y certificaciones
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): nuevo módulo `Modules\Certification`, independiente del Pasaporte Vial, con el agregado `Certificate` (`id`, `userId`, `courseId`, `validationCode`, `status` `issued`/`revoked` — terminal, sin reactivación —, `issuedAt`, `expiresAt` opcional, `history`). `ValidationCode` genera un código de 12 caracteres alfanuméricos en mayúsculas agrupados `XXXX-XXXX-XXXX`, excluyendo caracteres ambiguos (`0`, `O`, `1`, `I`). Emisión **manual/administrativa** vía `certifications.manage` (mismo patrón que `RoadPassport` en ENG-040), rechazando un segundo certificado para el mismo usuario+curso (`CertificateAlreadyExists`, 409). CQRS completo (`IssueCertificateCommand`/`RevokeCertificateCommand`/`GetCertificateQuery`/`GetMyCertificatesQuery`) y API HTTP en `/api/v1/certification/certificates` protegida por pertenencia o los permisos nuevos `certifications.manage`/`certifications.view` (`SuperAdmin`+`InstitutionalAdmin`: ambos; `Teacher`: solo view; `Student`: ninguno). Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-credenciales-certificaciones-eng043-design.md`.
 
 Incluye:
 
@@ -783,6 +785,12 @@ Códigos de validación.
 Vigencia.
 Revocación.
 Historial.
+
+Diferido:
+
+Emisión automática disparada por evidencia del Pasaporte Vial (`course_completed`) — se mantienen como conceptos de dominio separados en este incremento.
+Verificación pública por código (bullet propio de ENG-044).
+Reemisión de un certificado revocado (mismo criterio que ENG-040 con el pasaporte).
 ENG-044 — Consulta pública controlada
 
 Estado: Pendiente
@@ -1428,3 +1436,4 @@ Versión	Fecha	Descripción
 1.18.0	2026-08-26	Cierre de ENG-040 (Núcleo del Pasaporte Vial): nuevo módulo `Modules\RoadPassport` con el agregado `RoadPassport` (identidad, estado, nivel, historial propio), CQRS completo y API HTTP en `/api/v1/road-passport` protegida por pertenencia o los permisos nuevos `road_passports.manage`/`road_passports.view`; vigencia, agregación de evidencias (ENG-041) y cálculo de confianza (ENG-042) diferidos explícitamente
 1.19.0	2026-08-26	Cierre de ENG-041 (Evidencias del Pasaporte Vial): `RoadPassport::recordEvidence()` idempotente y registro reactivo de evidencia `course_completed`/`exam_passed` desde `Academic` (`CompleteEnrollmentHandler`/`SubmitExamAttemptHandler`), expuesta en `RoadPassportResponse`; prácticas/simulaciones (SIMUDRIVE), certificaciones y cálculo de confianza (ENG-042) diferidos explícitamente
 1.20.0	2026-08-26	Cierre de ENG-042 (Competency Trust Model): `RoadPassportTrustCalculator` calcula un `trust_score` (0-100) global por pasaporte a partir de su evidencia (peso por fuente, decaimiento por recencia con piso mínimo, multiplicador de consistencia acotado), expuesto en `RoadPassportResponse` sin persistirse; desagregación por competencia, validez/expiración de evidencia y persistencia del score diferidos explícitamente
+1.21.0	2026-08-26	Cierre de ENG-043 (Credenciales y certificaciones): nuevo módulo `Modules\Certification` con el agregado `Certificate` (código de validación `ValidationCode` con formato `XXXX-XXXX-XXXX`, estado `issued`/`revoked` terminal, vigencia opcional, historial), emisión manual vía `certifications.manage`, CQRS completo y API HTTP en `/api/v1/certification/certificates` protegida por pertenencia o `certifications.manage`/`certifications.view`; emisión automática desde evidencia del Pasaporte Vial, verificación pública por código (ENG-044) y reemisión tras revocación diferidos explícitamente (IMP-043 en ENG-LOG.md)

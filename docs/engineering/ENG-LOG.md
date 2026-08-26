@@ -1478,3 +1478,28 @@ Un `trust_score` global para todo el pasaporte (no por competencia — la eviden
 - `php artisan route:list --path=road-passport` ✅ — 8 rutas registradas (sin cambios, no se agregó ningún endpoint nuevo).
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-043 (Cierre de ENG-043 — Credenciales y certificaciones)
+
+### Alcance acordado con el usuario
+
+Emisión **administrativa/manual** de certificados (permiso `certifications.manage`, mismo patrón que la emisión de `RoadPassport` en ENG-040) para un usuario+curso, con código de validación generado al emitir, vigencia opcional (`expiresAt`), revocación terminal e historial de cambios de estado — como credencial independiente, no como parte del Pasaporte Vial. Diferido explícitamente: emisión automática disparada por evidencia del Pasaporte Vial (`course_completed`), verificación pública por código (bullet propio de ENG-044) y reemisión de un certificado revocado (mismo criterio que ENG-040 con el pasaporte). Detalle en `docs/plans/2026-08-26-credenciales-certificaciones-eng043-design.md`.
+
+### Completado
+
+- **Módulo nuevo `Modules\Certification`** (`modules/Certification`), siguiendo ENG-003 al pie de la letra: capas Domain/Application/Infrastructure/Presentation, `CertificationServiceProvider` registrado en `bootstrap/providers.php`, endpoint de estado público `GET /api/v1/certification/status`.
+- **Dominio**: `CertificateId` (VO UUID, mismo patrón que `RoadPassportId`); `ValidationCode` (VO) — código aleatorio de 12 caracteres alfanuméricos en mayúsculas agrupado `XXXX-XXXX-XXXX`, excluyendo caracteres ambiguos (`0`, `O`, `1`, `I`) para legibilidad humana, con `generate()` y `fromString()` (valida formato al reconstruir); `CertificateStatus` (enum `Issued`/`Revoked` — terminal, sin `Suspended` a diferencia de `RoadPassport`: un certificado revocado no se reactiva); `CertificateHistoryEntry` (VO de cambios de estado); agregado `Certificate` (`create()`, `restore()`, `revoke()` — rechaza si ya está `Revoked` vía `InvalidCertificateTransition`, 422).
+- **Persistencia**: tablas `certificates` (PK UUID, `user_id`→`users`, `course_id`→`academic_courses`, `validation_code` único, `unique(user_id, course_id)`) y `certificate_history_entries` (FK cascada); `EloquentCertificateRepository` transaccional, borra y reinserta el historial completo en cada `save()` (mismo patrón que `EloquentRoadPassportRepository`).
+- **CQRS**: `IssueCertificateCommand`/`RevokeCertificateCommand`/`GetCertificateQuery`/`GetMyCertificatesQuery` con sus handlers. `IssueCertificateHandler` rechaza un segundo certificado (emitido o revocado) para el mismo usuario+curso (`CertificateAlreadyExists`, 409). `GetCertificateHandler` con el mismo patrón de autorización que `GetRoadPassportHandler` (dueño o `certifications.view`). `GetMyCertificatesHandler` lista todos los certificados del usuario (a diferencia del pasaporte, un usuario puede tener varios).
+- **Autorización**: permisos nuevos `certifications.manage`/`certifications.view` en `Modules\Authorization\Domain\Enums\Permission`, mismo patrón de concesión que `road_passports.*`: `SuperAdmin` e `InstitutionalAdmin` ambos; `Teacher` solo view; `Student` ninguno (accede a los propios por pertenencia vía `/me`).
+- **API HTTP** bajo `auth:sanctum`, prefijo `api/v1/certification`: `POST /certificates` (`certifications.manage`), `GET /certificates/me`, `GET /certificates/{certificateId}` (dueño o `certifications.view`), `POST /certificates/{certificateId}/revoke` (`certifications.manage`). Errores públicos: `CERTIFICATE_NOT_FOUND` (404), `CERTIFICATE_ALREADY_EXISTS` (409), `INVALID_CERTIFICATE_TRANSITION` (422).
+- **Pruebas**: 42 tests en total repartidos en dominio (agregado, `ValidationCode`), aplicación (handlers con repositorio en memoria), integración (repositorio Eloquent, service provider) y feature (API HTTP completa, incluyendo autorización por rol y transiciones inválidas).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `42 passed (93 assertions)`.
+- Suite de `RolePermissionsTest` (Authorization) ✅ — `20 passed (80 assertions)` tras agregar los permisos nuevos.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=certification` ✅ — 5 rutas registradas (status + 4 de certificados).
+
+**Estado:** Finalizado.
