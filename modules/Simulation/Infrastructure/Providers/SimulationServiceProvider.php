@@ -14,8 +14,10 @@ use Modules\Simulation\Application\Commands\RetireSimulatorCommand;
 use Modules\Simulation\Application\Commands\RotateSimulatorIntegrationKeyCommand;
 use Modules\Simulation\Application\Commands\ScheduleSimulationSessionCommand;
 use Modules\Simulation\Application\Commands\StartSimulationSessionCommand;
+use Modules\Simulation\Application\Commands\SubmitDecisionPointsCommand;
 use Modules\Simulation\Application\Commands\SubmitTelemetryCommand;
 use Modules\Simulation\Application\Commands\SuspendSimulatorCommand;
+use Modules\Simulation\Application\Queries\GetDecisionEngineResultQuery;
 use Modules\Simulation\Application\Queries\GetMySimulationSessionsQuery;
 use Modules\Simulation\Application\Queries\GetPracticalResultQuery;
 use Modules\Simulation\Application\Queries\GetSessionTelemetryQuery;
@@ -25,6 +27,7 @@ use Modules\Simulation\Application\Queries\ListSimulationSessionsQuery;
 use Modules\Simulation\Application\Queries\ListSimulatorsQuery;
 use Modules\Simulation\Application\UseCases\CancelSimulationSessionHandler;
 use Modules\Simulation\Application\UseCases\CompleteSimulationSessionHandler;
+use Modules\Simulation\Application\UseCases\GetDecisionEngineResultHandler;
 use Modules\Simulation\Application\UseCases\GetMySimulationSessionsHandler;
 use Modules\Simulation\Application\UseCases\GetPracticalResultHandler;
 use Modules\Simulation\Application\UseCases\GetSessionTelemetryHandler;
@@ -38,6 +41,7 @@ use Modules\Simulation\Application\UseCases\RetireSimulatorHandler;
 use Modules\Simulation\Application\UseCases\RotateSimulatorIntegrationKeyHandler;
 use Modules\Simulation\Application\UseCases\ScheduleSimulationSessionHandler;
 use Modules\Simulation\Application\UseCases\StartSimulationSessionHandler;
+use Modules\Simulation\Application\UseCases\SubmitDecisionPointsHandler;
 use Modules\Simulation\Application\UseCases\SubmitTelemetryHandler;
 use Modules\Simulation\Application\UseCases\SuspendSimulatorHandler;
 use Modules\Simulation\Domain\Repositories\DecisionPointRepository;
@@ -83,6 +87,9 @@ final class SimulationServiceProvider extends ServiceProvider
         $registry->register(SubmitTelemetryCommand::class, SubmitTelemetryHandler::class);
         $registry->register(GetSessionTelemetryQuery::class, GetSessionTelemetryHandler::class);
         $registry->register(GetPracticalResultQuery::class, GetPracticalResultHandler::class);
+
+        $registry->register(SubmitDecisionPointsCommand::class, SubmitDecisionPointsHandler::class);
+        $registry->register(GetDecisionEngineResultQuery::class, GetDecisionEngineResultHandler::class);
 
         $this->loadRoutesFrom(
             dirname(__DIR__, 2).'/Presentation/Routes/api.php',

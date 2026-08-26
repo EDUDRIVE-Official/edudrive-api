@@ -11,8 +11,10 @@ use Modules\Simulation\Application\Commands\RetireSimulatorCommand;
 use Modules\Simulation\Application\Commands\RotateSimulatorIntegrationKeyCommand;
 use Modules\Simulation\Application\Commands\ScheduleSimulationSessionCommand;
 use Modules\Simulation\Application\Commands\StartSimulationSessionCommand;
+use Modules\Simulation\Application\Commands\SubmitDecisionPointsCommand;
 use Modules\Simulation\Application\Commands\SubmitTelemetryCommand;
 use Modules\Simulation\Application\Commands\SuspendSimulatorCommand;
+use Modules\Simulation\Application\Queries\GetDecisionEngineResultQuery;
 use Modules\Simulation\Application\Queries\GetMySimulationSessionsQuery;
 use Modules\Simulation\Application\Queries\GetPracticalResultQuery;
 use Modules\Simulation\Application\Queries\GetSessionTelemetryQuery;
@@ -22,6 +24,7 @@ use Modules\Simulation\Application\Queries\ListSimulationSessionsQuery;
 use Modules\Simulation\Application\Queries\ListSimulatorsQuery;
 use Modules\Simulation\Application\UseCases\CancelSimulationSessionHandler;
 use Modules\Simulation\Application\UseCases\CompleteSimulationSessionHandler;
+use Modules\Simulation\Application\UseCases\GetDecisionEngineResultHandler;
 use Modules\Simulation\Application\UseCases\GetMySimulationSessionsHandler;
 use Modules\Simulation\Application\UseCases\GetPracticalResultHandler;
 use Modules\Simulation\Application\UseCases\GetSessionTelemetryHandler;
@@ -35,6 +38,7 @@ use Modules\Simulation\Application\UseCases\RetireSimulatorHandler;
 use Modules\Simulation\Application\UseCases\RotateSimulatorIntegrationKeyHandler;
 use Modules\Simulation\Application\UseCases\ScheduleSimulationSessionHandler;
 use Modules\Simulation\Application\UseCases\StartSimulationSessionHandler;
+use Modules\Simulation\Application\UseCases\SubmitDecisionPointsHandler;
 use Modules\Simulation\Application\UseCases\SubmitTelemetryHandler;
 use Modules\Simulation\Application\UseCases\SuspendSimulatorHandler;
 use Modules\Simulation\Domain\Repositories\SimulationSessionRepository;
@@ -85,4 +89,11 @@ it('registra el handler CQRS de resultados practicos en el registry', function (
     $registry = app(MessageHandlerRegistry::class);
 
     expect($registry->handlerFor(GetPracticalResultQuery::class))->toBe(GetPracticalResultHandler::class);
+});
+
+it('registra los handlers CQRS del motor de decisiones en el registry', function (): void {
+    $registry = app(MessageHandlerRegistry::class);
+
+    expect($registry->handlerFor(SubmitDecisionPointsCommand::class))->toBe(SubmitDecisionPointsHandler::class)
+        ->and($registry->handlerFor(GetDecisionEngineResultQuery::class))->toBe(GetDecisionEngineResultHandler::class);
 });
