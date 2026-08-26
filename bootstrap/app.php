@@ -12,6 +12,7 @@ use Modules\Authorization\Presentation\Http\Middleware\EnsurePermission;
 use Modules\Foundation\Domain\Exceptions\DomainException;
 use Modules\Foundation\Presentation\Http\Middleware\CorrelationId;
 use Modules\Foundation\Presentation\Http\Responses\ApiErrorResponse;
+use Modules\Simulation\Presentation\Http\Middleware\AuthenticateSimulator;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -26,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'permission' => EnsurePermission::class,
+            'simulator.auth' => AuthenticateSimulator::class,
         ]);
 
         $middleware->redirectGuestsTo(
