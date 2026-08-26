@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use Modules\Gamification\Presentation\Http\Controllers\AchievementController;
 use Modules\Gamification\Presentation\Http\Controllers\BadgeController;
+use Modules\Gamification\Presentation\Http\Controllers\ExperienceController;
 use Modules\Gamification\Presentation\Http\Controllers\GamificationStatusController;
 
 Route::prefix('api/v1/gamification')
@@ -66,6 +67,14 @@ Route::prefix('api/v1/gamification')
                 Route::post('/badges/{badgeId}/grant', [BadgeController::class, 'grant'])
                     ->whereUuid('badgeId')
                     ->name('badges.grant');
+            });
+
+            Route::get('/experience/me', [ExperienceController::class, 'me'])
+                ->name('experience.me');
+
+            Route::middleware('permission:experience.manage')->group(function (): void {
+                Route::post('/experience/grant', [ExperienceController::class, 'grant'])
+                    ->name('experience.grant');
             });
         });
     });
