@@ -25,6 +25,12 @@ final class RoadPassportModel extends Model
         return $this->hasMany(RoadPassportHistoryEntryModel::class, 'road_passport_id')->orderBy('occurred_at');
     }
 
+    /** @return HasMany<RoadPassportEvidenceModel, $this> */
+    public function evidenceEntries(): HasMany
+    {
+        return $this->hasMany(RoadPassportEvidenceModel::class, 'road_passport_id')->orderBy('occurred_at');
+    }
+
     protected function casts(): array
     {
         return [

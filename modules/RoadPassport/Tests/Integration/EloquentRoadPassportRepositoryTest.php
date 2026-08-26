@@ -8,9 +8,12 @@ use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Repositories\UserRepository;
 use Modules\Identity\Domain\ValueObjects\Email;
 use Modules\RoadPassport\Domain\Aggregates\RoadPassport;
+use Modules\RoadPassport\Domain\Enums\EvidenceType;
 use Modules\RoadPassport\Domain\Enums\RoadPassportStatus;
 use Modules\RoadPassport\Domain\Repositories\RoadPassportRepository;
+use Modules\RoadPassport\Domain\ValueObjects\Evidence;
 use Modules\RoadPassport\Domain\ValueObjects\RoadPassportId;
+use Modules\RoadPassport\Infrastructure\Persistence\Eloquent\Models\RoadPassportEvidenceModel;
 use Modules\RoadPassport\Infrastructure\Persistence\Eloquent\Models\RoadPassportHistoryEntryModel;
 use Modules\RoadPassport\Infrastructure\Persistence\Eloquent\Models\RoadPassportModel;
 
@@ -114,6 +117,81 @@ it('borra en cascada el historial al eliminar el pasaporte', function (): void {
         ->delete();
 
     expect(RoadPassportHistoryEntryModel::query()
+        ->where('road_passport_id', $passport->id()->value())
+        ->count())->toBe(0);
+});
+
+it('guarda y recupera evidencia con sus detalles', function (): void {
+    $repository = app(RoadPassportRepository::class);
+    $course = createDraftCourseForPublishing('RPP-'.strtoupper((string) Str::random(4)));
+    $passport = RoadPassport::create(
+        id: RoadPassportId::fromString((string) Str::uuid()),
+        userId: persistedRoadPassportUserId(),
+        issuedAt: new DateTimeImmutable('now'),
+    );
+    $passport->recordEvidence(Evidence::create(
+        EvidenceType::ExamPassed,
+        (string) Str::uuid(),
+        $course->id()->value(),
+        new DateTimeImmutable('2026-08-26T12:00:00+00:00'),
+        ['percentage' => 80, 'passed' => true],
+    ));
+    $repository->save($passport);
+
+    $found = $repository->findById($passport->id());
+
+    expect($found?->evidence())->toHaveCount(1);
+    $evidence = $found?->evidence()[0];
+    expect($evidence?->type)->toBe(EvidenceType::ExamPassed)
+        ->and($evidence?->courseId)->toBe($course->id()->value())
+        ->and($evidence?->details)->toBe(['percentage' => 80, 'passed' => true]);
+});
+
+it('reemplaza la evidencia en vez de duplicarla al guardar de nuevo', function (): void {
+    $repository = app(RoadPassportRepository::class);
+    $course = createDraftCourseForPublishing('RPP-'.strtoupper((string) Str::random(4)));
+    $passport = RoadPassport::create(
+        id: RoadPassportId::fromString((string) Str::uuid()),
+        userId: persistedRoadPassportUserId(),
+        issuedAt: new DateTimeImmutable('now'),
+    );
+    $passport->recordEvidence(Evidence::create(
+        EvidenceType::CourseCompleted,
+        (string) Str::uuid(),
+        $course->id()->value(),
+        new DateTimeImmutable('now'),
+        [],
+    ));
+    $repository->save($passport);
+    $repository->save($passport);
+
+    $found = $repository->findById($passport->id());
+
+    expect($found?->evidence())->toHaveCount(1);
+});
+
+it('borra en cascada la evidencia al eliminar el pasaporte', function (): void {
+    $repository = app(RoadPassportRepository::class);
+    $course = createDraftCourseForPublishing('RPP-'.strtoupper((string) Str::random(4)));
+    $passport = RoadPassport::create(
+        id: RoadPassportId::fromString((string) Str::uuid()),
+        userId: persistedRoadPassportUserId(),
+        issuedAt: new DateTimeImmutable('now'),
+    );
+    $passport->recordEvidence(Evidence::create(
+        EvidenceType::CourseCompleted,
+        (string) Str::uuid(),
+        $course->id()->value(),
+        new DateTimeImmutable('now'),
+        [],
+    ));
+    $repository->save($passport);
+
+    RoadPassportModel::query()
+        ->where('id', $passport->id()->value())
+        ->delete();
+
+    expect(RoadPassportEvidenceModel::query()
         ->where('road_passport_id', $passport->id()->value())
         ->count())->toBe(0);
 });
