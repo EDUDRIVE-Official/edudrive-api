@@ -2,9 +2,6 @@
 
 declare(strict_types=1);
 
-namespace Modules\Gamification\Infrastructure\Providers;
-
-use Illuminate\Support\ServiceProvider;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
 use Modules\Gamification\Application\Commands\CreateAchievementCommand;
 use Modules\Gamification\Application\Commands\GrantAchievementCommand;
@@ -23,29 +20,18 @@ use Modules\Gamification\Domain\Repositories\UserAchievementRepository;
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentAchievementRepository;
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentUserAchievementRepository;
 
-final class GamificationServiceProvider extends ServiceProvider
-{
-    public function register(): void
-    {
-        $this->app->bind(AchievementRepository::class, EloquentAchievementRepository::class);
-        $this->app->bind(UserAchievementRepository::class, EloquentUserAchievementRepository::class);
-    }
+it('registra los repositorios de logros en el contenedor', function (): void {
+    expect(app(AchievementRepository::class))->toBeInstanceOf(EloquentAchievementRepository::class)
+        ->and(app(UserAchievementRepository::class))->toBeInstanceOf(EloquentUserAchievementRepository::class);
+});
 
-    public function boot(MessageHandlerRegistry $registry): void
-    {
-        $registry->register(CreateAchievementCommand::class, CreateAchievementHandler::class);
-        $registry->register(RetireAchievementCommand::class, RetireAchievementHandler::class);
-        $registry->register(GrantAchievementCommand::class, GrantAchievementHandler::class);
-        $registry->register(GetAchievementQuery::class, GetAchievementHandler::class);
-        $registry->register(ListAchievementsQuery::class, ListAchievementsHandler::class);
-        $registry->register(GetMyAchievementsQuery::class, GetMyAchievementsHandler::class);
+it('registra los handlers CQRS de logros en el registry', function (): void {
+    $registry = app(MessageHandlerRegistry::class);
 
-        $this->loadRoutesFrom(
-            dirname(__DIR__, 2).'/Presentation/Routes/api.php',
-        );
-
-        $this->loadMigrationsFrom(
-            dirname(__DIR__).'/Persistence/Migrations',
-        );
-    }
-}
+    expect($registry->handlerFor(CreateAchievementCommand::class))->toBe(CreateAchievementHandler::class)
+        ->and($registry->handlerFor(RetireAchievementCommand::class))->toBe(RetireAchievementHandler::class)
+        ->and($registry->handlerFor(GrantAchievementCommand::class))->toBe(GrantAchievementHandler::class)
+        ->and($registry->handlerFor(GetAchievementQuery::class))->toBe(GetAchievementHandler::class)
+        ->and($registry->handlerFor(ListAchievementsQuery::class))->toBe(ListAchievementsHandler::class)
+        ->and($registry->handlerFor(GetMyAchievementsQuery::class))->toBe(GetMyAchievementsHandler::class);
+});
