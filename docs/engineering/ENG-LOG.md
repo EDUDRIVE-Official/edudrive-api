@@ -1429,3 +1429,28 @@ Estado (`active`/`suspended`/`revoked`) y nivel numérico (solo sube mientras es
 - `php artisan route:list --path=road-passport` ✅ — 8 rutas registradas.
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-041 (Cierre de ENG-041 — Evidencias del Pasaporte Vial)
+
+### Alcance acordado con el usuario
+
+Solo dos tipos de evidencia con modelo de dominio real hoy: `course_completed` (`Enrollment` completado) y `exam_passed` (`ExamAttempt` aprobado), registrados de forma reactiva y automática. Diferido explícitamente: prácticas y simulaciones (dependen de SIMUDRIVE, sistema externo), certificaciones (sin concepto de dominio modelado), evidencias externas autorizadas (no existe mecanismo de ingesta externa) y el cálculo automático de confianza/nivel a partir de la evidencia (ENG-042). Detalle en `docs/plans/2026-08-26-evidencias-pasaporte-vial-eng041-design.md`.
+
+### Completado
+
+- **Dominio**: enum `EvidenceType` (`course_completed`, `exam_passed`) y VO `Evidence` (`type`, `subjectId`, `courseId`, `occurredAt`, `details: array`). `RoadPassport` gana `evidence: list<Evidence>` y `recordEvidence(Evidence $evidence): void`, **idempotente** por `type`+`subjectId` (no duplica si ya existe una entrada para el mismo sujeto), sin exigir ningún estado particular del pasaporte (se registra igual si está `suspended`, es un hecho histórico, no una transición). `restore()` gana el parámetro `evidence`.
+- **Persistencia**: tabla nueva `road_passport_evidence` (FK cascada a `road_passports`, `course_id` con FK a `academic_courses` — mismo patrón cross-módulo ya usado por `learning_events.course_id` en ENG-038). `EloquentRoadPassportRepository::save()` extiende su transacción existente: borra y reinserta también las filas de evidencia.
+- **Aplicación — registro reactivo**: `EvidenceEntry` (DTO), contrato `RoadPassportEvidenceRecorder` y `DefaultRoadPassportEvidenceRecorder` (resuelve el pasaporte por `userId`; si el usuario no tiene uno emitido, no falla, simplemente no registra nada).
+  - `CompleteEnrollmentHandler` (Academic) recibe `?RoadPassportEvidenceRecorder $evidenceRecorder = null` y registra `course_completed` tras completar el enrollment.
+  - `SubmitExamAttemptHandler` (Academic) recibe `?RoadPassportEvidenceRecorder $evidenceRecorder = null` como séptimo parámetro opcional (no rompe las llamadas posicionales existentes) y registra `exam_passed` solo cuando `attempt->passed() === true`, resolviendo el curso vía `EnrollmentRepository::findActiveOrPendingFor()` (mismo patrón que el registro de `LearningEvent` ya existente en el mismo handler).
+  - Acoplamiento bidireccional igual de intencional que `Academic`↔`Learning` en ENG-038: `Academic` depende de `RoadPassportEvidenceRecorder` (escritura); `RoadPassport` no depende de `Academic` en absoluto.
+- **Exposición**: `RoadPassportResponse` agrega el campo `evidence`, visible en `GET /road-passport/me` y `/{id}` — sin endpoint ni permiso nuevo.
+- **Pruebas**: extensión de `RoadPassportTest` (dominio, 3 casos nuevos: registro en orden, deduplicación, registro independiente del estado), extensión de `EloquentRoadPassportRepositoryTest` (persistencia, 3 casos: guardado/recuperación con detalles, sustitución en vez de duplicado, cascada), extensión de `RoadPassportServiceProviderTest` (binding del recorder), extensión de `EnrollmentLifecycleHandlerTest` (evidencia al completar matrícula, con spy) y de `ExamAttemptHandlerTest` (evidencia al aprobar un intento con ambas preguntas correctas, y ausencia de evidencia si no aprueba).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `49 passed (124 assertions)`.
+- Regresión ✅ sobre `EnrollmentTest`, `ExamAttemptTest`, `TheoryExamTest` y `EnrollmentProgressTest` (Feature) tras modificar los dos handlers de Academic — `55 passed (218 assertions)`, sin fallos.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+
+**Estado:** Finalizado.

@@ -737,16 +737,21 @@ Cálculo automático de confianza/nivel a partir de evidencia (ENG-042).
 Reemisión de un pasaporte revocado.
 ENG-041 — Evidencias del Pasaporte Vial
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): agregado al núcleo (`RoadPassport::evidence(): list<Evidence>`) dos tipos de evidencia registrados reactivamente, mismo patrón que `LearningEventRecorder` de ENG-038: `course_completed` (al completar un `Enrollment`, desde `CompleteEnrollmentHandler`) y `exam_passed` (al aprobar un `ExamAttempt`, desde `SubmitExamAttemptHandler`, solo cuando `passed() === true`). `RoadPassport::recordEvidence()` es idempotente por `type`+`subjectId` (una entrada por matrícula completada o intento aprobado). `Academic` depende de la abstracción `RoadPassportEvidenceRecorder` (escritura); `RoadPassport` no depende de `Academic` en absoluto — solo recibe datos ya resueltos vía `EvidenceEntry`. Si el usuario no tiene pasaporte emitido, el registro simplemente no ocurre (no falla). Expuesta como parte de `RoadPassportResponse` (`GET /road-passport/me` y `/{id}`), sin endpoint nuevo. Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-evidencias-pasaporte-vial-eng041-design.md`.
 
 Incluye:
 
 Cursos.
 Evaluaciones.
-Prácticas.
-Simulaciones.
-Certificaciones.
-Evidencias externas autorizadas.
+
+Diferido:
+
+Prácticas y simulaciones (dependen de SIMUDRIVE, sistema externo).
+Certificaciones (sin concepto de dominio modelado todavía).
+Evidencias externas autorizadas (no existe ningún mecanismo de ingesta externa; toda la evidencia se origina internamente en `Academic`).
+Cálculo automático de confianza/nivel a partir de la evidencia acumulada (ENG-042).
 ENG-042 — Competency Trust Model
 
 Estado: Pendiente
@@ -1414,3 +1419,4 @@ Versión	Fecha	Descripción
 1.16.0	2026-08-26	Consolidación de deuda de commits: ENG-032/033/034 (intentos de evaluación, motor de calificación, examen teórico) comiteados juntos en `1d6d90b` por compartir los mismos archivos; ENG-034 pasa de "En validación" a **Completado**. ENG-035 (Inscripciones) pasa de "Pendiente" a **Completado**: dominio, aplicación y persistencia de `Enrollment` comiteados en `e3e2186` (la API HTTP ya estaba comiteada desde antes)
 1.17.0	2026-08-26	Cierre de ENG-039 (Recomendaciones de aprendizaje): `EnrollmentLearningRecommendationService` (próxima lección, refuerzo de competencias agregado por curso, exámenes para reintentar) y `GET /enrollments/{enrollmentId}/recommendations` protegido por pertenencia o `enrollments.view`; SIMUDRIVE y recomendaciones por pregunta individual diferidas explícitamente
 1.18.0	2026-08-26	Cierre de ENG-040 (Núcleo del Pasaporte Vial): nuevo módulo `Modules\RoadPassport` con el agregado `RoadPassport` (identidad, estado, nivel, historial propio), CQRS completo y API HTTP en `/api/v1/road-passport` protegida por pertenencia o los permisos nuevos `road_passports.manage`/`road_passports.view`; vigencia, agregación de evidencias (ENG-041) y cálculo de confianza (ENG-042) diferidos explícitamente
+1.19.0	2026-08-26	Cierre de ENG-041 (Evidencias del Pasaporte Vial): `RoadPassport::recordEvidence()` idempotente y registro reactivo de evidencia `course_completed`/`exam_passed` desde `Academic` (`CompleteEnrollmentHandler`/`SubmitExamAttemptHandler`), expuesta en `RoadPassportResponse`; prácticas/simulaciones (SIMUDRIVE), certificaciones y cálculo de confianza (ENG-042) diferidos explícitamente
