@@ -20,7 +20,9 @@ use Modules\Simulation\Application\UseCases\RegisterSimulatorHandler;
 use Modules\Simulation\Application\UseCases\RetireSimulatorHandler;
 use Modules\Simulation\Application\UseCases\RotateSimulatorIntegrationKeyHandler;
 use Modules\Simulation\Application\UseCases\SuspendSimulatorHandler;
+use Modules\Simulation\Domain\Repositories\SimulationSessionRepository;
 use Modules\Simulation\Domain\Repositories\SimulatorRepository;
+use Modules\Simulation\Infrastructure\Persistence\Eloquent\Repositories\EloquentSimulationSessionRepository;
 use Modules\Simulation\Infrastructure\Persistence\Eloquent\Repositories\EloquentSimulatorRepository;
 
 final class SimulationServiceProvider extends ServiceProvider
@@ -28,6 +30,7 @@ final class SimulationServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(SimulatorRepository::class, EloquentSimulatorRepository::class);
+        $this->app->bind(SimulationSessionRepository::class, EloquentSimulationSessionRepository::class);
     }
 
     public function boot(MessageHandlerRegistry $registry): void
