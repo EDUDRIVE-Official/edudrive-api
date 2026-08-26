@@ -6,35 +6,49 @@ namespace Modules\Gamification\Infrastructure\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
+use Modules\Gamification\Application\Commands\CompleteChallengeParticipationCommand;
 use Modules\Gamification\Application\Commands\CreateAchievementCommand;
 use Modules\Gamification\Application\Commands\CreateBadgeCommand;
+use Modules\Gamification\Application\Commands\CreateChallengeCommand;
 use Modules\Gamification\Application\Commands\GrantAchievementCommand;
 use Modules\Gamification\Application\Commands\GrantBadgeCommand;
+use Modules\Gamification\Application\Commands\JoinChallengeCommand;
 use Modules\Gamification\Application\Commands\RecordExperienceCommand;
 use Modules\Gamification\Application\Commands\RetireAchievementCommand;
 use Modules\Gamification\Application\Commands\RetireBadgeCommand;
+use Modules\Gamification\Application\Commands\RetireChallengeCommand;
 use Modules\Gamification\Application\Commands\UpdateBadgeCommand;
 use Modules\Gamification\Application\Queries\GetAchievementQuery;
 use Modules\Gamification\Application\Queries\GetBadgeQuery;
+use Modules\Gamification\Application\Queries\GetChallengeQuery;
 use Modules\Gamification\Application\Queries\GetMyAchievementsQuery;
 use Modules\Gamification\Application\Queries\GetMyBadgesQuery;
+use Modules\Gamification\Application\Queries\GetMyChallengeParticipationsQuery;
 use Modules\Gamification\Application\Queries\GetMyExperienceSummaryQuery;
 use Modules\Gamification\Application\Queries\ListAchievementsQuery;
 use Modules\Gamification\Application\Queries\ListBadgesQuery;
+use Modules\Gamification\Application\Queries\ListChallengesQuery;
+use Modules\Gamification\Application\UseCases\CompleteChallengeParticipationHandler;
 use Modules\Gamification\Application\UseCases\CreateAchievementHandler;
 use Modules\Gamification\Application\UseCases\CreateBadgeHandler;
+use Modules\Gamification\Application\UseCases\CreateChallengeHandler;
 use Modules\Gamification\Application\UseCases\GetAchievementHandler;
 use Modules\Gamification\Application\UseCases\GetBadgeHandler;
+use Modules\Gamification\Application\UseCases\GetChallengeHandler;
 use Modules\Gamification\Application\UseCases\GetMyAchievementsHandler;
 use Modules\Gamification\Application\UseCases\GetMyBadgesHandler;
+use Modules\Gamification\Application\UseCases\GetMyChallengeParticipationsHandler;
 use Modules\Gamification\Application\UseCases\GetMyExperienceSummaryHandler;
 use Modules\Gamification\Application\UseCases\GrantAchievementHandler;
 use Modules\Gamification\Application\UseCases\GrantBadgeHandler;
+use Modules\Gamification\Application\UseCases\JoinChallengeHandler;
 use Modules\Gamification\Application\UseCases\ListAchievementsHandler;
 use Modules\Gamification\Application\UseCases\ListBadgesHandler;
+use Modules\Gamification\Application\UseCases\ListChallengesHandler;
 use Modules\Gamification\Application\UseCases\RecordExperienceHandler;
 use Modules\Gamification\Application\UseCases\RetireAchievementHandler;
 use Modules\Gamification\Application\UseCases\RetireBadgeHandler;
+use Modules\Gamification\Application\UseCases\RetireChallengeHandler;
 use Modules\Gamification\Application\UseCases\UpdateBadgeHandler;
 use Modules\Gamification\Domain\Repositories\AchievementRepository;
 use Modules\Gamification\Domain\Repositories\BadgeRepository;
@@ -83,6 +97,14 @@ final class GamificationServiceProvider extends ServiceProvider
 
         $registry->register(RecordExperienceCommand::class, RecordExperienceHandler::class);
         $registry->register(GetMyExperienceSummaryQuery::class, GetMyExperienceSummaryHandler::class);
+
+        $registry->register(CreateChallengeCommand::class, CreateChallengeHandler::class);
+        $registry->register(RetireChallengeCommand::class, RetireChallengeHandler::class);
+        $registry->register(JoinChallengeCommand::class, JoinChallengeHandler::class);
+        $registry->register(CompleteChallengeParticipationCommand::class, CompleteChallengeParticipationHandler::class);
+        $registry->register(GetChallengeQuery::class, GetChallengeHandler::class);
+        $registry->register(ListChallengesQuery::class, ListChallengesHandler::class);
+        $registry->register(GetMyChallengeParticipationsQuery::class, GetMyChallengeParticipationsHandler::class);
 
         $this->loadRoutesFrom(
             dirname(__DIR__, 2).'/Presentation/Routes/api.php',

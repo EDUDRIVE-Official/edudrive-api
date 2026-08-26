@@ -1,0 +1,15 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Modules\Gamification\Application\Commands;
+
+use Modules\Foundation\Application\Commands\Command;
+
+final readonly class JoinChallengeCommand implements Command
+{
+    public function __construct(
+        public string $challengeId,
+        public string $userId,
+    ) {}
+}

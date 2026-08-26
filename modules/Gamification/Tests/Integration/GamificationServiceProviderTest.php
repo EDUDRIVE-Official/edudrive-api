@@ -3,43 +3,61 @@
 declare(strict_types=1);
 
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
+use Modules\Gamification\Application\Commands\CompleteChallengeParticipationCommand;
 use Modules\Gamification\Application\Commands\CreateAchievementCommand;
 use Modules\Gamification\Application\Commands\CreateBadgeCommand;
+use Modules\Gamification\Application\Commands\CreateChallengeCommand;
 use Modules\Gamification\Application\Commands\GrantAchievementCommand;
 use Modules\Gamification\Application\Commands\GrantBadgeCommand;
+use Modules\Gamification\Application\Commands\JoinChallengeCommand;
 use Modules\Gamification\Application\Commands\RecordExperienceCommand;
 use Modules\Gamification\Application\Commands\RetireAchievementCommand;
 use Modules\Gamification\Application\Commands\RetireBadgeCommand;
+use Modules\Gamification\Application\Commands\RetireChallengeCommand;
 use Modules\Gamification\Application\Commands\UpdateBadgeCommand;
 use Modules\Gamification\Application\Queries\GetAchievementQuery;
 use Modules\Gamification\Application\Queries\GetBadgeQuery;
+use Modules\Gamification\Application\Queries\GetChallengeQuery;
 use Modules\Gamification\Application\Queries\GetMyAchievementsQuery;
 use Modules\Gamification\Application\Queries\GetMyBadgesQuery;
+use Modules\Gamification\Application\Queries\GetMyChallengeParticipationsQuery;
 use Modules\Gamification\Application\Queries\GetMyExperienceSummaryQuery;
 use Modules\Gamification\Application\Queries\ListAchievementsQuery;
 use Modules\Gamification\Application\Queries\ListBadgesQuery;
+use Modules\Gamification\Application\Queries\ListChallengesQuery;
+use Modules\Gamification\Application\UseCases\CompleteChallengeParticipationHandler;
 use Modules\Gamification\Application\UseCases\CreateAchievementHandler;
 use Modules\Gamification\Application\UseCases\CreateBadgeHandler;
+use Modules\Gamification\Application\UseCases\CreateChallengeHandler;
 use Modules\Gamification\Application\UseCases\GetAchievementHandler;
 use Modules\Gamification\Application\UseCases\GetBadgeHandler;
+use Modules\Gamification\Application\UseCases\GetChallengeHandler;
 use Modules\Gamification\Application\UseCases\GetMyAchievementsHandler;
 use Modules\Gamification\Application\UseCases\GetMyBadgesHandler;
+use Modules\Gamification\Application\UseCases\GetMyChallengeParticipationsHandler;
 use Modules\Gamification\Application\UseCases\GetMyExperienceSummaryHandler;
 use Modules\Gamification\Application\UseCases\GrantAchievementHandler;
 use Modules\Gamification\Application\UseCases\GrantBadgeHandler;
+use Modules\Gamification\Application\UseCases\JoinChallengeHandler;
 use Modules\Gamification\Application\UseCases\ListAchievementsHandler;
 use Modules\Gamification\Application\UseCases\ListBadgesHandler;
+use Modules\Gamification\Application\UseCases\ListChallengesHandler;
 use Modules\Gamification\Application\UseCases\RecordExperienceHandler;
 use Modules\Gamification\Application\UseCases\RetireAchievementHandler;
 use Modules\Gamification\Application\UseCases\RetireBadgeHandler;
+use Modules\Gamification\Application\UseCases\RetireChallengeHandler;
 use Modules\Gamification\Application\UseCases\UpdateBadgeHandler;
 use Modules\Gamification\Domain\Repositories\AchievementRepository;
 use Modules\Gamification\Domain\Repositories\BadgeRepository;
+use Modules\Gamification\Domain\Repositories\ChallengeParticipationRepository;
+use Modules\Gamification\Domain\Repositories\ChallengeRepository;
 use Modules\Gamification\Domain\Repositories\ExperienceEntryRepository;
 use Modules\Gamification\Domain\Repositories\UserAchievementRepository;
 use Modules\Gamification\Domain\Repositories\UserBadgeRepository;
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentAchievementRepository;
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentBadgeRepository;
+use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentChallengeParticipationRepository;
+use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentChallengeRepository;
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentExperienceEntryRepository;
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentUserAchievementRepository;
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentUserBadgeRepository;
@@ -86,4 +104,21 @@ it('registra los handlers CQRS de experiencia en el registry', function (): void
 
     expect($registry->handlerFor(RecordExperienceCommand::class))->toBe(RecordExperienceHandler::class)
         ->and($registry->handlerFor(GetMyExperienceSummaryQuery::class))->toBe(GetMyExperienceSummaryHandler::class);
+});
+
+it('registra los repositorios de retos en el contenedor', function (): void {
+    expect(app(ChallengeRepository::class))->toBeInstanceOf(EloquentChallengeRepository::class)
+        ->and(app(ChallengeParticipationRepository::class))->toBeInstanceOf(EloquentChallengeParticipationRepository::class);
+});
+
+it('registra los handlers CQRS de retos en el registry', function (): void {
+    $registry = app(MessageHandlerRegistry::class);
+
+    expect($registry->handlerFor(CreateChallengeCommand::class))->toBe(CreateChallengeHandler::class)
+        ->and($registry->handlerFor(RetireChallengeCommand::class))->toBe(RetireChallengeHandler::class)
+        ->and($registry->handlerFor(JoinChallengeCommand::class))->toBe(JoinChallengeHandler::class)
+        ->and($registry->handlerFor(CompleteChallengeParticipationCommand::class))->toBe(CompleteChallengeParticipationHandler::class)
+        ->and($registry->handlerFor(GetChallengeQuery::class))->toBe(GetChallengeHandler::class)
+        ->and($registry->handlerFor(ListChallengesQuery::class))->toBe(ListChallengesHandler::class)
+        ->and($registry->handlerFor(GetMyChallengeParticipationsQuery::class))->toBe(GetMyChallengeParticipationsHandler::class);
 });
