@@ -8,12 +8,16 @@ use DateTimeImmutable;
 use Modules\RoadPassport\Domain\Enums\RoadPassportStatus;
 use Modules\RoadPassport\Domain\Exceptions\InvalidRoadPassportLevel;
 use Modules\RoadPassport\Domain\Exceptions\InvalidRoadPassportTransition;
+use Modules\RoadPassport\Domain\ValueObjects\Evidence;
 use Modules\RoadPassport\Domain\ValueObjects\PassportHistoryEntry;
 use Modules\RoadPassport\Domain\ValueObjects\RoadPassportId;
 
 final class RoadPassport
 {
-    /** @param list<PassportHistoryEntry> $history */
+    /**
+     * @param  list<PassportHistoryEntry>  $history
+     * @param  list<Evidence>  $evidence
+     */
     private function __construct(
         private RoadPassportId $id,
         private string $userId,
@@ -21,6 +25,7 @@ final class RoadPassport
         private int $level,
         private DateTimeImmutable $issuedAt,
         private array $history,
+        private array $evidence = [],
     ) {}
 
     public static function create(RoadPassportId $id, string $userId, ?DateTimeImmutable $issuedAt = null): self
@@ -32,10 +37,14 @@ final class RoadPassport
             1,
             $issuedAt ?? new DateTimeImmutable('now'),
             [],
+            [],
         );
     }
 
-    /** @param list<PassportHistoryEntry> $history */
+    /**
+     * @param  list<PassportHistoryEntry>  $history
+     * @param  list<Evidence>  $evidence
+     */
     public static function restore(
         RoadPassportId $id,
         string $userId,
@@ -43,8 +52,9 @@ final class RoadPassport
         int $level,
         DateTimeImmutable $issuedAt,
         array $history,
+        array $evidence = [],
     ): self {
-        return new self($id, $userId, $status, $level, $issuedAt, $history);
+        return new self($id, $userId, $status, $level, $issuedAt, $history, $evidence);
     }
 
     public function suspend(?string $reason, DateTimeImmutable $at): void
@@ -117,6 +127,23 @@ final class RoadPassport
     public function history(): array
     {
         return $this->history;
+    }
+
+    public function recordEvidence(Evidence $evidence): void
+    {
+        foreach ($this->evidence as $existing) {
+            if ($existing->sameSubjectAs($evidence)) {
+                return;
+            }
+        }
+
+        $this->evidence[] = $evidence;
+    }
+
+    /** @return list<Evidence> */
+    public function evidence(): array
+    {
+        return $this->evidence;
     }
 
     private function transitionTo(RoadPassportStatus $to, ?string $reason, DateTimeImmutable $at): void

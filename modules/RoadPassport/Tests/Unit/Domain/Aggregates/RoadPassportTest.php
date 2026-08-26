@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 use Illuminate\Support\Str;
 use Modules\RoadPassport\Domain\Aggregates\RoadPassport;
+use Modules\RoadPassport\Domain\Enums\EvidenceType;
 use Modules\RoadPassport\Domain\Enums\RoadPassportHistoryType;
 use Modules\RoadPassport\Domain\Enums\RoadPassportStatus;
 use Modules\RoadPassport\Domain\Exceptions\InvalidRoadPassportLevel;
 use Modules\RoadPassport\Domain\Exceptions\InvalidRoadPassportTransition;
+use Modules\RoadPassport\Domain\ValueObjects\Evidence;
 use Modules\RoadPassport\Domain\ValueObjects\PassportHistoryEntry;
 use Modules\RoadPassport\Domain\ValueObjects\RoadPassportId;
 
@@ -20,12 +22,13 @@ function newRoadPassport(): RoadPassport
     );
 }
 
-it('se crea activo, en nivel 1 y sin historial', function (): void {
+it('se crea activo, en nivel 1, sin historial y sin evidencia', function (): void {
     $passport = newRoadPassport();
 
     expect($passport->status())->toBe(RoadPassportStatus::Active)
         ->and($passport->level())->toBe(1)
-        ->and($passport->history())->toBe([]);
+        ->and($passport->history())->toBe([])
+        ->and($passport->evidence())->toBe([]);
 });
 
 it('suspende un pasaporte activo y registra el cambio en el historial', function (): void {
@@ -142,6 +145,8 @@ it('restaura el agregado completo desde persistencia', function (): void {
         'Motivo',
     );
 
+    $evidence = Evidence::create(EvidenceType::CourseCompleted, 'enrollment-1', 'course-1', new DateTimeImmutable('now'), []);
+
     $passport = RoadPassport::restore(
         id: $id,
         userId: $userId,
@@ -149,6 +154,7 @@ it('restaura el agregado completo desde persistencia', function (): void {
         level: 2,
         issuedAt: $issuedAt,
         history: [$historyEntry],
+        evidence: [$evidence],
     );
 
     expect($passport->id()->equals($id))->toBeTrue()
@@ -156,5 +162,37 @@ it('restaura el agregado completo desde persistencia', function (): void {
         ->and($passport->status())->toBe(RoadPassportStatus::Suspended)
         ->and($passport->level())->toBe(2)
         ->and($passport->issuedAt())->toBe($issuedAt)
-        ->and($passport->history())->toBe([$historyEntry]);
+        ->and($passport->history())->toBe([$historyEntry])
+        ->and($passport->evidence())->toBe([$evidence]);
+});
+
+it('registra evidencia nueva y la conserva en orden', function (): void {
+    $passport = newRoadPassport();
+    $courseCompleted = Evidence::create(EvidenceType::CourseCompleted, 'enrollment-1', 'course-1', new DateTimeImmutable('now'), []);
+    $examPassed = Evidence::create(EvidenceType::ExamPassed, 'attempt-1', 'course-1', new DateTimeImmutable('now'), ['percentage' => 80]);
+
+    $passport->recordEvidence($courseCompleted);
+    $passport->recordEvidence($examPassed);
+
+    expect($passport->evidence())->toBe([$courseCompleted, $examPassed]);
+});
+
+it('ignora evidencia duplicada por tipo y sujeto', function (): void {
+    $passport = newRoadPassport();
+    $first = Evidence::create(EvidenceType::CourseCompleted, 'enrollment-1', 'course-1', new DateTimeImmutable('now'), []);
+    $duplicate = Evidence::create(EvidenceType::CourseCompleted, 'enrollment-1', 'course-1', new DateTimeImmutable('now'), []);
+
+    $passport->recordEvidence($first);
+    $passport->recordEvidence($duplicate);
+
+    expect($passport->evidence())->toHaveCount(1);
+});
+
+it('registra evidencia sin importar el estado del pasaporte', function (): void {
+    $passport = newRoadPassport();
+    $passport->suspend(null, new DateTimeImmutable('now'));
+
+    $passport->recordEvidence(Evidence::create(EvidenceType::ExamPassed, 'attempt-1', 'course-1', new DateTimeImmutable('now'), []));
+
+    expect($passport->evidence())->toHaveCount(1);
 });
