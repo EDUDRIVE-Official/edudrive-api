@@ -22,6 +22,9 @@ use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Academic\Domain\ValueObjects\EnrollmentId;
+use Modules\RoadPassport\Application\DTO\EvidenceEntry;
+use Modules\RoadPassport\Application\Services\RoadPassportEvidenceRecorder;
+use Modules\RoadPassport\Domain\Enums\EvidenceType;
 
 final class EnrollmentLifecycleRepository implements EnrollmentRepository
 {
@@ -60,6 +63,17 @@ final class EnrollmentLifecycleRepository implements EnrollmentRepository
         ?EnrollmentSource $source = null,
     ): array {
         return array_values($this->items);
+    }
+}
+
+final class SpyRoadPassportEvidenceRecorder implements RoadPassportEvidenceRecorder
+{
+    /** @var list<EvidenceEntry> */
+    public array $recorded = [];
+
+    public function record(EvidenceEntry $entry): void
+    {
+        $this->recorded[] = $entry;
     }
 }
 
@@ -111,6 +125,30 @@ it('completa una matricula activa', function (): void {
 
     expect($response)->toBeInstanceOf(EnrollmentResponse::class)
         ->and($response->status)->toBe('completed');
+});
+
+it('registra evidencia de pasaporte vial al completar una matricula', function (): void {
+    $repository = new EnrollmentLifecycleRepository;
+    $course = enrollmentLifecycleCourse();
+    $userId = (string) Str::uuid();
+    $enrollment = Enrollment::create(
+        id: EnrollmentId::fromString((string) Str::uuid()),
+        courseId: $course->id(),
+        userId: $userId,
+        status: EnrollmentStatus::Active,
+        source: EnrollmentSource::Individual,
+        enrolledAt: new DateTimeImmutable('2026-08-13T10:00:00+00:00'),
+    );
+    $repository->save($enrollment);
+    $recorder = new SpyRoadPassportEvidenceRecorder;
+
+    (new CompleteEnrollmentHandler($repository, $recorder))->handle(new CompleteEnrollmentCommand($enrollment->id()->value()));
+
+    expect($recorder->recorded)->toHaveCount(1)
+        ->and($recorder->recorded[0]->userId)->toBe($userId)
+        ->and($recorder->recorded[0]->type)->toBe(EvidenceType::CourseCompleted)
+        ->and($recorder->recorded[0]->subjectId)->toBe($enrollment->id()->value())
+        ->and($recorder->recorded[0]->courseId)->toBe($course->id()->value());
 });
 
 it('cancela una matricula activa', function (): void {

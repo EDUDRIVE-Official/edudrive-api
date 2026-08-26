@@ -54,6 +54,9 @@ use Modules\Identity\Domain\ValueObjects\Email;
 use Modules\Learning\Application\DTO\LearningEventEntry;
 use Modules\Learning\Application\Services\LearningEventRecorder;
 use Modules\Learning\Domain\ValueObjects\LearningVerb;
+use Modules\RoadPassport\Application\DTO\EvidenceEntry;
+use Modules\RoadPassport\Application\Services\RoadPassportEvidenceRecorder;
+use Modules\RoadPassport\Domain\Enums\EvidenceType;
 
 final class SpyExamAttemptGrader extends ExamAttemptGrader
 {
@@ -76,6 +79,17 @@ final class SpyLearningEventRecorderForAttempts implements LearningEventRecorder
     public array $recorded = [];
 
     public function record(LearningEventEntry $entry): void
+    {
+        $this->recorded[] = $entry;
+    }
+}
+
+final class SpyRoadPassportEvidenceRecorderForAttempts implements RoadPassportEvidenceRecorder
+{
+    /** @var list<EvidenceEntry> */
+    public array $recorded = [];
+
+    public function record(EvidenceEntry $entry): void
     {
         $this->recorded[] = $entry;
     }
@@ -625,4 +639,95 @@ it('no falla ni registra un evento si no hay enrollment resoluble para el curso 
 
     expect($response)->toBeInstanceOf(ExamAttemptResponse::class)
         ->and($recorder->recorded)->toBeEmpty();
+});
+
+it('registra evidencia de pasaporte vial al aprobar un intento', function (): void {
+    [$examId] = persistedAttemptExam();
+    $exam = app(ExamRepository::class)->findById(ExamId::fromString($examId));
+    $userId = persistedLearningEventUserId();
+
+    app(EnrollmentRepository::class)->save(Enrollment::create(
+        id: EnrollmentId::fromString((string) Str::uuid()),
+        courseId: $exam->courseId(),
+        userId: $userId,
+        status: EnrollmentStatus::Active,
+        source: EnrollmentSource::Individual,
+    ));
+
+    $repository = new InMemoryExamAttemptRepository;
+    $start = new StartExamAttemptHandler($repository, app(ExamRepository::class), app(QuestionRepository::class));
+    $started = $start->handle(new StartExamAttemptCommand($examId, $userId));
+
+    $answer = new AnswerAttemptQuestionHandler($repository);
+    $answer->handle(new AnswerAttemptQuestionCommand(
+        $started->id,
+        $userId,
+        1,
+        SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a']),
+    ));
+    $answer->handle(new AnswerAttemptQuestionCommand(
+        $started->id,
+        $userId,
+        2,
+        SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-b']),
+    ));
+
+    $evidenceRecorder = new SpyRoadPassportEvidenceRecorderForAttempts;
+    $submit = new SubmitExamAttemptHandler(
+        $repository,
+        null,
+        app(ExamRepository::class),
+        null,
+        app(EnrollmentRepository::class),
+        null,
+        $evidenceRecorder,
+    );
+    $submit->handle(new SubmitExamAttemptCommand($started->id, $userId));
+
+    expect($evidenceRecorder->recorded)->toHaveCount(1)
+        ->and($evidenceRecorder->recorded[0]->userId)->toBe($userId)
+        ->and($evidenceRecorder->recorded[0]->type)->toBe(EvidenceType::ExamPassed)
+        ->and($evidenceRecorder->recorded[0]->subjectId)->toBe($started->id)
+        ->and($evidenceRecorder->recorded[0]->courseId)->toBe($exam->courseId()->value())
+        ->and($evidenceRecorder->recorded[0]->details)->toHaveKeys(['score', 'total_points', 'percentage']);
+});
+
+it('no registra evidencia de pasaporte vial si el intento no aprueba', function (): void {
+    [$examId] = persistedAttemptExam();
+    $exam = app(ExamRepository::class)->findById(ExamId::fromString($examId));
+    $userId = persistedLearningEventUserId();
+
+    app(EnrollmentRepository::class)->save(Enrollment::create(
+        id: EnrollmentId::fromString((string) Str::uuid()),
+        courseId: $exam->courseId(),
+        userId: $userId,
+        status: EnrollmentStatus::Active,
+        source: EnrollmentSource::Individual,
+    ));
+
+    $repository = new InMemoryExamAttemptRepository;
+    $start = new StartExamAttemptHandler($repository, app(ExamRepository::class), app(QuestionRepository::class));
+    $started = $start->handle(new StartExamAttemptCommand($examId, $userId));
+
+    $answer = new AnswerAttemptQuestionHandler($repository);
+    $answer->handle(new AnswerAttemptQuestionCommand(
+        $started->id,
+        $userId,
+        1,
+        SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-b']),
+    ));
+
+    $evidenceRecorder = new SpyRoadPassportEvidenceRecorderForAttempts;
+    $submit = new SubmitExamAttemptHandler(
+        $repository,
+        null,
+        app(ExamRepository::class),
+        null,
+        app(EnrollmentRepository::class),
+        null,
+        $evidenceRecorder,
+    );
+    $submit->handle(new SubmitExamAttemptCommand($started->id, $userId));
+
+    expect($evidenceRecorder->recorded)->toBeEmpty();
 });

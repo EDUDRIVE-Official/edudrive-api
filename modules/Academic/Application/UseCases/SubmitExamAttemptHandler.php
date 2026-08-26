@@ -23,6 +23,9 @@ use Modules\Academic\Domain\ValueObjects\GradingPolicy;
 use Modules\Learning\Application\DTO\LearningEventEntry;
 use Modules\Learning\Application\Services\LearningEventRecorder;
 use Modules\Learning\Domain\ValueObjects\LearningVerb;
+use Modules\RoadPassport\Application\DTO\EvidenceEntry;
+use Modules\RoadPassport\Application\Services\RoadPassportEvidenceRecorder;
+use Modules\RoadPassport\Domain\Enums\EvidenceType;
 
 final readonly class SubmitExamAttemptHandler
 {
@@ -33,6 +36,7 @@ final readonly class SubmitExamAttemptHandler
         private ?TheoryStudyRecommendationService $recommendations = null,
         private ?EnrollmentRepository $enrollments = null,
         private ?LearningEventRecorder $learningEvents = null,
+        private ?RoadPassportEvidenceRecorder $evidenceRecorder = null,
     ) {}
 
     public function handle(SubmitExamAttemptCommand $command): ExamAttemptResponse
@@ -63,6 +67,7 @@ final readonly class SubmitExamAttemptHandler
         $this->attempts->save($attempt);
 
         $this->recordLearningEvent($attempt, $exam);
+        $this->recordEvidenceIfPassed($attempt, $exam);
 
         $studyRecommendations = $exam === null
             ? null
@@ -125,6 +130,29 @@ final readonly class SubmitExamAttemptHandler
                 'total_points' => $attempt->totalPoints(),
                 'percentage' => $attempt->percentage(),
                 'passed' => $attempt->passed(),
+            ],
+        ));
+    }
+
+    private function recordEvidenceIfPassed(ExamAttempt $attempt, ?Exam $exam): void
+    {
+        if ($this->enrollments === null || $this->evidenceRecorder === null || $exam === null || ! $attempt->passed()) {
+            return;
+        }
+
+        if ($this->enrollments->findActiveOrPendingFor($exam->courseId(), $attempt->userId()) === null) {
+            return;
+        }
+
+        $this->evidenceRecorder->record(new EvidenceEntry(
+            userId: $attempt->userId(),
+            type: EvidenceType::ExamPassed,
+            subjectId: $attempt->id()->value(),
+            courseId: $exam->courseId()->value(),
+            details: [
+                'score' => $attempt->score(),
+                'total_points' => $attempt->totalPoints(),
+                'percentage' => $attempt->percentage(),
             ],
         ));
     }
