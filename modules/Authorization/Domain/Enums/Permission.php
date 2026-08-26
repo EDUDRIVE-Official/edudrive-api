@@ -32,4 +32,6 @@ enum Permission: string
     case ViewSimulationSessions = 'simulation_sessions.view';
     case ManageAchievements = 'achievements.manage';
     case ViewAchievements = 'achievements.view';
+    case ManageBadges = 'badges.manage';
+    case ViewBadges = 'badges.view';
 }

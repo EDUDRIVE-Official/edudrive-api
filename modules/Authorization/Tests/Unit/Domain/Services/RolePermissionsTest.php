@@ -187,3 +187,17 @@ it('otorga manage y view de logros al administrador institucional, y view al doc
         ->and(RolePermissions::grants(Role::Student, Permission::ManageAchievements))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ViewAchievements))->toBeTrue();
 });
+
+it('otorga permisos de insignias al superadministrador', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageBadges))->toBeTrue()
+        ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewBadges))->toBeTrue();
+});
+
+it('otorga manage y view de insignias al administrador institucional, y view al docente y al estudiante', function (): void {
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageBadges))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewBadges))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageBadges))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ViewBadges))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageBadges))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ViewBadges))->toBeTrue();
+});
