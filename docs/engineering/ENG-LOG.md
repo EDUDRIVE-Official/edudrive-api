@@ -1310,3 +1310,43 @@ ENG-020
 - `php artisan migrate --force` + `migrate:status` ✅ (migración `create_academic_exams_tables` en estado `Ran`)
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-038 (Cierre de ENG-038 — Learning Record Store interno)
+
+### Completado
+
+- **Modelo de dominio**:
+  - Nuevo módulo `Modules\Learning` con la entidad inmutable `LearningEvent` (`enrollmentId`, `userId`, `courseId`, `verb`, `subjectId`, `occurredAt`, `evidence`), el value object `LearningEventId` (UUID normalizado) y el enum `LearningVerb` (`lesson_completed`, `exam_attempt_submitted`).
+  - Contrato de dominio `LearningEventRepository` (`record()`, `findByEnrollmentId()`).
+- **Persistencia**:
+  - Migración `2026_08_16_000001_create_learning_events_table` con la tabla `learning_events` (FK en cascada a `academic_enrollments`, `users` y `academic_courses`; `evidence` como JSON; índice `(enrollment_id, occurred_at)`).
+  - `LearningEventModel` y `EloquentLearningEventRepository`, con lectura ordenada del más reciente al más antiguo.
+- **Capa de aplicación e integración entre módulos**:
+  - `LearningEventEntry` (DTO) y el contrato `LearningEventRecorder`, con `DefaultLearningEventRecorder` como implementación por defecto — mismo patrón que `Identity` → `Audit` (`AuditLogger`).
+  - `LearningServiceProvider` registra el repositorio, el recorder, la consulta `GetEnrollmentLearningEventsQuery`/`GetEnrollmentLearningEventsHandler` (autorización por pertenencia al enrollment o permiso ya existente `enrollments.view`, reutilizando `EnrollmentRepository`/`EnrollmentNotFound` de `Academic`) y las rutas del módulo.
+  - `CompleteLessonHandler` (Academic, ENG-036/037) ahora recibe `LearningEventRecorder` y registra `lesson_completed` tras completar una lección, con `time_spent_minutes` como evidencia.
+  - `SubmitExamAttemptHandler` (Academic) recibe `EnrollmentRepository` y `LearningEventRecorder` como colaboradores opcionales (`null` por defecto, mismo patrón que `$grader`/`$exams`/`$recommendations` en este archivo) y registra `exam_attempt_submitted` con `score`/`total_points`/`percentage`/`passed` como evidencia, resolviendo el enrollment del alumno para el curso del examen vía `EnrollmentRepository::findActiveOrPendingFor()` (ENG-035). Si no hay enrollment resoluble para ese curso/usuario, no falla y simplemente no registra el evento.
+  - Acoplamiento bidireccional real e intencional entre `Academic` y `Learning` (escritura: `Academic` → `Learning`; lectura de autorización: `Learning` → `Academic`), documentado en `docs/plans/2026-08-16-learning-record-store-eng038-implementation.md`.
+- **Presentación e integración HTTP**:
+  - `LearningEventController` y ruta `GET /api/v1/academic/enrollments/{enrollmentId}/learning-events` bajo `auth:sanctum`, sin permiso nuevo (reutiliza `Permission::ViewEnrollments`, igual que `EnrollmentProgressController`).
+- **Pruebas**:
+  - Dominio: `LearningEventTest`, `LearningEventIdTest`.
+  - Persistencia: `EloquentLearningEventRepositoryTest` (orden, aislamiento por enrollment).
+  - Integración: `LearningServiceProviderTest` (bindings en el contenedor).
+  - Aplicación: `GetEnrollmentLearningEventsHandlerTest` (dueño, ajeno con/sin permiso, enrollment inexistente); extensión de `CompleteLessonHandlerTest` (spy de recorder) y de `ExamAttemptHandlerTest` (2 casos nuevos: registro con enrollment resoluble y no-fallo/no-registro sin enrollment resoluble).
+  - Feature HTTP: `LearningEventTest` (propios, ajenos con/sin `enrollments.view`, enrollment inexistente).
+
+### Nota sobre el historial de commits
+
+- El commit de la Task 7 (`262991a`, `feat(academic): record learning event on exam attempt submission`) consolida, además del cambio de esta historia, la deuda de consolidación de ENG-032/033/034 que ya afectaba a `SubmitExamAttemptHandler.php` y `ExamAttemptHandlerTest.php` (nunca comiteados hasta ahora): motor de calificación, intentos de examen y examen teórico. Decisión explícita del usuario, documentada en el propio mensaje del commit; el resto de archivos de esa deuda (`Enrollment`, `Question`/`Exam` theory metadata, etc.) sigue sin commitear y queda fuera de alcance de ENG-038.
+
+### Validaciones
+
+- Suite focalizada ENG-038 ✅ — `40 passed (118 assertions)` (`modules/Learning` completo + `CompleteLessonHandlerTest` + `ExamAttemptHandlerTest`).
+- Suite Feature adicional ✅ — `EnrollmentProgressTest` (16 casos), `ExamAttemptTest` (13 casos) y `TheoryExamTest` (4 casos) sin regresiones.
+- Pint ✅ sin issues sobre los archivos de ENG-038.
+- PHPStan nivel 8 ✅ sin errores sobre `modules/Learning`, `CompleteLessonHandler.php` y `SubmitExamAttemptHandler.php`.
+- `php artisan route:list --path=academic/enrollments` ✅ — 12 rutas registradas (11 previas + `learning-events`).
+- `php artisan migrate --force` ✅ — migración `create_learning_events_table` en estado `Ran`.
+
+**Estado:** Finalizado.

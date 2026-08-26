@@ -676,15 +676,20 @@ Actividades obligatorias.
 Rutas adaptativas.
 ENG-038 — Learning Record Store interno
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): se registran como hechos inmutables (append-only) los eventos de aprendizaje que ya ocurrían en `Academic` — lección completada y examen enviado — en un nuevo módulo `Modules\Learning` con DDD completo (`LearningEvent` como entidad inmutable, `LearningEventRepository`, tabla `learning_events`). `Academic` depende de la abstracción `LearningEventRecorder` (mismo patrón que `Identity` → `Audit` con `AuditLogger`) desde `CompleteLessonHandler` y `SubmitExamAttemptHandler`; `Learning` depende a su vez de `EnrollmentRepository`/`EnrollmentNotFound` de `Academic` para autorizar la consulta por pertenencia (dueño del enrollment o `enrollments.view`) — acoplamiento bidireccional real e intencional, documentado en el plan. Se expone `GET /enrollments/{enrollmentId}/learning-events` bajo `auth:sanctum`. `SubmitExamAttemptHandler` resuelve el enrollment del alumno para el curso del examen vía `EnrollmentRepository::findActiveOrPendingFor()` (ENG-035) y omite el registro sin fallar si no hay enrollment resoluble. Detalle completo en `docs/plans/2026-08-16-learning-record-store-eng038-design.md`, `docs/plans/2026-08-16-learning-record-store-eng038-implementation.md` y `docs/engineering/ENG-LOG.md` (IMP-038).
 
 Incluye:
 
 Eventos de aprendizaje.
 Acciones del estudiante.
 Evidencias.
-Origen web, móvil o simulador.
 Trazabilidad histórica.
+
+Diferido:
+
+Origen web, móvil o simulador (no se agregó ningún campo de origen/canal al evento; puede incorporarse en una historia futura si se necesita).
 ENG-039 — Recomendaciones de aprendizaje
 
 Estado: Pendiente
