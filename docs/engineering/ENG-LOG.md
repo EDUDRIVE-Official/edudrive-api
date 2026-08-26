@@ -1641,3 +1641,25 @@ El simulador reporta datos crudos por punto de decisión (contexto vial en texto
 - `php artisan route:list --path=simulation` ✅ — 20 rutas registradas (las 18 previas + 2 de decisiones).
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-050 (Cierre de ENG-050 — Sincronización offline)
+
+### Alcance acordado con el usuario
+
+La cola local y el manejo de la desconexión son responsabilidad del simulador (fuera de alcance de este backend, mismo criterio que el catálogo real de vehículos/escenarios en ENG-046). El trabajo de EDUDRIVE es que los endpoints de telemetría (ENG-047) y decisiones (ENG-049) ya construidos acepten reenvíos sin duplicar datos y toleren que lleguen tarde. Identificadores idempotentes por ítem (no una llave de idempotencia por lote completo, evita una tabla nueva). Datos tardíos: se aceptan si ocurrieron durante el periodo real en que la sesión estuvo en curso (comparando marca de tiempo contra `startedAt`/`endedAt`), sin importar el estado actual de la sesión. Diferido explícitamente: modelar la sesión offline como concepto de dominio propio (sesión completa reportada retroactivamente en un solo envío), tabla de llaves de idempotencia por lote, resolución de conflictos más allá de la ventana temporal. Detalle en `docs/plans/2026-08-26-sincronizacion-offline-eng050-design.md`.
+
+### Completado
+
+- **Dominio**: `SimulationSession::wasInProgressAt(DateTimeImmutable): bool` — método de consulta puro nuevo: `false` si `startedAt` es nulo (cubre `Scheduled` y `Cancelled`, ya que `cancel()` solo es posible desde `Scheduled`) o si la marca de tiempo es anterior a `startedAt`; `false` si `endedAt` no es nulo y la marca de tiempo es posterior; `true` en cualquier otro caso (incluye `InProgress` completo y `Completed` dentro de su ventana real).
+- **Persistencia**: `TelemetrySampleRepository`/`TelemetryEventRepository`/`DecisionPointRepository::saveBatch()` cambian de `void` a `int` (filas realmente insertadas); las implementaciones Eloquent usan `insertOrIgnore()` en vez de `insert()` — un `id` ya existente en base de datos se omite silenciosamente.
+- **CQRS**: `SubmitTelemetryCommand`/`SubmitDecisionPointsCommand` ahora incluyen `id` por ítem (provisto por el simulador, no generado con `Str::uuid()` al guardar). `SubmitTelemetryHandler`/`SubmitDecisionPointsHandler` cambian la validación de "sesión `InProgress` en este momento" a dos pasos: rechazar de entrada si la sesión nunca se inició (`startedAt` nulo, preserva el rechazo de una sesión `Scheduled`/`Cancelled` incluso con un lote vacío), y luego exigir que **todos** los ítems del lote satisfagan `wasInProgressAt()` contra su propia marca de tiempo — si alguno cae fuera de la ventana, se rechaza el lote completo (mismo código `SIMULATION_SESSION_NOT_IN_PROGRESS` ya existente, criterio ampliado). El conteo de la respuesta viene del valor real que devuelve `saveBatch()`.
+- **API HTTP**: `SubmitTelemetryRequest`/`SubmitDecisionPointsRequest` agregan `required|uuid` para `samples.*.id`/`events.*.id`/`decisions.*.id`. Sin cambios en rutas ni permisos.
+- **Pruebas**: 20 tests nuevos/actualizados repartidos en dominio (`wasInProgressAt`, 4 casos), persistencia (idempotencia por repositorio), aplicación (idempotencia y ventana temporal por handler) y feature (idempotencia y datos tardíos end-to-end vía HTTP).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `181 passed (437 assertions)`.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- Sin cambios en rutas registradas (20, mismas de ENG-049).
+
+**Estado:** Finalizado. Con esto cierra por completo la **Fase 9 — Integración con SIMUDRIVE** (ENG-045 a ENG-050).

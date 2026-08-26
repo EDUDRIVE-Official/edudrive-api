@@ -915,7 +915,9 @@ Que SIMUDRIVE reporte la evaluación ya calculada (delegar el criterio educativo
 Retroalimentación personalizada más allá de mensajes fijos por combinación riesgo+resultado.
 ENG-050 — Sincronización offline
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): la cola local y el manejo de la desconexión son responsabilidad del simulador (fuera de alcance de este backend, mismo criterio que el catálogo real de vehículos/escenarios en ENG-046) — el trabajo de EDUDRIVE fue hacer que `POST /sessions/{id}/telemetry` (ENG-047) y `POST /sessions/{id}/decisions` (ENG-049) acepten reenvíos de forma idempotente y toleren datos que llegan tarde. Cada lectura/evento/punto de decisión ahora incluye su propio `id` (UUID) generado por el simulador; al guardar el lote se usa `insertOrIgnore()` (Eloquent) en vez de `insert()` — un `id` ya existente se omite silenciosamente en lugar de duplicarse o fallar, y la respuesta (`samples_recorded`/`events_recorded`/`decisions_recorded`) refleja las filas realmente insertadas. La validación "la sesión debe estar `InProgress` en este momento" se amplió a "la lectura/decisión debe haber ocurrido durante el periodo real en que la sesión estuvo en curso" (nuevo método `SimulationSession::wasInProgressAt()`, comparando contra `startedAt`/`endedAt`) — acepta datos genuinos que llegan después de que la sesión ya se completó o se canceló por otro canal mientras el simulador estaba desconectado. Si cualquier ítem del lote cae fuera de esa ventana, se rechaza el lote completo. Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-sincronizacion-offline-eng050-design.md`.
 
 Incluye:
 
@@ -924,6 +926,12 @@ Cola local.
 Identificadores idempotentes.
 Sincronización posterior.
 Resolución de conflictos.
+
+Diferido:
+
+Modelar la sesión offline como un concepto de dominio propio (reportar una sesión completa programada+iniciada+completada en un solo envío retroactivo).
+Una tabla de llaves de idempotencia por lote completo (se prefirió id por ítem, más simple y sin tabla nueva).
+Resolución de conflictos más allá de la ventana temporal (ej. fusionar lecturas contradictorias).
 16. Fase 10 — Gamificación
 ENG-051 — Logros
 
@@ -1490,3 +1498,4 @@ Versión	Fecha	Descripción
 1.25.0	2026-08-26	Cierre de ENG-047 (Telemetría): entidades `TelemetrySample`/`TelemetryEvent` (solo-append, sin invariantes de agregado) en `Modules\Simulation`; primer mecanismo de autenticación máquina-a-máquina del backend (`AuthenticateSimulator`, alias `simulator.auth`, llave de integración por *bearer token* contra el hash SHA-256 almacenado); envío por lotes validado contra sesión↔simulador y estado `InProgress`; consulta para humanos bajo `auth:sanctum` reutilizando `simulation_sessions.view` sin permiso nuevo; procesamiento/agregación (ENG-048) diferido explícitamente (IMP-047 en ENG-LOG.md)
 1.26.0	2026-08-26	Cierre de ENG-048 (Resultados prácticos): servicio de dominio puro `PracticalResultCalculator` deriva un resultado `passed`/`failed` (puntaje 0-100, penalización por tipo de `TelemetryEvent`) en cada consulta a partir de la telemetría ya persistida de una sesión `Completed`, sin tabla ni migración nueva (mismo espíritu que `RoadPassportTrustCalculator`); competencias demostradas (texto libre) y evidencias asociadas (los propios errores) autocontenidos en `Modules\Simulation`; API HTTP en `GET /api/v1/simulation/sessions/{sessionId}/result` reutilizando `simulation_sessions.view`; registro manual, integración con el Pasaporte Vial y referencias a `Competency` de Academic diferidos explícitamente (IMP-048 en ENG-LOG.md)
 1.27.0	2026-08-26	Cierre de ENG-049 (SIMUDRIVE Decision Engine): entidad `DecisionPoint` (solo-append, reacción del conductor como conjunto cerrado para permitir evaluación determinística) y servicio de dominio puro `DecisionEngineCalculator` que evalúa apropiación por riesgo, genera retroalimentación fija y calcula consistencia agrupando por riesgo dentro de la sesión, sin persistir el resultado (mismo patrón que ENG-048); envío por lotes autenticado con `simulator.auth` (ENG-047), consulta bajo `auth:sanctum` reutilizando `simulation_sessions.view`; consistencia entre sesiones y evaluación delegada a SIMUDRIVE diferidas explícitamente (IMP-049 en ENG-LOG.md)
+1.28.0	2026-08-26	Cierre de ENG-050 (Sincronización offline) — última historia de la Fase 9: `POST /sessions/{id}/telemetry` y `POST /sessions/{id}/decisions` aceptan reenvíos idempotentes (id por ítem generado por el simulador, `insertOrIgnore()` en vez de `insert()`, conteo de filas realmente insertadas en la respuesta) y toleran datos tardíos (`SimulationSession::wasInProgressAt()` compara la marca de tiempo del dato contra `startedAt`/`endedAt` en vez de exigir que la sesión esté `InProgress` en el momento de la petición); la cola local es responsabilidad del simulador, fuera de alcance; modelar la sesión offline como concepto propio y una tabla de llaves de idempotencia por lote diferidos explícitamente (IMP-050 en ENG-LOG.md). Con esto cierra por completo la Fase 9 — Integración con SIMUDRIVE (ENG-045 a ENG-050)
