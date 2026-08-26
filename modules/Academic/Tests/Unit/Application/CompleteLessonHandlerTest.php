@@ -7,10 +7,16 @@ use Illuminate\Support\Str;
 use Modules\Academic\Application\Commands\CompleteLessonCommand;
 use Modules\Academic\Application\Exceptions\EnrollmentNotFound;
 use Modules\Academic\Application\Exceptions\LessonNotFound;
+use Modules\Academic\Application\Exceptions\UnitLocked;
 use Modules\Academic\Application\Responses\EnrollmentProgressResponse;
 use Modules\Academic\Application\Services\EnrollmentProgressCalculator;
 use Modules\Academic\Application\UseCases\CompleteLessonHandler;
+use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Aggregates\Enrollment;
+use Modules\Academic\Domain\Aggregates\UnitContent;
+use Modules\Academic\Domain\Entities\CourseModule;
+use Modules\Academic\Domain\Entities\CourseUnit;
+use Modules\Academic\Domain\Entities\Lesson;
 use Modules\Academic\Domain\Enums\EnrollmentSource;
 use Modules\Academic\Domain\Enums\EnrollmentStatus;
 use Modules\Academic\Domain\Exceptions\InvalidEnrollment;
@@ -20,17 +26,39 @@ use Modules\Academic\Domain\Repositories\EnrollmentRepository;
 use Modules\Academic\Domain\Repositories\ExamAttemptRepository;
 use Modules\Academic\Domain\Repositories\ExamRepository;
 use Modules\Academic\Domain\Repositories\UnitContentRepository;
+use Modules\Academic\Domain\Services\ContentBlockFactory;
 use Modules\Academic\Domain\Services\CourseCurriculumUnlockCalculator;
 use Modules\Academic\Domain\Services\CourseLessonCatalog;
+use Modules\Academic\Domain\ValueObjects\ContentBlockId;
+use Modules\Academic\Domain\ValueObjects\CourseCode;
+use Modules\Academic\Domain\ValueObjects\CourseId;
+use Modules\Academic\Domain\ValueObjects\CourseModuleId;
+use Modules\Academic\Domain\ValueObjects\CourseTitle;
+use Modules\Academic\Domain\ValueObjects\CourseUnitId;
+use Modules\Academic\Domain\ValueObjects\CurriculumCode;
 use Modules\Academic\Domain\ValueObjects\EnrollmentId;
 use Modules\Academic\Domain\ValueObjects\LessonId;
 use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Repositories\UserRepository;
 use Modules\Identity\Domain\ValueObjects\Email;
+use Modules\Learning\Application\DTO\LearningEventEntry;
+use Modules\Learning\Application\Services\LearningEventRecorder;
+use Modules\Learning\Domain\ValueObjects\LearningVerb;
 
 uses(RefreshDatabase::class);
 
-function completeLessonHandler(): CompleteLessonHandler
+final class SpyLearningEventRecorder implements LearningEventRecorder
+{
+    /** @var list<LearningEventEntry> */
+    public array $recorded = [];
+
+    public function record(LearningEventEntry $entry): void
+    {
+        $this->recorded[] = $entry;
+    }
+}
+
+function completeLessonHandler(?SpyLearningEventRecorder $recorder = null): CompleteLessonHandler
 {
     return new CompleteLessonHandler(
         app(EnrollmentRepository::class),
@@ -44,6 +72,7 @@ function completeLessonHandler(): CompleteLessonHandler
             app(ExamRepository::class),
             app(ExamAttemptRepository::class),
         ),
+        $recorder ?? new SpyLearningEventRecorder,
     );
 }
 
@@ -140,20 +169,20 @@ it('rechaza una leccion que no pertenece al curso de la inscripcion', function (
 });
 
 it('rechaza completar una leccion de una unidad bloqueada por prerrequisitos', function (): void {
-    $module1Id = \Modules\Academic\Domain\ValueObjects\CourseModuleId::fromString((string) Str::uuid());
-    $unit1Id = \Modules\Academic\Domain\ValueObjects\CourseUnitId::fromString((string) Str::uuid());
-    $module2Id = \Modules\Academic\Domain\ValueObjects\CourseModuleId::fromString((string) Str::uuid());
-    $unit2Id = \Modules\Academic\Domain\ValueObjects\CourseUnitId::fromString((string) Str::uuid());
+    $module1Id = CourseModuleId::fromString((string) Str::uuid());
+    $unit1Id = CourseUnitId::fromString((string) Str::uuid());
+    $module2Id = CourseModuleId::fromString((string) Str::uuid());
+    $unit2Id = CourseUnitId::fromString((string) Str::uuid());
 
-    $course = \Modules\Academic\Domain\Aggregates\Course::create(
-        id: \Modules\Academic\Domain\ValueObjects\CourseId::fromString((string) Str::uuid()),
-        code: \Modules\Academic\Domain\ValueObjects\CourseCode::fromString('PRG-CL-GATE-'.strtoupper((string) Str::random(4))),
-        title: \Modules\Academic\Domain\ValueObjects\CourseTitle::fromString('Curso con prerrequisitos'),
+    $course = Course::create(
+        id: CourseId::fromString((string) Str::uuid()),
+        code: CourseCode::fromString('PRG-CL-GATE-'.strtoupper((string) Str::random(4))),
+        title: CourseTitle::fromString('Curso con prerrequisitos'),
     );
     $course->replaceCurriculum([
-        \Modules\Academic\Domain\Entities\CourseModule::create(
+        CourseModule::create(
             id: $module1Id,
-            code: \Modules\Academic\Domain\ValueObjects\CurriculumCode::fromString('MOD-01'),
+            code: CurriculumCode::fromString('MOD-01'),
             title: 'Modulo 1',
             description: 'Primer modulo.',
             objectives: null,
@@ -161,9 +190,9 @@ it('rechaza completar una leccion de una unidad bloqueada por prerrequisitos', f
             position: 1,
             prerequisiteModuleIds: [],
             units: [
-                \Modules\Academic\Domain\Entities\CourseUnit::create(
+                CourseUnit::create(
                     id: $unit1Id,
-                    code: \Modules\Academic\Domain\ValueObjects\CurriculumCode::fromString('UNI-01'),
+                    code: CurriculumCode::fromString('UNI-01'),
                     title: 'Unidad 1',
                     description: 'Primera unidad.',
                     objectives: null,
@@ -173,9 +202,9 @@ it('rechaza completar una leccion de una unidad bloqueada por prerrequisitos', f
                 ),
             ],
         ),
-        \Modules\Academic\Domain\Entities\CourseModule::create(
+        CourseModule::create(
             id: $module2Id,
-            code: \Modules\Academic\Domain\ValueObjects\CurriculumCode::fromString('MOD-02'),
+            code: CurriculumCode::fromString('MOD-02'),
             title: 'Modulo 2',
             description: 'Segundo modulo.',
             objectives: null,
@@ -183,9 +212,9 @@ it('rechaza completar una leccion de una unidad bloqueada por prerrequisitos', f
             position: 2,
             prerequisiteModuleIds: [$module1Id],
             units: [
-                \Modules\Academic\Domain\Entities\CourseUnit::create(
+                CourseUnit::create(
                     id: $unit2Id,
-                    code: \Modules\Academic\Domain\ValueObjects\CurriculumCode::fromString('UNI-02'),
+                    code: CurriculumCode::fromString('UNI-02'),
                     title: 'Unidad 2',
                     description: 'Segunda unidad.',
                     objectives: null,
@@ -199,21 +228,21 @@ it('rechaza completar una leccion de una unidad bloqueada por prerrequisitos', f
     app(CourseRepository::class)->save($course);
 
     $lesson1Id = LessonId::fromString((string) Str::uuid());
-    app(UnitContentRepository::class)->replaceAtomically($course->id(), $unit1Id, \Modules\Academic\Domain\Aggregates\UnitContent::create($unit1Id, [
-        \Modules\Academic\Domain\Entities\Lesson::create($lesson1Id, \Modules\Academic\Domain\ValueObjects\CurriculumCode::fromString('LEC-01'), 'Leccion 1', null, 10, 1, [
-            \Modules\Academic\Domain\Services\ContentBlockFactory::create(\Modules\Academic\Domain\ValueObjects\ContentBlockId::fromString((string) Str::uuid()), 'text', 1, ['markdown' => 'Contenido.']),
+    app(UnitContentRepository::class)->replaceAtomically($course->id(), $unit1Id, UnitContent::create($unit1Id, [
+        Lesson::create($lesson1Id, CurriculumCode::fromString('LEC-01'), 'Leccion 1', null, 10, 1, [
+            ContentBlockFactory::create(ContentBlockId::fromString((string) Str::uuid()), 'text', 1, ['markdown' => 'Contenido.']),
         ]),
     ]));
 
     $lesson2Id = LessonId::fromString((string) Str::uuid());
-    app(UnitContentRepository::class)->replaceAtomically($course->id(), $unit2Id, \Modules\Academic\Domain\Aggregates\UnitContent::create($unit2Id, [
-        \Modules\Academic\Domain\Entities\Lesson::create($lesson2Id, \Modules\Academic\Domain\ValueObjects\CurriculumCode::fromString('LEC-02'), 'Leccion 2', null, 10, 1, [
-            \Modules\Academic\Domain\Services\ContentBlockFactory::create(\Modules\Academic\Domain\ValueObjects\ContentBlockId::fromString((string) Str::uuid()), 'text', 1, ['markdown' => 'Contenido.']),
+    app(UnitContentRepository::class)->replaceAtomically($course->id(), $unit2Id, UnitContent::create($unit2Id, [
+        Lesson::create($lesson2Id, CurriculumCode::fromString('LEC-02'), 'Leccion 2', null, 10, 1, [
+            ContentBlockFactory::create(ContentBlockId::fromString((string) Str::uuid()), 'text', 1, ['markdown' => 'Contenido.']),
         ]),
     ]));
 
     $userId = persistedTaskSevenUserId();
-    $enrollment = \Modules\Academic\Domain\Aggregates\Enrollment::create(
+    $enrollment = Enrollment::create(
         id: EnrollmentId::fromString((string) Str::uuid()),
         courseId: $course->id(),
         userId: $userId,
@@ -227,5 +256,27 @@ it('rechaza completar una leccion de una unidad bloqueada por prerrequisitos', f
         lessonId: $lesson2Id->value(),
         userId: $userId,
         timeSpentMinutes: null,
-    )))->toThrow(\Modules\Academic\Application\Exceptions\UnitLocked::class);
+    )))->toThrow(UnitLocked::class);
+});
+
+it('registra un evento de aprendizaje al completar una leccion', function (): void {
+    $enrollment = activeEnrollmentForLessonCompletion();
+    $course = app(CourseRepository::class)->findById($enrollment->courseId());
+    $lessonId = (new CourseLessonCatalog(app(UnitContentRepository::class)))->lessonIdsFor($course)[0];
+    $recorder = new SpyLearningEventRecorder;
+
+    completeLessonHandler($recorder)->handle(new CompleteLessonCommand(
+        enrollmentId: $enrollment->id()->value(),
+        lessonId: $lessonId,
+        userId: $enrollment->userId(),
+        timeSpentMinutes: 9,
+    ));
+
+    expect($recorder->recorded)->toHaveCount(1)
+        ->and($recorder->recorded[0]->enrollmentId)->toBe($enrollment->id()->value())
+        ->and($recorder->recorded[0]->userId)->toBe($enrollment->userId())
+        ->and($recorder->recorded[0]->courseId)->toBe($enrollment->courseId()->value())
+        ->and($recorder->recorded[0]->verb)->toBe(LearningVerb::LessonCompleted)
+        ->and($recorder->recorded[0]->subjectId)->toBe($lessonId)
+        ->and($recorder->recorded[0]->evidence)->toBe(['time_spent_minutes' => 9]);
 });

@@ -21,6 +21,9 @@ use Modules\Academic\Domain\Services\CourseCurriculumUnlockCalculator;
 use Modules\Academic\Domain\Services\CourseLessonCatalog;
 use Modules\Academic\Domain\ValueObjects\EnrollmentId;
 use Modules\Academic\Domain\ValueObjects\LessonId;
+use Modules\Learning\Application\DTO\LearningEventEntry;
+use Modules\Learning\Application\Services\LearningEventRecorder;
+use Modules\Learning\Domain\ValueObjects\LearningVerb;
 
 final readonly class CompleteLessonHandler
 {
@@ -31,6 +34,7 @@ final readonly class CompleteLessonHandler
         private CourseLessonCatalog $lessonCatalog,
         private CourseCurriculumUnlockCalculator $unlockCalculator,
         private EnrollmentProgressCalculator $calculator,
+        private LearningEventRecorder $learningEvents,
     ) {}
 
     public function handle(CompleteLessonCommand $command): EnrollmentProgressResponse
@@ -62,6 +66,15 @@ final readonly class CompleteLessonHandler
 
         $progress->completeLesson($lessonId, new DateTimeImmutable('now'), $command->timeSpentMinutes);
         $this->progressRepository->save($progress);
+
+        $this->learningEvents->record(new LearningEventEntry(
+            enrollmentId: $enrollment->id()->value(),
+            userId: $enrollment->userId(),
+            courseId: $enrollment->courseId()->value(),
+            verb: LearningVerb::LessonCompleted,
+            subjectId: $lessonId->value(),
+            evidence: ['time_spent_minutes' => $command->timeSpentMinutes],
+        ));
 
         return $this->calculator->calculate($enrollment, $progress);
     }
