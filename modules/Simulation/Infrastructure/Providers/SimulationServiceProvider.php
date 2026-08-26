@@ -17,6 +17,7 @@ use Modules\Simulation\Application\Commands\StartSimulationSessionCommand;
 use Modules\Simulation\Application\Commands\SubmitTelemetryCommand;
 use Modules\Simulation\Application\Commands\SuspendSimulatorCommand;
 use Modules\Simulation\Application\Queries\GetMySimulationSessionsQuery;
+use Modules\Simulation\Application\Queries\GetPracticalResultQuery;
 use Modules\Simulation\Application\Queries\GetSessionTelemetryQuery;
 use Modules\Simulation\Application\Queries\GetSimulationSessionQuery;
 use Modules\Simulation\Application\Queries\GetSimulatorQuery;
@@ -25,6 +26,7 @@ use Modules\Simulation\Application\Queries\ListSimulatorsQuery;
 use Modules\Simulation\Application\UseCases\CancelSimulationSessionHandler;
 use Modules\Simulation\Application\UseCases\CompleteSimulationSessionHandler;
 use Modules\Simulation\Application\UseCases\GetMySimulationSessionsHandler;
+use Modules\Simulation\Application\UseCases\GetPracticalResultHandler;
 use Modules\Simulation\Application\UseCases\GetSessionTelemetryHandler;
 use Modules\Simulation\Application\UseCases\GetSimulationSessionHandler;
 use Modules\Simulation\Application\UseCases\GetSimulatorHandler;
@@ -77,6 +79,7 @@ final class SimulationServiceProvider extends ServiceProvider
 
         $registry->register(SubmitTelemetryCommand::class, SubmitTelemetryHandler::class);
         $registry->register(GetSessionTelemetryQuery::class, GetSessionTelemetryHandler::class);
+        $registry->register(GetPracticalResultQuery::class, GetPracticalResultHandler::class);
 
         $this->loadRoutesFrom(
             dirname(__DIR__, 2).'/Presentation/Routes/api.php',

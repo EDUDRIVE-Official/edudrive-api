@@ -14,6 +14,7 @@ use Modules\Simulation\Application\Commands\StartSimulationSessionCommand;
 use Modules\Simulation\Application\Commands\SubmitTelemetryCommand;
 use Modules\Simulation\Application\Commands\SuspendSimulatorCommand;
 use Modules\Simulation\Application\Queries\GetMySimulationSessionsQuery;
+use Modules\Simulation\Application\Queries\GetPracticalResultQuery;
 use Modules\Simulation\Application\Queries\GetSessionTelemetryQuery;
 use Modules\Simulation\Application\Queries\GetSimulationSessionQuery;
 use Modules\Simulation\Application\Queries\GetSimulatorQuery;
@@ -22,6 +23,7 @@ use Modules\Simulation\Application\Queries\ListSimulatorsQuery;
 use Modules\Simulation\Application\UseCases\CancelSimulationSessionHandler;
 use Modules\Simulation\Application\UseCases\CompleteSimulationSessionHandler;
 use Modules\Simulation\Application\UseCases\GetMySimulationSessionsHandler;
+use Modules\Simulation\Application\UseCases\GetPracticalResultHandler;
 use Modules\Simulation\Application\UseCases\GetSessionTelemetryHandler;
 use Modules\Simulation\Application\UseCases\GetSimulationSessionHandler;
 use Modules\Simulation\Application\UseCases\GetSimulatorHandler;
@@ -77,4 +79,10 @@ it('registra los handlers CQRS de telemetria en el registry', function (): void 
 
     expect($registry->handlerFor(SubmitTelemetryCommand::class))->toBe(SubmitTelemetryHandler::class)
         ->and($registry->handlerFor(GetSessionTelemetryQuery::class))->toBe(GetSessionTelemetryHandler::class);
+});
+
+it('registra el handler CQRS de resultados practicos en el registry', function (): void {
+    $registry = app(MessageHandlerRegistry::class);
+
+    expect($registry->handlerFor(GetPracticalResultQuery::class))->toBe(GetPracticalResultHandler::class);
 });
