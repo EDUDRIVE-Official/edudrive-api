@@ -1734,3 +1734,27 @@ Tercera historia de la Fase 10 — Gamificación, extiende `Modules\Gamification
 - `php artisan route:list --path=gamification` ✅ — 16 rutas registradas (las 14 previas de ENG-051/052 + 2 de experiencia).
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-054 (Cierre de ENG-054 — Retos y misiones)
+
+### Alcance acordado con el usuario
+
+Cuarta y última historia de la Fase 10 — Gamificación. Retos individuales, grupales y misiones educativas se modelan con un solo agregado `Challenge` y un enum cerrado `ChallengeType`, sin modelar un concepto nuevo de equipo/grupo con membresía propia — un reto "grupal" es simplemente uno en el que participan varios usuarios, cada uno con su propio registro de participación. Todo el registro (unirse y finalizar) es manual vía `challenges.manage`, mismo criterio que `Achievement`/`Badge`, sin autoservicio de "unirse". Las fechas de vigencia restringen funcionalmente cuándo se puede registrar una participación nueva. La recompensa es texto libre descriptivo, sin vincularse ni otorgar automáticamente un `Achievement`/`Badge` real. Diferido explícitamente: concepto real de equipo/grupo, autoservicio de unión, otorgamiento automático de un logro/insignia real, consulta de las participaciones de otro usuario, reversión de una participación ya completada. Detalle en `docs/plans/2026-08-26-retos-misiones-eng054-design.md`.
+
+### Completado
+
+- **Dominio**: `ChallengeId`/`ChallengeCode` (mismos patrones que `AchievementId`/`AchievementCode`); `ChallengeType` (`Individual`/`Group`/`Educational`); `ChallengeStatus` (`Active`/`Retired`); `ChallengeParticipationStatus` (`Joined`/`Completed`). Agregado `Challenge` (constructor privado, `create()`/`restore()` validan que `endsAt` sea posterior a `startsAt` vía `guardDateWindow()`, `retire()` mismo criterio que `Achievement`/`Badge`, `isWithinWindow(DateTimeImmutable): bool` método de consulta puro). Entidad `ChallengeParticipation` — a diferencia de `UserAchievement`/`UserBadge`, no es un registro de solo-append inmutable: `join()` estático y `complete(?string $evidence, DateTimeImmutable $at)` mutador con guarda de invariante (`InvalidChallengeParticipationTransition`, 422, si ya está `Completed`), mismo espíritu que la transición `Active`→`Retired` de `Badge`.
+- **Persistencia**: tabla `challenges` (código único, `type`/`status` como columnas propias, `starts_at`/`ends_at`) y `challenge_participations` (FK cascada a `challenges` y a `users`, único por `challenge_id`+`user_id`). `ChallengeRepository`/`ChallengeParticipationRepository` con sus implementaciones Eloquent (`updateOrCreate`).
+- **CQRS**: `CreateChallengeCommand`/`RetireChallengeCommand`/`JoinChallengeCommand`/`CompleteChallengeParticipationCommand` y `GetChallengeQuery`/`ListChallengesQuery`/`GetMyChallengeParticipationsQuery`, con sus handlers. `JoinChallengeHandler` exige que el reto esté `active` **y** dentro de su ventana de vigencia (`ChallengeNotAvailable`, 422) y rechaza una unión duplicada (`ChallengeAlreadyJoined`, 409). `CompleteChallengeParticipationHandler` busca la participación existente por reto+usuario (`ChallengeParticipationNotFound`, 404, si no existe) y llama a `complete()`. Excepciones uniformes `ChallengeNotFound` (404) y `ChallengeAlreadyExists` (409).
+- **Autorización**: nuevos permisos `challenges.manage`/`challenges.view` (independientes de `achievements.*`/`badges.*`). `challenges.manage`: SuperAdmin e InstitutionalAdmin. `challenges.view`: SuperAdmin, InstitutionalAdmin, Teacher y **Student** (mismo criterio que `achievements.view`/`badges.view`).
+- **API HTTP**: `/api/v1/gamification/challenges` — `POST`/`POST {id}/retire`/`POST {id}/join`/`POST {id}/complete` bajo `challenges.manage`; `GET`/`GET {id}` bajo `challenges.view`; `GET /challenges/me` bajo `auth:sanctum` sin permiso adicional (autoservicio de consulta de participaciones propias).
+- **Pruebas**: 55 tests nuevos repartidos en dominio (`Challenge` — incluyendo la validación de ventana de fechas y `isWithinWindow()`, `ChallengeParticipation` — incluyendo la transición `Joined`→`Completed`, `ChallengeCode`), persistencia (ambos repositorios Eloquent), aplicación (handlers con repositorios en memoria, incluyendo el rechazo por ventana de fechas), proveedor de servicios y feature (API HTTP completa, incluyendo unión dentro/fuera de ventana, finalización y autoservicio de `/challenges/me`).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `174 passed (415 assertions)`.
+- Suite completa de Authorization ✅ — `50 passed (159 assertions)`, confirmando los permisos nuevos.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=gamification` ✅ — 23 rutas registradas (las 16 previas de ENG-051/052/053 + 7 de retos).
+
+**Estado:** Finalizado. Con esto cierra por completo la **Fase 10 — Gamificación** (ENG-051 a ENG-054).

@@ -996,7 +996,9 @@ Edición o borrado de un registro de experiencia ya creado.
 Referencias reales a `Competency` de Academic.
 ENG-054 — Retos y misiones
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): cuarta y última historia de la Fase 10, extiende `Modules\Gamification` con el agregado `Challenge` y la entidad `ChallengeParticipation`. Retos individuales, grupales y misiones educativas se modelan con un solo agregado y un enum cerrado `ChallengeType` (`individual`/`group`/`educational`) — un reto "grupal" es simplemente uno en el que participan varios usuarios, cada uno con su propio registro de `ChallengeParticipation`, sin modelar un concepto nuevo de equipo/grupo con membresía propia. Las fechas de vigencia (`startsAt`/`endsAt`) restringen funcionalmente la participación: `Challenge::isWithinWindow()` rechaza una unión nueva fuera de esa ventana. La recompensa (`reward`) es texto libre descriptivo, sin vincularse a un `Achievement`/`Badge` real. El seguimiento se modela con `ChallengeParticipation`, distinta de `UserAchievement`/`UserBadge` en que no es un registro de solo-append inmutable: tiene su propia transición `Joined` → `Completed` (`InvalidChallengeParticipationTransition`, 422, si ya está completada). Todo el registro (unión y finalización) es manual vía `challenges.manage`, mismo criterio que `Achievement`/`Badge` — sin autoservicio de "unirse". CQRS completo y API HTTP en `/api/v1/gamification/challenges` con `challenges.view` extendido a `Student`; autoservicio de consulta en `GET /challenges/me`. Concepto real de equipo/grupo, autoservicio de unión, otorgamiento automático de un logro/insignia real y consulta de las participaciones de otro usuario diferidos explícitamente. Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-retos-misiones-eng054-design.md`.
 
 Incluye:
 
@@ -1006,6 +1008,16 @@ Misiones educativas.
 Fechas.
 Recompensas.
 Seguimiento.
+
+Diferido:
+
+Concepto real de equipo/grupo con membresía propia y seguimiento agregado a nivel de grupo.
+Autoservicio de "unirse" a un reto/misión por parte del estudiante.
+Otorgamiento automático de un Achievement/Badge real al completar un reto/misión.
+Consulta de las participaciones de otro usuario (solo autoservicio).
+Reversión de una participación ya completada.
+
+Con esto cierra por completo la **Fase 10 — Gamificación** (ENG-051 a ENG-054).
 ENG-055 — Tablas de clasificación
 
 Estado: Diferido
@@ -1530,3 +1542,4 @@ Versión	Fecha	Descripción
 1.29.0	2026-08-26	Cierre de ENG-051 (Logros), primera historia de la Fase 10 (Gamificación): nuevo módulo `Modules\Gamification` con el agregado `Achievement` (catálogo, código único, ciclo de vida `active`/`retired` sin reversión) y la entidad de solo-append `UserAchievement` (otorgamiento manual con evidencia y fecha); otorgamiento vía `achievements.manage` (mismo criterio que `Certificate`), CQRS completo y API HTTP en `/api/v1/gamification/achievements` con `achievements.view` extendido a `Student` por ser catálogo de navegación abierta (a diferencia de módulos previos); revocación de logros, consulta de logros de otro usuario y evaluación automática de reglas diferidas explícitamente (IMP-051 en ENG-LOG.md)
 1.30.0	2026-08-26	Cierre de ENG-052 (Insignias), segunda historia de la Fase 10: agregado `Badge` en `Modules\Gamification`, con categoría cerrada `BadgeCategory` (educativa/institucional/práctica), nivel fijo `BadgeLevel` (bronce/plata/oro) y contenido editable vía `updateContent()` que incrementa un campo `version` (sin snapshots históricos); el otorgamiento (`UserBadge`) guarda `awardedVersion`, la versión vigente al momento de otorgarse; edición bloqueada si la insignia está retirada (`InvalidBadgeTransition`); otorgamiento manual vía `badges.manage` (mismo criterio que `Achievement`), CQRS completo y API HTTP en `/api/v1/gamification/badges` (incluye `PUT` para editar contenido) con `badges.view` extendido a `Student`; sistema de progresión de niveles (corresponde a ENG-053), historial completo de versiones, revocación y consulta de insignias de otro usuario diferidos explícitamente (IMP-052 en ENG-LOG.md)
 1.31.0	2026-08-26	Cierre de ENG-053 (Experiencia y niveles), tercera historia de la Fase 10: ledger de solo-append `ExperienceEntry` en `Modules\Gamification` (puntos estrictamente positivos, competencia opcional en texto libre, motivo); nivel general y nivel por competencia derivados por el servicio de dominio puro `ExperienceLevelCalculator` en cada consulta (`nivel = floor(xp_total / 100) + 1`, mismo patrón que `PracticalResultCalculator`/`DecisionEngineCalculator`), sin persistir el nivel; registro manual vía `experience.manage` (sin autoservicio de registro, ledger inmutable) y autoservicio de consulta en `GET /experience/me` (mismo criterio que `/achievements/me`/`/badges/me`); integración automática con otros módulos, tabla de umbrales configurable y consulta del resumen de otro usuario diferidos explícitamente (IMP-053 en ENG-LOG.md)
+1.32.0	2026-08-26	Cierre de ENG-054 (Retos y misiones) — última historia de la Fase 10: agregado `Challenge` (retos individuales/grupales y misiones educativas unificados bajo un enum cerrado `ChallengeType`, sin concepto de equipo/grupo propio) y entidad `ChallengeParticipation` con transición propia `Joined`→`Completed` (a diferencia de `UserAchievement`/`UserBadge`, no es un registro de solo-append inmutable); las fechas de vigencia restringen funcionalmente la unión (`Challenge::isWithinWindow()`); recompensa en texto libre sin vincularse a un logro/insignia real; todo el registro (unión y finalización) es manual vía `challenges.manage`, sin autoservicio; CQRS completo y API HTTP en `/api/v1/gamification/challenges` con `challenges.view` extendido a `Student` y autoservicio de consulta en `/challenges/me`; concepto de equipo/grupo, autoservicio de unión, otorgamiento automático de logros/insignias y consulta de participaciones de otro usuario diferidos explícitamente (IMP-054 en ENG-LOG.md). Con esto cierra por completo la Fase 10 — Gamificación (ENG-051 a ENG-054)
