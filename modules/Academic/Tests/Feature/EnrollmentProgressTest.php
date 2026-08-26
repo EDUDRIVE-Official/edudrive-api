@@ -234,3 +234,44 @@ it('responde 404 al consultar el curriculo de un enrollment inexistente', functi
         ->assertNotFound()
         ->assertJsonPath('code', 'ENROLLMENT_NOT_FOUND');
 });
+
+it('consulta las recomendaciones de aprendizaje propias', function (): void {
+    /** @var TestCase $this */
+    $userId = (string) Str::uuid();
+    actingAsUserId($userId);
+    $enrollment = activeEnrollmentForProgressFeature($userId);
+
+    $this->getJson("/api/v1/academic/enrollments/{$enrollment->id()->value()}/recommendations")
+        ->assertOk()
+        ->assertJsonPath('data.enrollment_id', $enrollment->id()->value())
+        ->assertJsonStructure(['data' => ['enrollment_id', 'next_lesson_id', 'weak_competencies', 'retryable_exams']]);
+});
+
+it('rechaza consultar recomendaciones ajenas sin permiso ampliado', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::Student);
+    $enrollment = activeEnrollmentForProgressFeature();
+
+    $this->getJson("/api/v1/academic/enrollments/{$enrollment->id()->value()}/recommendations")
+        ->assertNotFound()
+        ->assertJsonPath('code', 'ENROLLMENT_NOT_FOUND');
+});
+
+it('permite consultar recomendaciones ajenas con enrollments.view', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::Teacher);
+    $enrollment = activeEnrollmentForProgressFeature();
+
+    $this->getJson("/api/v1/academic/enrollments/{$enrollment->id()->value()}/recommendations")
+        ->assertOk()
+        ->assertJsonPath('data.enrollment_id', $enrollment->id()->value());
+});
+
+it('responde 404 al consultar recomendaciones de un enrollment inexistente', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::Teacher);
+
+    $this->getJson('/api/v1/academic/enrollments/'.Str::uuid().'/recommendations')
+        ->assertNotFound()
+        ->assertJsonPath('code', 'ENROLLMENT_NOT_FOUND');
+});

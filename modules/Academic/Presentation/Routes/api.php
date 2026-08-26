@@ -230,5 +230,9 @@ Route::prefix('api/v1/academic')
             Route::get('/enrollments/{enrollmentId}/curriculum', [EnrollmentProgressController::class, 'curriculum'])
                 ->whereUuid('enrollmentId')
                 ->name('enrollments.curriculum.show');
+
+            Route::get('/enrollments/{enrollmentId}/recommendations', [EnrollmentProgressController::class, 'recommendations'])
+                ->whereUuid('enrollmentId')
+                ->name('enrollments.recommendations.show');
         });
     });

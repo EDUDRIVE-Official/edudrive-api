@@ -9,9 +9,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Academic\Application\Commands\CompleteLessonCommand;
 use Modules\Academic\Application\Queries\GetEnrollmentCurriculumStatusQuery;
+use Modules\Academic\Application\Queries\GetEnrollmentLearningRecommendationsQuery;
 use Modules\Academic\Application\Queries\GetEnrollmentProgressQuery;
 use Modules\Academic\Application\Responses\CurriculumUnlockResponse;
 use Modules\Academic\Application\Responses\EnrollmentProgressResponse;
+use Modules\Academic\Application\Responses\LearningRecommendationsResponse;
 use Modules\Academic\Presentation\Http\Requests\CompleteLessonRequest;
 use Modules\Authorization\Application\Services\PermissionChecker;
 use Modules\Authorization\Domain\Enums\Permission;
@@ -70,6 +72,23 @@ final class EnrollmentProgressController
             canViewOthers: $permissionChecker->userHasPermission((string) $user->getAuthIdentifier(), Permission::ViewEnrollments),
         ));
         assert($result instanceof CurriculumUnlockResponse);
+
+        return response()->json(['data' => $result->toArray()]);
+    }
+
+    public function recommendations(
+        string $enrollmentId,
+        Request $request,
+        QueryBus $queryBus,
+        PermissionChecker $permissionChecker,
+    ): JsonResponse {
+        $user = self::authenticatedUser($request);
+        $result = $queryBus->ask(new GetEnrollmentLearningRecommendationsQuery(
+            enrollmentId: $enrollmentId,
+            userId: (string) $user->getAuthIdentifier(),
+            canViewOthers: $permissionChecker->userHasPermission((string) $user->getAuthIdentifier(), Permission::ViewEnrollments),
+        ));
+        assert($result instanceof LearningRecommendationsResponse);
 
         return response()->json(['data' => $result->toArray()]);
     }
