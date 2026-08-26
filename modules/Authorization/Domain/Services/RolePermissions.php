@@ -37,6 +37,8 @@ final class RolePermissions
                 Permission::ViewExamAttempts,
                 Permission::ManageEnrollments,
                 Permission::ViewEnrollments,
+                Permission::ManageRoadPassports,
+                Permission::ViewRoadPassports,
             ],
             Role::InstitutionalAdmin => [
                 Permission::ViewOrganizations,
@@ -48,6 +50,8 @@ final class RolePermissions
                 Permission::ViewExamAttempts,
                 Permission::ManageEnrollments,
                 Permission::ViewEnrollments,
+                Permission::ManageRoadPassports,
+                Permission::ViewRoadPassports,
             ],
             Role::Teacher => [
                 Permission::ViewOrganizations,
@@ -58,6 +62,7 @@ final class RolePermissions
                 Permission::ViewExams,
                 Permission::ViewExamAttempts,
                 Permission::ViewEnrollments,
+                Permission::ViewRoadPassports,
             ],
             Role::Student => [
                 Permission::ViewOrganizations,
