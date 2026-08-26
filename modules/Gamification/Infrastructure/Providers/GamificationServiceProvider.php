@@ -38,11 +38,15 @@ use Modules\Gamification\Application\UseCases\RetireBadgeHandler;
 use Modules\Gamification\Application\UseCases\UpdateBadgeHandler;
 use Modules\Gamification\Domain\Repositories\AchievementRepository;
 use Modules\Gamification\Domain\Repositories\BadgeRepository;
+use Modules\Gamification\Domain\Repositories\ChallengeParticipationRepository;
+use Modules\Gamification\Domain\Repositories\ChallengeRepository;
 use Modules\Gamification\Domain\Repositories\ExperienceEntryRepository;
 use Modules\Gamification\Domain\Repositories\UserAchievementRepository;
 use Modules\Gamification\Domain\Repositories\UserBadgeRepository;
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentAchievementRepository;
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentBadgeRepository;
+use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentChallengeParticipationRepository;
+use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentChallengeRepository;
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentExperienceEntryRepository;
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentUserAchievementRepository;
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentUserBadgeRepository;
@@ -56,6 +60,8 @@ final class GamificationServiceProvider extends ServiceProvider
         $this->app->bind(BadgeRepository::class, EloquentBadgeRepository::class);
         $this->app->bind(UserBadgeRepository::class, EloquentUserBadgeRepository::class);
         $this->app->bind(ExperienceEntryRepository::class, EloquentExperienceEntryRepository::class);
+        $this->app->bind(ChallengeRepository::class, EloquentChallengeRepository::class);
+        $this->app->bind(ChallengeParticipationRepository::class, EloquentChallengeParticipationRepository::class);
     }
 
     public function boot(MessageHandlerRegistry $registry): void
