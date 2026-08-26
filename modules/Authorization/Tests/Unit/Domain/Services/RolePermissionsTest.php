@@ -131,3 +131,17 @@ it('otorga manage y view de pasaporte vial al administrador institucional, solo 
         ->and(RolePermissions::grants(Role::Student, Permission::ManageRoadPassports))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ViewRoadPassports))->toBeFalse();
 });
+
+it('otorga permisos de certificaciones al superadministrador', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageCertifications))->toBeTrue()
+        ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewCertifications))->toBeTrue();
+});
+
+it('otorga manage y view de certificaciones al administrador institucional, solo view al docente y ninguno al estudiante', function (): void {
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageCertifications))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewCertifications))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageCertifications))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ViewCertifications))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageCertifications))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ViewCertifications))->toBeFalse();
+});

@@ -24,4 +24,6 @@ enum Permission: string
     case ViewEnrollments = 'enrollments.view';
     case ManageRoadPassports = 'road_passports.manage';
     case ViewRoadPassports = 'road_passports.view';
+    case ManageCertifications = 'certifications.manage';
+    case ViewCertifications = 'certifications.view';
 }
