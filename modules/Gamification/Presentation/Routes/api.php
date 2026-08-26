@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Modules\Gamification\Presentation\Http\Controllers\AchievementController;
+use Modules\Gamification\Presentation\Http\Controllers\BadgeController;
 use Modules\Gamification\Presentation\Http\Controllers\GamificationStatusController;
 
 Route::prefix('api/v1/gamification')
@@ -36,6 +37,35 @@ Route::prefix('api/v1/gamification')
                 Route::post('/achievements/{achievementId}/grant', [AchievementController::class, 'grant'])
                     ->whereUuid('achievementId')
                     ->name('achievements.grant');
+            });
+
+            Route::get('/badges/me', [BadgeController::class, 'me'])
+                ->name('badges.me');
+
+            Route::middleware('permission:badges.view')->group(function (): void {
+                Route::get('/badges', [BadgeController::class, 'index'])
+                    ->name('badges.index');
+
+                Route::get('/badges/{badgeId}', [BadgeController::class, 'show'])
+                    ->whereUuid('badgeId')
+                    ->name('badges.show');
+            });
+
+            Route::middleware('permission:badges.manage')->group(function (): void {
+                Route::post('/badges', [BadgeController::class, 'store'])
+                    ->name('badges.store');
+
+                Route::put('/badges/{badgeId}', [BadgeController::class, 'update'])
+                    ->whereUuid('badgeId')
+                    ->name('badges.update');
+
+                Route::post('/badges/{badgeId}/retire', [BadgeController::class, 'retire'])
+                    ->whereUuid('badgeId')
+                    ->name('badges.retire');
+
+                Route::post('/badges/{badgeId}/grant', [BadgeController::class, 'grant'])
+                    ->whereUuid('badgeId')
+                    ->name('badges.grant');
             });
         });
     });
