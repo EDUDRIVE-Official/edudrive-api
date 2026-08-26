@@ -63,18 +63,30 @@ it('guarda y recupera lecturas de telemetria en lote', function (): void {
         TelemetrySample::record((string) Str::uuid(), $sessionId, 42.5, 10.0, -0.5, 3.0, new DateTimeImmutable('2026-09-01T10:10:05+00:00')),
     ];
 
-    app(TelemetrySampleRepository::class)->saveBatch($samples);
+    $inserted = app(TelemetrySampleRepository::class)->saveBatch($samples);
     $found = app(TelemetrySampleRepository::class)->allForSession($sessionId);
 
-    expect($found)->toHaveCount(2)
+    expect($inserted)->toBe(2)
+        ->and($found)->toHaveCount(2)
         ->and($found[0]->speedKph())->toBe(40.0)
         ->and($found[1]->brakingPercentage())->toBe(10.0);
 });
 
 it('no falla al guardar un lote vacio de lecturas', function (): void {
-    app(TelemetrySampleRepository::class)->saveBatch([]);
+    expect(app(TelemetrySampleRepository::class)->saveBatch([]))->toBe(0);
+});
 
-    expect(true)->toBeTrue();
+it('ignora una lectura reenviada con el mismo id sin duplicarla', function (): void {
+    $sessionId = persistedTelemetrySessionId();
+    $sample = TelemetrySample::record((string) Str::uuid(), $sessionId, 40.0, 0.0, 1.1, 0.0, new DateTimeImmutable('2026-09-01T10:10:00+00:00'));
+    $repository = app(TelemetrySampleRepository::class);
+
+    $first = $repository->saveBatch([$sample]);
+    $second = $repository->saveBatch([$sample]);
+
+    expect($first)->toBe(1)
+        ->and($second)->toBe(0)
+        ->and($repository->allForSession($sessionId))->toHaveCount(1);
 });
 
 it('guarda y recupera eventos de telemetria en lote', function (): void {
@@ -84,10 +96,11 @@ it('guarda y recupera eventos de telemetria en lote', function (): void {
         TelemetryEvent::record((string) Str::uuid(), $sessionId, TelemetryEventType::SignalUsage, null, new DateTimeImmutable('2026-09-01T10:13:00+00:00')),
     ];
 
-    app(TelemetryEventRepository::class)->saveBatch($events);
+    $inserted = app(TelemetryEventRepository::class)->saveBatch($events);
     $found = app(TelemetryEventRepository::class)->allForSession($sessionId);
 
-    expect($found)->toHaveCount(2)
+    expect($inserted)->toBe(2)
+        ->and($found)->toHaveCount(2)
         ->and($found[0]->type())->toBe(TelemetryEventType::Collision)
         ->and($found[0]->details())->toBe('Colision leve')
         ->and($found[1]->details())->toBeNull();

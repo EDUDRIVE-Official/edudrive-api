@@ -12,13 +12,13 @@ use Modules\Simulation\Infrastructure\Persistence\Eloquent\Models\TelemetrySampl
 final readonly class EloquentTelemetrySampleRepository implements TelemetrySampleRepository
 {
     /** @param list<TelemetrySample> $samples */
-    public function saveBatch(array $samples): void
+    public function saveBatch(array $samples): int
     {
         if ($samples === []) {
-            return;
+            return 0;
         }
 
-        TelemetrySampleModel::query()->insert(array_map(
+        return TelemetrySampleModel::query()->insertOrIgnore(array_map(
             static fn (TelemetrySample $sample): array => [
                 'id' => $sample->id(),
                 'simulation_session_id' => $sample->sessionId(),

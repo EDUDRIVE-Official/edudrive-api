@@ -13,13 +13,13 @@ use Modules\Simulation\Infrastructure\Persistence\Eloquent\Models\TelemetryEvent
 final readonly class EloquentTelemetryEventRepository implements TelemetryEventRepository
 {
     /** @param list<TelemetryEvent> $events */
-    public function saveBatch(array $events): void
+    public function saveBatch(array $events): int
     {
         if ($events === []) {
-            return;
+            return 0;
         }
 
-        TelemetryEventModel::query()->insert(array_map(
+        return TelemetryEventModel::query()->insertOrIgnore(array_map(
             static fn (TelemetryEvent $event): array => [
                 'id' => $event->id(),
                 'simulation_session_id' => $event->sessionId(),

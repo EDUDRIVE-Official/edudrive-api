@@ -14,13 +14,13 @@ use Modules\Simulation\Infrastructure\Persistence\Eloquent\Models\DecisionPointM
 final readonly class EloquentDecisionPointRepository implements DecisionPointRepository
 {
     /** @param list<DecisionPoint> $points */
-    public function saveBatch(array $points): void
+    public function saveBatch(array $points): int
     {
         if ($points === []) {
-            return;
+            return 0;
         }
 
-        DecisionPointModel::query()->insert(array_map(
+        return DecisionPointModel::query()->insertOrIgnore(array_map(
             static fn (DecisionPoint $point): array => [
                 'id' => $point->id(),
                 'simulation_session_id' => $point->sessionId(),

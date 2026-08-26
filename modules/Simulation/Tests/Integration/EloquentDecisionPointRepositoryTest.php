@@ -62,17 +62,29 @@ it('guarda y recupera puntos de decision en lote', function (): void {
         DecisionPoint::record((string) Str::uuid(), $sessionId, 'Peatón cruzando', DecisionRiskLevel::Medium, DriverReactionType::Signaled, new DateTimeImmutable('2026-09-01T10:13:00+00:00')),
     ];
 
-    app(DecisionPointRepository::class)->saveBatch($points);
+    $inserted = app(DecisionPointRepository::class)->saveBatch($points);
     $found = app(DecisionPointRepository::class)->allForSession($sessionId);
 
-    expect($found)->toHaveCount(2)
+    expect($inserted)->toBe(2)
+        ->and($found)->toHaveCount(2)
         ->and($found[0]->roadContext())->toBe('Semáforo en amarillo')
         ->and($found[0]->riskLevel())->toBe(DecisionRiskLevel::High)
         ->and($found[1]->driverReaction())->toBe(DriverReactionType::Signaled);
 });
 
 it('no falla al guardar un lote vacio de puntos de decision', function (): void {
-    app(DecisionPointRepository::class)->saveBatch([]);
+    expect(app(DecisionPointRepository::class)->saveBatch([]))->toBe(0);
+});
 
-    expect(true)->toBeTrue();
+it('ignora un punto de decision reenviado con el mismo id sin duplicarlo', function (): void {
+    $sessionId = persistedDecisionPointSessionId();
+    $point = DecisionPoint::record((string) Str::uuid(), $sessionId, 'Semáforo en amarillo', DecisionRiskLevel::High, DriverReactionType::Braked, new DateTimeImmutable('2026-09-01T10:12:00+00:00'));
+    $repository = app(DecisionPointRepository::class);
+
+    $first = $repository->saveBatch([$point]);
+    $second = $repository->saveBatch([$point]);
+
+    expect($first)->toBe(1)
+        ->and($second)->toBe(0)
+        ->and($repository->allForSession($sessionId))->toHaveCount(1);
 });
