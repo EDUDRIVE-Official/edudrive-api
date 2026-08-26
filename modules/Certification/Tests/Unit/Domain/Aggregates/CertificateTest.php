@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Str;
 use Modules\Certification\Domain\Aggregates\Certificate;
+use Modules\Certification\Domain\Enums\CertificateEffectiveStatus;
 use Modules\Certification\Domain\Enums\CertificateStatus;
 use Modules\Certification\Domain\Exceptions\InvalidCertificateTransition;
 use Modules\Certification\Domain\ValueObjects\CertificateHistoryEntry;
@@ -92,4 +93,33 @@ it('restaura el agregado completo desde persistencia', function (): void {
         ->and($certificate->issuedAt())->toBe($issuedAt)
         ->and($certificate->expiresAt())->toBe($expiresAt)
         ->and($certificate->history())->toBe([$historyEntry]);
+});
+
+it('reporta vigencia efectiva valid sin fecha de expiracion', function (): void {
+    $certificate = newCertificate();
+
+    expect($certificate->effectiveStatus(new DateTimeImmutable('2026-08-26T10:00:00+00:00')))
+        ->toBe(CertificateEffectiveStatus::Valid);
+});
+
+it('reporta vigencia efectiva valid mientras la fecha de expiracion no haya pasado', function (): void {
+    $certificate = newCertificate(new DateTimeImmutable('2027-08-26T10:00:00+00:00'));
+
+    expect($certificate->effectiveStatus(new DateTimeImmutable('2026-08-26T10:00:00+00:00')))
+        ->toBe(CertificateEffectiveStatus::Valid);
+});
+
+it('reporta vigencia efectiva expired cuando la fecha de expiracion ya paso', function (): void {
+    $certificate = newCertificate(new DateTimeImmutable('2026-08-27T00:00:00+00:00'));
+
+    expect($certificate->effectiveStatus(new DateTimeImmutable('2026-08-28T00:00:00+00:00')))
+        ->toBe(CertificateEffectiveStatus::Expired);
+});
+
+it('reporta vigencia efectiva revoked sin importar la fecha de expiracion', function (): void {
+    $certificate = newCertificate(new DateTimeImmutable('2027-08-26T10:00:00+00:00'));
+    $certificate->revoke('Fraude', new DateTimeImmutable('2026-08-27T00:00:00+00:00'));
+
+    expect($certificate->effectiveStatus(new DateTimeImmutable('2026-08-26T12:00:00+00:00')))
+        ->toBe(CertificateEffectiveStatus::Revoked);
 });

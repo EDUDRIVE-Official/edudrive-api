@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Certification\Domain\Aggregates;
 
 use DateTimeImmutable;
+use Modules\Certification\Domain\Enums\CertificateEffectiveStatus;
 use Modules\Certification\Domain\Enums\CertificateStatus;
 use Modules\Certification\Domain\Exceptions\InvalidCertificateTransition;
 use Modules\Certification\Domain\ValueObjects\CertificateHistoryEntry;
@@ -108,5 +109,18 @@ final class Certificate
     public function history(): array
     {
         return $this->history;
+    }
+
+    public function effectiveStatus(DateTimeImmutable $now): CertificateEffectiveStatus
+    {
+        if ($this->status === CertificateStatus::Revoked) {
+            return CertificateEffectiveStatus::Revoked;
+        }
+
+        if ($this->expiresAt !== null && $this->expiresAt < $now) {
+            return CertificateEffectiveStatus::Expired;
+        }
+
+        return CertificateEffectiveStatus::Valid;
     }
 }
