@@ -16,4 +16,13 @@ final class CertificateNotFound extends DomainException
             statusCode: 404,
         );
     }
+
+    public static function withValidationCode(string $validationCode): self
+    {
+        return new self(
+            message: "No se encontro ningun certificado con el codigo {$validationCode}.",
+            errorCode: 'CERTIFICATE_NOT_FOUND',
+            statusCode: 404,
+        );
+    }
 }
