@@ -1526,3 +1526,28 @@ Endpoint público (sin autenticación) para verificar un certificado por código
 - `php artisan route:list --path=certification` ✅ — 6 rutas registradas (las 5 previas + `verify`).
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-045 (Cierre de ENG-045 — Registro de simuladores)
+
+### Alcance acordado con el usuario
+
+Primera historia de la Fase 9 (Integración con SIMUDRIVE): registro administrativo de simuladores autorizados. Llaves de integración generadas al registrar/rotar, devueltas **una única vez** en la respuesta HTTP; en base de datos solo se guarda su hash SHA-256 (mismo espíritu que los *personal access tokens* de Sanctum) — si se pierde, solo se puede rotar, no recuperar. Ciclo de vida `Active` → `Suspended` (reversible) → `Active` de nuevo, o `Retired` (terminal, mismo criterio que `RoadPassport::revoke()`/`Certificate::revoke()`). Diferido explícitamente: validación de sesiones/telemetría contra el simulador (ENG-046/047 — este incremento solo registra, no usa el simulador todavía), actualización de versión de software por heartbeat del dispositivo, geolocalización estructurada (`Ubicación` es texto libre). Detalle en `docs/plans/2026-08-26-registro-simuladores-eng045-design.md`.
+
+### Completado
+
+- **Módulo nuevo `Modules\Simulation`** (`modules/Simulation`), siguiendo ENG-003 al pie de la letra: capas Domain/Application/Infrastructure/Presentation, `SimulationServiceProvider` registrado en `bootstrap/providers.php`, endpoint de estado público `GET /api/v1/simulation/status`.
+- **Dominio**: `SimulatorId` (VO UUID); `DeviceIdentifier` (VO, no vacío, máximo 100 caracteres, mismo espíritu que `CourseCode`); `IntegrationKey` (VO) — `generate()` crea un valor aleatorio de 32 bytes (`random_bytes`, hexadecimal) y su hash SHA-256; `plainValue()` no nulo solo justo después de `generate()`; `fromHash()` reconstruye desde persistencia; `matches()` compara con `hash_equals()` (seguro contra *timing attacks*); `SimulatorStatus` (enum `Active`/`Suspended`/`Retired`); `SimulatorHistoryEntry` (VO de cambios de estado, mismo patrón que `CertificateHistoryEntry`); agregado `Simulator` (`register()`, `restore()`, `suspend()`, `reactivate()`, `retire()` — transiciones válidas mismo patrón que `RoadPassport`, `retire()` es terminal —, `rotateIntegrationKey()` sin entrada de historial porque no es un cambio de estado).
+- **Persistencia**: tablas `simulators` (PK UUID, `device_identifier` único, `integration_key_hash` único) y `simulator_history_entries` (FK cascada); `EloquentSimulatorRepository` transaccional, borra y reinserta el historial completo en cada `save()`.
+- **CQRS**: `RegisterSimulatorCommand`/`SuspendSimulatorCommand`/`ReactivateSimulatorCommand`/`RetireSimulatorCommand`/`RotateSimulatorIntegrationKeyCommand`/`GetSimulatorQuery`/`ListSimulatorsQuery` con sus handlers. `RegisterSimulatorHandler` rechaza un `deviceIdentifier` duplicado (`SimulatorAlreadyExists`, 409). `SimulatorResponse` nunca incluye el hash de la llave; un campo opcional `integration_key` (valor plano) solo se agrega en la respuesta de `register`/`rotate-key`.
+- **Autorización**: permisos nuevos `simulators.manage`/`simulators.view`, mismo patrón de concesión que `road_passports.*`/`certifications.*`: `SuperAdmin` e `InstitutionalAdmin` ambos; `Teacher` solo view (necesita saber qué simuladores existen para ENG-046); `Student` ninguno.
+- **API HTTP** bajo `auth:sanctum`, prefijo `api/v1/simulation`: `POST /simulators` (`simulators.manage`), `GET /simulators` y `GET /simulators/{simulatorId}` (`simulators.view`), `POST /simulators/{simulatorId}/suspend|reactivate|retire|rotate-key` (`simulators.manage`). Errores públicos: `SIMULATOR_NOT_FOUND` (404), `SIMULATOR_ALREADY_EXISTS` (409), `INVALID_SIMULATOR_TRANSITION` (422).
+- **Pruebas**: 51 tests en total repartidos en dominio (agregado, `DeviceIdentifier`, `IntegrationKey`), aplicación (handlers con repositorio en memoria), integración (repositorio Eloquent, service provider) y feature (API HTTP completa, incluyendo autorización por rol y transiciones inválidas).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `51 passed (132 assertions)`.
+- Suite de `RolePermissionsTest` (Authorization) ✅ — `22 passed (88 assertions)` tras agregar los permisos nuevos.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=simulation` ✅ — 8 rutas registradas.
+
+**Estado:** Finalizado.

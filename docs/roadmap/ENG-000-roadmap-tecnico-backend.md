@@ -812,7 +812,9 @@ Límite de tasa/anti-abuso del endpoint público (preocupación de infraestructu
 15. Fase 9 — Integración con SIMUDRIVE
 ENG-045 — Registro de simuladores
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): nuevo módulo `Modules\Simulation`, registro administrativo de simuladores SIMUDRIVE autorizados. Agregado `Simulator` (`deviceIdentifier` único, `softwareVersion`, `location` opcional, `status` `active`/`suspended`/`retired` — terminal, sin reactivación desde `retired`, mismo criterio que `RoadPassport`/`Certificate` —, `integrationKey`, historial de transiciones). `IntegrationKey` genera un valor aleatorio de 32 bytes al registrar o rotar, devuelto **una única vez** en la respuesta HTTP; en base de datos solo se guarda su hash SHA-256 (mismo espíritu que los *personal access tokens* de Sanctum) — si se pierde, solo se puede rotar, no recuperar. CQRS completo (registrar, suspender, reactivar, retirar, rotar llave, consultar, listar) y API HTTP en `/api/v1/simulation/simulators` protegida por los permisos nuevos `simulators.manage`/`simulators.view` (`SuperAdmin`+`InstitutionalAdmin`: ambos; `Teacher`: solo view; `Student`: ninguno). Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-registro-simuladores-eng045-design.md`.
 
 Incluye:
 
@@ -822,6 +824,12 @@ Versión del software.
 Ubicación.
 Estado.
 Llaves de integración.
+
+Diferido:
+
+Validación de sesiones/telemetría contra el simulador (ENG-046/047 — este incremento solo registra el simulador, no lo usa todavía).
+Actualización de la versión de software reportada por heartbeat del propio dispositivo (la versión se fija al registrar, no hay canal de auto-reporte).
+Geolocalización estructurada (`Ubicación` es texto libre, no coordenadas).
 ENG-046 — Sesiones de simulación
 
 Estado: Pendiente
@@ -1445,3 +1453,4 @@ Versión	Fecha	Descripción
 1.20.0	2026-08-26	Cierre de ENG-042 (Competency Trust Model): `RoadPassportTrustCalculator` calcula un `trust_score` (0-100) global por pasaporte a partir de su evidencia (peso por fuente, decaimiento por recencia con piso mínimo, multiplicador de consistencia acotado), expuesto en `RoadPassportResponse` sin persistirse; desagregación por competencia, validez/expiración de evidencia y persistencia del score diferidos explícitamente
 1.21.0	2026-08-26	Cierre de ENG-043 (Credenciales y certificaciones): nuevo módulo `Modules\Certification` con el agregado `Certificate` (código de validación `ValidationCode` con formato `XXXX-XXXX-XXXX`, estado `issued`/`revoked` terminal, vigencia opcional, historial), emisión manual vía `certifications.manage`, CQRS completo y API HTTP en `/api/v1/certification/certificates` protegida por pertenencia o `certifications.manage`/`certifications.view`; emisión automática desde evidencia del Pasaporte Vial, verificación pública por código (ENG-044) y reemisión tras revocación diferidos explícitamente (IMP-043 en ENG-LOG.md)
 1.22.0	2026-08-26	Cierre de ENG-044 (Consulta pública controlada): endpoint público `GET /api/v1/certification/verify/{validationCode}` sin autenticación, con vigencia efectiva calculada (`valid`/`expired`/`revoked`) vía `Certificate::effectiveStatus()`, datos mínimos (código, curso, titular, fechas — sin `user_id` ni historial), y error uniforme `CERTIFICATE_NOT_FOUND` para código inválido o inexistente; listado público y límite de tasa diferidos explícitamente (IMP-044 en ENG-LOG.md)
+1.23.0	2026-08-26	Cierre de ENG-045 (Registro de simuladores), primera historia de la Fase 9 (Integración con SIMUDRIVE): nuevo módulo `Modules\Simulation` con el agregado `Simulator` (identificador de dispositivo único, versión de software, ubicación opcional, estado `active`/`suspended`/`retired`, historial), llave de integración generada al registrar/rotar y devuelta una única vez (solo se persiste su hash SHA-256), CQRS completo y API HTTP en `/api/v1/simulation/simulators` protegida por `simulators.manage`/`simulators.view`; validación de sesiones/telemetría contra el simulador (ENG-046/047) diferida explícitamente (IMP-045 en ENG-LOG.md)
