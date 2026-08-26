@@ -6,12 +6,14 @@ namespace Modules\RoadPassport\Application\Responses;
 
 use DateTimeInterface;
 use Modules\RoadPassport\Domain\Aggregates\RoadPassport;
+use Modules\RoadPassport\Domain\ValueObjects\Evidence;
 use Modules\RoadPassport\Domain\ValueObjects\PassportHistoryEntry;
 
 final readonly class RoadPassportResponse
 {
     /**
      * @param  list<array{type: string, from: string, to: string, occurred_at: string, reason: ?string}>  $history
+     * @param  list<array{type: string, subject_id: string, course_id: string, occurred_at: string, details: array<string, mixed>}>  $evidence
      */
     public function __construct(
         public string $id,
@@ -20,6 +22,7 @@ final readonly class RoadPassportResponse
         public int $level,
         public string $issuedAt,
         public array $history,
+        public array $evidence,
     ) {}
 
     public static function fromRoadPassport(RoadPassport $passport): self
@@ -40,6 +43,16 @@ final readonly class RoadPassportResponse
                 ],
                 $passport->history(),
             ),
+            evidence: array_map(
+                static fn (Evidence $evidence): array => [
+                    'type' => $evidence->type->value,
+                    'subject_id' => $evidence->subjectId,
+                    'course_id' => $evidence->courseId,
+                    'occurred_at' => $evidence->occurredAt->format(DateTimeInterface::ATOM),
+                    'details' => $evidence->details,
+                ],
+                $passport->evidence(),
+            ),
         );
     }
 
@@ -51,6 +64,7 @@ final readonly class RoadPassportResponse
      *     level: int,
      *     issued_at: string,
      *     history: list<array{type: string, from: string, to: string, occurred_at: string, reason: ?string}>,
+     *     evidence: list<array{type: string, subject_id: string, course_id: string, occurred_at: string, details: array<string, mixed>}>,
      * }
      */
     public function toArray(): array
@@ -62,6 +76,7 @@ final readonly class RoadPassportResponse
             'level' => $this->level,
             'issued_at' => $this->issuedAt,
             'history' => $this->history,
+            'evidence' => $this->evidence,
         ];
     }
 }
