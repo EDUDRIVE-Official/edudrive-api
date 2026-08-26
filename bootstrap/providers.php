@@ -11,6 +11,7 @@ use Modules\Foundation\Providers\FoundationServiceProvider;
 use Modules\Gamification\Infrastructure\Providers\GamificationServiceProvider;
 use Modules\Identity\Providers\IdentityServiceProvider;
 use Modules\Learning\Infrastructure\Providers\LearningServiceProvider;
+use Modules\Notification\Infrastructure\Providers\NotificationServiceProvider;
 use Modules\Organization\Infrastructure\Providers\OrganizationServiceProvider;
 use Modules\RoadPassport\Infrastructure\Providers\RoadPassportServiceProvider;
 use Modules\Simulation\Infrastructure\Providers\SimulationServiceProvider;
@@ -28,4 +29,5 @@ return [
     CertificationServiceProvider::class,
     SimulationServiceProvider::class,
     GamificationServiceProvider::class,
+    NotificationServiceProvider::class,
 ];
