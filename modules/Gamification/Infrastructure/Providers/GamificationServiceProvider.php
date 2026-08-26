@@ -10,6 +10,7 @@ use Modules\Gamification\Application\Commands\CreateAchievementCommand;
 use Modules\Gamification\Application\Commands\CreateBadgeCommand;
 use Modules\Gamification\Application\Commands\GrantAchievementCommand;
 use Modules\Gamification\Application\Commands\GrantBadgeCommand;
+use Modules\Gamification\Application\Commands\RecordExperienceCommand;
 use Modules\Gamification\Application\Commands\RetireAchievementCommand;
 use Modules\Gamification\Application\Commands\RetireBadgeCommand;
 use Modules\Gamification\Application\Commands\UpdateBadgeCommand;
@@ -17,6 +18,7 @@ use Modules\Gamification\Application\Queries\GetAchievementQuery;
 use Modules\Gamification\Application\Queries\GetBadgeQuery;
 use Modules\Gamification\Application\Queries\GetMyAchievementsQuery;
 use Modules\Gamification\Application\Queries\GetMyBadgesQuery;
+use Modules\Gamification\Application\Queries\GetMyExperienceSummaryQuery;
 use Modules\Gamification\Application\Queries\ListAchievementsQuery;
 use Modules\Gamification\Application\Queries\ListBadgesQuery;
 use Modules\Gamification\Application\UseCases\CreateAchievementHandler;
@@ -25,10 +27,12 @@ use Modules\Gamification\Application\UseCases\GetAchievementHandler;
 use Modules\Gamification\Application\UseCases\GetBadgeHandler;
 use Modules\Gamification\Application\UseCases\GetMyAchievementsHandler;
 use Modules\Gamification\Application\UseCases\GetMyBadgesHandler;
+use Modules\Gamification\Application\UseCases\GetMyExperienceSummaryHandler;
 use Modules\Gamification\Application\UseCases\GrantAchievementHandler;
 use Modules\Gamification\Application\UseCases\GrantBadgeHandler;
 use Modules\Gamification\Application\UseCases\ListAchievementsHandler;
 use Modules\Gamification\Application\UseCases\ListBadgesHandler;
+use Modules\Gamification\Application\UseCases\RecordExperienceHandler;
 use Modules\Gamification\Application\UseCases\RetireAchievementHandler;
 use Modules\Gamification\Application\UseCases\RetireBadgeHandler;
 use Modules\Gamification\Application\UseCases\UpdateBadgeHandler;
@@ -70,6 +74,9 @@ final class GamificationServiceProvider extends ServiceProvider
         $registry->register(GetBadgeQuery::class, GetBadgeHandler::class);
         $registry->register(ListBadgesQuery::class, ListBadgesHandler::class);
         $registry->register(GetMyBadgesQuery::class, GetMyBadgesHandler::class);
+
+        $registry->register(RecordExperienceCommand::class, RecordExperienceHandler::class);
+        $registry->register(GetMyExperienceSummaryQuery::class, GetMyExperienceSummaryHandler::class);
 
         $this->loadRoutesFrom(
             dirname(__DIR__, 2).'/Presentation/Routes/api.php',
