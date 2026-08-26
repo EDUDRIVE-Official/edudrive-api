@@ -793,7 +793,9 @@ Verificación pública por código (bullet propio de ENG-044).
 Reemisión de un certificado revocado (mismo criterio que ENG-040 con el pasaporte).
 ENG-044 — Consulta pública controlada
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): endpoint público `GET /api/v1/certification/verify/{validationCode}` (sin autenticación), que expone únicamente los datos mínimos necesarios para verificar un certificado: código de validación, vigencia efectiva calculada (`valid`/`expired`/`revoked` — nueva regla de dominio `Certificate::effectiveStatus()`, distinta del `status` interno crudo, ya que considera `expiresAt`), fecha de emisión, fecha de vigencia, id y nombre del curso, y nombre del titular. No expone `user_id`, correo, historial de estados ni el id interno del certificado. Un código con formato inválido o inexistente responde igual (`CERTIFICATE_NOT_FOUND`, 404), sin distinguir el motivo. `VerifyCertificateHandler` depende directamente de `UserRepository` (Identity) y `CourseRepository` (Academic) para resolver nombre del titular y del curso — mismo precedente que `AssignRoleHandler` en `Authorization`. Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-consulta-publica-eng044-design.md`.
 
 Incluye:
 
@@ -802,6 +804,11 @@ Datos mínimos.
 Privacidad.
 Vigencia.
 Evidencia verificable.
+
+Diferido:
+
+Listado o enumeración pública de certificados (solo consulta puntual por código exacto).
+Límite de tasa/anti-abuso del endpoint público (preocupación de infraestructura/gateway, fuera de alcance de este incremento).
 15. Fase 9 — Integración con SIMUDRIVE
 ENG-045 — Registro de simuladores
 
@@ -1437,3 +1444,4 @@ Versión	Fecha	Descripción
 1.19.0	2026-08-26	Cierre de ENG-041 (Evidencias del Pasaporte Vial): `RoadPassport::recordEvidence()` idempotente y registro reactivo de evidencia `course_completed`/`exam_passed` desde `Academic` (`CompleteEnrollmentHandler`/`SubmitExamAttemptHandler`), expuesta en `RoadPassportResponse`; prácticas/simulaciones (SIMUDRIVE), certificaciones y cálculo de confianza (ENG-042) diferidos explícitamente
 1.20.0	2026-08-26	Cierre de ENG-042 (Competency Trust Model): `RoadPassportTrustCalculator` calcula un `trust_score` (0-100) global por pasaporte a partir de su evidencia (peso por fuente, decaimiento por recencia con piso mínimo, multiplicador de consistencia acotado), expuesto en `RoadPassportResponse` sin persistirse; desagregación por competencia, validez/expiración de evidencia y persistencia del score diferidos explícitamente
 1.21.0	2026-08-26	Cierre de ENG-043 (Credenciales y certificaciones): nuevo módulo `Modules\Certification` con el agregado `Certificate` (código de validación `ValidationCode` con formato `XXXX-XXXX-XXXX`, estado `issued`/`revoked` terminal, vigencia opcional, historial), emisión manual vía `certifications.manage`, CQRS completo y API HTTP en `/api/v1/certification/certificates` protegida por pertenencia o `certifications.manage`/`certifications.view`; emisión automática desde evidencia del Pasaporte Vial, verificación pública por código (ENG-044) y reemisión tras revocación diferidos explícitamente (IMP-043 en ENG-LOG.md)
+1.22.0	2026-08-26	Cierre de ENG-044 (Consulta pública controlada): endpoint público `GET /api/v1/certification/verify/{validationCode}` sin autenticación, con vigencia efectiva calculada (`valid`/`expired`/`revoked`) vía `Certificate::effectiveStatus()`, datos mínimos (código, curso, titular, fechas — sin `user_id` ni historial), y error uniforme `CERTIFICATE_NOT_FOUND` para código inválido o inexistente; listado público y límite de tasa diferidos explícitamente (IMP-044 en ENG-LOG.md)

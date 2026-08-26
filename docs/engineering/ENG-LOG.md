@@ -1503,3 +1503,26 @@ Emisión **administrativa/manual** de certificados (permiso `certifications.mana
 - `php artisan route:list --path=certification` ✅ — 5 rutas registradas (status + 4 de certificados).
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-044 (Cierre de ENG-044 — Consulta pública controlada)
+
+### Alcance acordado con el usuario
+
+Endpoint público (sin autenticación) para verificar un certificado por código de validación, exponiendo el nombre del titular además del mínimo (curso, vigencia efectiva, fechas) — útil para que un verificador externo confirme a quién pertenece el certificado. Vigencia efectiva calculada explícitamente (`valid`/`expired`/`revoked`), no el `status` interno crudo. Diferido explícitamente: listado/enumeración pública de certificados (solo consulta puntual por código exacto), límite de tasa/anti-abuso (preocupación de infraestructura/gateway) y exposición de evidencia cruzada del Pasaporte Vial. Detalle en `docs/plans/2026-08-26-consulta-publica-eng044-design.md`.
+
+### Completado
+
+- **Dominio**: `CertificateEffectiveStatus` (enum `Valid`/`Expired`/`Revoked`) y `Certificate::effectiveStatus(DateTimeImmutable $now): CertificateEffectiveStatus` — método puro en el agregado existente: `Revoked` tiene prioridad sobre la fecha de vigencia; `Expired` si `expiresAt` ya pasó; `Valid` en cualquier otro caso (incluye certificados sin `expiresAt`).
+- **Persistencia**: `CertificateRepository::findByValidationCode(ValidationCode): ?Certificate`, implementado en `EloquentCertificateRepository` filtrando por la columna única `validation_code`.
+- **CQRS**: `VerifyCertificateQuery(validationCode)` → `VerifyCertificateHandler`. Un código con formato inválido (`ValidationCode::fromString` lanza `InvalidArgumentException`) o inexistente responde igual: `CertificateNotFound::withValidationCode()` (404, mismo código público `CERTIFICATE_NOT_FOUND`) — sin distinguir el motivo. El handler depende directamente de `Modules\Identity\Domain\Repositories\UserRepository` y `Modules\Academic\Domain\Repositories\CourseRepository` para resolver el nombre del titular y del curso — mismo precedente que `AssignRoleHandler` en `Authorization` (que depende de `UserRepository` de `Identity`); no se creó una interfaz de resolución nueva porque no es un enriquecimiento opcional/reactivo, sino un dato siempre requerido por la verificación.
+- **`CertificateVerificationResponse`** (DTO público): `validation_code`, `status` (efectivo), `issued_at`, `expires_at`, `course_id`, `course_name`, `holder_name` — sin `user_id`, correo, historial ni el `id` interno del certificado.
+- **API HTTP**: `GET /api/v1/certification/verify/{validationCode}` público, sin `auth:sanctum` ni permiso, con restricción de formato a nivel de ruta (`^[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}$`).
+- **Pruebas**: 12 tests nuevos repartidos en dominio (4 casos de `effectiveStatus`), persistencia (`findByValidationCode`), aplicación (6 casos con repositorios en memoria para `Certificate`, `User` y `Course`) y feature (6 casos de API HTTP pública, incluyendo normalización de mayúsculas/minúsculas y ambos tipos de 404).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `59 passed (129 assertions)`.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=certification` ✅ — 6 rutas registradas (las 5 previas + `verify`).
+
+**Estado:** Finalizado.
