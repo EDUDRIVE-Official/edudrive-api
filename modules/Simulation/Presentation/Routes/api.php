@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
+use Modules\Simulation\Presentation\Http\Controllers\SimulationSessionController;
 use Modules\Simulation\Presentation\Http\Controllers\SimulationStatusController;
 use Modules\Simulation\Presentation\Http\Controllers\SimulatorController;
 
@@ -41,6 +42,33 @@ Route::prefix('api/v1/simulation')
                 Route::post('/simulators/{simulatorId}/rotate-key', [SimulatorController::class, 'rotateKey'])
                     ->whereUuid('simulatorId')
                     ->name('simulators.rotate-key');
+            });
+
+            Route::post('/sessions', [SimulationSessionController::class, 'store'])
+                ->name('sessions.store');
+
+            Route::get('/sessions/me', [SimulationSessionController::class, 'me'])
+                ->name('sessions.me');
+
+            Route::get('/sessions/{sessionId}', [SimulationSessionController::class, 'show'])
+                ->whereUuid('sessionId')
+                ->name('sessions.show');
+
+            Route::post('/sessions/{sessionId}/start', [SimulationSessionController::class, 'start'])
+                ->whereUuid('sessionId')
+                ->name('sessions.start');
+
+            Route::post('/sessions/{sessionId}/complete', [SimulationSessionController::class, 'complete'])
+                ->whereUuid('sessionId')
+                ->name('sessions.complete');
+
+            Route::post('/sessions/{sessionId}/cancel', [SimulationSessionController::class, 'cancel'])
+                ->whereUuid('sessionId')
+                ->name('sessions.cancel');
+
+            Route::middleware('permission:simulation_sessions.view')->group(function (): void {
+                Route::get('/sessions', [SimulationSessionController::class, 'index'])
+                    ->name('sessions.index');
             });
         });
     });
