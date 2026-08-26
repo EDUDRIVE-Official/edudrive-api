@@ -853,7 +853,9 @@ Re-validación del estado del simulador al iniciar la sesión (solo se valida al
 Integración real con telemetría del simulador (ENG-047) y resultados prácticos (ENG-048).
 ENG-047 — Telemetría
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): dos entidades nuevas de solo-append en `Modules\Simulation`, sin invariantes de agregado — `TelemetrySample` (velocidad, frenado, aceleración, dirección + marca de tiempo) y `TelemetryEvent` (colisión/infracción/uso de señal/evento crítico, con detalle opcional + marca de tiempo). El simulador mismo reporta la telemetría por lotes, autenticado con su llave de integración (`Authorization: Bearer <llave>`, ENG-045) — primer mecanismo de autenticación máquina-a-máquina de este backend (`AuthenticateSimulator`, alias `simulator.auth`, busca el simulador por el hash SHA-256 de la llave recibida, mismo patrón que Sanctum para *personal access tokens*). Valida que la sesión exista, pertenezca a ese simulador y esté `InProgress` (si no, `SIMULATION_SESSION_NOT_FOUND`/`SIMULATION_SESSION_NOT_IN_PROGRESS`). La consulta de la telemetría ya registrada es para humanos, bajo `auth:sanctum`, con el mismo criterio de pertenencia que las sesiones (sin permiso nuevo — reutiliza `simulation_sessions.view`). Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-telemetria-eng047-design.md`.
 
 Incluye:
 
@@ -865,6 +867,12 @@ Uso de señales.
 Colisiones.
 Infracciones.
 Eventos críticos.
+
+Diferido:
+
+Procesamiento o agregación de la telemetría (ENG-048, Resultados prácticos).
+Límites de tamaño de lote o límite de tasa del endpoint (preocupación de infraestructura).
+Reintentos/idempotencia ante envíos duplicados del mismo lote.
 ENG-048 — Resultados prácticos
 
 Estado: Pendiente
@@ -1463,3 +1471,4 @@ Versión	Fecha	Descripción
 1.22.0	2026-08-26	Cierre de ENG-044 (Consulta pública controlada): endpoint público `GET /api/v1/certification/verify/{validationCode}` sin autenticación, con vigencia efectiva calculada (`valid`/`expired`/`revoked`) vía `Certificate::effectiveStatus()`, datos mínimos (código, curso, titular, fechas — sin `user_id` ni historial), y error uniforme `CERTIFICATE_NOT_FOUND` para código inválido o inexistente; listado público y límite de tasa diferidos explícitamente (IMP-044 en ENG-LOG.md)
 1.23.0	2026-08-26	Cierre de ENG-045 (Registro de simuladores), primera historia de la Fase 9 (Integración con SIMUDRIVE): nuevo módulo `Modules\Simulation` con el agregado `Simulator` (identificador de dispositivo único, versión de software, ubicación opcional, estado `active`/`suspended`/`retired`, historial), llave de integración generada al registrar/rotar y devuelta una única vez (solo se persiste su hash SHA-256), CQRS completo y API HTTP en `/api/v1/simulation/simulators` protegida por `simulators.manage`/`simulators.view`; validación de sesiones/telemetría contra el simulador (ENG-046/047) diferida explícitamente (IMP-045 en ENG-LOG.md)
 1.24.0	2026-08-26	Cierre de ENG-046 (Sesiones de simulación): nuevo agregado `SimulationSession` en `Modules\Simulation` (usuario, simulador, vehículo y escenario en texto libre, ciclo de vida `scheduled`/`in_progress`/`completed`/`cancelled`, duración planeada y efectiva), programación en autoservicio validando que el simulador esté `active`, criterio de propiedad extendido por primera vez a mutaciones (no solo consultas), CQRS completo y API HTTP en `/api/v1/simulation/sessions` protegida por pertenencia o `simulation_sessions.manage`/`simulation_sessions.view`; detección de conflictos de horario e integración con telemetría (ENG-047) diferidas explícitamente (IMP-046 en ENG-LOG.md)
+1.25.0	2026-08-26	Cierre de ENG-047 (Telemetría): entidades `TelemetrySample`/`TelemetryEvent` (solo-append, sin invariantes de agregado) en `Modules\Simulation`; primer mecanismo de autenticación máquina-a-máquina del backend (`AuthenticateSimulator`, alias `simulator.auth`, llave de integración por *bearer token* contra el hash SHA-256 almacenado); envío por lotes validado contra sesión↔simulador y estado `InProgress`; consulta para humanos bajo `auth:sanctum` reutilizando `simulation_sessions.view` sin permiso nuevo; procesamiento/agregación (ENG-048) diferido explícitamente (IMP-047 en ENG-LOG.md)

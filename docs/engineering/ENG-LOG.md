@@ -1575,3 +1575,26 @@ Ciclo de vida `Scheduled` → `InProgress` (inicio real) → `Completed` (fin re
 - `php artisan route:list --path=simulation` ✅ — 15 rutas registradas (las 8 previas + 7 de sesiones).
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-047 (Cierre de ENG-047 — Telemetría)
+
+### Alcance acordado con el usuario
+
+El simulador mismo reporta la telemetría, autenticado con su llave de integración (ENG-045) — primer mecanismo de autenticación máquina-a-máquina de este backend, no una sesión de usuario Sanctum. Velocidad/frenado/aceleración/dirección (`TelemetrySample`, lectura continua) y colisiones/infracciones/uso de señales/eventos críticos (`TelemetryEvent`, ocurrencia puntual) son dos conceptos separados, sin invariantes de agregado — bitácora de solo-append. Envío por lotes (el simulador buferea y sube periódicamente), no una llamada por lectura. Diferido explícitamente: procesamiento/agregación de la telemetría (ENG-048), límites de tamaño de lote o *rate limiting* (infraestructura), reintentos/idempotencia ante lotes duplicados. Detalle en `docs/plans/2026-08-26-telemetria-eng047-design.md`.
+
+### Completado
+
+- **Dominio**: `TelemetryEventType` (enum `Collision`/`Infraction`/`SignalUsage`/`Critical`); `TelemetrySample` (entidad inmutable: `speedKph` ≥ 0, `brakingPercentage` 0-100, `accelerationMps2` y `steeringAngleDegrees` con signo, `recordedAt`); `TelemetryEvent` (entidad inmutable: `type`, `details` opcional, `occurredAt`). Sin excepciones de dominio nuevas — errores de forma son `InvalidArgumentException`, mismo criterio que `DeviceIdentifier`/`ValidationCode`; la validación primaria vive en `SubmitTelemetryRequest`.
+- **Persistencia**: tablas `telemetry_samples`/`telemetry_events` (FK cascada a `simulation_sessions`, sin tabla de historial — *append-only*, no aplica el patrón borrar-y-reinsertar de los agregados). `TelemetrySampleRepository`/`TelemetryEventRepository::saveBatch()` usan `insert()` de Eloquent para inserción masiva, no N `create()` individuales. Nuevo método `SimulatorRepository::findByIntegrationKeyHash()` (mismo patrón que Sanctum: búsqueda directa por hash indexado, sin `hash_equals` en la consulta).
+- **Autenticación de simuladores**: `AuthenticateSimulator` (middleware, alias `simulator.auth`, registrado en `bootstrap/app.php` igual que `permission` → `EnsurePermission`) extrae el *bearer token*, calcula su hash SHA-256 y busca el simulador; responde 401 si falta el token, no hay coincidencia, o el simulador no está `Active` — revocar acceso es tan simple como suspender/retirar el simulador (ENG-045). Deja el id del simulador en `$request->attributes` para el controlador.
+- **CQRS**: `SubmitTelemetryCommand`/`SubmitTelemetryHandler` valida que la sesión exista y pertenezca al simulador autenticado (`SimulationSessionNotFound`, 404, reutilizado de ENG-046 — aquí por pertenencia al simulador, no al usuario) y que esté `InProgress` (`SimulationSessionNotInProgress`, 422, nueva excepción); construye las entidades y las guarda en lote, devolviendo `TelemetryBatchResponse` (`samples_recorded`, `events_recorded`). `GetSessionTelemetryQuery`/`GetSessionTelemetryHandler` reutiliza el mismo criterio de propiedad que `GetSimulationSessionHandler` (dueño o `simulation_sessions.view`, sin permiso nuevo).
+- **API HTTP**: `POST /api/v1/simulation/sessions/{sessionId}/telemetry` con middleware `simulator.auth` (sin `auth:sanctum`), body `samples`/`events` opcionales validados por forma (`SubmitTelemetryRequest`); `GET /api/v1/simulation/sessions/{sessionId}/telemetry` bajo `auth:sanctum`, dueño de la sesión o `simulation_sessions.view`.
+- **Pruebas**: 25 tests nuevos repartidos en dominio (`TelemetrySample`/`TelemetryEvent`), persistencia (repositorios Eloquent, `findByIntegrationKeyHash`), presentación (middleware `AuthenticateSimulator` en aislamiento), aplicación (handlers con repositorios en memoria) y feature (API HTTP completa, incluyendo autenticación de simulador y ambos criterios de pertenencia).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `124 passed (301 assertions)`.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=simulation` ✅ — 17 rutas registradas (las 15 previas + 2 de telemetría).
+
+**Estado:** Finalizado.
