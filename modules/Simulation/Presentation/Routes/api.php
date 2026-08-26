@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
+use Modules\Simulation\Presentation\Http\Controllers\DecisionEngineController;
 use Modules\Simulation\Presentation\Http\Controllers\SimulationSessionController;
 use Modules\Simulation\Presentation\Http\Controllers\SimulationStatusController;
 use Modules\Simulation\Presentation\Http\Controllers\SimulatorController;
@@ -18,6 +19,11 @@ Route::prefix('api/v1/simulation')
             ->whereUuid('sessionId')
             ->middleware('simulator.auth')
             ->name('sessions.telemetry.store');
+
+        Route::post('/sessions/{sessionId}/decisions', [DecisionEngineController::class, 'store'])
+            ->whereUuid('sessionId')
+            ->middleware('simulator.auth')
+            ->name('sessions.decisions.store');
 
         Route::middleware('auth:sanctum')->group(function (): void {
             Route::middleware('permission:simulators.view')->group(function (): void {
@@ -79,6 +85,10 @@ Route::prefix('api/v1/simulation')
             Route::get('/sessions/{sessionId}/result', [SimulationSessionController::class, 'result'])
                 ->whereUuid('sessionId')
                 ->name('sessions.result');
+
+            Route::get('/sessions/{sessionId}/decisions', [DecisionEngineController::class, 'show'])
+                ->whereUuid('sessionId')
+                ->name('sessions.decisions.show');
 
             Route::middleware('permission:simulation_sessions.view')->group(function (): void {
                 Route::get('/sessions', [SimulationSessionController::class, 'index'])
