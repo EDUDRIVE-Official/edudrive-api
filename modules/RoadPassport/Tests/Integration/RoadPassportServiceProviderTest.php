@@ -2,9 +2,6 @@
 
 declare(strict_types=1);
 
-namespace Modules\RoadPassport\Infrastructure\Providers;
-
-use Illuminate\Support\ServiceProvider;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
 use Modules\RoadPassport\Application\Commands\ChangeRoadPassportLevelCommand;
 use Modules\RoadPassport\Application\Commands\IssueRoadPassportCommand;
@@ -23,29 +20,18 @@ use Modules\RoadPassport\Application\UseCases\SuspendRoadPassportHandler;
 use Modules\RoadPassport\Domain\Repositories\RoadPassportRepository;
 use Modules\RoadPassport\Infrastructure\Persistence\Eloquent\Repositories\EloquentRoadPassportRepository;
 
-final class RoadPassportServiceProvider extends ServiceProvider
-{
-    public function register(): void
-    {
-        $this->app->bind(RoadPassportRepository::class, EloquentRoadPassportRepository::class);
-    }
+it('registra el repositorio de pasaporte vial en el contenedor', function (): void {
+    expect(app(RoadPassportRepository::class))->toBeInstanceOf(EloquentRoadPassportRepository::class);
+});
 
-    public function boot(MessageHandlerRegistry $registry): void
-    {
-        $registry->register(IssueRoadPassportCommand::class, IssueRoadPassportHandler::class);
-        $registry->register(SuspendRoadPassportCommand::class, SuspendRoadPassportHandler::class);
-        $registry->register(ReactivateRoadPassportCommand::class, ReactivateRoadPassportHandler::class);
-        $registry->register(RevokeRoadPassportCommand::class, RevokeRoadPassportHandler::class);
-        $registry->register(ChangeRoadPassportLevelCommand::class, ChangeRoadPassportLevelHandler::class);
-        $registry->register(GetRoadPassportQuery::class, GetRoadPassportHandler::class);
-        $registry->register(GetMyRoadPassportQuery::class, GetMyRoadPassportHandler::class);
+it('registra los handlers CQRS de pasaporte vial en el registry', function (): void {
+    $registry = app(MessageHandlerRegistry::class);
 
-        $this->loadRoutesFrom(
-            dirname(__DIR__, 2).'/Presentation/Routes/api.php',
-        );
-
-        $this->loadMigrationsFrom(
-            dirname(__DIR__).'/Persistence/Migrations',
-        );
-    }
-}
+    expect($registry->handlerFor(IssueRoadPassportCommand::class))->toBe(IssueRoadPassportHandler::class)
+        ->and($registry->handlerFor(SuspendRoadPassportCommand::class))->toBe(SuspendRoadPassportHandler::class)
+        ->and($registry->handlerFor(ReactivateRoadPassportCommand::class))->toBe(ReactivateRoadPassportHandler::class)
+        ->and($registry->handlerFor(RevokeRoadPassportCommand::class))->toBe(RevokeRoadPassportHandler::class)
+        ->and($registry->handlerFor(ChangeRoadPassportLevelCommand::class))->toBe(ChangeRoadPassportLevelHandler::class)
+        ->and($registry->handlerFor(GetRoadPassportQuery::class))->toBe(GetRoadPassportHandler::class)
+        ->and($registry->handlerFor(GetMyRoadPassportQuery::class))->toBe(GetMyRoadPassportHandler::class);
+});
