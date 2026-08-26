@@ -19,7 +19,7 @@ final class Achievement
         private string $description,
         private string $earningRule,
         private AchievementStatus $status,
-        private DateTimeImmutable $createdAt,
+        private DateTimeImmutable $registeredAt,
         private ?DateTimeImmutable $retiredAt,
         private ?string $retiredReason,
     ) {}
@@ -30,7 +30,7 @@ final class Achievement
         string $name,
         string $description,
         string $earningRule,
-        ?DateTimeImmutable $createdAt = null,
+        ?DateTimeImmutable $registeredAt = null,
     ): self {
         return new self(
             $id,
@@ -39,7 +39,7 @@ final class Achievement
             $description,
             $earningRule,
             AchievementStatus::Active,
-            $createdAt ?? new DateTimeImmutable('now'),
+            $registeredAt ?? new DateTimeImmutable('now'),
             null,
             null,
         );
@@ -52,11 +52,11 @@ final class Achievement
         string $description,
         string $earningRule,
         AchievementStatus $status,
-        DateTimeImmutable $createdAt,
+        DateTimeImmutable $registeredAt,
         ?DateTimeImmutable $retiredAt,
         ?string $retiredReason,
     ): self {
-        return new self($id, $code, $name, $description, $earningRule, $status, $createdAt, $retiredAt, $retiredReason);
+        return new self($id, $code, $name, $description, $earningRule, $status, $registeredAt, $retiredAt, $retiredReason);
     }
 
     public function retire(?string $reason, DateTimeImmutable $at): void
@@ -100,9 +100,9 @@ final class Achievement
         return $this->status;
     }
 
-    public function createdAt(): DateTimeImmutable
+    public function registeredAt(): DateTimeImmutable
     {
-        return $this->createdAt;
+        return $this->registeredAt;
     }
 
     public function retiredAt(): ?DateTimeImmutable

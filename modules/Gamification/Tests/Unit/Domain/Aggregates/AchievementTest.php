@@ -17,7 +17,7 @@ function newAchievement(): Achievement
         name: 'Primer curso completado',
         description: 'Se otorga al completar el primer curso.',
         earningRule: 'Completar cualquier curso por primera vez.',
-        createdAt: new DateTimeImmutable('2026-08-26T10:00:00+00:00'),
+        registeredAt: new DateTimeImmutable('2026-08-26T10:00:00+00:00'),
     );
 }
 
@@ -50,7 +50,7 @@ it('rechaza retirar un logro ya retirado', function (): void {
 it('restaura el agregado completo desde persistencia', function (): void {
     $id = AchievementId::fromString((string) Str::uuid());
     $code = AchievementCode::fromString('primer-curso-completado');
-    $createdAt = new DateTimeImmutable('2026-08-26T10:00:00+00:00');
+    $registeredAt = new DateTimeImmutable('2026-08-26T10:00:00+00:00');
     $retiredAt = new DateTimeImmutable('2026-08-27T00:00:00+00:00');
 
     $achievement = Achievement::restore(
@@ -60,7 +60,7 @@ it('restaura el agregado completo desde persistencia', function (): void {
         description: 'Se otorga al completar el primer curso.',
         earningRule: 'Completar cualquier curso por primera vez.',
         status: AchievementStatus::Retired,
-        createdAt: $createdAt,
+        registeredAt: $registeredAt,
         retiredAt: $retiredAt,
         retiredReason: 'Motivo',
     );
@@ -71,7 +71,7 @@ it('restaura el agregado completo desde persistencia', function (): void {
         ->and($achievement->description())->toBe('Se otorga al completar el primer curso.')
         ->and($achievement->earningRule())->toBe('Completar cualquier curso por primera vez.')
         ->and($achievement->status())->toBe(AchievementStatus::Retired)
-        ->and($achievement->createdAt())->toBe($createdAt)
+        ->and($achievement->registeredAt())->toBe($registeredAt)
         ->and($achievement->retiredAt())->toBe($retiredAt)
         ->and($achievement->retiredReason())->toBe('Motivo');
 });
