@@ -14,8 +14,10 @@ use Modules\Simulation\Application\Commands\RetireSimulatorCommand;
 use Modules\Simulation\Application\Commands\RotateSimulatorIntegrationKeyCommand;
 use Modules\Simulation\Application\Commands\ScheduleSimulationSessionCommand;
 use Modules\Simulation\Application\Commands\StartSimulationSessionCommand;
+use Modules\Simulation\Application\Commands\SubmitTelemetryCommand;
 use Modules\Simulation\Application\Commands\SuspendSimulatorCommand;
 use Modules\Simulation\Application\Queries\GetMySimulationSessionsQuery;
+use Modules\Simulation\Application\Queries\GetSessionTelemetryQuery;
 use Modules\Simulation\Application\Queries\GetSimulationSessionQuery;
 use Modules\Simulation\Application\Queries\GetSimulatorQuery;
 use Modules\Simulation\Application\Queries\ListSimulationSessionsQuery;
@@ -23,6 +25,7 @@ use Modules\Simulation\Application\Queries\ListSimulatorsQuery;
 use Modules\Simulation\Application\UseCases\CancelSimulationSessionHandler;
 use Modules\Simulation\Application\UseCases\CompleteSimulationSessionHandler;
 use Modules\Simulation\Application\UseCases\GetMySimulationSessionsHandler;
+use Modules\Simulation\Application\UseCases\GetSessionTelemetryHandler;
 use Modules\Simulation\Application\UseCases\GetSimulationSessionHandler;
 use Modules\Simulation\Application\UseCases\GetSimulatorHandler;
 use Modules\Simulation\Application\UseCases\ListSimulationSessionsHandler;
@@ -33,6 +36,7 @@ use Modules\Simulation\Application\UseCases\RetireSimulatorHandler;
 use Modules\Simulation\Application\UseCases\RotateSimulatorIntegrationKeyHandler;
 use Modules\Simulation\Application\UseCases\ScheduleSimulationSessionHandler;
 use Modules\Simulation\Application\UseCases\StartSimulationSessionHandler;
+use Modules\Simulation\Application\UseCases\SubmitTelemetryHandler;
 use Modules\Simulation\Application\UseCases\SuspendSimulatorHandler;
 use Modules\Simulation\Domain\Repositories\SimulationSessionRepository;
 use Modules\Simulation\Domain\Repositories\SimulatorRepository;
@@ -70,6 +74,9 @@ final class SimulationServiceProvider extends ServiceProvider
         $registry->register(GetSimulationSessionQuery::class, GetSimulationSessionHandler::class);
         $registry->register(GetMySimulationSessionsQuery::class, GetMySimulationSessionsHandler::class);
         $registry->register(ListSimulationSessionsQuery::class, ListSimulationSessionsHandler::class);
+
+        $registry->register(SubmitTelemetryCommand::class, SubmitTelemetryHandler::class);
+        $registry->register(GetSessionTelemetryQuery::class, GetSessionTelemetryHandler::class);
 
         $this->loadRoutesFrom(
             dirname(__DIR__, 2).'/Presentation/Routes/api.php',
