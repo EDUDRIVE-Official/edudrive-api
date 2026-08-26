@@ -11,9 +11,11 @@ use Modules\Academic\Domain\Entities\Responses\MatchingResponse;
 use Modules\Academic\Domain\Entities\Responses\MultiSelectResponse;
 use Modules\Academic\Domain\Entities\Responses\SingleChoiceResponse;
 use Modules\Academic\Domain\Entities\Responses\TrueFalseResponse;
+use Modules\Academic\Domain\Enums\QuestionSourceKind;
 use Modules\Academic\Domain\Enums\QuestionType;
 use Modules\Academic\Domain\Exceptions\InvalidQuestion;
 use Modules\Academic\Domain\ValueObjects\CompetencyId;
+use Modules\Academic\Domain\ValueObjects\LicenseCategory;
 use Modules\Academic\Domain\ValueObjects\QuestionId;
 use Modules\Academic\Domain\ValueObjects\QuestionOptionId;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\QuestionModel;
@@ -49,6 +51,10 @@ it('guarda y reconstruye una pregunta de seleccion unica', function (): void {
         SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a']),
         questionRepoOptions(['opt-a', 'opt-b']),
         'La zona escolar exige reducir la velocidad.',
+        [],
+        QuestionSourceKind::Official,
+        '  OF-001  ',
+        [LicenseCategory::fromString('A1')],
     );
 
     $repository->save($question);
@@ -60,10 +66,37 @@ it('guarda y reconstruye una pregunta de seleccion unica', function (): void {
         ->and($stored?->competencyId()->equals($competencyId))->toBeTrue()
         ->and($stored?->score())->toBe(2)
         ->and($stored?->explanation())->toBe('La zona escolar exige reducir la velocidad.')
+        ->and($stored?->sourceKind())->toBe(QuestionSourceKind::Official)
+        ->and($stored?->sourceReference())->toBe('OF-001')
+        ->and($stored?->licenseCategories()[0]->value())->toBe('A1')
         ->and($stored?->response()->toArray())->toBe(['type' => 'single_choice', 'optionId' => 'opt-a'])
         ->and($stored?->options())->toHaveCount(2)
         ->and($stored?->options()[0]->refId())->toBe('opt-a')
         ->and($stored?->options()[0]->side())->toBeNull();
+});
+
+it('normaliza source reference nulo y conserva categorias vacias para custom', function (): void {
+    $repository = app(EloquentQuestionRepository::class);
+    $competencyId = CompetencyId::fromString(persistedQuestionCompetencyId());
+    $question = Question::create(
+        QuestionId::fromString((string) Str::uuid()),
+        QuestionType::TrueFalse,
+        $competencyId,
+        'Prompt',
+        1,
+        TrueFalseResponse::fromArray(['type' => 'true_false', 'correct' => true]),
+        [],
+        sourceReference: '   ',
+    );
+
+    $repository->save($question);
+
+    $stored = $repository->findById($question->id());
+
+    expect($stored)->not->toBeNull()
+        ->and($stored?->sourceKind())->toBe(QuestionSourceKind::Custom)
+        ->and($stored?->sourceReference())->toBeNull()
+        ->and($stored?->licenseCategories())->toBe([]);
 });
 
 it('guarda y reconstruye un emparejamiento con lados en las opciones', function (): void {

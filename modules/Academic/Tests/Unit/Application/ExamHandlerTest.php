@@ -8,6 +8,7 @@ use Modules\Academic\Application\Commands\DeleteExamCommand;
 use Modules\Academic\Application\Commands\UpdateExamCommand;
 use Modules\Academic\Application\Exceptions\CourseNotFound;
 use Modules\Academic\Application\Exceptions\ExamNotFound;
+use Modules\Academic\Application\Exceptions\InvalidTheoryExam;
 use Modules\Academic\Application\Exceptions\QuestionNotFound;
 use Modules\Academic\Application\Queries\GetExamQuery;
 use Modules\Academic\Application\Queries\ListExamsQuery;
@@ -23,6 +24,7 @@ use Modules\Academic\Domain\Aggregates\Exam;
 use Modules\Academic\Domain\Aggregates\Question;
 use Modules\Academic\Domain\Entities\QuestionOption;
 use Modules\Academic\Domain\Entities\Responses\SingleChoiceResponse;
+use Modules\Academic\Domain\Enums\QuestionSourceKind;
 use Modules\Academic\Domain\Enums\QuestionType;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\ExamRepository;
@@ -32,6 +34,7 @@ use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Academic\Domain\ValueObjects\ExamId;
+use Modules\Academic\Domain\ValueObjects\LicenseCategory;
 use Modules\Academic\Domain\ValueObjects\QuestionId;
 use Modules\Academic\Domain\ValueObjects\QuestionOptionId;
 
@@ -112,6 +115,45 @@ function persistedExamFixtures(): array
     return [$course->id()->value(), $questionIds];
 }
 
+/** @return array{0: string, 1: list<string>} */
+function persistedOfficialExamFixtures(array $categories = ['B1']): array
+{
+    $courseRepository = app(CourseRepository::class);
+    $course = Course::create(
+        id: CourseId::fromString((string) Str::uuid()),
+        code: CourseCode::fromString('EXT-'.strtoupper((string) Str::random(4))),
+        title: CourseTitle::fromString('Curso teorico oficial'),
+    );
+    $courseRepository->save($course);
+
+    $questionRepository = app(QuestionRepository::class);
+    $competencyId = CompetencyId::fromString(persistedQuestionCompetencyId());
+    $questionIds = [];
+    foreach (['opt-a', 'opt-b'] as $refId) {
+        $question = Question::create(
+            QuestionId::fromString((string) Str::uuid()),
+            QuestionType::SingleChoice,
+            $competencyId,
+            '¿Pregunta oficial '.$refId.'?',
+            1,
+            SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => $refId]),
+            [
+                QuestionOption::create($refId, QuestionOptionId::fromString((string) Str::uuid()), 1, 'A'),
+                QuestionOption::create('opt-x', QuestionOptionId::fromString((string) Str::uuid()), 2, 'B'),
+            ],
+            sourceKind: QuestionSourceKind::Official,
+            licenseCategories: array_map(
+                static fn (string $category): LicenseCategory => LicenseCategory::fromString($category),
+                $categories,
+            ),
+        );
+        $questionRepository->save($question);
+        $questionIds[] = $question->id()->value();
+    }
+
+    return [$course->id()->value(), $questionIds];
+}
+
 it('crea un examen exitosamente', function (): void {
     [$courseId, $questionIds] = persistedExamFixtures();
     $repository = new InMemoryExamRepository;
@@ -154,6 +196,53 @@ it('rechaza crear un examen con pregunta inexistente', function (): void {
         questions: examQuestionPayloads([(string) Str::uuid()]),
     )))->toThrow(QuestionNotFound::class)
         ->and($repository->saveCalls)->toBe(0);
+});
+
+it('rechaza crear un examen theory con preguntas custom', function (): void {
+    [$courseId, $questionIds] = persistedExamFixtures();
+    $repository = new InMemoryExamRepository;
+    $handler = new CreateExamHandler($repository, app(CourseRepository::class), app(QuestionRepository::class));
+
+    expect(fn () => $handler->handle(new CreateExamCommand(
+        courseId: $courseId,
+        title: 'Theory invalido',
+        kind: 'theory',
+        licenseCategory: 'B1',
+        questions: examQuestionPayloads($questionIds),
+    )))->toThrow(InvalidTheoryExam::class)
+        ->and($repository->saveCalls)->toBe(0);
+});
+
+it('rechaza crear un examen theory con preguntas fuera de categoria', function (): void {
+    [$courseId, $questionIds] = persistedOfficialExamFixtures(['A1']);
+    $repository = new InMemoryExamRepository;
+    $handler = new CreateExamHandler($repository, app(CourseRepository::class), app(QuestionRepository::class));
+
+    expect(fn () => $handler->handle(new CreateExamCommand(
+        courseId: $courseId,
+        title: 'Theory fuera de categoria',
+        kind: 'theory',
+        licenseCategory: 'B1',
+        questions: examQuestionPayloads($questionIds),
+    )))->toThrow(InvalidTheoryExam::class)
+        ->and($repository->saveCalls)->toBe(0);
+});
+
+it('permite crear un examen theory con preguntas oficiales de la categoria', function (): void {
+    [$courseId, $questionIds] = persistedOfficialExamFixtures(['B1', 'A2B']);
+    $repository = new InMemoryExamRepository;
+    $handler = new CreateExamHandler($repository, app(CourseRepository::class), app(QuestionRepository::class));
+
+    $response = $handler->handle(new CreateExamCommand(
+        courseId: $courseId,
+        title: 'Theory valido',
+        kind: 'theory',
+        licenseCategory: 'B1',
+        questions: examQuestionPayloads($questionIds),
+    ));
+
+    expect($response->kind)->toBe('theory')
+        ->and($response->licenseCategory)->toBe('B1');
 });
 
 it('obtiene y lista exámenes filtrados por curso', function (): void {

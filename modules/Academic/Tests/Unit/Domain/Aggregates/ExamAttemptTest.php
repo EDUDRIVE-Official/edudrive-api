@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 use Modules\Academic\Domain\Aggregates\ExamAttempt;
 use Modules\Academic\Domain\Entities\AttemptQuestion;
+use Modules\Academic\Domain\Entities\AttemptQuestionGrade;
+use Modules\Academic\Domain\Entities\CompetencyGrade;
 use Modules\Academic\Domain\Entities\Responses\SingleChoiceResponse;
 use Modules\Academic\Domain\Enums\ExamAttemptStatus;
 use Modules\Academic\Domain\Enums\ExamFeedbackMode;
 use Modules\Academic\Domain\Enums\QuestionType;
 use Modules\Academic\Domain\Exceptions\InvalidExamAttempt;
 use Modules\Academic\Domain\ValueObjects\AttemptQuestionId;
+use Modules\Academic\Domain\ValueObjects\CompetencyId;
 use Modules\Academic\Domain\ValueObjects\ExamAttemptId;
 use Modules\Academic\Domain\ValueObjects\ExamId;
+use Modules\Academic\Domain\ValueObjects\GradingResult;
 use Modules\Academic\Domain\ValueObjects\QuestionId;
 
 function attemptQuestions(): array
@@ -21,6 +25,7 @@ function attemptQuestions(): array
             AttemptQuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92101'),
             1,
             QuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92102'),
+            CompetencyId::fromString('01981a64-8300-7b1d-b442-764ea7f92107'),
             10,
             '¿Primera?',
             QuestionType::SingleChoice,
@@ -31,6 +36,7 @@ function attemptQuestions(): array
             AttemptQuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92103'),
             2,
             QuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92104'),
+            CompetencyId::fromString('01981a64-8300-7b1d-b442-764ea7f92108'),
             10,
             '¿Segunda?',
             QuestionType::SingleChoice,
@@ -38,6 +44,52 @@ function attemptQuestions(): array
             SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-b']),
         ),
     ];
+}
+
+function gradingResultForAttempt(int $score, int $percentage, bool $passed): GradingResult
+{
+    return new GradingResult(
+        $score,
+        20,
+        $percentage,
+        $passed,
+        [
+            new AttemptQuestionGrade(
+                AttemptQuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92101'),
+                QuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92102'),
+                CompetencyId::fromString('01981a64-8300-7b1d-b442-764ea7f92107'),
+                min($score, 10),
+                10,
+                (int) round(min($score, 10) / 10 * 100),
+                min($score, 10) === 10,
+                min($score, 10) > 0,
+            ),
+            new AttemptQuestionGrade(
+                AttemptQuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92103'),
+                QuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92104'),
+                CompetencyId::fromString('01981a64-8300-7b1d-b442-764ea7f92108'),
+                max(0, $score - 10),
+                10,
+                (int) round(max(0, $score - 10) / 10 * 100),
+                max(0, $score - 10) === 10,
+                max(0, $score - 10) > 0,
+            ),
+        ],
+        [
+            new CompetencyGrade(
+                CompetencyId::fromString('01981a64-8300-7b1d-b442-764ea7f92107'),
+                min($score, 10),
+                10,
+                (int) round(min($score, 10) / 10 * 100),
+            ),
+            new CompetencyGrade(
+                CompetencyId::fromString('01981a64-8300-7b1d-b442-764ea7f92108'),
+                max(0, $score - 10),
+                10,
+                (int) round(max(0, $score - 10) / 10 * 100),
+            ),
+        ],
+    );
 }
 
 it('inicia un intento en estado in_progress con su snapshot', function (): void {
@@ -172,13 +224,83 @@ it('envía el intento y calcula score, percentage y passed', function (): void {
     $attempt->answer(1, SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a']), new DateTimeImmutable('2026-08-12 10:01:00'));
     $attempt->answer(2, SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-b']), new DateTimeImmutable('2026-08-12 10:02:00'));
 
-    $attempt->submit(new DateTimeImmutable('2026-08-12 10:10:00'));
+    $attempt->submit(new DateTimeImmutable('2026-08-12 10:10:00'), gradingResultForAttempt(20, 100, true));
 
     expect($attempt->status())->toBe(ExamAttemptStatus::Submitted)
         ->and($attempt->submittedAt())->not->toBeNull()
         ->and($attempt->score())->toBe(20)
         ->and($attempt->percentage())->toBe(100)
         ->and($attempt->passed())->toBeTrue();
+});
+
+it('aplica el grading result detallado al enviar el intento', function (): void {
+    $attempt = ExamAttempt::start(
+        ExamAttemptId::fromString('01981a64-8300-7b1d-b442-764ea7f92105'),
+        ExamId::fromString('01981a64-8300-7b1d-b442-764ea7f92106'),
+        'user-1',
+        'Examen',
+        45,
+        70,
+        false,
+        ExamFeedbackMode::None,
+        attemptQuestions(),
+        new DateTimeImmutable('2026-08-12 10:00:00'),
+    );
+
+    $result = new GradingResult(
+        15,
+        20,
+        75,
+        true,
+        [
+            new AttemptQuestionGrade(
+                AttemptQuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92101'),
+                QuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92102'),
+                CompetencyId::fromString('01981a64-8300-7b1d-b442-764ea7f92107'),
+                10,
+                10,
+                100,
+                true,
+                true,
+            ),
+            new AttemptQuestionGrade(
+                AttemptQuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92103'),
+                QuestionId::fromString('01981a64-8300-7b1d-b442-764ea7f92104'),
+                CompetencyId::fromString('01981a64-8300-7b1d-b442-764ea7f92108'),
+                5,
+                10,
+                50,
+                false,
+                true,
+            ),
+        ],
+        [
+            new CompetencyGrade(
+                CompetencyId::fromString('01981a64-8300-7b1d-b442-764ea7f92107'),
+                10,
+                10,
+                100,
+            ),
+            new CompetencyGrade(
+                CompetencyId::fromString('01981a64-8300-7b1d-b442-764ea7f92108'),
+                5,
+                10,
+                50,
+            ),
+        ],
+    );
+
+    $attempt->submit(new DateTimeImmutable('2026-08-12 10:10:00'), $result);
+
+    expect($attempt->status())->toBe(ExamAttemptStatus::Submitted)
+        ->and($attempt->score())->toBe(15)
+        ->and($attempt->percentage())->toBe(75)
+        ->and($attempt->passed())->toBeTrue()
+        ->and($attempt->questionBreakdown())->toHaveCount(2)
+        ->and($attempt->questionBreakdown()[1]->score())->toBe(5)
+        ->and($attempt->questionBreakdown()[1]->isCorrect())->toBeFalse()
+        ->and($attempt->competencyBreakdown())->toHaveCount(2)
+        ->and($attempt->competencyBreakdown()[1]->score())->toBe(5);
 });
 
 it('marca como no aprobado cuando no alcanza el passing_score', function (): void {
@@ -197,7 +319,7 @@ it('marca como no aprobado cuando no alcanza el passing_score', function (): voi
 
     $attempt->answer(1, SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a']), new DateTimeImmutable('2026-08-12 10:01:00'));
 
-    $attempt->submit(new DateTimeImmutable('2026-08-12 10:10:00'));
+    $attempt->submit(new DateTimeImmutable('2026-08-12 10:10:00'), gradingResultForAttempt(10, 50, false));
 
     expect($attempt->score())->toBe(10)
         ->and($attempt->percentage())->toBe(50)
@@ -237,11 +359,11 @@ it('rechaza responder o enviar un intento ya finalizado', function (): void {
         attemptQuestions(),
         new DateTimeImmutable('2026-08-12 10:00:00'),
     );
-    $attempt->submit(new DateTimeImmutable('2026-08-12 10:10:00'));
+    $attempt->submit(new DateTimeImmutable('2026-08-12 10:10:00'), gradingResultForAttempt(0, 0, false));
 
     expect(fn () => $attempt->answer(1, SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a']), new DateTimeImmutable('2026-08-12 10:11:00')))
         ->toThrow(InvalidExamAttempt::class)
-        ->and(fn () => $attempt->submit(new DateTimeImmutable('2026-08-12 10:12:00')))
+        ->and(fn () => $attempt->submit(new DateTimeImmutable('2026-08-12 10:12:00'), gradingResultForAttempt(0, 0, false)))
         ->toThrow(InvalidExamAttempt::class);
 });
 

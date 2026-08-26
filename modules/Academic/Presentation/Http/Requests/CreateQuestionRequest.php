@@ -7,6 +7,7 @@ namespace Modules\Academic\Presentation\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Rules\In;
+use Modules\Academic\Domain\Enums\QuestionSourceKind;
 use Modules\Academic\Domain\Enums\QuestionType;
 
 final class CreateQuestionRequest extends FormRequest
@@ -25,6 +26,10 @@ final class CreateQuestionRequest extends FormRequest
             'prompt' => ['required', 'string', 'max:1000'],
             'score' => ['required', 'integer', 'min:1'],
             'explanation' => ['nullable', 'string', 'max:2000'],
+            'source_kind' => ['sometimes', 'string', new Enum(QuestionSourceKind::class)],
+            'source_reference' => ['nullable', 'string', 'max:255'],
+            'license_categories' => ['sometimes', 'array'],
+            'license_categories.*' => ['required', 'string', 'regex:/\S/'],
             'options' => ['sometimes', 'array'],
             'options.*.ref_id' => ['required_with:options', 'distinct', 'string', 'max:80'],
             'options.*.label' => ['required_with:options', 'string', 'max:500'],

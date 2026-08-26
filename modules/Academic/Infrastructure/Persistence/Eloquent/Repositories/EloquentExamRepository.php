@@ -9,9 +9,11 @@ use Illuminate\Support\Str;
 use Modules\Academic\Domain\Aggregates\Exam;
 use Modules\Academic\Domain\Entities\ExamQuestion;
 use Modules\Academic\Domain\Enums\ExamFeedbackMode;
+use Modules\Academic\Domain\Enums\ExamKind;
 use Modules\Academic\Domain\Repositories\ExamRepository;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\ExamId;
+use Modules\Academic\Domain\ValueObjects\LicenseCategory;
 use Modules\Academic\Domain\ValueObjects\QuestionId;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\ExamModel;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\ExamQuestionModel;
@@ -32,6 +34,10 @@ final readonly class EloquentExamRepository implements ExamRepository
                     'passing_score' => $exam->passingScore(),
                     'shuffle_questions' => $exam->shuffleQuestions(),
                     'feedback_mode' => $exam->feedbackMode()->value,
+                    'kind' => $exam->kind()->value,
+                    'license_category' => $exam->licenseCategory()?->value(),
+                    'allow_partial_credit' => $exam->allowPartialCredit(),
+                    'apply_penalties' => $exam->applyPenalties(),
                 ],
             );
 
@@ -95,6 +101,10 @@ final readonly class EloquentExamRepository implements ExamRepository
             (int) $model->getAttribute('passing_score'),
             (bool) $model->getAttribute('shuffle_questions'),
             ExamFeedbackMode::from((string) $model->getAttribute('feedback_mode')),
+            ExamKind::from((string) ($model->getAttribute('kind') ?? ExamKind::Standard->value)),
+            $model->getAttribute('license_category') === null ? null : LicenseCategory::fromString((string) $model->getAttribute('license_category')),
+            (bool) ($model->getAttribute('allow_partial_credit') ?? false),
+            (bool) ($model->getAttribute('apply_penalties') ?? false),
         );
     }
 }

@@ -7,9 +7,11 @@ use Illuminate\Support\Str;
 use Modules\Academic\Domain\Aggregates\Question;
 use Modules\Academic\Domain\Entities\QuestionOption;
 use Modules\Academic\Domain\Entities\Responses\SingleChoiceResponse;
+use Modules\Academic\Domain\Enums\QuestionSourceKind;
 use Modules\Academic\Domain\Enums\QuestionType;
 use Modules\Academic\Domain\Repositories\QuestionRepository;
 use Modules\Academic\Domain\ValueObjects\CompetencyId;
+use Modules\Academic\Domain\ValueObjects\LicenseCategory;
 use Modules\Academic\Domain\ValueObjects\QuestionId;
 use Modules\Academic\Domain\ValueObjects\QuestionOptionId;
 use Modules\Authorization\Domain\Enums\Role;
@@ -35,6 +37,16 @@ function examPayload(string $courseId, array $questionIds, array $overrides = []
         'shuffle_questions' => true,
         'feedback_mode' => 'after_submission',
         'questions' => examPayloadQuestions($questionIds),
+    ], $overrides);
+}
+
+function theoryExamPayload(string $courseId, array $questionIds, array $overrides = []): array
+{
+    return array_merge(examPayload($courseId, $questionIds), [
+        'kind' => 'theory',
+        'license_category' => 'b1',
+        'allow_partial_credit' => true,
+        'apply_penalties' => true,
     ], $overrides);
 }
 
@@ -69,6 +81,37 @@ function persistedExamQuestionIds(): array
     return $ids;
 }
 
+/** @return list<string> */
+function persistedOfficialExamQuestionIds(array $categories = ['B1']): array
+{
+    $questionRepository = app(QuestionRepository::class);
+    $competencyId = CompetencyId::fromString(persistedQuestionCompetencyId());
+    $ids = [];
+    foreach (['opt-a', 'opt-b'] as $refId) {
+        $question = Question::create(
+            QuestionId::fromString((string) Str::uuid()),
+            QuestionType::SingleChoice,
+            $competencyId,
+            '¿Pregunta oficial '.$refId.'?',
+            1,
+            SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => $refId]),
+            [
+                QuestionOption::create($refId, QuestionOptionId::fromString((string) Str::uuid()), 1, 'A'),
+                QuestionOption::create('opt-x', QuestionOptionId::fromString((string) Str::uuid()), 2, 'B'),
+            ],
+            sourceKind: QuestionSourceKind::Official,
+            licenseCategories: array_map(
+                static fn (string $category): LicenseCategory => LicenseCategory::fromString($category),
+                $categories,
+            ),
+        );
+        $questionRepository->save($question);
+        $ids[] = $question->id()->value();
+    }
+
+    return $ids;
+}
+
 it('crea un examen con preguntas válidas', function (): void {
     /** @var TestCase $this */
     actingAsRole(Role::SuperAdmin);
@@ -82,6 +125,21 @@ it('crea un examen con preguntas válidas', function (): void {
         ->assertJsonPath('data.feedback_mode', 'after_submission')
         ->assertJsonCount(2, 'data.questions')
         ->assertJsonStructure(['data' => ['id', 'title', 'course_id', 'questions']]);
+});
+
+it('crea un examen theory con metadata y reglas de grading', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::SuperAdmin);
+
+    $this->postJson('/api/v1/academic/exams', theoryExamPayload(
+        persistedExamCourseId(),
+        persistedOfficialExamQuestionIds(['B1', 'A2B']),
+    ))
+        ->assertCreated()
+        ->assertJsonPath('data.kind', 'theory')
+        ->assertJsonPath('data.license_category', 'B1')
+        ->assertJsonPath('data.allow_partial_credit', true)
+        ->assertJsonPath('data.apply_penalties', true);
 });
 
 it('rechaza crear un examen con curso inexistente', function (): void {
@@ -120,6 +178,26 @@ it('valida duración, intentos y puntaje fuera de rango', function (): void {
         ->assertJsonValidationErrors(['passing_score']);
 });
 
+it('valida kind y license_category para examenes theory', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::SuperAdmin);
+    $questionIds = persistedExamQuestionIds();
+
+    $this->postJson('/api/v1/academic/exams', theoryExamPayload(
+        persistedExamCourseId(),
+        $questionIds,
+        ['kind' => 'invalid-kind'],
+    ))->assertUnprocessable()
+        ->assertJsonValidationErrors(['kind']);
+
+    $this->postJson('/api/v1/academic/exams', theoryExamPayload(
+        persistedExamCourseId(),
+        $questionIds,
+        ['license_category' => '   '],
+    ))->assertUnprocessable()
+        ->assertJsonValidationErrors(['license_category']);
+});
+
 it('rechaza un examen sin preguntas', function (): void {
     /** @var TestCase $this */
     actingAsRole(Role::SuperAdmin);
@@ -154,6 +232,38 @@ it('rechaza preguntas duplicadas en un examen', function (): void {
         ->assertJsonPath('code', 'INVALID_EXAM');
 });
 
+it('rechaza un examen theory con preguntas custom', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::SuperAdmin);
+
+    $this->postJson('/api/v1/academic/exams', theoryExamPayload(persistedExamCourseId(), persistedExamQuestionIds()))
+        ->assertUnprocessable()
+        ->assertJsonPath('code', 'INVALID_THEORY_EXAM');
+});
+
+it('rechaza un examen theory con preguntas oficiales fuera de categoria', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::SuperAdmin);
+
+    $this->postJson('/api/v1/academic/exams', theoryExamPayload(
+        persistedExamCourseId(),
+        persistedOfficialExamQuestionIds(['A1']),
+    ))->assertUnprocessable()
+        ->assertJsonPath('code', 'INVALID_THEORY_EXAM');
+});
+
+it('permite un examen theory con preguntas oficiales compatibles con la categoria', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::SuperAdmin);
+
+    $this->postJson('/api/v1/academic/exams', theoryExamPayload(
+        persistedExamCourseId(),
+        persistedOfficialExamQuestionIds(['B1', 'A2B']),
+    ))->assertCreated()
+        ->assertJsonPath('data.kind', 'theory')
+        ->assertJsonPath('data.license_category', 'B1');
+});
+
 it('lista exámenes filtrados por curso', function (): void {
     /** @var TestCase $this */
     actingAsRole(Role::SuperAdmin);
@@ -183,7 +293,11 @@ it('obtiene el detalle de un examen con sus preguntas en orden', function (): vo
         ->assertOk()
         ->assertJsonPath('data.questions.0.position', 1)
         ->assertJsonPath('data.questions.1.position', 2)
-        ->assertJsonPath('data.questions.0.type', 'single_choice');
+        ->assertJsonPath('data.questions.0.type', 'single_choice')
+        ->assertJsonPath('data.kind', 'standard')
+        ->assertJsonPath('data.license_category', null)
+        ->assertJsonPath('data.allow_partial_credit', false)
+        ->assertJsonPath('data.apply_penalties', false);
 });
 
 it('actualiza un examen', function (): void {
@@ -192,15 +306,25 @@ it('actualiza un examen', function (): void {
     $created = $this->postJson('/api/v1/academic/exams', examPayload(persistedExamCourseId(), persistedExamQuestionIds()))
         ->assertCreated();
 
+    $officialQuestionIds = persistedOfficialExamQuestionIds(['A2B', 'B1']);
+
     $this->putJson('/api/v1/academic/exams/'.$created->json('data.id'), [
         'title' => 'Examen actualizado',
         'max_attempts' => 3,
         'passing_score' => 80,
-        'questions' => examPayloadQuestions(persistedExamQuestionIds()),
+        'kind' => 'theory',
+        'license_category' => 'A2B',
+        'allow_partial_credit' => true,
+        'apply_penalties' => true,
+        'questions' => examPayloadQuestions($officialQuestionIds),
     ])->assertOk()
         ->assertJsonPath('data.title', 'Examen actualizado')
         ->assertJsonPath('data.max_attempts', 3)
-        ->assertJsonPath('data.passing_score', 80);
+        ->assertJsonPath('data.passing_score', 80)
+        ->assertJsonPath('data.kind', 'theory')
+        ->assertJsonPath('data.license_category', 'A2B')
+        ->assertJsonPath('data.allow_partial_credit', true)
+        ->assertJsonPath('data.apply_penalties', true);
 });
 
 it('elimina un examen y deja de listarlo', function (): void {

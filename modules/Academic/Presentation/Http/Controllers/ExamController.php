@@ -48,6 +48,10 @@ final class ExamController
             passingScore: (int) ($data['passing_score'] ?? 60),
             shuffleQuestions: $request->boolean('shuffle_questions', false),
             feedbackMode: (string) ($data['feedback_mode'] ?? 'none'),
+            kind: (string) ($data['kind'] ?? 'standard'),
+            licenseCategory: isset($data['license_category']) ? (string) $data['license_category'] : null,
+            allowPartialCredit: $request->boolean('allow_partial_credit', false),
+            applyPenalties: $request->boolean('apply_penalties', false),
             questions: self::normalizeQuestions($data['questions'] ?? []),
         ));
         assert($result instanceof ExamResponse);
@@ -75,6 +79,10 @@ final class ExamController
             passingScore: (int) ($data['passing_score'] ?? 60),
             shuffleQuestions: $request->boolean('shuffle_questions', false),
             feedbackMode: (string) ($data['feedback_mode'] ?? 'none'),
+            kind: (string) ($data['kind'] ?? 'standard'),
+            licenseCategory: isset($data['license_category']) ? (string) $data['license_category'] : null,
+            allowPartialCredit: $request->boolean('allow_partial_credit', false),
+            applyPenalties: $request->boolean('apply_penalties', false),
             questions: self::normalizeQuestions($data['questions'] ?? []),
         ));
         assert($result instanceof ExamResponse);

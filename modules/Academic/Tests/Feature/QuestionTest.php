@@ -24,6 +24,15 @@ function singleChoicePayload(string $competencyId): array
     ];
 }
 
+function officialSingleChoicePayload(string $competencyId, array $overrides = []): array
+{
+    return array_merge(singleChoicePayload($competencyId), [
+        'source_kind' => 'official',
+        'source_reference' => ' MTC-2026-001 ',
+        'license_categories' => ['b1', 'A2B'],
+    ], $overrides);
+}
+
 it('crea una pregunta de selección única', function (): void {
     /** @var TestCase $this */
     actingAsRole(Role::SuperAdmin);
@@ -34,6 +43,18 @@ it('crea una pregunta de selección única', function (): void {
         ->assertJsonPath('data.correct.optionId', 'opt-a')
         ->assertJsonPath('data.score', 1)
         ->assertJsonStructure(['data' => ['id', 'type', 'competency_id', 'prompt', 'score', 'options', 'correct', 'media']]);
+});
+
+it('crea una pregunta oficial con metadata teorica', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::SuperAdmin);
+
+    $this->postJson('/api/v1/academic/questions', officialSingleChoicePayload(persistedQuestionCompetencyId()))
+        ->assertCreated()
+        ->assertJsonPath('data.source_kind', 'official')
+        ->assertJsonPath('data.source_reference', 'MTC-2026-001')
+        ->assertJsonPath('data.license_categories.0', 'B1')
+        ->assertJsonPath('data.license_categories.1', 'A2B');
 });
 
 it('crea una pregunta true_false sin opciones', function (): void {
@@ -68,6 +89,17 @@ it('rechaza un puntaje de cero con validación', function (): void {
         ],
     ])->assertUnprocessable()
         ->assertJsonValidationErrors(['score']);
+});
+
+it('valida categorias de licencia como strings no vacios', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::SuperAdmin);
+
+    $this->postJson('/api/v1/academic/questions', officialSingleChoicePayload(
+        persistedQuestionCompetencyId(),
+        ['license_categories' => ['B1', '   ']],
+    ))->assertUnprocessable()
+        ->assertJsonValidationErrors(['license_categories.1']);
 });
 
 it('rechaza crear una pregunta con competencia inexistente', function (): void {
@@ -132,6 +164,28 @@ it('actualiza prompt y puntaje de una pregunta', function (): void {
     ])->assertOk()
         ->assertJsonPath('data.prompt', 'Prompt actualizado')
         ->assertJsonPath('data.score', 5);
+});
+
+it('actualiza metadata teorica de una pregunta', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::SuperAdmin);
+
+    $created = $this->postJson('/api/v1/academic/questions', singleChoicePayload(persistedQuestionCompetencyId()))
+        ->assertCreated();
+
+    $questionId = $created->json('data.id');
+
+    $this->putJson("/api/v1/academic/questions/{$questionId}", officialSingleChoicePayload(
+        persistedQuestionCompetencyId(),
+        [
+            'prompt' => 'Prompt actualizado',
+            'source_reference' => ' Reglamento-44 ',
+            'license_categories' => ['c'],
+        ],
+    ))->assertOk()
+        ->assertJsonPath('data.source_kind', 'official')
+        ->assertJsonPath('data.source_reference', 'Reglamento-44')
+        ->assertJsonPath('data.license_categories.0', 'C');
 });
 
 it('elimina una pregunta y deja de listarla', function (): void {

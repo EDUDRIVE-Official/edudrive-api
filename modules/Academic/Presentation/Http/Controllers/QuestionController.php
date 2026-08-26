@@ -48,6 +48,9 @@ final class QuestionController
             options: self::normalizeOptions($data['options'] ?? []),
             explanation: isset($data['explanation']) ? (string) $data['explanation'] : null,
             media: $data['media'] ?? [],
+            sourceKind: isset($data['source_kind']) ? (string) $data['source_kind'] : 'custom',
+            sourceReference: isset($data['source_reference']) ? (string) $data['source_reference'] : null,
+            licenseCategories: self::normalizeLicenseCategories($data['license_categories'] ?? []),
         ));
         assert($result instanceof QuestionResponse);
 
@@ -74,6 +77,9 @@ final class QuestionController
             options: self::normalizeOptions($data['options'] ?? []),
             explanation: isset($data['explanation']) ? (string) $data['explanation'] : null,
             media: $data['media'] ?? [],
+            sourceKind: isset($data['source_kind']) ? (string) $data['source_kind'] : 'custom',
+            sourceReference: isset($data['source_reference']) ? (string) $data['source_reference'] : null,
+            licenseCategories: self::normalizeLicenseCategories($data['license_categories'] ?? []),
         ));
         assert($result instanceof QuestionResponse);
 
@@ -98,5 +104,14 @@ final class QuestionController
             'label' => (string) $option['label'],
             'side' => isset($option['side']) ? (string) $option['side'] : null,
         ], $options);
+    }
+
+    /**
+     * @param  list<mixed>  $licenseCategories
+     * @return list<string>
+     */
+    private static function normalizeLicenseCategories(array $licenseCategories): array
+    {
+        return array_map(static fn (mixed $category): string => (string) $category, $licenseCategories);
     }
 }

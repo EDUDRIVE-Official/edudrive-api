@@ -10,6 +10,7 @@ use Modules\Academic\Domain\Entities\ExamQuestion;
 use Modules\Academic\Domain\Entities\QuestionOption;
 use Modules\Academic\Domain\Entities\Responses\SingleChoiceResponse;
 use Modules\Academic\Domain\Enums\ExamFeedbackMode;
+use Modules\Academic\Domain\Enums\ExamKind;
 use Modules\Academic\Domain\Enums\QuestionType;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\QuestionRepository;
@@ -18,6 +19,7 @@ use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Academic\Domain\ValueObjects\ExamId;
+use Modules\Academic\Domain\ValueObjects\LicenseCategory;
 use Modules\Academic\Domain\ValueObjects\QuestionId;
 use Modules\Academic\Domain\ValueObjects\QuestionOptionId;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\ExamQuestionModel;
@@ -81,6 +83,10 @@ it('guarda y reconstruye un examen con sus preguntas ordenadas', function (): vo
         passingScore: 75,
         shuffleQuestions: true,
         feedbackMode: ExamFeedbackMode::AfterSubmission,
+        kind: ExamKind::Theory,
+        licenseCategory: LicenseCategory::fromString('B1'),
+        allowPartialCredit: true,
+        applyPenalties: true,
         questions: examRepoQuestions($questionIds),
     );
     $repository->save($exam);
@@ -93,6 +99,10 @@ it('guarda y reconstruye un examen con sus preguntas ordenadas', function (): vo
         ->and($stored?->passingScore())->toBe(75)
         ->and($stored?->shuffleQuestions())->toBeTrue()
         ->and($stored?->feedbackMode())->toBe(ExamFeedbackMode::AfterSubmission)
+        ->and($stored?->kind())->toBe(ExamKind::Theory)
+        ->and($stored?->licenseCategory()?->value())->toBe('B1')
+        ->and($stored?->allowPartialCredit())->toBeTrue()
+        ->and($stored?->applyPenalties())->toBeTrue()
         ->and($stored?->questions())->toHaveCount(2)
         ->and($stored?->questions()[0]->position())->toBe(1)
         ->and($stored?->questions()[1]->position())->toBe(2);

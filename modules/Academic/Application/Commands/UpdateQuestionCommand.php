@@ -12,6 +12,7 @@ final readonly class UpdateQuestionCommand implements Command
      * @param  array<string, mixed>  $response
      * @param  list<array{refId: string, label: string, side?: string|null}>  $options
      * @param  list<array{type: string, url: string}>  $media
+     * @param  list<string>  $licenseCategories
      */
     public function __construct(
         public string $questionId,
@@ -22,5 +23,8 @@ final readonly class UpdateQuestionCommand implements Command
         public array $options = [],
         public ?string $explanation = null,
         public array $media = [],
+        public string $sourceKind = 'custom',
+        public ?string $sourceReference = null,
+        public array $licenseCategories = [],
     ) {}
 }

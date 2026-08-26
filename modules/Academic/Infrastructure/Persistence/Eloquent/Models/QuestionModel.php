@@ -31,6 +31,7 @@ final class QuestionModel extends Model
             'score' => 'int',
             'media' => 'array',
             'response' => 'array',
+            'license_categories' => 'array',
         ];
     }
 }

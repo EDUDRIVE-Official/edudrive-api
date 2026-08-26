@@ -22,6 +22,10 @@ final readonly class ExamResponse
         public int $passingScore,
         public bool $shuffleQuestions,
         public string $feedbackMode,
+        public string $kind,
+        public ?string $licenseCategory,
+        public bool $allowPartialCredit,
+        public bool $applyPenalties,
         public array $questions,
     ) {}
 
@@ -40,6 +44,10 @@ final readonly class ExamResponse
             $exam->passingScore(),
             $exam->shuffleQuestions(),
             $exam->feedbackMode()->value,
+            $exam->kind()->value,
+            $exam->licenseCategory()?->value(),
+            $exam->allowPartialCredit(),
+            $exam->applyPenalties(),
             array_map(
                 static fn (ExamQuestion $examQuestion): array => [
                     'position' => $examQuestion->position(),
@@ -64,6 +72,10 @@ final readonly class ExamResponse
      *     passing_score: int,
      *     shuffle_questions: bool,
      *     feedback_mode: string,
+     *     kind: string,
+     *     license_category: string|null,
+     *     allow_partial_credit: bool,
+     *     apply_penalties: bool,
      *     questions: list<array{position: int, question_id: string, points: int, ref_id: string, type: string}>
      * }
      */
@@ -79,6 +91,10 @@ final readonly class ExamResponse
             'passing_score' => $this->passingScore,
             'shuffle_questions' => $this->shuffleQuestions,
             'feedback_mode' => $this->feedbackMode,
+            'kind' => $this->kind,
+            'license_category' => $this->licenseCategory,
+            'allow_partial_credit' => $this->allowPartialCredit,
+            'apply_penalties' => $this->applyPenalties,
             'questions' => $this->questions,
         ];
     }

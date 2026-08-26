@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Modules\Academic\Presentation\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Modules\Academic\Domain\Enums\ExamFeedbackMode;
+use Modules\Academic\Domain\Enums\ExamKind;
 
 final class UpdateExamRequest extends FormRequest
 {
@@ -26,6 +28,16 @@ final class UpdateExamRequest extends FormRequest
             'passing_score' => ['integer', 'min:1', 'max:100'],
             'shuffle_questions' => ['boolean'],
             'feedback_mode' => ['string', new Enum(ExamFeedbackMode::class)],
+            'kind' => ['sometimes', 'string', new Enum(ExamKind::class)],
+            'license_category' => [
+                Rule::requiredIf(fn (): bool => $this->input('kind', 'standard') === ExamKind::Theory->value),
+                'nullable',
+                'string',
+                'regex:/\S/',
+                'max:50',
+            ],
+            'allow_partial_credit' => ['boolean'],
+            'apply_penalties' => ['boolean'],
             'questions' => ['array'],
             'questions.*.question_id' => ['required', 'string', 'uuid'],
             'questions.*.points' => ['required', 'integer', 'min:1'],

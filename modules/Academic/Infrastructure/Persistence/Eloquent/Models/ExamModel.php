@@ -33,6 +33,9 @@ final class ExamModel extends Model
             'passing_score' => 'int',
             'shuffle_questions' => 'bool',
             'feedback_mode' => 'string',
+            'kind' => 'string',
+            'allow_partial_credit' => 'bool',
+            'apply_penalties' => 'bool',
         ];
     }
 }

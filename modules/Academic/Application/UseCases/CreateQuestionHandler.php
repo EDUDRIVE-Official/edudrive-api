@@ -11,10 +11,12 @@ use Modules\Academic\Application\Responses\QuestionResponse;
 use Modules\Academic\Application\Services\QuestionResponseFactory;
 use Modules\Academic\Domain\Aggregates\Question;
 use Modules\Academic\Domain\Entities\QuestionOption;
+use Modules\Academic\Domain\Enums\QuestionSourceKind;
 use Modules\Academic\Domain\Enums\QuestionType;
 use Modules\Academic\Domain\Repositories\CompetencyRepository;
 use Modules\Academic\Domain\Repositories\QuestionRepository;
 use Modules\Academic\Domain\ValueObjects\CompetencyId;
+use Modules\Academic\Domain\ValueObjects\LicenseCategory;
 use Modules\Academic\Domain\ValueObjects\QuestionId;
 use Modules\Academic\Domain\ValueObjects\QuestionMedia;
 use Modules\Academic\Domain\ValueObjects\QuestionOptionId;
@@ -43,6 +45,9 @@ final readonly class CreateQuestionHandler
             array_map($this->optionMapper(), $command->options, array_keys($command->options)),
             $command->explanation,
             array_map(static fn (array $media): QuestionMedia => QuestionMedia::fromArray($media), $command->media),
+            QuestionSourceKind::from($command->sourceKind),
+            $command->sourceReference,
+            array_map(static fn (string $category): LicenseCategory => LicenseCategory::fromString($category), $command->licenseCategories),
         );
         $this->questions->save($question);
 

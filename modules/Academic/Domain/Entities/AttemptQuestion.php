@@ -8,6 +8,7 @@ use Modules\Academic\Domain\Entities\Responses\QuestionResponse;
 use Modules\Academic\Domain\Enums\QuestionType;
 use Modules\Academic\Domain\Exceptions\InvalidExamAttempt;
 use Modules\Academic\Domain\ValueObjects\AttemptQuestionId;
+use Modules\Academic\Domain\ValueObjects\CompetencyId;
 use Modules\Academic\Domain\ValueObjects\QuestionId;
 
 final class AttemptQuestion
@@ -17,6 +18,7 @@ final class AttemptQuestion
         private AttemptQuestionId $id,
         private int $position,
         private QuestionId $questionId,
+        private CompetencyId $competencyId,
         private int $points,
         private string $prompt,
         private QuestionType $type,
@@ -33,6 +35,7 @@ final class AttemptQuestion
         AttemptQuestionId $id,
         int $position,
         QuestionId $questionId,
+        CompetencyId $competencyId,
         int $points,
         string $prompt,
         QuestionType $type,
@@ -47,7 +50,7 @@ final class AttemptQuestion
             throw InvalidExamAttempt::create();
         }
 
-        return new self($id, $position, $questionId, $points, trim($prompt), $type, $options, $correctResponse, $explanation, $userResponse, $isCorrect, $answeredAt);
+        return new self($id, $position, $questionId, $competencyId, $points, trim($prompt), $type, $options, $correctResponse, $explanation, $userResponse, $isCorrect, $answeredAt);
     }
 
     /** @param  list<array<string, mixed>>  $options */
@@ -55,6 +58,7 @@ final class AttemptQuestion
         AttemptQuestionId $id,
         int $position,
         QuestionId $questionId,
+        CompetencyId $competencyId,
         int $points,
         string $prompt,
         QuestionType $type,
@@ -65,7 +69,7 @@ final class AttemptQuestion
         ?bool $isCorrect = null,
         ?\DateTimeImmutable $answeredAt = null,
     ): self {
-        return self::create($id, $position, $questionId, $points, $prompt, $type, $options, $correctResponse, $explanation, $userResponse, $isCorrect, $answeredAt);
+        return self::create($id, $position, $questionId, $competencyId, $points, $prompt, $type, $options, $correctResponse, $explanation, $userResponse, $isCorrect, $answeredAt);
     }
 
     public function withPosition(int $position): self
@@ -74,7 +78,7 @@ final class AttemptQuestion
             throw InvalidExamAttempt::create();
         }
 
-        return new self($this->id, $position, $this->questionId, $this->points, $this->prompt, $this->type, $this->options, $this->correctResponse, $this->explanation, $this->userResponse, $this->isCorrect, $this->answeredAt);
+        return new self($this->id, $position, $this->questionId, $this->competencyId, $this->points, $this->prompt, $this->type, $this->options, $this->correctResponse, $this->explanation, $this->userResponse, $this->isCorrect, $this->answeredAt);
     }
 
     public function answer(QuestionResponse $response, \DateTimeImmutable $answeredAt): void
@@ -97,6 +101,11 @@ final class AttemptQuestion
     public function questionId(): QuestionId
     {
         return $this->questionId;
+    }
+
+    public function competencyId(): CompetencyId
+    {
+        return $this->competencyId;
     }
 
     public function points(): int

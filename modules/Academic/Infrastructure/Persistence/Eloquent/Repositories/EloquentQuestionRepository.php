@@ -9,9 +9,11 @@ use Illuminate\Support\Str;
 use Modules\Academic\Application\Services\QuestionResponseFactory;
 use Modules\Academic\Domain\Aggregates\Question;
 use Modules\Academic\Domain\Entities\QuestionOption;
+use Modules\Academic\Domain\Enums\QuestionSourceKind;
 use Modules\Academic\Domain\Enums\QuestionType;
 use Modules\Academic\Domain\Repositories\QuestionRepository;
 use Modules\Academic\Domain\ValueObjects\CompetencyId;
+use Modules\Academic\Domain\ValueObjects\LicenseCategory;
 use Modules\Academic\Domain\ValueObjects\QuestionId;
 use Modules\Academic\Domain\ValueObjects\QuestionMedia;
 use Modules\Academic\Domain\ValueObjects\QuestionOptionId;
@@ -31,6 +33,12 @@ final readonly class EloquentQuestionRepository implements QuestionRepository
                     'prompt' => $question->prompt(),
                     'explanation' => $question->explanation(),
                     'score' => $question->score(),
+                    'source_kind' => $question->sourceKind()->value,
+                    'source_reference' => $question->sourceReference(),
+                    'license_categories' => array_map(
+                        static fn (LicenseCategory $category): string => $category->value(),
+                        $question->licenseCategories(),
+                    ),
                     'media' => array_map(
                         static fn (QuestionMedia $media): array => $media->toArray(),
                         $question->media(),
@@ -89,6 +97,9 @@ final readonly class EloquentQuestionRepository implements QuestionRepository
         /** @var list<array{type: string, url: string}> $media */
         $media = $model->getAttribute('media') ?? [];
 
+        /** @var list<string> $licenseCategories */
+        $licenseCategories = $model->getAttribute('license_categories') ?? [];
+
         $options = array_values($model->options->map(fn (QuestionOptionModel $option): QuestionOption => QuestionOption::create(
             refId: (string) $option->getAttribute('ref_id'),
             id: QuestionOptionId::fromString((string) $option->getAttribute('id')),
@@ -107,6 +118,9 @@ final readonly class EloquentQuestionRepository implements QuestionRepository
             $options,
             $model->getAttribute('explanation') === null ? null : (string) $model->getAttribute('explanation'),
             array_map(static fn (array $m): QuestionMedia => QuestionMedia::fromArray($m), $media),
+            QuestionSourceKind::from((string) ($model->getAttribute('source_kind') ?? QuestionSourceKind::Custom->value)),
+            $model->getAttribute('source_reference') === null ? null : (string) $model->getAttribute('source_reference'),
+            array_map(static fn (string $category): LicenseCategory => LicenseCategory::fromString($category), $licenseCategories),
         );
     }
 }

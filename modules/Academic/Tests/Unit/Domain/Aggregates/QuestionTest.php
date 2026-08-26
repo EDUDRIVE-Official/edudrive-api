@@ -10,10 +10,12 @@ use Modules\Academic\Domain\Entities\Responses\MultiSelectResponse;
 use Modules\Academic\Domain\Entities\Responses\OrderingResponse;
 use Modules\Academic\Domain\Entities\Responses\SingleChoiceResponse;
 use Modules\Academic\Domain\Entities\Responses\TrueFalseResponse;
+use Modules\Academic\Domain\Enums\QuestionSourceKind;
 use Modules\Academic\Domain\Enums\QuestionType;
 use Modules\Academic\Domain\Exceptions\InvalidQuestion;
 use Modules\Academic\Domain\Exceptions\InvalidQuestionScore;
 use Modules\Academic\Domain\ValueObjects\CompetencyId;
+use Modules\Academic\Domain\ValueObjects\LicenseCategory;
 use Modules\Academic\Domain\ValueObjects\QuestionId;
 use Modules\Academic\Domain\ValueObjects\QuestionMedia;
 use Modules\Academic\Domain\ValueObjects\QuestionOptionId;
@@ -65,9 +67,177 @@ it('construye una pregunta de seleccion unica valida', function (): void {
         ->and($question->prompt())->toBe('¿Cuál es la velocidad máxima en zona urbana?')
         ->and($question->score())->toBe(1)
         ->and($question->explanation())->toBeNull()
+        ->and($question->sourceKind())->toBe(QuestionSourceKind::Custom)
+        ->and($question->sourceReference())->toBeNull()
+        ->and($question->licenseCategories())->toBe([])
         ->and($question->media())->toBe([])
         ->and(count($question->options()))->toBe(2)
         ->and($question->response()->toArray())->toBe(['type' => 'single_choice', 'optionId' => 'opt-a']);
+});
+
+it('normaliza source reference opcional y conserva categorias oficiales', function (): void {
+    $question = Question::create(
+        questionId(),
+        QuestionType::SingleChoice,
+        competencyId(),
+        'Prompt',
+        1,
+        SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a']),
+        questionOptions(['opt-a', 'opt-b']),
+        sourceKind: QuestionSourceKind::Official,
+        sourceReference: '  MTC-2026-001  ',
+        licenseCategories: [
+            LicenseCategory::fromString('A1'),
+            LicenseCategory::fromString('B2'),
+        ],
+    );
+
+    expect($question->sourceKind())->toBe(QuestionSourceKind::Official)
+        ->and($question->sourceReference())->toBe('MTC-2026-001')
+        ->and(array_map(
+            static fn (LicenseCategory $category): string => $category->value(),
+            $question->licenseCategories(),
+        ))->toBe(['A1', 'B2']);
+});
+
+it('normaliza source reference en blanco a null', function (): void {
+    $question = Question::create(
+        questionId(),
+        QuestionType::TrueFalse,
+        competencyId(),
+        'Prompt',
+        1,
+        TrueFalseResponse::fromArray(['type' => 'true_false', 'correct' => true]),
+        [],
+        sourceReference: '   ',
+    );
+
+    expect($question->sourceReference())->toBeNull();
+});
+
+it('permite source reference de hasta 255 caracteres', function (): void {
+    $question = Question::create(
+        questionId(),
+        QuestionType::TrueFalse,
+        competencyId(),
+        'Prompt',
+        1,
+        TrueFalseResponse::fromArray(['type' => 'true_false', 'correct' => true]),
+        [],
+        sourceReference: str_repeat('R', 255),
+    );
+
+    expect($question->sourceReference())->toBe(str_repeat('R', 255));
+});
+
+it('rechaza source reference de mas de 255 caracteres', function (): void {
+    expect(fn () => Question::create(
+        questionId(),
+        QuestionType::TrueFalse,
+        competencyId(),
+        'Prompt',
+        1,
+        TrueFalseResponse::fromArray(['type' => 'true_false', 'correct' => true]),
+        [],
+        sourceReference: str_repeat('R', 256),
+    ))->toThrow(InvalidQuestion::class);
+});
+
+it('rechaza categorias de licencia vacias', function (): void {
+    expect(fn () => Question::create(
+        questionId(),
+        QuestionType::SingleChoice,
+        competencyId(),
+        'Prompt',
+        1,
+        SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a']),
+        questionOptions(['opt-a', 'opt-b']),
+        sourceKind: QuestionSourceKind::Official,
+        licenseCategories: [LicenseCategory::fromString('   ')],
+    ))->toThrow(InvalidArgumentException::class);
+});
+
+it('rechaza categorias de licencia repetidas', function (): void {
+    expect(fn () => Question::create(
+        questionId(),
+        QuestionType::SingleChoice,
+        competencyId(),
+        'Prompt',
+        1,
+        SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a']),
+        questionOptions(['opt-a', 'opt-b']),
+        sourceKind: QuestionSourceKind::Official,
+        licenseCategories: [
+            LicenseCategory::fromString('A1'),
+            LicenseCategory::fromString('a1'),
+        ],
+    ))->toThrow(InvalidQuestion::class);
+});
+
+it('permite preguntas custom sin categorias', function (): void {
+    $question = Question::create(
+        questionId(),
+        QuestionType::TrueFalse,
+        competencyId(),
+        'Prompt',
+        1,
+        TrueFalseResponse::fromArray(['type' => 'true_false', 'correct' => true]),
+        [],
+        sourceKind: QuestionSourceKind::Custom,
+    );
+
+    expect($question->sourceKind())->toBe(QuestionSourceKind::Custom)
+        ->and($question->licenseCategories())->toBe([]);
+});
+
+it('permite preguntas custom con categorias en esta etapa', function (): void {
+    $question = Question::create(
+        questionId(),
+        QuestionType::TrueFalse,
+        competencyId(),
+        'Prompt',
+        1,
+        TrueFalseResponse::fromArray(['type' => 'true_false', 'correct' => true]),
+        [],
+        sourceKind: QuestionSourceKind::Custom,
+        licenseCategories: [LicenseCategory::fromString('A-III especial')],
+    );
+
+    expect($question->sourceKind())->toBe(QuestionSourceKind::Custom)
+        ->and($question->licenseCategories()[0]->value())->toBe('A-III ESPECIAL');
+});
+
+it('permite preguntas official sin categorias en esta etapa', function (): void {
+    $question = Question::create(
+        questionId(),
+        QuestionType::SingleChoice,
+        competencyId(),
+        'Prompt',
+        1,
+        SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a']),
+        questionOptions(['opt-a', 'opt-b']),
+        sourceKind: QuestionSourceKind::Official,
+    );
+
+    expect($question->sourceKind())->toBe(QuestionSourceKind::Official)
+        ->and($question->licenseCategories())->toBe([]);
+});
+
+it('permite preguntas official con categorias validas', function (): void {
+    $question = Question::create(
+        questionId(),
+        QuestionType::SingleChoice,
+        competencyId(),
+        'Prompt',
+        1,
+        SingleChoiceResponse::fromArray(['type' => 'single_choice', 'optionId' => 'opt-a']),
+        questionOptions(['opt-a', 'opt-b']),
+        sourceKind: QuestionSourceKind::Official,
+        licenseCategories: [LicenseCategory::fromString('A2B')],
+    );
+
+    expect($question->sourceKind())->toBe(QuestionSourceKind::Official)
+        ->and($question->licenseCategories()[0]->value())->toBe('A2B');
 });
 
 it('rechaza una pregunta con puntaje no positivo', function (): void {
@@ -277,11 +447,18 @@ it('restaura el agregado con su estado completo', function (): void {
         MultiSelectResponse::fromArray(['type' => 'multi_select', 'optionIds' => ['opt-a', 'opt-b']]),
         questionOptions(['opt-a', 'opt-b']),
         'Explicación de prueba',
+        [],
+        QuestionSourceKind::Official,
+        '  REF-22  ',
+        [LicenseCategory::fromString('B1')],
     );
 
     expect($question->id()->equals($id))->toBeTrue()
         ->and($question->competencyId()->equals($competency))->toBeTrue()
         ->and($question->explanation())->toBe('Explicación de prueba')
+        ->and($question->sourceKind())->toBe(QuestionSourceKind::Official)
+        ->and($question->sourceReference())->toBe('REF-22')
+        ->and($question->licenseCategories()[0]->value())->toBe('B1')
         ->and($question->score())->toBe(2)
         ->and($question->response()->toArray())->toBe(['type' => 'multi_select', 'optionIds' => ['opt-a', 'opt-b']]);
 });
@@ -304,12 +481,19 @@ it('reemplaza los datos de una pregunta de forma atomica', function (): void {
         MultiSelectResponse::fromArray(['type' => 'multi_select', 'optionIds' => ['opt-a', 'opt-c']]),
         questionOptions(['opt-a', 'opt-b', 'opt-c']),
         'Nueva explicación',
+        [],
+        QuestionSourceKind::Official,
+        ' OF-9 ',
+        [LicenseCategory::fromString('A3C')],
     );
 
     expect($question->type())->toBe(QuestionType::MultiSelect)
         ->and($question->prompt())->toBe('Prompt cambiado')
         ->and($question->score())->toBe(3)
         ->and($question->explanation())->toBe('Nueva explicación')
+        ->and($question->sourceKind())->toBe(QuestionSourceKind::Official)
+        ->and($question->sourceReference())->toBe('OF-9')
+        ->and($question->licenseCategories()[0]->value())->toBe('A3C')
         ->and(count($question->options()))->toBe(3)
         ->and($question->response()->toArray())->toBe(['type' => 'multi_select', 'optionIds' => ['opt-a', 'opt-c']]);
 });

@@ -11,10 +11,12 @@ use Modules\Academic\Domain\Entities\Responses\OrderingResponse;
 use Modules\Academic\Domain\Entities\Responses\QuestionResponse;
 use Modules\Academic\Domain\Entities\Responses\SingleChoiceResponse;
 use Modules\Academic\Domain\Entities\Responses\TrueFalseResponse;
+use Modules\Academic\Domain\Enums\QuestionSourceKind;
 use Modules\Academic\Domain\Enums\QuestionType;
 use Modules\Academic\Domain\Exceptions\InvalidQuestion;
 use Modules\Academic\Domain\Exceptions\InvalidQuestionScore;
 use Modules\Academic\Domain\ValueObjects\CompetencyId;
+use Modules\Academic\Domain\ValueObjects\LicenseCategory;
 use Modules\Academic\Domain\ValueObjects\QuestionId;
 use Modules\Academic\Domain\ValueObjects\QuestionMedia;
 
@@ -24,8 +26,11 @@ final class Question
 
     private const int MAX_EXPLANATION_LENGTH = 2000;
 
+    private const int MAX_SOURCE_REFERENCE_LENGTH = 255;
+
     /** @param list<QuestionOption> $options
-     *  @param  list<QuestionMedia>  $media */
+     *  @param  list<QuestionMedia>  $media
+     *  @param  list<LicenseCategory>  $licenseCategories */
     private function __construct(
         private QuestionId $id,
         private QuestionType $type,
@@ -36,10 +41,14 @@ final class Question
         private array $options,
         private ?string $explanation,
         private array $media,
+        private QuestionSourceKind $sourceKind,
+        private ?string $sourceReference,
+        private array $licenseCategories,
     ) {}
 
     /** @param list<QuestionOption> $options
-     *  @param  list<QuestionMedia>  $media */
+     *  @param  list<QuestionMedia>  $media
+     *  @param  list<LicenseCategory>  $licenseCategories */
     public static function create(
         QuestionId $id,
         QuestionType $type,
@@ -50,15 +59,19 @@ final class Question
         array $options,
         ?string $explanation = null,
         array $media = [],
+        QuestionSourceKind $sourceKind = QuestionSourceKind::Custom,
+        ?string $sourceReference = null,
+        array $licenseCategories = [],
     ): self {
-        $question = new self($id, $type, $competencyId, $prompt, $score, $response, $options, $explanation, $media);
+        $question = new self($id, $type, $competencyId, $prompt, $score, $response, $options, $explanation, $media, $sourceKind, $sourceReference, $licenseCategories);
         $question->assertValid();
 
         return $question;
     }
 
     /** @param list<QuestionOption> $options
-     *  @param  list<QuestionMedia>  $media */
+     *  @param  list<QuestionMedia>  $media
+     *  @param  list<LicenseCategory>  $licenseCategories */
     public static function restore(
         QuestionId $id,
         QuestionType $type,
@@ -69,15 +82,19 @@ final class Question
         array $options,
         ?string $explanation = null,
         array $media = [],
+        QuestionSourceKind $sourceKind = QuestionSourceKind::Custom,
+        ?string $sourceReference = null,
+        array $licenseCategories = [],
     ): self {
-        $question = new self($id, $type, $competencyId, $prompt, $score, $response, $options, $explanation, $media);
+        $question = new self($id, $type, $competencyId, $prompt, $score, $response, $options, $explanation, $media, $sourceKind, $sourceReference, $licenseCategories);
         $question->assertValid();
 
         return $question;
     }
 
     /** @param list<QuestionOption> $options
-     *  @param  list<QuestionMedia>  $media */
+     *  @param  list<QuestionMedia>  $media
+     *  @param  list<LicenseCategory>  $licenseCategories */
     public function replace(
         QuestionType $type,
         string $prompt,
@@ -86,6 +103,9 @@ final class Question
         array $options,
         ?string $explanation = null,
         array $media = [],
+        QuestionSourceKind $sourceKind = QuestionSourceKind::Custom,
+        ?string $sourceReference = null,
+        array $licenseCategories = [],
     ): void {
         $next = new self(
             $this->id,
@@ -97,6 +117,9 @@ final class Question
             $options,
             $explanation,
             $media,
+            $sourceKind,
+            $sourceReference,
+            $licenseCategories,
         );
         $next->assertValid();
 
@@ -107,6 +130,9 @@ final class Question
         $this->options = $options;
         $this->explanation = $next->explanation;
         $this->media = $media;
+        $this->sourceKind = $next->sourceKind;
+        $this->sourceReference = $next->sourceReference;
+        $this->licenseCategories = $next->licenseCategories;
     }
 
     public function id(): QuestionId
@@ -150,6 +176,22 @@ final class Question
         return $this->explanation;
     }
 
+    public function sourceKind(): QuestionSourceKind
+    {
+        return $this->sourceKind;
+    }
+
+    public function sourceReference(): ?string
+    {
+        return $this->sourceReference;
+    }
+
+    /** @return list<LicenseCategory> */
+    public function licenseCategories(): array
+    {
+        return $this->licenseCategories;
+    }
+
     /** @return list<QuestionMedia> */
     public function media(): array
     {
@@ -164,6 +206,8 @@ final class Question
         }
 
         $this->explanation = self::optionalString($this->explanation, self::MAX_EXPLANATION_LENGTH);
+        $this->sourceReference = self::optionalString($this->sourceReference, self::MAX_SOURCE_REFERENCE_LENGTH);
+        $this->licenseCategories = self::normalizeLicenseCategories($this->licenseCategories);
 
         if ($this->score < 1) {
             throw InvalidQuestionScore::create();
@@ -178,6 +222,28 @@ final class Question
         }
 
         $this->assertResponseMatchesOptions();
+    }
+
+    /** @param list<LicenseCategory> $categories
+     *  @return list<LicenseCategory> */
+    private static function normalizeLicenseCategories(array $categories): array
+    {
+        $normalized = [];
+
+        foreach ($categories as $category) {
+            $key = $category->value();
+
+            if (array_key_exists($key, $normalized)) {
+                throw InvalidQuestion::create();
+            }
+
+            $normalized[$key] = $category;
+        }
+
+        /** @var list<LicenseCategory> $result */
+        $result = array_values($normalized);
+
+        return $result;
     }
 
     private function assertResponseMatchesOptions(): void
@@ -272,7 +338,7 @@ final class Question
         }
     }
 
-    private static function optionalString(?string $value, int $maxLength): ?string
+    private static function optionalString(?string $value, ?int $maxLength = null): ?string
     {
         if ($value === null) {
             return null;
@@ -282,7 +348,7 @@ final class Question
         if ($value === '') {
             return null;
         }
-        if (strlen($value) > $maxLength) {
+        if ($maxLength !== null && strlen($value) > $maxLength) {
             throw InvalidQuestion::create();
         }
 

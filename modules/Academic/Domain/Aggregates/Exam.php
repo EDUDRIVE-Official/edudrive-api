@@ -6,9 +6,11 @@ namespace Modules\Academic\Domain\Aggregates;
 
 use Modules\Academic\Domain\Entities\ExamQuestion;
 use Modules\Academic\Domain\Enums\ExamFeedbackMode;
+use Modules\Academic\Domain\Enums\ExamKind;
 use Modules\Academic\Domain\Exceptions\InvalidExam;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\ExamId;
+use Modules\Academic\Domain\ValueObjects\LicenseCategory;
 
 final class Exam
 {
@@ -27,6 +29,10 @@ final class Exam
         private int $passingScore,
         private bool $shuffleQuestions,
         private ExamFeedbackMode $feedbackMode,
+        private ExamKind $kind,
+        private ?LicenseCategory $licenseCategory,
+        private bool $allowPartialCredit,
+        private bool $applyPenalties,
         private array $questions,
     ) {}
 
@@ -42,8 +48,12 @@ final class Exam
         int $passingScore = 60,
         bool $shuffleQuestions = false,
         ExamFeedbackMode $feedbackMode = ExamFeedbackMode::None,
+        ExamKind $kind = ExamKind::Standard,
+        ?LicenseCategory $licenseCategory = null,
+        bool $allowPartialCredit = false,
+        bool $applyPenalties = false,
     ): self {
-        $exam = new self($id, $courseId, $title, $description, $durationMinutes, $maxAttempts, $passingScore, $shuffleQuestions, $feedbackMode, $questions);
+        $exam = new self($id, $courseId, $title, $description, $durationMinutes, $maxAttempts, $passingScore, $shuffleQuestions, $feedbackMode, $kind, $licenseCategory, $allowPartialCredit, $applyPenalties, $questions);
         $exam->assertValid();
 
         return $exam;
@@ -61,8 +71,12 @@ final class Exam
         int $passingScore = 60,
         bool $shuffleQuestions = false,
         ExamFeedbackMode $feedbackMode = ExamFeedbackMode::None,
+        ExamKind $kind = ExamKind::Standard,
+        ?LicenseCategory $licenseCategory = null,
+        bool $allowPartialCredit = false,
+        bool $applyPenalties = false,
     ): self {
-        $exam = new self($id, $courseId, $title, $description, $durationMinutes, $maxAttempts, $passingScore, $shuffleQuestions, $feedbackMode, $questions);
+        $exam = new self($id, $courseId, $title, $description, $durationMinutes, $maxAttempts, $passingScore, $shuffleQuestions, $feedbackMode, $kind, $licenseCategory, $allowPartialCredit, $applyPenalties, $questions);
         $exam->assertValid();
 
         return $exam;
@@ -78,8 +92,12 @@ final class Exam
         int $passingScore = 60,
         bool $shuffleQuestions = false,
         ExamFeedbackMode $feedbackMode = ExamFeedbackMode::None,
+        ExamKind $kind = ExamKind::Standard,
+        ?LicenseCategory $licenseCategory = null,
+        bool $allowPartialCredit = false,
+        bool $applyPenalties = false,
     ): void {
-        $next = new self($this->id, $this->courseId, $title, $description, $durationMinutes, $maxAttempts, $passingScore, $shuffleQuestions, $feedbackMode, $questions);
+        $next = new self($this->id, $this->courseId, $title, $description, $durationMinutes, $maxAttempts, $passingScore, $shuffleQuestions, $feedbackMode, $kind, $licenseCategory, $allowPartialCredit, $applyPenalties, $questions);
         $next->assertValid();
 
         $this->title = $next->title;
@@ -89,6 +107,10 @@ final class Exam
         $this->passingScore = $next->passingScore;
         $this->shuffleQuestions = $next->shuffleQuestions;
         $this->feedbackMode = $next->feedbackMode;
+        $this->kind = $next->kind;
+        $this->licenseCategory = $next->licenseCategory;
+        $this->allowPartialCredit = $next->allowPartialCredit;
+        $this->applyPenalties = $next->applyPenalties;
         $this->questions = $next->questions;
     }
 
@@ -137,6 +159,26 @@ final class Exam
         return $this->feedbackMode;
     }
 
+    public function kind(): ExamKind
+    {
+        return $this->kind;
+    }
+
+    public function licenseCategory(): ?LicenseCategory
+    {
+        return $this->licenseCategory;
+    }
+
+    public function allowPartialCredit(): bool
+    {
+        return $this->allowPartialCredit;
+    }
+
+    public function applyPenalties(): bool
+    {
+        return $this->applyPenalties;
+    }
+
     /** @return list<ExamQuestion> */
     public function questions(): array
     {
@@ -161,6 +203,14 @@ final class Exam
         }
 
         if ($this->passingScore < 1 || $this->passingScore > 100) {
+            throw InvalidExam::create();
+        }
+
+        if ($this->kind === ExamKind::Theory && $this->licenseCategory === null) {
+            throw InvalidExam::create();
+        }
+
+        if ($this->kind === ExamKind::Standard && $this->licenseCategory !== null) {
             throw InvalidExam::create();
         }
 
