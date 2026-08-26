@@ -79,7 +79,47 @@ it('acepta un lote de puntos de decision autenticado con la llave del simulador'
     $this->withHeaders(['Authorization' => "Bearer {$plainKey}"])
         ->postJson("/api/v1/simulation/sessions/{$session->id()->value()}/decisions", [
             'decisions' => [
-                ['road_context' => 'Semáforo en amarillo', 'risk_level' => 'high', 'driver_reaction' => 'braked', 'occurred_at' => '2026-09-01T10:12:00+00:00'],
+                ['id' => (string) Str::uuid(), 'road_context' => 'Semáforo en amarillo', 'risk_level' => 'high', 'driver_reaction' => 'braked', 'occurred_at' => '2026-09-01T10:12:00+00:00'],
+            ],
+        ])
+        ->assertCreated()
+        ->assertJsonPath('data.decisions_recorded', 1);
+});
+
+it('ignora un reenvio del mismo lote de decisiones sin duplicar filas', function (): void {
+    /** @var TestCase $this */
+    [$simulator, $plainKey] = persistedDecisionEngineFeatureSimulator();
+    $userId = persistedDecisionEngineFeatureUserId();
+    $session = persistedDecisionEngineFeatureSession($userId, $simulator->id()->value());
+    $payload = [
+        'decisions' => [
+            ['id' => (string) Str::uuid(), 'road_context' => 'Semáforo en amarillo', 'risk_level' => 'high', 'driver_reaction' => 'braked', 'occurred_at' => '2026-09-01T10:12:00+00:00'],
+        ],
+    ];
+
+    $this->withHeaders(['Authorization' => "Bearer {$plainKey}"])
+        ->postJson("/api/v1/simulation/sessions/{$session->id()->value()}/decisions", $payload)
+        ->assertCreated()
+        ->assertJsonPath('data.decisions_recorded', 1);
+
+    $this->withHeaders(['Authorization' => "Bearer {$plainKey}"])
+        ->postJson("/api/v1/simulation/sessions/{$session->id()->value()}/decisions", $payload)
+        ->assertCreated()
+        ->assertJsonPath('data.decisions_recorded', 0);
+});
+
+it('acepta un punto de decision que llego tarde para una sesion ya completada', function (): void {
+    /** @var TestCase $this */
+    [$simulator, $plainKey] = persistedDecisionEngineFeatureSimulator();
+    $userId = persistedDecisionEngineFeatureUserId();
+    $session = persistedDecisionEngineFeatureSession($userId, $simulator->id()->value());
+    $session->complete(new DateTimeImmutable('2026-09-01T10:45:00+00:00'));
+    app(SimulationSessionRepository::class)->save($session);
+
+    $this->withHeaders(['Authorization' => "Bearer {$plainKey}"])
+        ->postJson("/api/v1/simulation/sessions/{$session->id()->value()}/decisions", [
+            'decisions' => [
+                ['id' => (string) Str::uuid(), 'road_context' => 'Semáforo en amarillo', 'risk_level' => 'high', 'driver_reaction' => 'braked', 'occurred_at' => '2026-09-01T10:20:00+00:00'],
             ],
         ])
         ->assertCreated()
@@ -116,7 +156,7 @@ it('el dueno consulta el resultado del motor de decisiones de su sesion completa
     $this->withHeaders(['Authorization' => "Bearer {$plainKey}"])
         ->postJson("/api/v1/simulation/sessions/{$session->id()->value()}/decisions", [
             'decisions' => [
-                ['road_context' => 'Semáforo en amarillo', 'risk_level' => 'high', 'driver_reaction' => 'braked', 'occurred_at' => '2026-09-01T10:12:00+00:00'],
+                ['id' => (string) Str::uuid(), 'road_context' => 'Semáforo en amarillo', 'risk_level' => 'high', 'driver_reaction' => 'braked', 'occurred_at' => '2026-09-01T10:12:00+00:00'],
             ],
         ])->assertCreated();
 

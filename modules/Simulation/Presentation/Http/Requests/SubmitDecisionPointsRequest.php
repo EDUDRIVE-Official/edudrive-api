@@ -21,6 +21,7 @@ final class SubmitDecisionPointsRequest extends FormRequest
     {
         return [
             'decisions' => ['array'],
+            'decisions.*.id' => ['required', 'uuid'],
             'decisions.*.road_context' => ['required', 'string', 'max:255'],
             'decisions.*.risk_level' => ['required', 'string', Rule::in(array_map(
                 static fn (DecisionRiskLevel $level): string => $level->value,

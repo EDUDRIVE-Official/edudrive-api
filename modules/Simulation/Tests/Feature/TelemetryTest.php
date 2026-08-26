@@ -79,15 +79,55 @@ it('acepta un lote de telemetria autenticado con la llave del simulador', functi
     $this->withHeaders(['Authorization' => "Bearer {$plainKey}"])
         ->postJson("/api/v1/simulation/sessions/{$session->id()->value()}/telemetry", [
             'samples' => [
-                ['speed_kph' => 40.0, 'braking_percentage' => 0.0, 'acceleration_mps2' => 1.1, 'steering_angle_degrees' => 0.0, 'recorded_at' => '2026-09-01T10:10:00+00:00'],
+                ['id' => (string) Str::uuid(), 'speed_kph' => 40.0, 'braking_percentage' => 0.0, 'acceleration_mps2' => 1.1, 'steering_angle_degrees' => 0.0, 'recorded_at' => '2026-09-01T10:10:00+00:00'],
             ],
             'events' => [
-                ['type' => 'collision', 'details' => 'Colision leve', 'occurred_at' => '2026-09-01T10:11:00+00:00'],
+                ['id' => (string) Str::uuid(), 'type' => 'collision', 'details' => 'Colision leve', 'occurred_at' => '2026-09-01T10:11:00+00:00'],
             ],
         ])
         ->assertCreated()
         ->assertJsonPath('data.samples_recorded', 1)
         ->assertJsonPath('data.events_recorded', 1);
+});
+
+it('ignora un reenvio del mismo lote sin duplicar filas', function (): void {
+    /** @var TestCase $this */
+    [$simulator, $plainKey] = persistedTelemetryFeatureSimulator();
+    $userId = persistedTelemetryFeatureUserId();
+    $session = persistedTelemetryFeatureSession($userId, $simulator->id()->value());
+    $payload = [
+        'samples' => [
+            ['id' => (string) Str::uuid(), 'speed_kph' => 40.0, 'braking_percentage' => 0.0, 'acceleration_mps2' => 1.1, 'steering_angle_degrees' => 0.0, 'recorded_at' => '2026-09-01T10:10:00+00:00'],
+        ],
+        'events' => [],
+    ];
+
+    $this->withHeaders(['Authorization' => "Bearer {$plainKey}"])
+        ->postJson("/api/v1/simulation/sessions/{$session->id()->value()}/telemetry", $payload)
+        ->assertCreated()
+        ->assertJsonPath('data.samples_recorded', 1);
+
+    $this->withHeaders(['Authorization' => "Bearer {$plainKey}"])
+        ->postJson("/api/v1/simulation/sessions/{$session->id()->value()}/telemetry", $payload)
+        ->assertCreated()
+        ->assertJsonPath('data.samples_recorded', 0);
+});
+
+it('acepta telemetria que llego tarde para una sesion ya completada', function (): void {
+    /** @var TestCase $this */
+    [$simulator, $plainKey] = persistedTelemetryFeatureSimulator();
+    $userId = persistedTelemetryFeatureUserId();
+    $session = persistedTelemetryFeatureSession($userId, $simulator->id()->value());
+    $session->complete(new DateTimeImmutable('2026-09-01T10:45:00+00:00'));
+    app(SimulationSessionRepository::class)->save($session);
+
+    $this->withHeaders(['Authorization' => "Bearer {$plainKey}"])
+        ->postJson("/api/v1/simulation/sessions/{$session->id()->value()}/telemetry", [
+            'samples' => [['id' => (string) Str::uuid(), 'speed_kph' => 40.0, 'braking_percentage' => 0.0, 'acceleration_mps2' => 1.1, 'steering_angle_degrees' => 0.0, 'recorded_at' => '2026-09-01T10:20:00+00:00']],
+            'events' => [],
+        ])
+        ->assertCreated()
+        ->assertJsonPath('data.samples_recorded', 1);
 });
 
 it('rechaza un lote de telemetria sin llave de simulador', function (): void {
@@ -143,7 +183,7 @@ it('el dueno consulta la telemetria de su propia sesion', function (): void {
     $session = persistedTelemetryFeatureSession($userId, $simulator->id()->value());
     $this->withHeaders(['Authorization' => "Bearer {$plainKey}"])
         ->postJson("/api/v1/simulation/sessions/{$session->id()->value()}/telemetry", [
-            'samples' => [['speed_kph' => 30.0, 'braking_percentage' => 0.0, 'acceleration_mps2' => 0.0, 'steering_angle_degrees' => 0.0, 'recorded_at' => '2026-09-01T10:10:00+00:00']],
+            'samples' => [['id' => (string) Str::uuid(), 'speed_kph' => 30.0, 'braking_percentage' => 0.0, 'acceleration_mps2' => 0.0, 'steering_angle_degrees' => 0.0, 'recorded_at' => '2026-09-01T10:10:00+00:00']],
             'events' => [],
         ])->assertCreated();
 
