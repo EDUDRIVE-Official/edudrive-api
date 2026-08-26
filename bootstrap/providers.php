@@ -6,6 +6,7 @@ use App\Providers\AppServiceProvider;
 use Modules\Academic\Infrastructure\Providers\AcademicServiceProvider;
 use Modules\Audit\Infrastructure\Providers\AuditServiceProvider;
 use Modules\Authorization\Infrastructure\Providers\AuthorizationServiceProvider;
+use Modules\Certification\Infrastructure\Providers\CertificationServiceProvider;
 use Modules\Foundation\Providers\FoundationServiceProvider;
 use Modules\Identity\Providers\IdentityServiceProvider;
 use Modules\Learning\Infrastructure\Providers\LearningServiceProvider;
@@ -22,4 +23,5 @@ return [
     OrganizationServiceProvider::class,
     AuthorizationServiceProvider::class,
     RoadPassportServiceProvider::class,
+    CertificationServiceProvider::class,
 ];
