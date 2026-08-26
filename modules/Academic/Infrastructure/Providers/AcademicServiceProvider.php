@@ -43,6 +43,7 @@ use Modules\Academic\Application\Commands\UpdateQuestionCommand;
 use Modules\Academic\Application\Queries\GetCourseCurriculumQuery;
 use Modules\Academic\Application\Queries\GetCourseVersionQuery;
 use Modules\Academic\Application\Queries\GetEnrollmentCurriculumStatusQuery;
+use Modules\Academic\Application\Queries\GetEnrollmentLearningRecommendationsQuery;
 use Modules\Academic\Application\Queries\GetEnrollmentProgressQuery;
 use Modules\Academic\Application\Queries\GetEnrollmentQuery;
 use Modules\Academic\Application\Queries\GetExamAttemptQuery;
@@ -86,6 +87,7 @@ use Modules\Academic\Application\UseCases\GetCourseCurriculumHandler;
 use Modules\Academic\Application\UseCases\GetCourseVersionHandler;
 use Modules\Academic\Application\UseCases\GetEnrollmentCurriculumStatusHandler;
 use Modules\Academic\Application\UseCases\GetEnrollmentHandler;
+use Modules\Academic\Application\UseCases\GetEnrollmentLearningRecommendationsHandler;
 use Modules\Academic\Application\UseCases\GetEnrollmentProgressHandler;
 use Modules\Academic\Application\UseCases\GetExamAttemptHandler;
 use Modules\Academic\Application\UseCases\GetExamHandler;
@@ -265,6 +267,11 @@ final class AcademicServiceProvider extends ServiceProvider
         $registry->register(
             GetEnrollmentCurriculumStatusQuery::class,
             GetEnrollmentCurriculumStatusHandler::class,
+        );
+
+        $registry->register(
+            GetEnrollmentLearningRecommendationsQuery::class,
+            GetEnrollmentLearningRecommendationsHandler::class,
         );
 
         $registry->register(
