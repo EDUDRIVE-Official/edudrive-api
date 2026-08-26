@@ -1350,3 +1350,26 @@ ENG-020
 - `php artisan migrate --force` ✅ — migración `create_learning_events_table` en estado `Ran`.
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — Consolidación de deuda de commits (ENG-032/033/034/035)
+
+### Contexto
+
+Desde sesiones previas, ENG-032 (Intentos de evaluación), ENG-033 (Motor de calificación) y ENG-034 (Examen teórico de conducción) estaban implementados y validados técnicamente, pero su código nunca se había comiteado (ver notas de IMP-032/033/034 y `docs/engineering/SESION.md`). De ENG-035 (Inscripciones) solo se había comiteado la capa de presentación HTTP (`EnrollmentController`, requests, rutas); el dominio, la aplicación y la persistencia de `Enrollment` seguían sin commitear. Esta sesión consolidó toda esa deuda.
+
+### Completado
+
+- **Validación previa a comitear**: `php vendor/bin/pint modules/Academic` (458 archivos; corrigió 4 issues de estilo en `CreateBulkEnrollmentsHandler.php` y 3 tests, revalidados en verde) y `php vendor/bin/phpstan analyse --no-progress --memory-limit=1G modules/Academic` (sin errores).
+- **Commit `1d6d90b`** — ENG-032 + ENG-033 + ENG-034 juntos (92 archivos): las tres historias comparten los mismos archivos base (`Exam.php`, `ExamAttempt.php`, `Question.php`, `AttemptQuestion.php` y sus capas de persistencia/HTTP), construidos como extensiones sucesivas del mismo código en una sesión previa continua. Separarlas en tres commits históricos distintos después del hecho habría requerido dividir hunks dentro de los mismos archivos sin información confiable de límites entre tareas, con riesgo real de dejar un commit intermedio con código roto (una clase con un método a medio escribir). Se documentó esta decisión explícitamente en el mensaje del commit.
+- **Commit `e3e2186`** — ENG-035, dominio/aplicación/persistencia de `Enrollment` (38 archivos): agregado `Enrollment`, `EnrollmentId`, enums `EnrollmentStatus`/`EnrollmentSource`, `EnrollmentRepository`, casos de uso de creación (individual/masiva/institucional) y ciclo de vida (activar/completar/cancelar), consultas, y persistencia Eloquent en `academic_enrollments`. No tocó la capa de presentación, ya comiteada.
+- **Commits de documentación**: `3fbd2ff` (diseño/plan de ENG-033/034), `d32fb80` (diseño/plan de ENG-035) y `50d8035` (corrección menor de un nombre de método en el plan de ENG-036, hallazgo incidental sin relación con esta consolidación).
+- **Roadmap actualizado**: ENG-034 pasa de "En validación" a **Completado**; ENG-035 pasa de "Pendiente" a **Completado**; ambos con nota explicando la consolidación y referencia a los commits.
+- Explícitamente fuera de alcance de esta consolidación: el resto de la deuda documentada en `SESION.md` que no correspondía a estas cuatro historias (si la hay), y cualquier archivo ajeno a `modules/Academic` que pudiera aparecer como no trackeado (`.claude/`, `games/`, etc.), que no se tocaron.
+
+### Validaciones
+
+- Pint ✅ sobre todo `modules/Academic` (458 archivos, sin issues tras la corrección).
+- PHPStan nivel 8 ✅ sobre todo `modules/Academic`, sin errores.
+- Suite focalizada previa (misma sesión, antes de comitear) ✅ para los archivos recién corregidos por Pint (`BulkEnrollmentHandlerTest`, `EnrollmentHandlerTest`, `TheoryExamHandlerTest` — 10 pruebas / 35 aserciones) y para toda la funcionalidad de ENG-032/033/034/035 vía las suites Feature/Integration/Unit ya verificadas en sesiones anteriores y no modificadas en esta.
+
+**Estado:** Finalizado.

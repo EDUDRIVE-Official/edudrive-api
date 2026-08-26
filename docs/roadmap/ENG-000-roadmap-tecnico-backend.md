@@ -596,6 +596,8 @@ Estado: Completado
 
 Nota (2026-08-12): se completó el agregado `ExamAttempt` como snapshot inmutable del examen al iniciar cada intento, con estados `in_progress`/`submitted`/`canceled`, respuestas por pregunta, guardado progresivo, resultado básico (`score`, `total_points`, `percentage`, `passed`) y prevención de duplicados por intento activo y `max_attempts`. La persistencia quedó normalizada en `academic_exam_attempts` y `academic_exam_attempt_questions`, con CQRS completo (start/answer/submit/cancel/get/list), API HTTP bajo `auth:sanctum` y permiso nuevo `exam_attempts.view` para listar o revisar intentos de terceros. Los errores públicos incluyen `EXAM_ATTEMPT_NOT_FOUND` (404), `EXAM_ATTEMPT_LIMIT_REACHED` (409) y `EXAM_ATTEMPT_ALREADY_SUBMITTED` (409). El motor de calificación fina (ENG-033) y el examen teórico (ENG-034) quedan diferidos. Detalle completo en `docs/plans/2026-08-12-intentos-evaluacion-eng032-implementation.md` y `docs/engineering/ENG-LOG.md`.
 
+Nota (2026-08-26): el código validado técnicamente desde el cierre original quedó consolidado en git en `1d6d90b` junto con ENG-033/034 (ver nota de ENG-034 más abajo sobre por qué se consolidaron en un solo commit).
+
 Incluye:
 
 Inicio.
@@ -611,6 +613,8 @@ Estado: Completado
 
 Nota (2026-08-12): se completó el motor de calificación sobre `ExamAttempt`, reemplazando el scoring básico inline por un servicio de dominio `ExamAttemptGrader` con `GradingPolicy`, `GradingResult`, breakdown por pregunta y por competencia, y persistencia JSON en `academic_exam_attempts` (`grading_breakdown`, `competency_results`). El snapshot del intento se enriqueció con `competency_id`, se habilitó partial credit para `multi_select`, `matching` y `ordering`, y se mantuvo `single_choice` / `true_false` como todo-o-nada. La API existente de intentos ahora devuelve grading detallado en `submit` y lo expone en `show` solo cuando el intento quedó `submitted` y además pasa las reglas de visibilidad (`feedback_mode` / permisos). El examen teórico de conducción (ENG-034) queda diferido y ya puede reutilizar este motor. Detalle completo en `docs/plans/2026-08-12-motor-calificacion-eng033-implementation.md` y `docs/engineering/ENG-LOG.md`.
 
+Nota (2026-08-26): consolidado en git junto con ENG-032/034 en `1d6d90b` (ver nota de ENG-034 más abajo).
+
 Incluye:
 
 Puntaje.
@@ -621,9 +625,11 @@ Resultados parciales.
 Reglas configurables.
 ENG-034 — Examen teórico de conducción
 
-Estado: En validación
+Estado: Completado
 
-Nota (2026-08-13): la primera versión backend de examen teórico de conducción ya quedó implementada sobre `Modules\Academic`, reutilizando `Question`, `Exam`, `ExamAttempt` y `ExamAttemptGrader`. El incremento cubre metadata teórica en preguntas y exámenes, validación de banco oficial y categoría, reglas configurables de grading por examen, recomendaciones básicas de estudio, endpoints especializados `theory-exams`, e historial teórico filtrable por categoría. La validación técnica focalizada ya quedó en verde (`129 passed / 533 assertions`, `phpstan` sin errores, `pint` aplicado), pero el estado se mantiene en **En validación** porque el trabajo aún no está consolidado en commits locales. Ver `docs/plans/2026-08-12-examen-teorico-conduccion-eng034-implementation.md` y `docs/engineering/ENG-LOG.md` (IMP-034).
+Nota (2026-08-13): la primera versión backend de examen teórico de conducción ya quedó implementada sobre `Modules\Academic`, reutilizando `Question`, `Exam`, `ExamAttempt` y `ExamAttemptGrader`. El incremento cubre metadata teórica en preguntas y exámenes, validación de banco oficial y categoría, reglas configurables de grading por examen, recomendaciones básicas de estudio, endpoints especializados `theory-exams`, e historial teórico filtrable por categoría. La validación técnica focalizada ya quedó en verde (`129 passed / 533 assertions`, `phpstan` sin errores, `pint` aplicado), pero el estado se mantuvo en **En validación** porque el trabajo aún no estaba consolidado en commits locales. Ver `docs/plans/2026-08-12-examen-teorico-conduccion-eng034-implementation.md` y `docs/engineering/ENG-LOG.md` (IMP-034).
+
+Nota (2026-08-26): consolidado en git. ENG-032, ENG-033 y ENG-034 se comitearon juntos en `1d6d90b` (`feat(academic): consolidate exam attempts, grading engine and theory exam`) porque las tres historias comparten los mismos archivos (`Exam.php`, `ExamAttempt.php`, `Question.php`, `AttemptQuestion.php` y sus capas de persistencia/HTTP) al haberse construido como extensiones sucesivas del mismo código en una sesión previa continua — sus diffs no se pueden separar limpiamente en tres commits históricos distintos después del hecho. Estado actualizado de "En validación" a **Completado**.
 
 Incluye:
 
@@ -636,7 +642,9 @@ Recomendaciones de estudio.
 13. Fase 7 — Progreso y Learning OS
 ENG-035 — Inscripciones
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): implementado sobre `Modules\Academic` el agregado `Enrollment` (identidad propia `EnrollmentId`, estados `pending`/`active`/`completed`/`canceled`, origen `individual`/`bulk`/`institutional`), con CQRS completo (creación individual/masiva/institucional, activar/completar/cancelar, consulta y listado filtrado) y persistencia Eloquent en `academic_enrollments`. La API HTTP (`EnrollmentController`, rutas y permisos `enrollments.view`/`enrollments.manage`) ya se había comiteado en su momento; el dominio, la aplicación y la persistencia quedaron consolidados ahora en `e3e2186` (`feat(academic): consolidate enrollment domain, application and persistence`), tras haber quedado implementados y validados sin commitear en una sesión previa. Detalle completo en `docs/plans/2026-08-13-inscripciones-eng035-implementation.md`, `docs/plans/2026-08-14-eng035-enrollment-api.md` y `docs/engineering/ENG-LOG.md`.
 
 Incluye:
 
@@ -1390,3 +1398,4 @@ Versión	Fecha	Descripción
 1.13.0	2026-08-12	Cierre de ENG-033 (Motor de calificación): `ExamAttemptGrader`, `GradingPolicy`, `GradingResult`, breakdown por pregunta y competencia, partial credit/penalizaciones por tipo, persistencia JSON del grading y exposición controlada en submit/show (IMP-033 en ENG-LOG.md)
 1.14.0	2026-08-13	ENG-034 pasa a En validación: metadata teórica en preguntas/exámenes, validación de banco oficial y categoría, grading derivado del examen, recomendaciones de estudio, endpoints `theory-exams`/`theory-attempts` e historial teórico; validación técnica focalizada completa en verde, pendiente consolidación de commits (IMP-034 en ENG-LOG.md)
 1.15.0	2026-08-16	Cierre de ENG-036 (Seguimiento de progreso): agregado `EnrollmentProgress` con completitud de lecciones, `EnrollmentProgressCalculator` (porcentaje, tiempo invertido, evaluaciones y última actividad), CQRS completo (`CompleteLessonCommand`/`GetEnrollmentProgressQuery`) y API HTTP protegida por pertenencia o `enrollments.view` (IMP-036 en ENG-LOG.md)
+1.16.0	2026-08-26	Consolidación de deuda de commits: ENG-032/033/034 (intentos de evaluación, motor de calificación, examen teórico) comiteados juntos en `1d6d90b` por compartir los mismos archivos; ENG-034 pasa de "En validación" a **Completado**. ENG-035 (Inscripciones) pasa de "Pendiente" a **Completado**: dominio, aplicación y persistencia de `Enrollment` comiteados en `e3e2186` (la API HTTP ya estaba comiteada desde antes)
