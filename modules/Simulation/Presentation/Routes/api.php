@@ -76,6 +76,10 @@ Route::prefix('api/v1/simulation')
                 ->whereUuid('sessionId')
                 ->name('sessions.telemetry.show');
 
+            Route::get('/sessions/{sessionId}/result', [SimulationSessionController::class, 'result'])
+                ->whereUuid('sessionId')
+                ->name('sessions.result');
+
             Route::middleware('permission:simulation_sessions.view')->group(function (): void {
                 Route::get('/sessions', [SimulationSessionController::class, 'index'])
                     ->name('sessions.index');

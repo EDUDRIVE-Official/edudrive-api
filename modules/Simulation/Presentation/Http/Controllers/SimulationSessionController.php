@@ -17,8 +17,10 @@ use Modules\Simulation\Application\Commands\CompleteSimulationSessionCommand;
 use Modules\Simulation\Application\Commands\ScheduleSimulationSessionCommand;
 use Modules\Simulation\Application\Commands\StartSimulationSessionCommand;
 use Modules\Simulation\Application\Queries\GetMySimulationSessionsQuery;
+use Modules\Simulation\Application\Queries\GetPracticalResultQuery;
 use Modules\Simulation\Application\Queries\GetSimulationSessionQuery;
 use Modules\Simulation\Application\Queries\ListSimulationSessionsQuery;
+use Modules\Simulation\Application\Responses\PracticalResultResponse;
 use Modules\Simulation\Application\Responses\SimulationSessionResponse;
 use Modules\Simulation\Presentation\Http\Requests\CancelSimulationSessionRequest;
 use Modules\Simulation\Presentation\Http\Requests\ScheduleSimulationSessionRequest;
@@ -132,6 +134,23 @@ final class SimulationSessionController
             reason: isset($data['reason']) ? (string) $data['reason'] : null,
         ));
         assert($result instanceof SimulationSessionResponse);
+
+        return response()->json(['data' => $result->toArray()]);
+    }
+
+    public function result(
+        string $sessionId,
+        Request $request,
+        QueryBus $queryBus,
+        PermissionChecker $permissionChecker,
+    ): JsonResponse {
+        $user = self::authenticatedUser($request);
+        $result = $queryBus->ask(new GetPracticalResultQuery(
+            sessionId: $sessionId,
+            userId: (string) $user->getAuthIdentifier(),
+            canViewOthers: $permissionChecker->userHasPermission((string) $user->getAuthIdentifier(), Permission::ViewSimulationSessions),
+        ));
+        assert($result instanceof PracticalResultResponse);
 
         return response()->json(['data' => $result->toArray()]);
     }
