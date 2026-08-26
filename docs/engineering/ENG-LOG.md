@@ -1686,3 +1686,27 @@ Primera historia de la **Fase 10 — Gamificación**. Otorgamiento manual de log
 - `php artisan route:list --path=gamification` ✅ — 7 rutas registradas.
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-052 (Cierre de ENG-052 — Insignias)
+
+### Alcance acordado con el usuario
+
+Segunda historia de la Fase 10 — Gamificación, extiende `Modules\Gamification` (creado en ENG-051) con un segundo agregado, `Badge`. Otorgamiento manual vía `badges.manage`, sin motor de evaluación automática de reglas — mismo criterio que `Achievement`/`Certificate`. "Niveles" se modela como un atributo fijo de la insignia (`BadgeLevel`: bronce/plata/oro), sin sistema de progresión ni acumulación — eso corresponde a ENG-053 (Experiencia y niveles), un concepto distinto (nivel del usuario, no de la insignia). "Versionado" se modela como un campo `version` (entero) que se incrementa al editar el contenido; el otorgamiento guarda la versión vigente en ese momento, pero no se conservan snapshots históricos completos del contenido anterior (a diferencia de `CourseVersion` en Academic). Categoría modelada como enum cerrado `BadgeCategory` (educativa/institucional/práctica), tal como las enumera el roadmap. Diferido explícitamente: evaluación automática de reglas, sistema de progresión de niveles, historial completo de snapshots por versión, revocación de una insignia otorgada, consulta de las insignias de otro usuario. Detalle en `docs/plans/2026-08-26-insignias-eng052-design.md`.
+
+### Completado
+
+- **Dominio**: `BadgeId`/`BadgeCode` (mismos patrones que `AchievementId`/`AchievementCode`); `BadgeCategory` (`Educational`/`Institutional`/`Practical`); `BadgeLevel` (`Bronze`/`Silver`/`Gold`); `BadgeStatus` (`Active`/`Retired`). Agregado `Badge` (constructor privado, `create()`/`restore()`, `updateContent()` que reemplaza nombre/descripción/criterio/categoría/nivel e incrementa `version`, `retire()` mismo criterio que `Achievement::retire()`). `InvalidBadgeTransition` (422) con dos factorías: `alreadyRetired()` (reutilizada de "retirar dos veces") y `cannotEditRetired()` (edición bloqueada si `status === Retired`). Entidad `UserBadge` (otorgamiento inmutable de solo-append, con `awardedVersion` denormalizado desde `Badge::version()` al momento del otorgamiento).
+- **Persistencia**: tablas `badges` (código único, `category`/`level`/`version`/`status` como columnas propias) y `user_badges` (FK cascada a `badges` y a `users`, único por `badge_id`+`user_id`, columna `awarded_version`). `BadgeRepository`/`UserBadgeRepository` con sus implementaciones Eloquent (`updateOrCreate`).
+- **CQRS**: `CreateBadgeCommand`/`UpdateBadgeCommand`/`RetireBadgeCommand`/`GrantBadgeCommand` y `GetBadgeQuery`/`ListBadgesQuery`/`GetMyBadgesQuery`, con sus handlers — `UpdateBadgeHandler` es el único nuevo respecto al patrón de `Achievement` (ENG-051 no tenía edición de contenido). `GrantBadgeHandler` exige que la insignia esté `active` (`BadgeNotAvailable`, 422) y rechaza un otorgamiento duplicado por usuario+insignia (`BadgeAlreadyGranted`, 409); denormaliza `awardedVersion` desde `Badge::version()`. Excepciones uniformes `BadgeNotFound` (404) y `BadgeAlreadyExists` (409).
+- **Autorización**: nuevos permisos `badges.manage`/`badges.view` (independientes de `achievements.*`, catálogos separados). `badges.manage`: SuperAdmin e InstitutionalAdmin. `badges.view`: SuperAdmin, InstitutionalAdmin, Teacher y **Student** (mismo criterio que `achievements.view`).
+- **API HTTP**: `/api/v1/gamification/badges` — `POST`/`PUT {id}`/`POST {id}/retire`/`POST {id}/grant` bajo `badges.manage`; `GET`/`GET {id}` bajo `badges.view`; `GET /badges/me` bajo `auth:sanctum` sin permiso adicional (autoservicio). `PUT /badges/{badgeId}` para la edición de contenido, mismo verbo que `QuestionController::update`/`ExamController::update` en Academic.
+- **Pruebas**: 51 tests nuevos repartidos en dominio (`Badge`, `UserBadge`, `BadgeCode`), persistencia (ambos repositorios Eloquent, incluyendo el incremento de versión), aplicación (handlers con repositorios en memoria, incluyendo `UpdateBadgeHandler` y el bloqueo de edición sobre una insignia retirada), proveedor de servicios y feature (API HTTP completa, incluyendo la edición con incremento de versión y el otorgamiento con `awarded_version`).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `95 passed (224 assertions)`.
+- Suite completa de Authorization ✅ — `47 passed (147 assertions)`, confirmando los permisos nuevos.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=gamification` ✅ — 14 rutas registradas (las 7 previas de ENG-051 + 7 de insignias).
+
+**Estado:** Finalizado.

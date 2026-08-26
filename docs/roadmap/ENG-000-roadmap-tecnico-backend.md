@@ -954,7 +954,9 @@ Consulta de los logros obtenidos por otro usuario (solo autoservicio).
 Evaluación automática de reglas de obtención (el otorgamiento es manual, vía `achievements.manage`).
 ENG-052 — Insignias
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): segunda historia de la Fase 10 (Gamificación), extiende `Modules\Gamification` con el agregado `Badge`, distinto de `Achievement` (ENG-051) en tres puntos. Categoría cerrada `BadgeCategory` (`educational`/`institutional`/`practical`, tal como las enumera el roadmap). Nivel fijo `BadgeLevel` (`bronze`/`silver`/`gold`) asignado a la insignia, sin sistema de progresión ni acumulación (eso corresponde a ENG-053, un concepto distinto: nivel del usuario, no de la insignia). Contenido editable mediante `updateContent()`, que incrementa un campo `version` (entero, inicia en 1) — sin conservar snapshots históricos completos, a diferencia de `CourseVersion` en Academic; el otorgamiento a un usuario (`UserBadge`) guarda `awardedVersion`, la versión vigente al momento de otorgarse. Edición bloqueada si la insignia está `retired` (`InvalidBadgeTransition`, 422, reutilizada también para "retirar dos veces"). Otorgamiento manual vía `badges.manage` (mismo criterio que `Achievement`/`Certificate`), rechazando insignias no `active` o duplicadas por usuario+insignia. CQRS completo y API HTTP en `/api/v1/gamification/badges`, incluyendo `PUT /badges/{badgeId}` para la edición de contenido; permisos nuevos `badges.manage`/`badges.view`, con `badges.view` otorgado también a `Student` (mismo criterio que `achievements.view`). Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-insignias-eng052-design.md`.
 
 Incluye:
 
@@ -963,6 +965,14 @@ Insignias institucionales.
 Insignias prácticas.
 Niveles.
 Versionado.
+
+Diferido:
+
+Evaluación automática de reglas de otorgamiento (otorgamiento manual, igual que ENG-051).
+Sistema de progresión de niveles por acumulación de insignias (corresponde a ENG-053).
+Historial completo de snapshots por versión (solo se conserva el número de versión).
+Revocación de una insignia ya otorgada.
+Consulta de las insignias obtenidas por otro usuario (solo autoservicio).
 ENG-053 — Experiencia y niveles
 
 Estado: Pendiente
@@ -1508,3 +1518,4 @@ Versión	Fecha	Descripción
 1.27.0	2026-08-26	Cierre de ENG-049 (SIMUDRIVE Decision Engine): entidad `DecisionPoint` (solo-append, reacción del conductor como conjunto cerrado para permitir evaluación determinística) y servicio de dominio puro `DecisionEngineCalculator` que evalúa apropiación por riesgo, genera retroalimentación fija y calcula consistencia agrupando por riesgo dentro de la sesión, sin persistir el resultado (mismo patrón que ENG-048); envío por lotes autenticado con `simulator.auth` (ENG-047), consulta bajo `auth:sanctum` reutilizando `simulation_sessions.view`; consistencia entre sesiones y evaluación delegada a SIMUDRIVE diferidas explícitamente (IMP-049 en ENG-LOG.md)
 1.28.0	2026-08-26	Cierre de ENG-050 (Sincronización offline) — última historia de la Fase 9: `POST /sessions/{id}/telemetry` y `POST /sessions/{id}/decisions` aceptan reenvíos idempotentes (id por ítem generado por el simulador, `insertOrIgnore()` en vez de `insert()`, conteo de filas realmente insertadas en la respuesta) y toleran datos tardíos (`SimulationSession::wasInProgressAt()` compara la marca de tiempo del dato contra `startedAt`/`endedAt` en vez de exigir que la sesión esté `InProgress` en el momento de la petición); la cola local es responsabilidad del simulador, fuera de alcance; modelar la sesión offline como concepto propio y una tabla de llaves de idempotencia por lote diferidos explícitamente (IMP-050 en ENG-LOG.md). Con esto cierra por completo la Fase 9 — Integración con SIMUDRIVE (ENG-045 a ENG-050)
 1.29.0	2026-08-26	Cierre de ENG-051 (Logros), primera historia de la Fase 10 (Gamificación): nuevo módulo `Modules\Gamification` con el agregado `Achievement` (catálogo, código único, ciclo de vida `active`/`retired` sin reversión) y la entidad de solo-append `UserAchievement` (otorgamiento manual con evidencia y fecha); otorgamiento vía `achievements.manage` (mismo criterio que `Certificate`), CQRS completo y API HTTP en `/api/v1/gamification/achievements` con `achievements.view` extendido a `Student` por ser catálogo de navegación abierta (a diferencia de módulos previos); revocación de logros, consulta de logros de otro usuario y evaluación automática de reglas diferidas explícitamente (IMP-051 en ENG-LOG.md)
+1.30.0	2026-08-26	Cierre de ENG-052 (Insignias), segunda historia de la Fase 10: agregado `Badge` en `Modules\Gamification`, con categoría cerrada `BadgeCategory` (educativa/institucional/práctica), nivel fijo `BadgeLevel` (bronce/plata/oro) y contenido editable vía `updateContent()` que incrementa un campo `version` (sin snapshots históricos); el otorgamiento (`UserBadge`) guarda `awardedVersion`, la versión vigente al momento de otorgarse; edición bloqueada si la insignia está retirada (`InvalidBadgeTransition`); otorgamiento manual vía `badges.manage` (mismo criterio que `Achievement`), CQRS completo y API HTTP en `/api/v1/gamification/badges` (incluye `PUT` para editar contenido) con `badges.view` extendido a `Student`; sistema de progresión de niveles (corresponde a ENG-053), historial completo de versiones, revocación y consulta de insignias de otro usuario diferidos explícitamente (IMP-052 en ENG-LOG.md)
