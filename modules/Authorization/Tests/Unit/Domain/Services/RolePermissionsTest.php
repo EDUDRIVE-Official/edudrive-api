@@ -145,3 +145,17 @@ it('otorga manage y view de certificaciones al administrador institucional, solo
         ->and(RolePermissions::grants(Role::Student, Permission::ManageCertifications))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ViewCertifications))->toBeFalse();
 });
+
+it('otorga permisos de simuladores al superadministrador', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageSimulators))->toBeTrue()
+        ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewSimulators))->toBeTrue();
+});
+
+it('otorga manage y view de simuladores al administrador institucional, solo view al docente y ninguno al estudiante', function (): void {
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageSimulators))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewSimulators))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageSimulators))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ViewSimulators))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageSimulators))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ViewSimulators))->toBeFalse();
+});
