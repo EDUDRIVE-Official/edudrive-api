@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use Modules\Gamification\Presentation\Http\Controllers\AchievementController;
 use Modules\Gamification\Presentation\Http\Controllers\BadgeController;
+use Modules\Gamification\Presentation\Http\Controllers\ChallengeController;
 use Modules\Gamification\Presentation\Http\Controllers\ExperienceController;
 use Modules\Gamification\Presentation\Http\Controllers\GamificationStatusController;
 
@@ -75,6 +76,35 @@ Route::prefix('api/v1/gamification')
             Route::middleware('permission:experience.manage')->group(function (): void {
                 Route::post('/experience/grant', [ExperienceController::class, 'grant'])
                     ->name('experience.grant');
+            });
+
+            Route::get('/challenges/me', [ChallengeController::class, 'me'])
+                ->name('challenges.me');
+
+            Route::middleware('permission:challenges.view')->group(function (): void {
+                Route::get('/challenges', [ChallengeController::class, 'index'])
+                    ->name('challenges.index');
+
+                Route::get('/challenges/{challengeId}', [ChallengeController::class, 'show'])
+                    ->whereUuid('challengeId')
+                    ->name('challenges.show');
+            });
+
+            Route::middleware('permission:challenges.manage')->group(function (): void {
+                Route::post('/challenges', [ChallengeController::class, 'store'])
+                    ->name('challenges.store');
+
+                Route::post('/challenges/{challengeId}/retire', [ChallengeController::class, 'retire'])
+                    ->whereUuid('challengeId')
+                    ->name('challenges.retire');
+
+                Route::post('/challenges/{challengeId}/join', [ChallengeController::class, 'join'])
+                    ->whereUuid('challengeId')
+                    ->name('challenges.join');
+
+                Route::post('/challenges/{challengeId}/complete', [ChallengeController::class, 'complete'])
+                    ->whereUuid('challengeId')
+                    ->name('challenges.complete');
             });
         });
     });
