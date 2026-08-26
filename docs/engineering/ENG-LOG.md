@@ -1551,3 +1551,27 @@ Primera historia de la Fase 9 (Integración con SIMUDRIVE): registro administrat
 - `php artisan route:list --path=simulation` ✅ — 8 rutas registradas.
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-046 (Cierre de ENG-046 — Sesiones de simulación)
+
+### Alcance acordado con el usuario
+
+Ciclo de vida `Scheduled` → `InProgress` (inicio real) → `Completed` (fin real, duración efectiva) o `Cancelled` (solo desde `Scheduled`) — da a ENG-047 (Telemetría) un punto explícito de "sesión activa ahora mismo". Programación en **autoservicio**: cualquier usuario autenticado programa su propia sesión (el `userId` se toma del usuario autenticado, nunca del cuerpo de la petición); administradores/docentes gestionan sesiones de terceros vía `simulation_sessions.manage`/`simulation_sessions.view`, extendiendo el mismo criterio de propiedad ya usado en `GetCertificateHandler`/`GetRoadPassportHandler` también a las transiciones de estado, no solo a la consulta. `Vehículo`/`Escenario` como texto libre (el catálogo real vive en SIMUDRIVE). Diferido explícitamente: detección de conflictos de horario entre sesiones del mismo simulador, re-validación del estado del simulador al iniciar (solo se valida al programar), integración real con telemetría (ENG-047) y resultados prácticos (ENG-048). Detalle en `docs/plans/2026-08-26-sesiones-simulacion-eng046-design.md`.
+
+### Completado
+
+- **Dominio**: segundo agregado independiente en `Modules\Simulation`, `SimulationSession` (`id`, `userId`, `simulatorId`, `vehicleType`, `scenario`, `scheduledAt`, `plannedDurationMinutes`, `status`, `startedAt`/`endedAt` nullable, `history`). `SimulationSessionStatus` (enum `Scheduled`/`InProgress`/`Completed`/`Cancelled`); `SimulationSessionHistoryEntry` (mismo patrón que `SimulatorHistoryEntry`); `schedule()`/`restore()`/`start()`/`complete()`/`cancel()` con las transiciones válidas ya descritas; `actualDurationMinutes(): ?int` calcula minutos entre `startedAt` y `endedAt`, `null` si no está `Completed`.
+- **Persistencia**: tablas `simulation_sessions` (FK a `users` y `simulators`) y `simulation_session_history_entries` (FK cascada); `EloquentSimulationSessionRepository` transaccional, mismo patrón de borrar-y-reinsertar historial.
+- **CQRS**: `ScheduleSimulationSessionCommand`/`StartSimulationSessionCommand`/`CompleteSimulationSessionCommand`/`CancelSimulationSessionCommand`/`GetSimulationSessionQuery`/`GetMySimulationSessionsQuery`/`ListSimulationSessionsQuery` con sus handlers. `ScheduleSimulationSessionHandler` valida que el simulador exista (`SimulatorNotFound`, reutilizado de ENG-045) y esté `Active` (`SimulatorNotAvailable`, 422, nueva excepción). Los handlers de mutación (`Start`/`Complete`/`Cancel`) y de consulta reciben `userId`+`canManageOthers`/`canViewOthers` y lanzan `SimulationSessionNotFound` (404) tanto si no existe como si no es del usuario y no tiene permiso ampliado — primera vez que este criterio de propiedad se aplica a mutaciones en esta sesión de trabajo, no solo a lecturas.
+- **Autorización**: permisos nuevos `simulation_sessions.manage`/`simulation_sessions.view`, mismo patrón de concesión que `road_passports.*`/`certifications.*`/`simulators.*`. Programar una sesión nueva no requiere ningún permiso.
+- **API HTTP** bajo `auth:sanctum`, prefijo `api/v1/simulation`: `POST /sessions` (autoservicio), `GET /sessions/me` (autoservicio), `GET /sessions` (`simulation_sessions.view`), `GET /sessions/{sessionId}` (dueño o `simulation_sessions.view`), `POST /sessions/{sessionId}/start|complete|cancel` (dueño o `simulation_sessions.manage`). Errores públicos: `SIMULATION_SESSION_NOT_FOUND` (404), `SIMULATOR_NOT_AVAILABLE` (422), `INVALID_SIMULATION_SESSION_TRANSITION` (422).
+- **Pruebas**: 42 tests nuevos repartidos en dominio (agregado), persistencia (repositorio Eloquent, service provider), aplicación (handlers con repositorios en memoria, incluyendo el criterio de propiedad en mutaciones) y feature (API HTTP completa, incluyendo autoservicio, permisos ampliados y transiciones inválidas).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `93 passed (240 assertions)`.
+- Suite de `RolePermissionsTest` (Authorization) ✅ — `24 passed (96 assertions)` tras agregar los permisos nuevos.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=simulation` ✅ — 15 rutas registradas (las 8 previas + 7 de sesiones).
+
+**Estado:** Finalizado.

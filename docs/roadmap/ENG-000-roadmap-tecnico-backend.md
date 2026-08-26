@@ -832,7 +832,9 @@ Actualización de la versión de software reportada por heartbeat del propio dis
 Geolocalización estructurada (`Ubicación` es texto libre, no coordenadas).
 ENG-046 — Sesiones de simulación
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): segundo agregado del módulo `Modules\Simulation`, `SimulationSession` — vincula usuario, simulador, vehículo y escenario (`vehicleType`/`scenario` como texto libre, sin catálogo propio en EDUDRIVE, el catálogo real vive en SIMUDRIVE), con ciclo de vida `scheduled` → `in_progress` (inicio real) → `completed` (fin real, duración efectiva calculada) o `cancelled` (solo desde `scheduled`). Programar una sesión es **autoservicio**: cualquier usuario autenticado programa la propia (el `userId` se toma del usuario autenticado, nunca del cuerpo de la petición); valida que el simulador exista y esté `active` (`SimulatorNotAvailable`, 422, reutilizando `SimulatorNotFound` de ENG-045 si no existe). El criterio de propiedad ya usado en consultas (`GetCertificateHandler`/`GetRoadPassportHandler`: dueño o permiso ampliado) se extiende por primera vez también a las transiciones de estado (`start`/`complete`/`cancel`), no solo a la lectura. CQRS completo y API HTTP en `/api/v1/simulation/sessions` protegida por pertenencia o los permisos nuevos `simulation_sessions.manage`/`simulation_sessions.view`. Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-sesiones-simulacion-eng046-design.md`.
 
 Incluye:
 
@@ -843,6 +845,12 @@ Escenario.
 Fecha.
 Duración.
 Estado de la sesión.
+
+Diferido:
+
+Detección de conflictos de horario entre sesiones del mismo simulador.
+Re-validación del estado del simulador al iniciar la sesión (solo se valida al programar).
+Integración real con telemetría del simulador (ENG-047) y resultados prácticos (ENG-048).
 ENG-047 — Telemetría
 
 Estado: Pendiente
@@ -1454,3 +1462,4 @@ Versión	Fecha	Descripción
 1.21.0	2026-08-26	Cierre de ENG-043 (Credenciales y certificaciones): nuevo módulo `Modules\Certification` con el agregado `Certificate` (código de validación `ValidationCode` con formato `XXXX-XXXX-XXXX`, estado `issued`/`revoked` terminal, vigencia opcional, historial), emisión manual vía `certifications.manage`, CQRS completo y API HTTP en `/api/v1/certification/certificates` protegida por pertenencia o `certifications.manage`/`certifications.view`; emisión automática desde evidencia del Pasaporte Vial, verificación pública por código (ENG-044) y reemisión tras revocación diferidos explícitamente (IMP-043 en ENG-LOG.md)
 1.22.0	2026-08-26	Cierre de ENG-044 (Consulta pública controlada): endpoint público `GET /api/v1/certification/verify/{validationCode}` sin autenticación, con vigencia efectiva calculada (`valid`/`expired`/`revoked`) vía `Certificate::effectiveStatus()`, datos mínimos (código, curso, titular, fechas — sin `user_id` ni historial), y error uniforme `CERTIFICATE_NOT_FOUND` para código inválido o inexistente; listado público y límite de tasa diferidos explícitamente (IMP-044 en ENG-LOG.md)
 1.23.0	2026-08-26	Cierre de ENG-045 (Registro de simuladores), primera historia de la Fase 9 (Integración con SIMUDRIVE): nuevo módulo `Modules\Simulation` con el agregado `Simulator` (identificador de dispositivo único, versión de software, ubicación opcional, estado `active`/`suspended`/`retired`, historial), llave de integración generada al registrar/rotar y devuelta una única vez (solo se persiste su hash SHA-256), CQRS completo y API HTTP en `/api/v1/simulation/simulators` protegida por `simulators.manage`/`simulators.view`; validación de sesiones/telemetría contra el simulador (ENG-046/047) diferida explícitamente (IMP-045 en ENG-LOG.md)
+1.24.0	2026-08-26	Cierre de ENG-046 (Sesiones de simulación): nuevo agregado `SimulationSession` en `Modules\Simulation` (usuario, simulador, vehículo y escenario en texto libre, ciclo de vida `scheduled`/`in_progress`/`completed`/`cancelled`, duración planeada y efectiva), programación en autoservicio validando que el simulador esté `active`, criterio de propiedad extendido por primera vez a mutaciones (no solo consultas), CQRS completo y API HTTP en `/api/v1/simulation/sessions` protegida por pertenencia o `simulation_sessions.manage`/`simulation_sessions.view`; detección de conflictos de horario e integración con telemetría (ENG-047) diferidas explícitamente (IMP-046 en ENG-LOG.md)
