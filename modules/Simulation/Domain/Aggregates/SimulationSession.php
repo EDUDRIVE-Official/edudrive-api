@@ -168,6 +168,19 @@ final class SimulationSession
         return (int) round(($this->endedAt->getTimestamp() - $this->startedAt->getTimestamp()) / 60);
     }
 
+    public function wasInProgressAt(DateTimeImmutable $at): bool
+    {
+        if ($this->startedAt === null || $at < $this->startedAt) {
+            return false;
+        }
+
+        if ($this->endedAt !== null && $at > $this->endedAt) {
+            return false;
+        }
+
+        return true;
+    }
+
     /** @return list<SimulationSessionHistoryEntry> */
     public function history(): array
     {

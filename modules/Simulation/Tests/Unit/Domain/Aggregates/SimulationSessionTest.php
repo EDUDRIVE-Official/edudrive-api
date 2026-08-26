@@ -136,3 +136,36 @@ it('restaura el agregado completo desde persistencia', function (): void {
         ->and($session->actualDurationMinutes())->toBe(45)
         ->and($session->history())->toBe([$historyEntry]);
 });
+
+it('reporta que nunca estuvo en curso si aun no se ha iniciado', function (): void {
+    $session = newSimulationSession();
+
+    expect($session->wasInProgressAt(new DateTimeImmutable('2026-09-01T10:00:00+00:00')))->toBeFalse();
+});
+
+it('reporta que nunca estuvo en curso si fue cancelada', function (): void {
+    $session = newSimulationSession();
+    $session->cancel(null, new DateTimeImmutable('2026-08-31T00:00:00+00:00'));
+
+    expect($session->wasInProgressAt(new DateTimeImmutable('2026-09-01T10:00:00+00:00')))->toBeFalse();
+});
+
+it('reporta que esta en curso para cualquier marca de tiempo posterior al inicio mientras no haya finalizado', function (): void {
+    $session = newSimulationSession();
+    $session->start(new DateTimeImmutable('2026-09-01T10:05:00+00:00'));
+
+    expect($session->wasInProgressAt(new DateTimeImmutable('2026-09-01T10:05:00+00:00')))->toBeTrue()
+        ->and($session->wasInProgressAt(new DateTimeImmutable('2026-09-05T00:00:00+00:00')))->toBeTrue()
+        ->and($session->wasInProgressAt(new DateTimeImmutable('2026-09-01T10:04:59+00:00')))->toBeFalse();
+});
+
+it('reporta que estuvo en curso solo dentro de la ventana real una vez completada', function (): void {
+    $session = newSimulationSession();
+    $session->start(new DateTimeImmutable('2026-09-01T10:05:00+00:00'));
+    $session->complete(new DateTimeImmutable('2026-09-01T10:50:00+00:00'));
+
+    expect($session->wasInProgressAt(new DateTimeImmutable('2026-09-01T10:30:00+00:00')))->toBeTrue()
+        ->and($session->wasInProgressAt(new DateTimeImmutable('2026-09-01T10:50:00+00:00')))->toBeTrue()
+        ->and($session->wasInProgressAt(new DateTimeImmutable('2026-09-01T10:50:01+00:00')))->toBeFalse()
+        ->and($session->wasInProgressAt(new DateTimeImmutable('2026-09-01T10:04:59+00:00')))->toBeFalse();
+});
