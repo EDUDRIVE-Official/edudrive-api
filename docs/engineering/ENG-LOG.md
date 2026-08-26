@@ -1401,3 +1401,31 @@ Incluido: recomendación de próxima lección, refuerzo de competencias agregado
 - `php artisan route:list --path=academic/enrollments` ✅ — 13 rutas registradas (12 previas + `recommendations`).
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-040 (Cierre de ENG-040 — Núcleo del Pasaporte Vial)
+
+### Alcance acordado con el usuario
+
+Estado (`active`/`suspended`/`revoked`) y nivel numérico (solo sube mientras está `active`) en el núcleo. "Historial formativo" en este alcance es el historial propio de cambios de estado/nivel del pasaporte, no la lista de cursos/evaluaciones (eso es ENG-041). Diferido explícitamente: vigencia/expiración, agregación de evidencias (ENG-041), cálculo automático de confianza/nivel (ENG-042), reemisión de un pasaporte revocado. Detalle en `docs/plans/2026-08-26-nucleo-pasaporte-vial-eng040-design.md`.
+
+### Completado
+
+- **Módulo nuevo `Modules\RoadPassport`**, siguiendo `ENG-003` al pie de la letra: bootstrap con `RoadPassportServiceProvider`, endpoint de estado `GET /api/v1/road-passport/status`, registrado en `bootstrap/providers.php`.
+- **Dominio**: agregado `RoadPassport` (`RoadPassportId`, `userId`, `RoadPassportStatus`, `level: int`, `issuedAt`, `history: list<PassportHistoryEntry>`).
+  - `suspend()` solo desde `Active`; `reactivate()` solo desde `Suspended`; `revoke()` desde `Active`/`Suspended`, terminal (rechaza cualquier transición posterior, incluido `changeLevel()`); `changeLevel()` exige `Active` y un nivel estrictamente mayor al actual. Cada transición y cambio de nivel agrega una entrada al historial (`PassportHistoryEntry::statusChanged()`/`::levelChanged()`).
+  - Excepciones de dominio `InvalidRoadPassportTransition` y `InvalidRoadPassportLevel` (422).
+- **Persistencia**: tablas `road_passports` (`user_id` único, FK a `users`) y `road_passport_history_entries` (FK cascada a `road_passports`). `EloquentRoadPassportRepository::save()` transaccional, borra y reinserta el historial completo en cada guardado (mismo patrón que `EloquentExamAttemptRepository` con sus preguntas).
+- **Aplicación (CQRS)**: `IssueRoadPassportCommand` (rechaza un segundo pasaporte para el mismo usuario con `RoadPassportAlreadyExists`, 409), `SuspendRoadPassportCommand`, `ReactivateRoadPassportCommand`, `RevokeRoadPassportCommand`, `ChangeRoadPassportLevelCommand` (todos con `RoadPassportNotFound`, 404, si no existe), `GetRoadPassportQuery` (dueño o permiso ampliado, mismo patrón que `GetEnrollmentProgressHandler`) y `GetMyRoadPassportQuery` (resuelve el pasaporte del usuario autenticado por su `userId`, sin necesitar conocer el `roadPassportId`).
+- **Autorización**: permisos nuevos `road_passports.manage`/`road_passports.view`, mismo patrón de concesión que `enrollments.manage`/`enrollments.view` (SuperAdmin e InstitutionalAdmin ambos; Teacher solo view; Student ninguno, accede al propio por pertenencia).
+- **HTTP**: `RoadPassportController` con `POST /road-passport` (emitir), `GET /road-passport/me` (propio), `GET /road-passport/{id}` (dueño o `road_passports.view`), `POST /road-passport/{id}/suspend|reactivate|revoke` y `PUT /road-passport/{id}/level`, todos bajo `auth:sanctum`, mutaciones bajo `road_passports.manage`.
+- **Pruebas**: `RoadPassportTest` (dominio, 12 casos), `EloquentRoadPassportRepositoryTest` (persistencia, 5 casos, incluida la sustitución del historial en vez de duplicarlo), `RoadPassportServiceProviderTest` (registro CQRS), `RoadPassportHandlerTest` (aplicación, 10 casos con repositorio en memoria), `RoadPassportTest`/`RoadPassportStatusTest` (Feature, 13 casos: autorización, transiciones, 422, 404, 409).
+- **Corrección durante el desarrollo**: colisión de nombres entre el helper `persistedRoadPassportFor()` declarado tanto en el test de aplicación (con repositorio en memoria) como en el test Feature (con base de datos real) — Pest carga todos los archivos de test en el mismo proceso PHP, así que dos funciones globales con el mismo nombre en archivos distintos producen un error fatal de redeclaración. Se renombró el helper del test Feature a `persistedRoadPassportFeature()`.
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `42 passed (112 assertions)` (dominio, aplicación, persistencia, integración del provider y feature HTTP).
+- Regresión ✅ sobre Authorization/Identity/Organization/Foundation/Learning tras el cambio de permisos — `105 passed (273 assertions)`, sin fallos.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=road-passport` ✅ — 8 rutas registradas.
+
+**Estado:** Finalizado.

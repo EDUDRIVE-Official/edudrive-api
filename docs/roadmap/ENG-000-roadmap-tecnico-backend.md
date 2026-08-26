@@ -717,7 +717,9 @@ Preparación para SIMUDRIVE (sistema externo, fuera de este repositorio).
 14. Fase 8 — Pasaporte Vial
 ENG-040 — Núcleo del Pasaporte Vial
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): nuevo módulo `Modules\RoadPassport` (siguiendo ENG-003 al pie de la letra, mismo patrón de bootstrap que `Modules\Learning` en ENG-038), con el agregado `RoadPassport`: identificador propio, `userId` (uno por persona, único), estado (`active`/`suspended`/`revoked`, con `revoked` terminal) y nivel entero (solo sube mientras está `active`). El historial formativo de este alcance reducido es el propio historial de cambios de estado y nivel del pasaporte (`PassportHistoryEntry`) — no la agregación de cursos/evaluaciones/prácticas, que es ENG-041. CQRS completo (emitir/suspender/reactivar/revocar/cambiar nivel/consultar) y API HTTP bajo `auth:sanctum` en `/api/v1/road-passport`, con permisos nuevos `road_passports.manage`/`road_passports.view` (mismo patrón de concesión que `enrollments.manage`/`enrollments.view`: SuperAdmin e InstitutionalAdmin ambos, Teacher solo view, Student ninguno — accede al propio por pertenencia vía `GET /road-passport/me`). Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-nucleo-pasaporte-vial-eng040-design.md` y `docs/engineering/ENG-LOG.md`.
 
 Incluye:
 
@@ -725,8 +727,14 @@ Identificador del Pasaporte Vial.
 Propietario.
 Estado.
 Nivel.
-Historial formativo.
-Vigencia.
+Historial de cambios de estado y nivel.
+
+Diferido:
+
+Vigencia (fecha de expiración o renovación del pasaporte — no se modeló ningún campo de vigencia en este alcance reducido).
+Agregación de evidencias (cursos, evaluaciones, prácticas, simulaciones, certificaciones — ENG-041).
+Cálculo automático de confianza/nivel a partir de evidencia (ENG-042).
+Reemisión de un pasaporte revocado.
 ENG-041 — Evidencias del Pasaporte Vial
 
 Estado: Pendiente
@@ -1405,3 +1413,4 @@ Versión	Fecha	Descripción
 1.15.0	2026-08-16	Cierre de ENG-036 (Seguimiento de progreso): agregado `EnrollmentProgress` con completitud de lecciones, `EnrollmentProgressCalculator` (porcentaje, tiempo invertido, evaluaciones y última actividad), CQRS completo (`CompleteLessonCommand`/`GetEnrollmentProgressQuery`) y API HTTP protegida por pertenencia o `enrollments.view` (IMP-036 en ENG-LOG.md)
 1.16.0	2026-08-26	Consolidación de deuda de commits: ENG-032/033/034 (intentos de evaluación, motor de calificación, examen teórico) comiteados juntos en `1d6d90b` por compartir los mismos archivos; ENG-034 pasa de "En validación" a **Completado**. ENG-035 (Inscripciones) pasa de "Pendiente" a **Completado**: dominio, aplicación y persistencia de `Enrollment` comiteados en `e3e2186` (la API HTTP ya estaba comiteada desde antes)
 1.17.0	2026-08-26	Cierre de ENG-039 (Recomendaciones de aprendizaje): `EnrollmentLearningRecommendationService` (próxima lección, refuerzo de competencias agregado por curso, exámenes para reintentar) y `GET /enrollments/{enrollmentId}/recommendations` protegido por pertenencia o `enrollments.view`; SIMUDRIVE y recomendaciones por pregunta individual diferidas explícitamente
+1.18.0	2026-08-26	Cierre de ENG-040 (Núcleo del Pasaporte Vial): nuevo módulo `Modules\RoadPassport` con el agregado `RoadPassport` (identidad, estado, nivel, historial propio), CQRS completo y API HTTP en `/api/v1/road-passport` protegida por pertenencia o los permisos nuevos `road_passports.manage`/`road_passports.view`; vigencia, agregación de evidencias (ENG-041) y cálculo de confianza (ENG-042) diferidos explícitamente
