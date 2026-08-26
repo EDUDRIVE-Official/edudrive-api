@@ -28,6 +28,10 @@ final class LearningServiceProvider extends ServiceProvider
             GetEnrollmentLearningEventsHandler::class,
         );
 
+        $this->loadRoutesFrom(
+            dirname(__DIR__, 2).'/Presentation/Routes/api.php',
+        );
+
         $this->loadMigrationsFrom(
             dirname(__DIR__).'/Persistence/Migrations',
         );
