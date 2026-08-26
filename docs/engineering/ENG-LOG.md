@@ -1619,3 +1619,25 @@ Cálculo automático desde la telemetría (sin intervención humana): un servici
 - `php artisan route:list --path=simulation` ✅ — 18 rutas registradas (las 17 previas + `result`).
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-049 (Cierre de ENG-049 — SIMUDRIVE Decision Engine)
+
+### Alcance acordado con el usuario
+
+El simulador reporta datos crudos por punto de decisión (contexto vial en texto libre, nivel de riesgo asignado por el diseño del escenario en SIMUDRIVE, reacción del conductor de un conjunto cerrado necesario para evaluación determinística) y un servicio de dominio en EDUDRIVE evalúa si la reacción fue apropiada, genera retroalimentación y calcula consistencia — EDUDRIVE decide, no solo ingiere. Consistencia con alcance limitado a la sesión actual (se agrupa por nivel de riesgo, no se compara contra el historial completo del usuario). Envío por lotes, igual que la telemetría. Sin persistencia del resultado evaluado — se calcula en cada consulta a partir de los puntos de decisión crudos ya persistidos, mismo patrón que ENG-048. Diferido explícitamente: consistencia entre sesiones o de todo el historial del usuario, que SIMUDRIVE reporte la evaluación ya calculada, retroalimentación personalizada más allá de mensajes fijos. Detalle en `docs/plans/2026-08-26-decision-engine-eng049-design.md`.
+
+### Completado
+
+- **Dominio**: `DecisionRiskLevel` (enum `Low`/`Medium`/`High`); `DriverReactionType` (enum `Braked`/`Accelerated`/`Maintained`/`Swerved`/`Signaled`/`Ignored` — conjunto cerrado, no texto libre, precisamente para permitir la evaluación determinística); `DecisionEvaluationOutcome` (enum `Appropriate`/`Inappropriate`); `DecisionPoint` (entidad inmutable, solo-append, mismo espíritu que `TelemetryEvent`); `DecisionPointEvaluation`/`DecisionEngineResult` (VOs del resultado evaluado). `DecisionEngineCalculator` (servicio de dominio puro, mismo espíritu que `PracticalResultCalculator`): tabla de reacciones apropiadas por nivel de riesgo (`ignored` nunca apropiado; `high` solo `braked`/`swerved`/`signaled`; `medium` suma `maintained`; `low` cualquiera salvo `ignored`); retroalimentación fija por combinación riesgo+resultado (`match` exhaustivo); consistencia agrupando evaluaciones por `riskLevel` — un grupo es consistente si todas sus reacciones comparten el mismo resultado, `consistency_score = grupos_consistentes / grupos_totales` (1.0 si no hay puntos de decisión).
+- **Persistencia**: tabla `decision_points` (FK cascada a `simulation_sessions`, sin tabla de historial — *append-only*, igual que `telemetry_events`). `DecisionPointRepository::saveBatch()`/`allForSession()`.
+- **CQRS**: `SubmitDecisionPointsCommand`/`SubmitDecisionPointsHandler`, mismo patrón de validación que `SubmitTelemetryHandler` (sesión existe, pertenece al simulador autenticado, está `InProgress`). `GetDecisionEngineResultQuery`/`GetDecisionEngineResultHandler`, mismo criterio de propiedad que `GetPracticalResultHandler` (dueño o `simulation_sessions.view`, sin permiso nuevo); exige `status = Completed` (`DecisionEngineResultNotAvailable`, 422, nueva excepción).
+- **API HTTP**: `POST /api/v1/simulation/sessions/{sessionId}/decisions` con middleware `simulator.auth` (sin `auth:sanctum`), body `decisions` validado por forma (`SubmitDecisionPointsRequest`); `GET /api/v1/simulation/sessions/{sessionId}/decisions` bajo `auth:sanctum`, dueño de la sesión o `simulation_sessions.view`.
+- **Pruebas**: 26 tests nuevos repartidos en dominio (`DecisionEngineCalculator`, 9 casos incluyendo reglas por nivel de riesgo y consistencia parcial/total), persistencia (repositorio Eloquent), aplicación (handlers con repositorios en memoria) y feature (API HTTP completa, incluyendo autenticación de simulador y ambos criterios de pertenencia).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `165 passed (394 assertions)`.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=simulation` ✅ — 20 rutas registradas (las 18 previas + 2 de decisiones).
+
+**Estado:** Finalizado.

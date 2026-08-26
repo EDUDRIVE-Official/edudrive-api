@@ -895,7 +895,9 @@ Integración con el Pasaporte Vial (`RoadPassport::recordEvidence()`) a partir d
 Referencias reales a `Competency` de Academic.
 ENG-049 — SIMUDRIVE Decision Engine
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): tercera entidad de solo-append en `Modules\Simulation`, `DecisionPoint` — el simulador reporta datos crudos por punto de decisión (contexto vial en texto libre, nivel de riesgo `low`/`medium`/`high` asignado por el diseño del escenario en SIMUDRIVE, y la reacción del conductor de un conjunto cerrado: `braked`/`accelerated`/`maintained`/`swerved`/`signaled`/`ignored` — necesario como conjunto cerrado, no texto libre, para que la evaluación sea determinística). Un servicio de dominio puro `DecisionEngineCalculator` evalúa, en cada consulta (sin persistir el resultado, mismo patrón que ENG-048), si la reacción fue apropiada para ese riesgo (regla fija: `ignored` nunca es apropiado; para `high` solo `braked`/`swerved`/`signaled`; para `medium` se suma `maintained`; para `low` cualquiera salvo `ignored`), genera retroalimentación fija por combinación riesgo+resultado, y calcula consistencia agrupando por nivel de riesgo dentro de la misma sesión (`consistency_score = grupos_consistentes / grupos_totales`). Envío por lotes autenticado con la llave de integración del simulador (`simulator.auth`, igual que ENG-047), exigiendo sesión `InProgress`. Consulta del resultado bajo `auth:sanctum`, dueño de la sesión o `simulation_sessions.view` (sin permiso nuevo), exige sesión `Completed`. Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-decision-engine-eng049-design.md`.
 
 Incluye:
 
@@ -905,6 +907,12 @@ Riesgo.
 Consistencia.
 Respuesta del conductor.
 Retroalimentación educativa.
+
+Diferido:
+
+Consistencia a través de múltiples sesiones o de todo el historial del usuario.
+Que SIMUDRIVE reporte la evaluación ya calculada (delegar el criterio educativo a SIMUDRIVE).
+Retroalimentación personalizada más allá de mensajes fijos por combinación riesgo+resultado.
 ENG-050 — Sincronización offline
 
 Estado: Pendiente
@@ -1481,3 +1489,4 @@ Versión	Fecha	Descripción
 1.24.0	2026-08-26	Cierre de ENG-046 (Sesiones de simulación): nuevo agregado `SimulationSession` en `Modules\Simulation` (usuario, simulador, vehículo y escenario en texto libre, ciclo de vida `scheduled`/`in_progress`/`completed`/`cancelled`, duración planeada y efectiva), programación en autoservicio validando que el simulador esté `active`, criterio de propiedad extendido por primera vez a mutaciones (no solo consultas), CQRS completo y API HTTP en `/api/v1/simulation/sessions` protegida por pertenencia o `simulation_sessions.manage`/`simulation_sessions.view`; detección de conflictos de horario e integración con telemetría (ENG-047) diferidas explícitamente (IMP-046 en ENG-LOG.md)
 1.25.0	2026-08-26	Cierre de ENG-047 (Telemetría): entidades `TelemetrySample`/`TelemetryEvent` (solo-append, sin invariantes de agregado) en `Modules\Simulation`; primer mecanismo de autenticación máquina-a-máquina del backend (`AuthenticateSimulator`, alias `simulator.auth`, llave de integración por *bearer token* contra el hash SHA-256 almacenado); envío por lotes validado contra sesión↔simulador y estado `InProgress`; consulta para humanos bajo `auth:sanctum` reutilizando `simulation_sessions.view` sin permiso nuevo; procesamiento/agregación (ENG-048) diferido explícitamente (IMP-047 en ENG-LOG.md)
 1.26.0	2026-08-26	Cierre de ENG-048 (Resultados prácticos): servicio de dominio puro `PracticalResultCalculator` deriva un resultado `passed`/`failed` (puntaje 0-100, penalización por tipo de `TelemetryEvent`) en cada consulta a partir de la telemetría ya persistida de una sesión `Completed`, sin tabla ni migración nueva (mismo espíritu que `RoadPassportTrustCalculator`); competencias demostradas (texto libre) y evidencias asociadas (los propios errores) autocontenidos en `Modules\Simulation`; API HTTP en `GET /api/v1/simulation/sessions/{sessionId}/result` reutilizando `simulation_sessions.view`; registro manual, integración con el Pasaporte Vial y referencias a `Competency` de Academic diferidos explícitamente (IMP-048 en ENG-LOG.md)
+1.27.0	2026-08-26	Cierre de ENG-049 (SIMUDRIVE Decision Engine): entidad `DecisionPoint` (solo-append, reacción del conductor como conjunto cerrado para permitir evaluación determinística) y servicio de dominio puro `DecisionEngineCalculator` que evalúa apropiación por riesgo, genera retroalimentación fija y calcula consistencia agrupando por riesgo dentro de la sesión, sin persistir el resultado (mismo patrón que ENG-048); envío por lotes autenticado con `simulator.auth` (ENG-047), consulta bajo `auth:sanctum` reutilizando `simulation_sessions.view`; consistencia entre sesiones y evaluación delegada a SIMUDRIVE diferidas explícitamente (IMP-049 en ENG-LOG.md)
