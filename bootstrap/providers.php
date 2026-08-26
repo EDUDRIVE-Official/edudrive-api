@@ -8,6 +8,7 @@ use Modules\Audit\Infrastructure\Providers\AuditServiceProvider;
 use Modules\Authorization\Infrastructure\Providers\AuthorizationServiceProvider;
 use Modules\Certification\Infrastructure\Providers\CertificationServiceProvider;
 use Modules\Foundation\Providers\FoundationServiceProvider;
+use Modules\Gamification\Infrastructure\Providers\GamificationServiceProvider;
 use Modules\Identity\Providers\IdentityServiceProvider;
 use Modules\Learning\Infrastructure\Providers\LearningServiceProvider;
 use Modules\Organization\Infrastructure\Providers\OrganizationServiceProvider;
@@ -26,4 +27,5 @@ return [
     RoadPassportServiceProvider::class,
     CertificationServiceProvider::class,
     SimulationServiceProvider::class,
+    GamificationServiceProvider::class,
 ];
