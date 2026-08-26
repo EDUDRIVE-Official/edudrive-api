@@ -1710,3 +1710,27 @@ Segunda historia de la Fase 10 — Gamificación, extiende `Modules\Gamification
 - `php artisan route:list --path=gamification` ✅ — 14 rutas registradas (las 7 previas de ENG-051 + 7 de insignias).
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-053 (Cierre de ENG-053 — Experiencia y niveles)
+
+### Alcance acordado con el usuario
+
+Tercera historia de la Fase 10 — Gamificación, extiende `Modules\Gamification` con un tercer concepto, `ExperienceEntry`, distinto de `Achievement`/`Badge` en que no es un catálogo: es un ledger de solo-append de puntos de experiencia (XP). Otorgamiento manual vía `experience.manage`, sin integración automática reactiva con otros módulos (logros, insignias, cursos, exámenes) como fuente de XP. Nivel general y nivel por competencia calculados mediante un servicio de dominio puro en cada consulta, sin persistirse — mismo patrón que `PracticalResultCalculator`/`DecisionEngineCalculator`/`RoadPassportTrustCalculator`. Regla de progresión con fórmula fija y umbral uniforme (`nivel = floor(xp_total / 100) + 1`), sin tabla de umbrales configurable. Prevención de manipulación: ledger inmutable de solo-append, puntos estrictamente positivos, y sin autoservicio de registro (un estudiante nunca puede otorgarse XP a sí mismo). Diferido explícitamente: integración automática reactiva, tabla de umbrales configurable, consulta del resumen de experiencia de otro usuario, edición/borrado de un registro, referencias reales a `Competency` de Academic. Detalle en `docs/plans/2026-08-26-experiencia-niveles-eng053-design.md`.
+
+### Completado
+
+- **Dominio**: entidad `ExperienceEntry` (inmutable, solo-append, mismo espíritu que `UserAchievement`/`UserBadge`/`TelemetryEvent`): `id`, `userId`, `points` (validado estrictamente positivo en el constructor vía `record()`, `InvalidArgumentException` si no), `competencyId` opcional en texto libre, `reason`, `recordedAt`. VOs `CompetencyExperience` (`competencyId`, `totalPoints`, `level`) y `ExperienceSummary` (`userId`, `totalPoints`, `generalLevel`, `competencies`). Servicio de dominio `ExperienceLevelCalculator::summarize(userId, entries)`: suma todos los puntos del usuario para el nivel general; agrupa por `competencyId` (ignorando registros sin competencia) para el nivel por competencia; ambos usan la misma fórmula `intdiv(puntos, 100) + 1`.
+- **Persistencia**: tabla `experience_entries` (FK cascada a `users`, `points` sin signo, `competency_id` nullable, sin restricción de unicidad — un usuario puede tener muchos registros). `ExperienceEntryRepository` con su implementación Eloquent (`updateOrCreate`, `allForUser()`).
+- **CQRS**: `RecordExperienceCommand`/`RecordExperienceHandler` (crea y guarda un `ExperienceEntry` nuevo). `GetMyExperienceSummaryQuery`/`GetMyExperienceSummaryHandler` (instancia `ExperienceLevelCalculator` directamente, mismo patrón que `GetPracticalResultHandler` con `PracticalResultCalculator` — sin inyección ni registro en el contenedor).
+- **Autorización**: un solo permiso nuevo, `experience.manage` (SuperAdmin + InstitutionalAdmin, mismo criterio que `achievements.manage`/`badges.manage`). Sin `experience.view` — la consulta es autoservicio únicamente.
+- **API HTTP**: `POST /api/v1/gamification/experience/grant` bajo `experience.manage`; `GET /api/v1/gamification/experience/me` bajo `auth:sanctum` sin permiso adicional (autoservicio), devuelve `total_points`, `general_level` y el arreglo `competencies`.
+- **Pruebas**: 24 tests nuevos repartidos en dominio (`ExperienceEntry`, `ExperienceLevelCalculator` — incluyendo el cálculo independiente de nivel general vs. por competencia), persistencia (repositorio Eloquent), aplicación (handlers con repositorio en memoria), proveedor de servicios y feature (API HTTP completa, incluyendo el resumen con nivel general y por competencia, y el rechazo de puntos no positivos).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `119 passed (286 assertions)`.
+- Suite completa de Authorization ✅ — `48 passed (151 assertions)`, confirmando el permiso nuevo.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=gamification` ✅ — 16 rutas registradas (las 14 previas de ENG-051/052 + 2 de experiencia).
+
+**Estado:** Finalizado.

@@ -975,7 +975,9 @@ Revocación de una insignia ya otorgada.
 Consulta de las insignias obtenidas por otro usuario (solo autoservicio).
 ENG-053 — Experiencia y niveles
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): tercera historia de la Fase 10, extiende `Modules\Gamification` con `ExperienceEntry`, un ledger de solo-append de puntos de experiencia (XP) — a diferencia de `Achievement`/`Badge`, no es un catálogo. Cada registro tiene `points` (entero estrictamente positivo, validado en el dominio), un `competencyId` opcional en texto libre (sin referencia real a `Competency` de Academic, mismo criterio que ENG-048/049) y un `reason` descriptivo. El nivel general y el nivel por competencia se derivan mediante un servicio de dominio puro, `ExperienceLevelCalculator`, calculado en cada consulta a partir de la suma de puntos acumulados (mismo patrón que `PracticalResultCalculator`/`DecisionEngineCalculator`/`RoadPassportTrustCalculator`) — el nivel no se persiste. Regla de progresión fija con umbral uniforme: `nivel = floor(xp_total / 100) + 1`, igual para el nivel general y cada nivel por competencia. Prevención de manipulación: el ledger es inmutable (sin edición ni borrado), solo se registra vía `experience.manage` (SuperAdmin/InstitutionalAdmin, sin autoservicio de registro), y los puntos deben ser estrictamente positivos. Solo existe autoservicio de consulta (`GET /experience/me`, `auth:sanctum` sin permiso adicional) — mismo criterio que `/achievements/me`/`/badges/me`: la consulta del resumen de experiencia de otro usuario queda diferida. Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-experiencia-niveles-eng053-design.md`.
 
 Incluye:
 
@@ -984,6 +986,14 @@ Nivel general.
 Nivel por competencia.
 Reglas de progresión.
 Prevención de manipulación.
+
+Diferido:
+
+Integración automática reactiva con otros módulos (logros, insignias, cursos, exámenes) como fuente de XP.
+Tabla de umbrales de progresión configurable por nivel (curva personalizada).
+Consulta del resumen de experiencia de otro usuario (solo autoservicio).
+Edición o borrado de un registro de experiencia ya creado.
+Referencias reales a `Competency` de Academic.
 ENG-054 — Retos y misiones
 
 Estado: Pendiente
@@ -1519,3 +1529,4 @@ Versión	Fecha	Descripción
 1.28.0	2026-08-26	Cierre de ENG-050 (Sincronización offline) — última historia de la Fase 9: `POST /sessions/{id}/telemetry` y `POST /sessions/{id}/decisions` aceptan reenvíos idempotentes (id por ítem generado por el simulador, `insertOrIgnore()` en vez de `insert()`, conteo de filas realmente insertadas en la respuesta) y toleran datos tardíos (`SimulationSession::wasInProgressAt()` compara la marca de tiempo del dato contra `startedAt`/`endedAt` en vez de exigir que la sesión esté `InProgress` en el momento de la petición); la cola local es responsabilidad del simulador, fuera de alcance; modelar la sesión offline como concepto propio y una tabla de llaves de idempotencia por lote diferidos explícitamente (IMP-050 en ENG-LOG.md). Con esto cierra por completo la Fase 9 — Integración con SIMUDRIVE (ENG-045 a ENG-050)
 1.29.0	2026-08-26	Cierre de ENG-051 (Logros), primera historia de la Fase 10 (Gamificación): nuevo módulo `Modules\Gamification` con el agregado `Achievement` (catálogo, código único, ciclo de vida `active`/`retired` sin reversión) y la entidad de solo-append `UserAchievement` (otorgamiento manual con evidencia y fecha); otorgamiento vía `achievements.manage` (mismo criterio que `Certificate`), CQRS completo y API HTTP en `/api/v1/gamification/achievements` con `achievements.view` extendido a `Student` por ser catálogo de navegación abierta (a diferencia de módulos previos); revocación de logros, consulta de logros de otro usuario y evaluación automática de reglas diferidas explícitamente (IMP-051 en ENG-LOG.md)
 1.30.0	2026-08-26	Cierre de ENG-052 (Insignias), segunda historia de la Fase 10: agregado `Badge` en `Modules\Gamification`, con categoría cerrada `BadgeCategory` (educativa/institucional/práctica), nivel fijo `BadgeLevel` (bronce/plata/oro) y contenido editable vía `updateContent()` que incrementa un campo `version` (sin snapshots históricos); el otorgamiento (`UserBadge`) guarda `awardedVersion`, la versión vigente al momento de otorgarse; edición bloqueada si la insignia está retirada (`InvalidBadgeTransition`); otorgamiento manual vía `badges.manage` (mismo criterio que `Achievement`), CQRS completo y API HTTP en `/api/v1/gamification/badges` (incluye `PUT` para editar contenido) con `badges.view` extendido a `Student`; sistema de progresión de niveles (corresponde a ENG-053), historial completo de versiones, revocación y consulta de insignias de otro usuario diferidos explícitamente (IMP-052 en ENG-LOG.md)
+1.31.0	2026-08-26	Cierre de ENG-053 (Experiencia y niveles), tercera historia de la Fase 10: ledger de solo-append `ExperienceEntry` en `Modules\Gamification` (puntos estrictamente positivos, competencia opcional en texto libre, motivo); nivel general y nivel por competencia derivados por el servicio de dominio puro `ExperienceLevelCalculator` en cada consulta (`nivel = floor(xp_total / 100) + 1`, mismo patrón que `PracticalResultCalculator`/`DecisionEngineCalculator`), sin persistir el nivel; registro manual vía `experience.manage` (sin autoservicio de registro, ledger inmutable) y autoservicio de consulta en `GET /experience/me` (mismo criterio que `/achievements/me`/`/badges/me`); integración automática con otros módulos, tabla de umbrales configurable y consulta del resumen de otro usuario diferidos explícitamente (IMP-053 en ENG-LOG.md)
