@@ -28,4 +28,6 @@ enum Permission: string
     case ViewCertifications = 'certifications.view';
     case ManageSimulators = 'simulators.manage';
     case ViewSimulators = 'simulators.view';
+    case ManageSimulationSessions = 'simulation_sessions.manage';
+    case ViewSimulationSessions = 'simulation_sessions.view';
 }
