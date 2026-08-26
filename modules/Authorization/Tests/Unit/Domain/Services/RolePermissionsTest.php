@@ -201,3 +201,10 @@ it('otorga manage y view de insignias al administrador institucional, y view al 
         ->and(RolePermissions::grants(Role::Student, Permission::ManageBadges))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ViewBadges))->toBeTrue();
 });
+
+it('otorga el permiso de gestion de experiencia al superadministrador y al administrador institucional, y a nadie mas', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageExperience))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageExperience))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageExperience))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageExperience))->toBeFalse();
+});

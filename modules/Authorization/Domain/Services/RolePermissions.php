@@ -49,6 +49,7 @@ final class RolePermissions
                 Permission::ViewAchievements,
                 Permission::ManageBadges,
                 Permission::ViewBadges,
+                Permission::ManageExperience,
             ],
             Role::InstitutionalAdmin => [
                 Permission::ViewOrganizations,
@@ -72,6 +73,7 @@ final class RolePermissions
                 Permission::ViewAchievements,
                 Permission::ManageBadges,
                 Permission::ViewBadges,
+                Permission::ManageExperience,
             ],
             Role::Teacher => [
                 Permission::ViewOrganizations,
