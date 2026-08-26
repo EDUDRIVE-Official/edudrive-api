@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Modules\Simulation\Application\UseCases;
 
 use DateTimeImmutable;
-use Illuminate\Support\Str;
 use Modules\Simulation\Application\Commands\SubmitDecisionPointsCommand;
 use Modules\Simulation\Application\Exceptions\SimulationSessionNotFound;
 use Modules\Simulation\Application\Exceptions\SimulationSessionNotInProgress;
@@ -13,7 +12,6 @@ use Modules\Simulation\Application\Responses\DecisionPointsBatchResponse;
 use Modules\Simulation\Domain\Entities\DecisionPoint;
 use Modules\Simulation\Domain\Enums\DecisionRiskLevel;
 use Modules\Simulation\Domain\Enums\DriverReactionType;
-use Modules\Simulation\Domain\Enums\SimulationSessionStatus;
 use Modules\Simulation\Domain\Repositories\DecisionPointRepository;
 use Modules\Simulation\Domain\Repositories\SimulationSessionRepository;
 use Modules\Simulation\Domain\ValueObjects\SimulationSessionId;
@@ -32,13 +30,13 @@ final readonly class SubmitDecisionPointsHandler
             throw SimulationSessionNotFound::withId($command->sessionId);
         }
 
-        if ($session->status() !== SimulationSessionStatus::InProgress) {
+        if ($session->startedAt() === null) {
             throw SimulationSessionNotInProgress::create();
         }
 
         $points = array_map(
             fn (array $data): DecisionPoint => DecisionPoint::record(
-                id: (string) Str::uuid(),
+                id: (string) $data['id'],
                 sessionId: $command->sessionId,
                 roadContext: (string) $data['road_context'],
                 riskLevel: DecisionRiskLevel::from((string) $data['risk_level']),
@@ -48,8 +46,12 @@ final readonly class SubmitDecisionPointsHandler
             $command->decisions,
         );
 
-        $this->decisionPoints->saveBatch($points);
+        foreach ($points as $point) {
+            if (! $session->wasInProgressAt($point->occurredAt())) {
+                throw SimulationSessionNotInProgress::create();
+            }
+        }
 
-        return new DecisionPointsBatchResponse(count($points));
+        return new DecisionPointsBatchResponse($this->decisionPoints->saveBatch($points));
     }
 }

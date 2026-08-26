@@ -54,11 +54,20 @@ final class InMemoryDecisionPointRepository implements DecisionPointRepository
     public array $items = [];
 
     /** @param list<DecisionPoint> $points */
-    public function saveBatch(array $points): void
+    public function saveBatch(array $points): int
     {
+        $inserted = 0;
+
         foreach ($points as $point) {
+            if ($this->hasId($point->id())) {
+                continue;
+            }
+
             $this->items[] = $point;
+            $inserted++;
         }
+
+        return $inserted;
     }
 
     /** @return list<DecisionPoint> */
@@ -68,6 +77,17 @@ final class InMemoryDecisionPointRepository implements DecisionPointRepository
             $this->items,
             static fn (DecisionPoint $point): bool => $point->sessionId() === $sessionId,
         ));
+    }
+
+    private function hasId(string $id): bool
+    {
+        foreach ($this->items as $item) {
+            if ($item->id() === $id) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 
@@ -106,14 +126,72 @@ it('registra un lote de puntos de decision para una sesion en curso', function (
         sessionId: $session->id()->value(),
         simulatorId: $simulatorId,
         decisions: [
-            ['road_context' => 'Semáforo en amarillo', 'risk_level' => 'high', 'driver_reaction' => 'braked', 'occurred_at' => '2026-09-01T10:12:00+00:00'],
-            ['road_context' => 'Peatón cruzando', 'risk_level' => 'medium', 'driver_reaction' => 'signaled', 'occurred_at' => '2026-09-01T10:13:00+00:00'],
+            ['id' => (string) Str::uuid(), 'road_context' => 'Semáforo en amarillo', 'risk_level' => 'high', 'driver_reaction' => 'braked', 'occurred_at' => '2026-09-01T10:12:00+00:00'],
+            ['id' => (string) Str::uuid(), 'road_context' => 'Peatón cruzando', 'risk_level' => 'medium', 'driver_reaction' => 'signaled', 'occurred_at' => '2026-09-01T10:13:00+00:00'],
         ],
     ));
 
     expect($response)->toBeInstanceOf(DecisionPointsBatchResponse::class)
         ->and($response->decisionsRecorded)->toBe(2)
         ->and($points->allForSession($session->id()->value()))->toHaveCount(2);
+});
+
+it('ignora un reenvio con los mismos identificadores sin duplicar filas', function (): void {
+    $sessions = new InMemoryDecisionEngineSessionRepository;
+    $points = new InMemoryDecisionPointRepository;
+    $simulatorId = (string) Str::uuid();
+    $session = newDecisionEngineTestSession($sessions, $simulatorId);
+    $command = new SubmitDecisionPointsCommand(
+        sessionId: $session->id()->value(),
+        simulatorId: $simulatorId,
+        decisions: [
+            ['id' => (string) Str::uuid(), 'road_context' => 'Semáforo en amarillo', 'risk_level' => 'high', 'driver_reaction' => 'braked', 'occurred_at' => '2026-09-01T10:12:00+00:00'],
+        ],
+    );
+    $handler = new SubmitDecisionPointsHandler($sessions, $points);
+
+    $first = $handler->handle($command);
+    $second = $handler->handle($command);
+
+    expect($first->decisionsRecorded)->toBe(1)
+        ->and($second->decisionsRecorded)->toBe(0)
+        ->and($points->allForSession($session->id()->value()))->toHaveCount(1);
+});
+
+it('acepta un punto de decision que llego tarde pero ocurrio dentro de la ventana real de una sesion completada', function (): void {
+    $sessions = new InMemoryDecisionEngineSessionRepository;
+    $points = new InMemoryDecisionPointRepository;
+    $simulatorId = (string) Str::uuid();
+    $session = newDecisionEngineTestSession($sessions, $simulatorId);
+    $session->complete(new DateTimeImmutable('2026-09-01T10:45:00+00:00'));
+    $sessions->save($session);
+
+    $response = (new SubmitDecisionPointsHandler($sessions, $points))->handle(new SubmitDecisionPointsCommand(
+        sessionId: $session->id()->value(),
+        simulatorId: $simulatorId,
+        decisions: [
+            ['id' => (string) Str::uuid(), 'road_context' => 'Semáforo en amarillo', 'risk_level' => 'high', 'driver_reaction' => 'braked', 'occurred_at' => '2026-09-01T10:20:00+00:00'],
+        ],
+    ));
+
+    expect($response->decisionsRecorded)->toBe(1);
+});
+
+it('rechaza un punto de decision cuya marca de tiempo cae fuera de la ventana real de la sesion', function (): void {
+    $sessions = new InMemoryDecisionEngineSessionRepository;
+    $points = new InMemoryDecisionPointRepository;
+    $simulatorId = (string) Str::uuid();
+    $session = newDecisionEngineTestSession($sessions, $simulatorId);
+    $session->complete(new DateTimeImmutable('2026-09-01T10:45:00+00:00'));
+    $sessions->save($session);
+
+    expect(fn () => (new SubmitDecisionPointsHandler($sessions, $points))->handle(new SubmitDecisionPointsCommand(
+        sessionId: $session->id()->value(),
+        simulatorId: $simulatorId,
+        decisions: [
+            ['id' => (string) Str::uuid(), 'road_context' => 'Semáforo en amarillo', 'risk_level' => 'high', 'driver_reaction' => 'braked', 'occurred_at' => '2026-09-01T11:00:00+00:00'],
+        ],
+    )))->toThrow(SimulationSessionNotInProgress::class);
 });
 
 it('rechaza puntos de decision para una sesion inexistente', function (): void {

@@ -53,11 +53,20 @@ final class InMemoryTelemetrySampleRepository implements TelemetrySampleReposito
     public array $items = [];
 
     /** @param list<TelemetrySample> $samples */
-    public function saveBatch(array $samples): void
+    public function saveBatch(array $samples): int
     {
+        $inserted = 0;
+
         foreach ($samples as $sample) {
+            if ($this->hasId($sample->id())) {
+                continue;
+            }
+
             $this->items[] = $sample;
+            $inserted++;
         }
+
+        return $inserted;
     }
 
     /** @return list<TelemetrySample> */
@@ -68,6 +77,17 @@ final class InMemoryTelemetrySampleRepository implements TelemetrySampleReposito
             static fn (TelemetrySample $sample): bool => $sample->sessionId() === $sessionId,
         ));
     }
+
+    private function hasId(string $id): bool
+    {
+        foreach ($this->items as $item) {
+            if ($item->id() === $id) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 final class InMemoryTelemetryEventRepository implements TelemetryEventRepository
@@ -76,11 +96,31 @@ final class InMemoryTelemetryEventRepository implements TelemetryEventRepository
     public array $items = [];
 
     /** @param list<TelemetryEvent> $events */
-    public function saveBatch(array $events): void
+    public function saveBatch(array $events): int
     {
+        $inserted = 0;
+
         foreach ($events as $event) {
+            if ($this->hasId($event->id())) {
+                continue;
+            }
+
             $this->items[] = $event;
+            $inserted++;
         }
+
+        return $inserted;
+    }
+
+    private function hasId(string $id): bool
+    {
+        foreach ($this->items as $item) {
+            if ($item->id() === $id) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** @return list<TelemetryEvent> */
@@ -125,11 +165,11 @@ it('registra un lote de lecturas y eventos para una sesion en curso', function (
         sessionId: $session->id()->value(),
         simulatorId: $simulatorId,
         samples: [
-            ['speed_kph' => 40.0, 'braking_percentage' => 0.0, 'acceleration_mps2' => 1.1, 'steering_angle_degrees' => 0.0, 'recorded_at' => '2026-09-01T10:10:00+00:00'],
-            ['speed_kph' => 38.0, 'braking_percentage' => 20.0, 'acceleration_mps2' => -1.5, 'steering_angle_degrees' => 2.0, 'recorded_at' => '2026-09-01T10:10:05+00:00'],
+            ['id' => (string) Str::uuid(), 'speed_kph' => 40.0, 'braking_percentage' => 0.0, 'acceleration_mps2' => 1.1, 'steering_angle_degrees' => 0.0, 'recorded_at' => '2026-09-01T10:10:00+00:00'],
+            ['id' => (string) Str::uuid(), 'speed_kph' => 38.0, 'braking_percentage' => 20.0, 'acceleration_mps2' => -1.5, 'steering_angle_degrees' => 2.0, 'recorded_at' => '2026-09-01T10:10:05+00:00'],
         ],
         events: [
-            ['type' => 'collision', 'details' => 'Colision leve', 'occurred_at' => '2026-09-01T10:11:00+00:00'],
+            ['id' => (string) Str::uuid(), 'type' => 'collision', 'details' => 'Colision leve', 'occurred_at' => '2026-09-01T10:11:00+00:00'],
         ],
     ));
 
@@ -138,6 +178,69 @@ it('registra un lote de lecturas y eventos para una sesion en curso', function (
         ->and($response->eventsRecorded)->toBe(1)
         ->and($samples->allForSession($session->id()->value()))->toHaveCount(2)
         ->and($events->allForSession($session->id()->value()))->toHaveCount(1);
+});
+
+it('ignora un reenvio con los mismos identificadores sin duplicar filas', function (): void {
+    $sessions = new InMemoryTelemetrySessionRepository;
+    $samples = new InMemoryTelemetrySampleRepository;
+    $events = new InMemoryTelemetryEventRepository;
+    $simulatorId = (string) Str::uuid();
+    $session = persistedTelemetryTestSession($sessions, $simulatorId);
+    $sampleId = (string) Str::uuid();
+    $eventId = (string) Str::uuid();
+    $command = new SubmitTelemetryCommand(
+        sessionId: $session->id()->value(),
+        simulatorId: $simulatorId,
+        samples: [['id' => $sampleId, 'speed_kph' => 40.0, 'braking_percentage' => 0.0, 'acceleration_mps2' => 1.1, 'steering_angle_degrees' => 0.0, 'recorded_at' => '2026-09-01T10:10:00+00:00']],
+        events: [['id' => $eventId, 'type' => 'collision', 'details' => null, 'occurred_at' => '2026-09-01T10:11:00+00:00']],
+    );
+    $handler = new SubmitTelemetryHandler($sessions, $samples, $events);
+
+    $first = $handler->handle($command);
+    $second = $handler->handle($command);
+
+    expect($first->samplesRecorded)->toBe(1)
+        ->and($first->eventsRecorded)->toBe(1)
+        ->and($second->samplesRecorded)->toBe(0)
+        ->and($second->eventsRecorded)->toBe(0)
+        ->and($samples->allForSession($session->id()->value()))->toHaveCount(1)
+        ->and($events->allForSession($session->id()->value()))->toHaveCount(1);
+});
+
+it('acepta telemetria que llego tarde pero ocurrio dentro de la ventana real de una sesion completada', function (): void {
+    $sessions = new InMemoryTelemetrySessionRepository;
+    $samples = new InMemoryTelemetrySampleRepository;
+    $events = new InMemoryTelemetryEventRepository;
+    $simulatorId = (string) Str::uuid();
+    $session = persistedTelemetryTestSession($sessions, $simulatorId);
+    $session->complete(new DateTimeImmutable('2026-09-01T10:45:00+00:00'));
+    $sessions->save($session);
+
+    $response = (new SubmitTelemetryHandler($sessions, $samples, $events))->handle(new SubmitTelemetryCommand(
+        sessionId: $session->id()->value(),
+        simulatorId: $simulatorId,
+        samples: [['id' => (string) Str::uuid(), 'speed_kph' => 40.0, 'braking_percentage' => 0.0, 'acceleration_mps2' => 1.1, 'steering_angle_degrees' => 0.0, 'recorded_at' => '2026-09-01T10:20:00+00:00']],
+        events: [],
+    ));
+
+    expect($response->samplesRecorded)->toBe(1);
+});
+
+it('rechaza telemetria cuya marca de tiempo cae fuera de la ventana real de la sesion', function (): void {
+    $sessions = new InMemoryTelemetrySessionRepository;
+    $samples = new InMemoryTelemetrySampleRepository;
+    $events = new InMemoryTelemetryEventRepository;
+    $simulatorId = (string) Str::uuid();
+    $session = persistedTelemetryTestSession($sessions, $simulatorId);
+    $session->complete(new DateTimeImmutable('2026-09-01T10:45:00+00:00'));
+    $sessions->save($session);
+
+    expect(fn () => (new SubmitTelemetryHandler($sessions, $samples, $events))->handle(new SubmitTelemetryCommand(
+        sessionId: $session->id()->value(),
+        simulatorId: $simulatorId,
+        samples: [['id' => (string) Str::uuid(), 'speed_kph' => 40.0, 'braking_percentage' => 0.0, 'acceleration_mps2' => 1.1, 'steering_angle_degrees' => 0.0, 'recorded_at' => '2026-09-01T11:00:00+00:00']],
+        events: [],
+    )))->toThrow(SimulationSessionNotInProgress::class);
 });
 
 it('acepta un lote sin eventos o sin lecturas', function (): void {
@@ -209,7 +312,7 @@ it('devuelve la telemetria de la sesion al dueno o a un tercero con permiso ampl
     (new SubmitTelemetryHandler($sessions, $samples, $events))->handle(new SubmitTelemetryCommand(
         sessionId: $session->id()->value(),
         simulatorId: $simulatorId,
-        samples: [['speed_kph' => 30.0, 'braking_percentage' => 0.0, 'acceleration_mps2' => 0.0, 'steering_angle_degrees' => 0.0, 'recorded_at' => '2026-09-01T10:10:00+00:00']],
+        samples: [['id' => (string) Str::uuid(), 'speed_kph' => 30.0, 'braking_percentage' => 0.0, 'acceleration_mps2' => 0.0, 'steering_angle_degrees' => 0.0, 'recorded_at' => '2026-09-01T10:10:00+00:00']],
         events: [],
     ));
 

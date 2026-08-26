@@ -9,7 +9,7 @@ use Modules\Foundation\Application\Commands\Command;
 final readonly class SubmitDecisionPointsCommand implements Command
 {
     /**
-     * @param  list<array{road_context: string, risk_level: string, driver_reaction: string, occurred_at: string}>  $decisions
+     * @param  list<array{id: string, road_context: string, risk_level: string, driver_reaction: string, occurred_at: string}>  $decisions
      */
     public function __construct(
         public string $sessionId,

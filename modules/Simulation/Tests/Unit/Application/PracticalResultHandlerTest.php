@@ -49,11 +49,13 @@ final class InMemoryPracticalResultEventRepository implements TelemetryEventRepo
     public array $items = [];
 
     /** @param list<TelemetryEvent> $events */
-    public function saveBatch(array $events): void
+    public function saveBatch(array $events): int
     {
         foreach ($events as $event) {
             $this->items[] = $event;
         }
+
+        return count($events);
     }
 
     /** @return list<TelemetryEvent> */
