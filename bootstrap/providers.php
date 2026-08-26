@@ -12,6 +12,7 @@ use Modules\Identity\Providers\IdentityServiceProvider;
 use Modules\Learning\Infrastructure\Providers\LearningServiceProvider;
 use Modules\Organization\Infrastructure\Providers\OrganizationServiceProvider;
 use Modules\RoadPassport\Infrastructure\Providers\RoadPassportServiceProvider;
+use Modules\Simulation\Infrastructure\Providers\SimulationServiceProvider;
 
 return [
     AppServiceProvider::class,
@@ -24,4 +25,5 @@ return [
     AuthorizationServiceProvider::class,
     RoadPassportServiceProvider::class,
     CertificationServiceProvider::class,
+    SimulationServiceProvider::class,
 ];
