@@ -1373,3 +1373,31 @@ Desde sesiones previas, ENG-032 (Intentos de evaluación), ENG-033 (Motor de cal
 - Suite focalizada previa (misma sesión, antes de comitear) ✅ para los archivos recién corregidos por Pint (`BulkEnrollmentHandlerTest`, `EnrollmentHandlerTest`, `TheoryExamHandlerTest` — 10 pruebas / 35 aserciones) y para toda la funcionalidad de ENG-032/033/034/035 vía las suites Feature/Integration/Unit ya verificadas en sesiones anteriores y no modificadas en esta.
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-039 (Cierre de ENG-039 — Recomendaciones de aprendizaje)
+
+### Alcance acordado con el usuario
+
+Incluido: recomendación de próxima lección, refuerzo de competencias agregado por curso, recomendación de reintentar exámenes reprobados. Diferido explícitamente: integración con SIMUDRIVE (sistema externo, fuera de este repositorio) y recomendaciones a nivel de pregunta individual más allá de la evidencia que ya aporta el refuerzo de competencias. Rutas adaptativas siguen diferidas desde ENG-037. Detalle en `docs/plans/2026-08-26-recomendaciones-aprendizaje-eng039-design.md`.
+
+### Completado
+
+- **Servicio de aplicación `EnrollmentLearningRecommendationService`** (`modules/Academic/Application/Services`), sin persistencia nueva — todo se deriva en memoria a partir de `Course`, `EnrollmentProgress`, `Exam` y `ExamAttempt` ya existentes:
+  - Próxima lección: recorre `CourseLessonCatalog::lessonIdsFor()` en orden curricular y devuelve la primera lección no completada cuya unidad esté desbloqueada según `CourseCurriculumUnlockCalculator` (reutilizados sin modificar); `null` si el curso ya está completo.
+  - Refuerzo de competencias: generaliza la lógica de `TheoryStudyRecommendationService` (breakdown por competencia con evidencia de `question_ids`) a través de todos los exámenes del curso, usando únicamente el intento **enviado más reciente** por examen (mismo patrón sin N+1 que `EnrollmentProgressCalculator::evaluationsFor()`: se listan los exámenes del curso una vez y se cruzan en memoria contra los intentos del usuario). Ordenado peor-primero, acotado a un máximo fijo de 5. Reutiliza `StudyRecommendationResponse` sin crear un DTO nuevo.
+  - Exámenes para reintentar: por cada examen del curso, si el intento más reciente no aprobó, quedan intentos disponibles (`countCompletedFor() < maxAttempts()`) y no hay un intento activo (`findActiveFor()`), se recomienda reintentar. Nuevo DTO `RetryableExamResponse`.
+- **CQRS**: `GetEnrollmentLearningRecommendationsQuery`/`GetEnrollmentLearningRecommendationsHandler`, misma autorización que `GetEnrollmentProgressHandler`/`GetEnrollmentCurriculumStatusHandler` (dueño del enrollment o permiso ya existente `enrollments.view`, sin permiso nuevo). Registrado en `AcademicServiceProvider`.
+- **HTTP**: `EnrollmentProgressController::recommendations()` + `GET /enrollments/{enrollmentId}/recommendations` bajo `auth:sanctum`, junto a `progress`/`curriculum` en el mismo controlador. Error público reutilizado: `ENROLLMENT_NOT_FOUND` (404); sin errores nuevos (el endpoint no recibe payload).
+- **Pruebas**:
+  - Aplicación: `EnrollmentLearningRecommendationServiceTest` (6 casos: sin actividad, próxima lección salta la completada, null al completar todo, usa el intento más reciente por examen omitiendo competencias con desempeño perfecto, reintentos con exclusión por aprobado/agotado/intento activo, orden peor-primero a través de varios exámenes) y `GetEnrollmentLearningRecommendationsHandlerTest` (4 casos de autorización, mismo patrón que el resto de handlers de enrollment).
+  - Integración: extensión de `AcademicServiceProviderEnrollmentProgressTest` con el registro del nuevo handler.
+  - Feature HTTP: extensión de `EnrollmentProgressTest` con 4 casos (propias, ajenas con/sin `enrollments.view`, enrollment inexistente).
+- **Corrección durante el desarrollo**: la primera versión de "intento más reciente por examen" comparaba `submittedAt()` entre intentos, pero dos intentos enviados en la misma prueba pueden compartir el mismo segundo de timestamp y producir un empate que conservaba el intento equivocado. Se corrigió aprovechando que `ExamAttemptRepository::all()` ya ordena por `created_at` ascendente: basta con sobrescribir por examen al iterar, sin comparar timestamps.
+
+### Validaciones
+
+- Suite focalizada ENG-039 ✅ — `EnrollmentLearningRecommendationServiceTest` (6/6), `GetEnrollmentLearningRecommendationsHandlerTest` (4/4), extensión de `AcademicServiceProviderEnrollmentProgressTest` y de `EnrollmentProgressTest` (20/20 tras la extensión), todas en verde.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=academic/enrollments` ✅ — 13 rutas registradas (12 previas + `recommendations`).
+
+**Estado:** Finalizado.

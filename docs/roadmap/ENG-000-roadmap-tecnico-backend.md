@@ -700,15 +700,20 @@ Diferido:
 Origen web, móvil o simulador (no se agregó ningún campo de origen/canal al evento; puede incorporarse en una historia futura si se necesita).
 ENG-039 — Recomendaciones de aprendizaje
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): implementado sobre `Modules\Academic`, sin módulo nuevo, siguiendo el mismo patrón que `EnrollmentProgressCalculator`/`CourseCurriculumUnlockCalculator`/`TheoryStudyRecommendationService`. Nuevo servicio `EnrollmentLearningRecommendationService::build()` combina tres piezas por inscripción: (1) próxima lección — primera lección del curso, en orden curricular, que no esté completada y cuya unidad esté desbloqueada (`CourseLessonCatalog` + `CourseCurriculumUnlockCalculator`); (2) refuerzo de competencias — generaliza `TheoryStudyRecommendationService` a través de todos los exámenes del curso, usando solo el intento enviado más reciente por examen (para que una mejora posterior no quede ensombrecida por un intento antiguo reprobado), ordenado de peor a mejor desempeño y acotado a un máximo de 5; (3) exámenes para reintentar — exámenes reprobados con intentos disponibles y sin un intento activo en curso. Expuesto en `GET /enrollments/{enrollmentId}/recommendations` (misma autorización que progreso/currículo: dueño del enrollment o permiso ya existente `enrollments.view`, sin permiso nuevo). Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-recomendaciones-aprendizaje-eng039-design.md` y `docs/engineering/ENG-LOG.md`.
 
 Incluye:
 
 Recomendación de lecciones.
 Refuerzo de competencias.
 Repetición de evaluaciones.
-Recomendaciones según errores.
-Preparación para SIMUDRIVE.
+
+Diferido:
+
+Recomendaciones según errores a nivel de pregunta individual, más allá de la evidencia (`question_ids`) que ya aporta el refuerzo de competencias.
+Preparación para SIMUDRIVE (sistema externo, fuera de este repositorio).
 14. Fase 8 — Pasaporte Vial
 ENG-040 — Núcleo del Pasaporte Vial
 
@@ -1399,3 +1404,4 @@ Versión	Fecha	Descripción
 1.14.0	2026-08-13	ENG-034 pasa a En validación: metadata teórica en preguntas/exámenes, validación de banco oficial y categoría, grading derivado del examen, recomendaciones de estudio, endpoints `theory-exams`/`theory-attempts` e historial teórico; validación técnica focalizada completa en verde, pendiente consolidación de commits (IMP-034 en ENG-LOG.md)
 1.15.0	2026-08-16	Cierre de ENG-036 (Seguimiento de progreso): agregado `EnrollmentProgress` con completitud de lecciones, `EnrollmentProgressCalculator` (porcentaje, tiempo invertido, evaluaciones y última actividad), CQRS completo (`CompleteLessonCommand`/`GetEnrollmentProgressQuery`) y API HTTP protegida por pertenencia o `enrollments.view` (IMP-036 en ENG-LOG.md)
 1.16.0	2026-08-26	Consolidación de deuda de commits: ENG-032/033/034 (intentos de evaluación, motor de calificación, examen teórico) comiteados juntos en `1d6d90b` por compartir los mismos archivos; ENG-034 pasa de "En validación" a **Completado**. ENG-035 (Inscripciones) pasa de "Pendiente" a **Completado**: dominio, aplicación y persistencia de `Enrollment` comiteados en `e3e2186` (la API HTTP ya estaba comiteada desde antes)
+1.17.0	2026-08-26	Cierre de ENG-039 (Recomendaciones de aprendizaje): `EnrollmentLearningRecommendationService` (próxima lección, refuerzo de competencias agregado por curso, exámenes para reintentar) y `GET /enrollments/{enrollmentId}/recommendations` protegido por pertenencia o `enrollments.view`; SIMUDRIVE y recomendaciones por pregunta individual diferidas explícitamente
