@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Modules\RoadPassport\Application\Responses;
 
+use DateTimeImmutable;
 use DateTimeInterface;
 use Modules\RoadPassport\Domain\Aggregates\RoadPassport;
+use Modules\RoadPassport\Domain\Services\RoadPassportTrustCalculator;
 use Modules\RoadPassport\Domain\ValueObjects\Evidence;
 use Modules\RoadPassport\Domain\ValueObjects\PassportHistoryEntry;
 
@@ -23,10 +25,13 @@ final readonly class RoadPassportResponse
         public string $issuedAt,
         public array $history,
         public array $evidence,
+        public int $trustScore,
     ) {}
 
-    public static function fromRoadPassport(RoadPassport $passport): self
+    public static function fromRoadPassport(RoadPassport $passport, ?DateTimeImmutable $now = null): self
     {
+        $now ??= new DateTimeImmutable('now');
+
         return new self(
             id: $passport->id()->value(),
             userId: $passport->userId(),
@@ -53,6 +58,7 @@ final readonly class RoadPassportResponse
                 ],
                 $passport->evidence(),
             ),
+            trustScore: (new RoadPassportTrustCalculator)->calculate($passport, $now),
         );
     }
 
@@ -65,6 +71,7 @@ final readonly class RoadPassportResponse
      *     issued_at: string,
      *     history: list<array{type: string, from: string, to: string, occurred_at: string, reason: ?string}>,
      *     evidence: list<array{type: string, subject_id: string, course_id: string, occurred_at: string, details: array<string, mixed>}>,
+     *     trust_score: int,
      * }
      */
     public function toArray(): array
@@ -77,6 +84,7 @@ final readonly class RoadPassportResponse
             'issued_at' => $this->issuedAt,
             'history' => $this->history,
             'evidence' => $this->evidence,
+            'trust_score' => $this->trustScore,
         ];
     }
 }

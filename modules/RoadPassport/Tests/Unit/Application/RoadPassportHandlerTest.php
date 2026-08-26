@@ -21,8 +21,10 @@ use Modules\RoadPassport\Application\UseCases\ReactivateRoadPassportHandler;
 use Modules\RoadPassport\Application\UseCases\RevokeRoadPassportHandler;
 use Modules\RoadPassport\Application\UseCases\SuspendRoadPassportHandler;
 use Modules\RoadPassport\Domain\Aggregates\RoadPassport;
+use Modules\RoadPassport\Domain\Enums\EvidenceType;
 use Modules\RoadPassport\Domain\Exceptions\InvalidRoadPassportTransition;
 use Modules\RoadPassport\Domain\Repositories\RoadPassportRepository;
+use Modules\RoadPassport\Domain\ValueObjects\Evidence;
 use Modules\RoadPassport\Domain\ValueObjects\RoadPassportId;
 
 final class InMemoryRoadPassportRepository implements RoadPassportRepository
@@ -73,7 +75,29 @@ it('emite un pasaporte vial nuevo en nivel 1', function (): void {
     expect($response)->toBeInstanceOf(RoadPassportResponse::class)
         ->and($response->userId)->toBe($userId)
         ->and($response->status)->toBe('active')
-        ->and($response->level)->toBe(1);
+        ->and($response->level)->toBe(1)
+        ->and($response->trustScore)->toBe(0);
+});
+
+it('refleja en trust_score la evidencia acumulada del pasaporte', function (): void {
+    $repository = new InMemoryRoadPassportRepository;
+    $passport = persistedRoadPassportFor($repository);
+    $passport->recordEvidence(Evidence::create(
+        EvidenceType::ExamPassed,
+        'attempt-1',
+        'course-1',
+        new DateTimeImmutable('now'),
+        [],
+    ));
+    $repository->save($passport);
+
+    $response = (new GetRoadPassportHandler($repository))->handle(new GetRoadPassportQuery(
+        roadPassportId: $passport->id()->value(),
+        userId: $passport->userId(),
+        canViewOthers: false,
+    ));
+
+    expect($response->trustScore)->toBeGreaterThan(0);
 });
 
 it('rechaza emitir un segundo pasaporte para el mismo usuario', function (): void {
