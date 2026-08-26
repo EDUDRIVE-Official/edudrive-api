@@ -65,6 +65,15 @@ final readonly class EloquentSimulatorRepository implements SimulatorRepository
         return $model === null ? null : $this->toDomain($model);
     }
 
+    public function findByIntegrationKeyHash(string $integrationKeyHash): ?Simulator
+    {
+        $model = SimulatorModel::query()->with('historyEntries')
+            ->where('integration_key_hash', $integrationKeyHash)
+            ->first();
+
+        return $model === null ? null : $this->toDomain($model);
+    }
+
     /** @return list<Simulator> */
     public function all(): array
     {

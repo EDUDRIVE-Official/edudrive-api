@@ -36,8 +36,12 @@ use Modules\Simulation\Application\UseCases\StartSimulationSessionHandler;
 use Modules\Simulation\Application\UseCases\SuspendSimulatorHandler;
 use Modules\Simulation\Domain\Repositories\SimulationSessionRepository;
 use Modules\Simulation\Domain\Repositories\SimulatorRepository;
+use Modules\Simulation\Domain\Repositories\TelemetryEventRepository;
+use Modules\Simulation\Domain\Repositories\TelemetrySampleRepository;
 use Modules\Simulation\Infrastructure\Persistence\Eloquent\Repositories\EloquentSimulationSessionRepository;
 use Modules\Simulation\Infrastructure\Persistence\Eloquent\Repositories\EloquentSimulatorRepository;
+use Modules\Simulation\Infrastructure\Persistence\Eloquent\Repositories\EloquentTelemetryEventRepository;
+use Modules\Simulation\Infrastructure\Persistence\Eloquent\Repositories\EloquentTelemetrySampleRepository;
 
 final class SimulationServiceProvider extends ServiceProvider
 {
@@ -45,6 +49,8 @@ final class SimulationServiceProvider extends ServiceProvider
     {
         $this->app->bind(SimulatorRepository::class, EloquentSimulatorRepository::class);
         $this->app->bind(SimulationSessionRepository::class, EloquentSimulationSessionRepository::class);
+        $this->app->bind(TelemetrySampleRepository::class, EloquentTelemetrySampleRepository::class);
+        $this->app->bind(TelemetryEventRepository::class, EloquentTelemetryEventRepository::class);
     }
 
     public function boot(MessageHandlerRegistry $registry): void

@@ -82,6 +82,11 @@ final class InMemorySimulatorRepositoryForSessions implements SimulatorRepositor
         throw new LogicException('No usado en esta prueba.');
     }
 
+    public function findByIntegrationKeyHash(string $integrationKeyHash): ?Simulator
+    {
+        throw new LogicException('No usado en esta prueba.');
+    }
+
     /** @return list<Simulator> */
     public function all(): array
     {

@@ -16,6 +16,8 @@ interface SimulatorRepository
 
     public function findByDeviceIdentifier(DeviceIdentifier $deviceIdentifier): ?Simulator;
 
+    public function findByIntegrationKeyHash(string $integrationKeyHash): ?Simulator;
+
     /** @return list<Simulator> */
     public function all(): array;
 }

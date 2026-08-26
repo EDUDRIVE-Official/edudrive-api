@@ -53,6 +53,17 @@ final class InMemorySimulatorRepository implements SimulatorRepository
         return null;
     }
 
+    public function findByIntegrationKeyHash(string $integrationKeyHash): ?Simulator
+    {
+        foreach ($this->items as $simulator) {
+            if ($simulator->integrationKey()->hash() === $integrationKeyHash) {
+                return $simulator;
+            }
+        }
+
+        return null;
+    }
+
     /** @return list<Simulator> */
     public function all(): array
     {
