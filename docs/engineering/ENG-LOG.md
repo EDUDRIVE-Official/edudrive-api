@@ -1805,3 +1805,27 @@ Segunda historia de la Fase 11, extiende `Modules\Notification` con `Notificatio
 - `php artisan route:list --path=notification` ✅ — 8 rutas registradas (las 4 previas de ENG-056 + 4 de preferencias).
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-058 (Cierre de ENG-058 — Plantillas de comunicación)
+
+### Alcance acordado con el usuario
+
+Tercera y última historia de la Fase 11, extiende `Modules\Notification` con `CommunicationTemplate` — un catálogo versionado de plantillas de contenido, capacidad independiente del envío de notificaciones: `SendNotificationCommand` no se modifica para aceptar una plantilla. Idiomas modelados como una fila por código+idioma, cada una con su propio ciclo de versión independiente (código único por idioma, no globalmente único). Marca institucional sin mecanismo nuevo — convención de variables reservadas que el llamador provee al renderizar. Variables declaradas obligatorias al renderizar: falta alguna lanza un error; placeholders no declarados quedan como texto literal. Diferido explícitamente: integración con el envío, plantillas específicas por organización con resolución en cascada, motor de plantillas real, historial completo de versiones anteriores. Detalle en `docs/plans/2026-08-26-plantillas-comunicacion-eng058-design.md`.
+
+### Completado
+
+- **Dominio**: `CommunicationTemplateId`/`CommunicationTemplateCode` (mismos patrones que `AchievementId`/`AchievementCode`); `CommunicationTemplateStatus` (`Active`/`Retired`); VO `RenderedTemplate` (`subject`, `body`). Agregado `CommunicationTemplate` — `create()`/`restore()` validan el formato ISO del idioma vía `guardLocale()` (regex `^[a-z]{2}(-[A-Z]{2})?$`); `updateContent()` incrementa `version`, bloqueado si `retired` (`InvalidCommunicationTemplateTransition`, 422, reutilizada también para "retirar dos veces"); `render(array $values): RenderedTemplate` exige que todas las `variables` declaradas estén presentes en `$values` (`MissingTemplateVariable`, 422, si falta alguna) y sustituye cada `{{nombre}}` por su valor vía `str_replace` en `subjectTemplate`/`bodyTemplate` — un placeholder no declarado en el texto queda intacto.
+- **Persistencia**: tabla `communication_templates` (`variables` como columna `json`, único por `code`+`locale`, no por `code` solo). `CommunicationTemplateRepository` con su implementación Eloquent (`findByCodeAndLocale()` en vez de `findByCode()`, `updateOrCreate`).
+- **CQRS**: `CreateCommunicationTemplateCommand`/`UpdateCommunicationTemplateCommand`/`RetireCommunicationTemplateCommand` y `GetCommunicationTemplateQuery`/`ListCommunicationTemplatesQuery`/`PreviewCommunicationTemplateQuery`, con sus handlers. `CreateCommunicationTemplateHandler` verifica duplicados por código+idioma (`CommunicationTemplateAlreadyExists`, 409). `PreviewCommunicationTemplateHandler` busca la plantilla y delega en `render()`, propagando `MissingTemplateVariable` si corresponde — no persiste nada.
+- **Autorización**: nuevos permisos `communication_templates.manage`/`communication_templates.view`. `communication_templates.manage`: SuperAdmin e InstitutionalAdmin. `communication_templates.view`: SuperAdmin, InstitutionalAdmin y **Teacher** — sin `Student` (a diferencia de `achievements.view`/`badges.view`/`challenges.view`, esta es una herramienta interna administrativa/docente, mismo criterio que `road_passports.view`/`certifications.view`/`simulators.view`).
+- **API HTTP**: `/api/v1/notification/templates` — `POST`/`PUT {id}`/`POST {id}/retire` bajo `communication_templates.manage`; `GET`/`GET {id}`/`POST {id}/preview` bajo `communication_templates.view` (la vista previa es de solo lectura, no requiere el permiso de gestión).
+- **Pruebas**: 42 tests nuevos repartidos en dominio (`CommunicationTemplate` — incluyendo el renderizado, la variable faltante y el placeholder no declarado; `CommunicationTemplateCode`), persistencia (repositorio Eloquent, incluyendo la unicidad por código+idioma), aplicación (handlers con repositorio en memoria) y feature (API HTTP completa, incluyendo el rechazo de `Student` al listar el catálogo).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `99 passed (248 assertions)`.
+- Suite completa de Authorization ✅ — `53 passed (171 assertions)`, confirmando los permisos nuevos.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=notification` ✅ — 14 rutas registradas (las 8 previas de ENG-056/057 + 6 de plantillas).
+
+**Estado:** Finalizado. Con esto cierra por completo la **Fase 11 — Comunicación y notificaciones** (ENG-056 a ENG-058).

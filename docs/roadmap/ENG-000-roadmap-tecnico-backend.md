@@ -1072,7 +1072,9 @@ Historial de consentimientos versionado por política legal.
 Gestión administrativa de las preferencias de otro usuario.
 ENG-058 — Plantillas de comunicación
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): tercera y última historia de la Fase 11, extiende `Modules\Notification` con un tercer agregado, `CommunicationTemplate` — un catálogo versionado de plantillas de contenido, independiente del envío de notificaciones (ENG-056/057): `SendNotificationCommand` no se modificó para usar plantillas. Versionado simple (campo `version` que se incrementa al editar, sin snapshots históricos, mismo criterio que `Badge`). Variables con sintaxis `{{variable}}` sustituidas por `str_replace`, declaradas como una lista cerrada por plantilla — renderizar sin proveer todas las declaradas lanza `MissingTemplateVariable` (422); placeholders no declarados quedan como texto literal. Idiomas modelados como una fila por código+idioma, cada una con su propio ciclo de versión (único por código+idioma, no globalmente único). Marca institucional sin mecanismo nuevo — convención de variables reservadas (`{{institution_name}}`, etc.) que el llamador provee al renderizar. Vista previa (`POST /templates/{id}/preview`) bajo `communication_templates.view`, no requiere el permiso de gestión. `communication_templates.view` no se otorga a `Student` (herramienta interna administrativa/docente, mismo criterio que `road_passports.view`/`certifications.view`/`simulators.view`). Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-plantillas-comunicacion-eng058-design.md`.
 
 Incluye:
 
@@ -1081,6 +1083,15 @@ Variables.
 Idiomas.
 Marca institucional.
 Vista previa.
+
+Diferido:
+
+Integración con `SendNotificationCommand` (uso de una plantilla al enviar una notificación real).
+Plantillas específicas por organización con resolución en cascada.
+Motor de plantillas real (condicionales, bucles, herencia).
+Historial completo de versiones anteriores.
+
+Con esto cierra por completo la **Fase 11 — Comunicación y notificaciones** (ENG-056 a ENG-058).
 18. Fase 12 — Administración y operación
 ENG-059 — Panel administrativo API
 
@@ -1564,3 +1575,4 @@ Versión	Fecha	Descripción
 1.32.0	2026-08-26	Cierre de ENG-054 (Retos y misiones) — última historia de la Fase 10: agregado `Challenge` (retos individuales/grupales y misiones educativas unificados bajo un enum cerrado `ChallengeType`, sin concepto de equipo/grupo propio) y entidad `ChallengeParticipation` con transición propia `Joined`→`Completed` (a diferencia de `UserAchievement`/`UserBadge`, no es un registro de solo-append inmutable); las fechas de vigencia restringen funcionalmente la unión (`Challenge::isWithinWindow()`); recompensa en texto libre sin vincularse a un logro/insignia real; todo el registro (unión y finalización) es manual vía `challenges.manage`, sin autoservicio; CQRS completo y API HTTP en `/api/v1/gamification/challenges` con `challenges.view` extendido a `Student` y autoservicio de consulta en `/challenges/me`; concepto de equipo/grupo, autoservicio de unión, otorgamiento automático de logros/insignias y consulta de participaciones de otro usuario diferidos explícitamente (IMP-054 en ENG-LOG.md). Con esto cierra por completo la Fase 10 — Gamificación (ENG-051 a ENG-054)
 1.33.0	2026-08-26	Cierre de ENG-056 (Motor de notificaciones), primera historia de la Fase 11 (Comunicación y notificaciones): nuevo módulo `Modules\Notification` con el agregado `Notification` (canal `email`/`web`/`mobile`/`internal_message` como metadato, categoría en texto libre, transición propia `unread`→`read`); solo registro y seguimiento, sin integración real de entrega por canal (SMTP, proveedor push) ni disparo automático desde otros módulos; envío manual vía `notifications.manage`, autoservicio de consulta y de marcado como leída con verificación de pertenencia (`NotificationNotFound` anti-fuga, mismo criterio que `RoadPassport`/`SimulationSession`); CQRS completo y API HTTP en `/api/v1/notification/notifications`, sin permiso `.view` (autoservicio únicamente); entrega real, disparo automático, estado de entrega granular y catálogo cerrado de categorías diferidos explícitamente (IMP-056 en ENG-LOG.md)
 1.34.0	2026-08-26	Cierre de ENG-057 (Preferencias de notificación), segunda historia de la Fase 11: agregado `NotificationPreference` en `Modules\Notification` (registro de configuración por usuario, no catálogo ni ledger) con `allowedChannels`/`mutedCategories` (todo permitido por defecto, silenciamiento explícito), `frequency` y horario de silencio almacenados sin aplicarse todavía, y consentimiento booleano simple otorgado por defecto; `SendNotificationHandler` ahora consulta la preferencia del destinatario y descarta silenciosamente el envío si no lo permite (`handle()` retorna `null`, la API responde `200 OK` con `data: null`); gestión 100% autoservicio sin permiso nuevo; aplicación real de frecuencia/horario de silencio, catálogo cerrado de categorías y versionado legal de consentimientos diferidos explícitamente (IMP-057 en ENG-LOG.md)
+1.35.0	2026-08-26	Cierre de ENG-058 (Plantillas de comunicación) — última historia de la Fase 11: agregado `CommunicationTemplate` en `Modules\Notification`, independiente del envío de notificaciones (ENG-056/057 no se modificaron); versionado simple sin snapshots (mismo criterio que `Badge`); variables `{{variable}}` sustituidas por `str_replace`, declaradas como lista cerrada (`MissingTemplateVariable`, 422, si falta alguna al renderizar); idiomas modelados como fila por código+idioma, cada una versionada por separado; marca institucional como convención de variables reservadas, sin mecanismo nuevo; vista previa (`POST /templates/{id}/preview`) bajo `communication_templates.view`; `communication_templates.view` sin acceso de `Student` (herramienta administrativa/docente); integración con el envío, plantillas por organización, motor de plantillas real e historial de versiones diferidos explícitamente (IMP-058 en ENG-LOG.md). Con esto cierra por completo la Fase 11 — Comunicación y notificaciones (ENG-056 a ENG-058)
