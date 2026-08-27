@@ -20,8 +20,10 @@ use Modules\Notification\Application\UseCases\MarkNotificationAsReadHandler;
 use Modules\Notification\Application\UseCases\RevokeNotificationConsentHandler;
 use Modules\Notification\Application\UseCases\SendNotificationHandler;
 use Modules\Notification\Application\UseCases\UpdateNotificationPreferenceHandler;
+use Modules\Notification\Domain\Repositories\CommunicationTemplateRepository;
 use Modules\Notification\Domain\Repositories\NotificationPreferenceRepository;
 use Modules\Notification\Domain\Repositories\NotificationRepository;
+use Modules\Notification\Infrastructure\Persistence\Eloquent\Repositories\EloquentCommunicationTemplateRepository;
 use Modules\Notification\Infrastructure\Persistence\Eloquent\Repositories\EloquentNotificationPreferenceRepository;
 use Modules\Notification\Infrastructure\Persistence\Eloquent\Repositories\EloquentNotificationRepository;
 
@@ -31,6 +33,7 @@ final class NotificationServiceProvider extends ServiceProvider
     {
         $this->app->bind(NotificationRepository::class, EloquentNotificationRepository::class);
         $this->app->bind(NotificationPreferenceRepository::class, EloquentNotificationPreferenceRepository::class);
+        $this->app->bind(CommunicationTemplateRepository::class, EloquentCommunicationTemplateRepository::class);
     }
 
     public function boot(MessageHandlerRegistry $registry): void
