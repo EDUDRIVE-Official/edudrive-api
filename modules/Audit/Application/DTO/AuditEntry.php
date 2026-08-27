@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Modules\Audit\Application\DTO;
 
+use DateTimeImmutable;
+
 final readonly class AuditEntry
 {
     /**
@@ -15,5 +17,7 @@ final readonly class AuditEntry
         public ?string $entity = null,
         public ?string $entityId = null,
         public array $metadata = [],
+        public ?string $id = null,
+        public ?DateTimeImmutable $occurredAt = null,
     ) {}
 }

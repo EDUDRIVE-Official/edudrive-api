@@ -9,4 +9,7 @@ use Modules\Audit\Application\DTO\AuditEntry;
 interface AuditRepository
 {
     public function save(AuditEntry $entry): void;
+
+    /** @return list<AuditEntry> */
+    public function all(): array;
 }

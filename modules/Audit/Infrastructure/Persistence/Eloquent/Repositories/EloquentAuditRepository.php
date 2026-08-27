@@ -22,4 +22,24 @@ final class EloquentAuditRepository implements AuditRepository
             'occurred_at' => CarbonImmutable::now(),
         ]);
     }
+
+    /** @return list<AuditEntry> */
+    public function all(): array
+    {
+        return array_values(
+            AuditLogModel::query()
+                ->orderByDesc('occurred_at')
+                ->get()
+                ->map(fn (AuditLogModel $model): AuditEntry => new AuditEntry(
+                    action: $model->action,
+                    userId: $model->user_id,
+                    entity: $model->entity,
+                    entityId: $model->entity_id,
+                    metadata: $model->metadata ?? [],
+                    id: $model->id,
+                    occurredAt: $model->occurred_at->toDateTimeImmutable(),
+                ))
+                ->all(),
+        );
+    }
 }
