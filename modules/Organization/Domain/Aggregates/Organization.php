@@ -59,6 +59,11 @@ final class Organization
         $this->campuses[] = $campus;
     }
 
+    public function rename(OrganizationName $name): void
+    {
+        $this->name = $name;
+    }
+
     public function id(): OrganizationId
     {
         return $this->id;

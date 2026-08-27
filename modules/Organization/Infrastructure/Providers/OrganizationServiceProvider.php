@@ -8,10 +8,14 @@ use Illuminate\Support\ServiceProvider;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
 use Modules\Organization\Application\Commands\AddCampusCommand;
 use Modules\Organization\Application\Commands\CreateOrganizationCommand;
+use Modules\Organization\Application\Commands\UpdateOrganizationCommand;
+use Modules\Organization\Application\Queries\GetOrganizationQuery;
 use Modules\Organization\Application\Queries\ListOrganizationsQuery;
 use Modules\Organization\Application\UseCases\AddCampusHandler;
 use Modules\Organization\Application\UseCases\CreateOrganizationHandler;
+use Modules\Organization\Application\UseCases\GetOrganizationHandler;
 use Modules\Organization\Application\UseCases\ListOrganizationsHandler;
+use Modules\Organization\Application\UseCases\UpdateOrganizationHandler;
 use Modules\Organization\Domain\Repositories\OrganizationRepository;
 use Modules\Organization\Infrastructure\Persistence\Eloquent\Repositories\EloquentOrganizationRepository;
 
@@ -41,6 +45,16 @@ final class OrganizationServiceProvider extends ServiceProvider
         $registry->register(
             ListOrganizationsQuery::class,
             ListOrganizationsHandler::class,
+        );
+
+        $registry->register(
+            GetOrganizationQuery::class,
+            GetOrganizationHandler::class,
+        );
+
+        $registry->register(
+            UpdateOrganizationCommand::class,
+            UpdateOrganizationHandler::class,
         );
 
         $this->loadRoutesFrom(

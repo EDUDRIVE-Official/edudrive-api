@@ -9,12 +9,15 @@ use Modules\Foundation\Application\Bus\CommandBus;
 use Modules\Foundation\Application\Bus\QueryBus;
 use Modules\Organization\Application\Commands\AddCampusCommand;
 use Modules\Organization\Application\Commands\CreateOrganizationCommand;
+use Modules\Organization\Application\Commands\UpdateOrganizationCommand;
+use Modules\Organization\Application\Queries\GetOrganizationQuery;
 use Modules\Organization\Application\Queries\ListOrganizationsQuery;
 use Modules\Organization\Application\Responses\AddCampusResponse;
 use Modules\Organization\Application\Responses\CreateOrganizationResponse;
 use Modules\Organization\Application\Responses\OrganizationListItemResponse;
 use Modules\Organization\Presentation\Http\Requests\AddCampusRequest;
 use Modules\Organization\Presentation\Http\Requests\CreateOrganizationRequest;
+use Modules\Organization\Presentation\Http\Requests\UpdateOrganizationRequest;
 use Symfony\Component\HttpFoundation\Response;
 
 final class OrganizationController
@@ -35,6 +38,38 @@ final class OrganizationController
         );
 
         return response()->json(['data' => $data]);
+    }
+
+    public function show(
+        string $organizationId,
+        QueryBus $queryBus,
+    ): JsonResponse {
+        $result = $queryBus->ask(
+            new GetOrganizationQuery(organizationId: $organizationId),
+        );
+
+        assert($result instanceof OrganizationListItemResponse);
+
+        return response()->json(['data' => $result->toArray()]);
+    }
+
+    public function update(
+        string $organizationId,
+        UpdateOrganizationRequest $request,
+        CommandBus $commandBus,
+    ): JsonResponse {
+        $validated = $request->validated();
+
+        $result = $commandBus->dispatch(
+            new UpdateOrganizationCommand(
+                organizationId: $organizationId,
+                name: (string) $validated['name'],
+            ),
+        );
+
+        assert($result instanceof OrganizationListItemResponse);
+
+        return response()->json(['data' => $result->toArray()]);
     }
 
     public function store(

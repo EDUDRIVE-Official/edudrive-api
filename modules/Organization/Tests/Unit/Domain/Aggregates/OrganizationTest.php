@@ -37,3 +37,15 @@ it('permite agregar sedes a una organización', function (): void {
     expect($organization->campuses())->toHaveCount(1)
         ->and($organization->campuses()[0]->name())->toBe('Sede Cabo Velas');
 });
+
+it('permite renombrar una organización', function (): void {
+    $organization = Organization::create(
+        id: OrganizationId::fromString('01981a64-8300-7b1d-b442-764ea7f915c0'),
+        name: OrganizationName::fromString('Escuela de Manejo EDUDRIVE'),
+        type: OrganizationType::DrivingSchool,
+    );
+
+    $organization->rename(OrganizationName::fromString('Escuela de Manejo Costa Rica'));
+
+    expect($organization->name()->value())->toBe('Escuela de Manejo Costa Rica');
+});
