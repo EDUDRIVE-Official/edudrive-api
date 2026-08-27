@@ -259,6 +259,17 @@ it('otorga manage, view de usuarios y view de reportes al superadministrador y a
         ->and(RolePermissions::grants(Role::Student, Permission::ViewReports))->toBeFalse();
 });
 
+it('otorga manage y view de archivos ajenos al superadministrador y al administrador institucional, y a nadie mas', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageFiles))->toBeTrue()
+        ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewFiles))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageFiles))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewFiles))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageFiles))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ViewFiles))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageFiles))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ViewFiles))->toBeFalse();
+});
+
 it('otorga permisos de configuracion y operacion del sistema unicamente al superadministrador', function (): void {
     expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageSystemSettings))->toBeTrue()
         ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewSystemSettings))->toBeTrue()

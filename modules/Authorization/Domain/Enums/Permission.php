@@ -46,4 +46,6 @@ enum Permission: string
     case ManageSystemSettings = 'system_settings.manage';
     case ViewSystemSettings = 'system_settings.view';
     case ViewSystemOperations = 'system_operations.view';
+    case ManageFiles = 'files.manage';
+    case ViewFiles = 'files.view';
 }
