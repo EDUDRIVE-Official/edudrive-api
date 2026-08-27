@@ -12,7 +12,9 @@ use Modules\Notification\Application\Queries\GetMyNotificationsQuery;
 use Modules\Notification\Application\UseCases\GetMyNotificationsHandler;
 use Modules\Notification\Application\UseCases\MarkNotificationAsReadHandler;
 use Modules\Notification\Application\UseCases\SendNotificationHandler;
+use Modules\Notification\Domain\Repositories\NotificationPreferenceRepository;
 use Modules\Notification\Domain\Repositories\NotificationRepository;
+use Modules\Notification\Infrastructure\Persistence\Eloquent\Repositories\EloquentNotificationPreferenceRepository;
 use Modules\Notification\Infrastructure\Persistence\Eloquent\Repositories\EloquentNotificationRepository;
 
 final class NotificationServiceProvider extends ServiceProvider
@@ -20,6 +22,7 @@ final class NotificationServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(NotificationRepository::class, EloquentNotificationRepository::class);
+        $this->app->bind(NotificationPreferenceRepository::class, EloquentNotificationPreferenceRepository::class);
     }
 
     public function boot(MessageHandlerRegistry $registry): void
