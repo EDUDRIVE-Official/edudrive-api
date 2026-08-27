@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use Modules\Identity\Presentation\Http\Controllers\ActivateUserController;
 use Modules\Identity\Presentation\Http\Controllers\AuthController;
+use Modules\Identity\Presentation\Http\Controllers\BulkImportUsersController;
 use Modules\Identity\Presentation\Http\Controllers\DeactivateUserController;
 use Modules\Identity\Presentation\Http\Controllers\ListUsersController;
 use Modules\Identity\Presentation\Http\Controllers\LoginController;
@@ -62,5 +63,8 @@ Route::middleware(['api', 'auth:sanctum'])
             Route::post('/{userId}/deactivate', DeactivateUserController::class)
                 ->whereUuid('userId')
                 ->name('api.v1.users.deactivate');
+
+            Route::post('/import', BulkImportUsersController::class)
+                ->name('api.v1.users.import');
         });
     });
