@@ -1051,7 +1051,9 @@ Estado de entrega granular (pending/sent/delivered/failed) y reintentos.
 Catálogo cerrado de categorías (corresponde a ENG-057).
 ENG-057 — Preferencias de notificación
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-26): segunda historia de la Fase 11, extiende `Modules\Notification` con un segundo agregado, `NotificationPreference` — un registro de configuración por usuario (no un catálogo ni un ledger de solo-append). Todo permitido por defecto con silenciamiento explícito: `allowedChannels` (subconjunto del enum cerrado, los cuatro por defecto) y `mutedCategories` (texto libre, vacío por defecto). `SendNotificationHandler` (ENG-056) ahora consulta la preferencia del destinatario antes de registrar la notificación — si el canal, la categoría o el consentimiento no lo permiten, la notificación se descarta silenciosamente (`handle()` retorna `null`, la API responde `200 OK` con `data: null` en vez de `201 Created`). Frecuencia (`immediate`/`daily`/`weekly`) y horario de silencio (`quietHoursStart`/`quietHoursEnd`, formato `HH:MM`) se almacenan como configuración pero no se aplican todavía — requieren un motor de programación/cola que no existe aún. Consentimiento como booleano simple `consentGiven`, otorgado por defecto (notificaciones operativas/educativas, no de marketing), con `consentUpdatedAt` registrando el último cambio explícito. Gestión 100% autoservicio (`auth:sanctum`, sin permiso nuevo) — un usuario solo administra sus propias preferencias. Detalle completo y alcance acordado explícitamente con el usuario en `docs/plans/2026-08-26-preferencias-notificacion-eng057-design.md`.
 
 Incluye:
 
@@ -1060,6 +1062,14 @@ Categorías.
 Frecuencia.
 Horarios.
 Consentimientos.
+
+Diferido:
+
+Aplicación real de la frecuencia (agregación en lotes/digest).
+Aplicación real del horario de silencio (bloqueo o diferimiento del envío).
+Catálogo cerrado de categorías silenciables.
+Historial de consentimientos versionado por política legal.
+Gestión administrativa de las preferencias de otro usuario.
 ENG-058 — Plantillas de comunicación
 
 Estado: Pendiente
@@ -1553,3 +1563,4 @@ Versión	Fecha	Descripción
 1.31.0	2026-08-26	Cierre de ENG-053 (Experiencia y niveles), tercera historia de la Fase 10: ledger de solo-append `ExperienceEntry` en `Modules\Gamification` (puntos estrictamente positivos, competencia opcional en texto libre, motivo); nivel general y nivel por competencia derivados por el servicio de dominio puro `ExperienceLevelCalculator` en cada consulta (`nivel = floor(xp_total / 100) + 1`, mismo patrón que `PracticalResultCalculator`/`DecisionEngineCalculator`), sin persistir el nivel; registro manual vía `experience.manage` (sin autoservicio de registro, ledger inmutable) y autoservicio de consulta en `GET /experience/me` (mismo criterio que `/achievements/me`/`/badges/me`); integración automática con otros módulos, tabla de umbrales configurable y consulta del resumen de otro usuario diferidos explícitamente (IMP-053 en ENG-LOG.md)
 1.32.0	2026-08-26	Cierre de ENG-054 (Retos y misiones) — última historia de la Fase 10: agregado `Challenge` (retos individuales/grupales y misiones educativas unificados bajo un enum cerrado `ChallengeType`, sin concepto de equipo/grupo propio) y entidad `ChallengeParticipation` con transición propia `Joined`→`Completed` (a diferencia de `UserAchievement`/`UserBadge`, no es un registro de solo-append inmutable); las fechas de vigencia restringen funcionalmente la unión (`Challenge::isWithinWindow()`); recompensa en texto libre sin vincularse a un logro/insignia real; todo el registro (unión y finalización) es manual vía `challenges.manage`, sin autoservicio; CQRS completo y API HTTP en `/api/v1/gamification/challenges` con `challenges.view` extendido a `Student` y autoservicio de consulta en `/challenges/me`; concepto de equipo/grupo, autoservicio de unión, otorgamiento automático de logros/insignias y consulta de participaciones de otro usuario diferidos explícitamente (IMP-054 en ENG-LOG.md). Con esto cierra por completo la Fase 10 — Gamificación (ENG-051 a ENG-054)
 1.33.0	2026-08-26	Cierre de ENG-056 (Motor de notificaciones), primera historia de la Fase 11 (Comunicación y notificaciones): nuevo módulo `Modules\Notification` con el agregado `Notification` (canal `email`/`web`/`mobile`/`internal_message` como metadato, categoría en texto libre, transición propia `unread`→`read`); solo registro y seguimiento, sin integración real de entrega por canal (SMTP, proveedor push) ni disparo automático desde otros módulos; envío manual vía `notifications.manage`, autoservicio de consulta y de marcado como leída con verificación de pertenencia (`NotificationNotFound` anti-fuga, mismo criterio que `RoadPassport`/`SimulationSession`); CQRS completo y API HTTP en `/api/v1/notification/notifications`, sin permiso `.view` (autoservicio únicamente); entrega real, disparo automático, estado de entrega granular y catálogo cerrado de categorías diferidos explícitamente (IMP-056 en ENG-LOG.md)
+1.34.0	2026-08-26	Cierre de ENG-057 (Preferencias de notificación), segunda historia de la Fase 11: agregado `NotificationPreference` en `Modules\Notification` (registro de configuración por usuario, no catálogo ni ledger) con `allowedChannels`/`mutedCategories` (todo permitido por defecto, silenciamiento explícito), `frequency` y horario de silencio almacenados sin aplicarse todavía, y consentimiento booleano simple otorgado por defecto; `SendNotificationHandler` ahora consulta la preferencia del destinatario y descarta silenciosamente el envío si no lo permite (`handle()` retorna `null`, la API responde `200 OK` con `data: null`); gestión 100% autoservicio sin permiso nuevo; aplicación real de frecuencia/horario de silencio, catálogo cerrado de categorías y versionado legal de consentimientos diferidos explícitamente (IMP-057 en ENG-LOG.md)

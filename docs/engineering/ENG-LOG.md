@@ -1783,3 +1783,25 @@ Primera historia de la Fase 11 — Comunicación y notificaciones. Nuevo módulo
 - `php artisan route:list --path=notification` ✅ — 4 rutas registradas.
 
 **Estado:** Finalizado.
+
+## 2026-08-26 — IMP-057 (Cierre de ENG-057 — Preferencias de notificación)
+
+### Alcance acordado con el usuario
+
+Segunda historia de la Fase 11, extiende `Modules\Notification` con `NotificationPreference`. Se aplica activamente: `SendNotificationHandler` consulta la preferencia del destinatario antes de registrar la notificación y la descarta silenciosamente si el canal, la categoría o el consentimiento no lo permiten. Todo permitido por defecto con silenciamiento explícito (`allowedChannels`/`mutedCategories`), en vez de un modelo allowlist más restrictivo. Frecuencia y horario de silencio solo se almacenan como configuración, sin aplicarse — requieren un motor de programación/cola que no existe aún. Consentimiento como booleano simple, otorgado por defecto porque las notificaciones son operativas/educativas, no de marketing. Diferido explícitamente: aplicación real de frecuencia/horario de silencio, catálogo cerrado de categorías, historial de consentimientos versionado, gestión administrativa de las preferencias de otro usuario. Detalle en `docs/plans/2026-08-26-preferencias-notificacion-eng057-design.md`.
+
+### Completado
+
+- **Dominio**: `NotificationFrequency` (`Immediate`/`Daily`/`Weekly`). Agregado `NotificationPreference` — registro de configuración por usuario, no catálogo ni ledger: `default($userId)` (todo permitido, `immediate`, sin horario de silencio, consentimiento otorgado, sin fecha), `restore()`, `update()` (valida que el horario de silencio sea ambos `null` o ambos `HH:MM` válidos vía `guardQuietHours()`, sin restringir el orden porque puede cruzar la medianoche), `giveConsent(DateTimeImmutable $at)`/`revokeConsent(DateTimeImmutable $at)`, y el método de consulta `allows(NotificationChannel $channel, string $category): bool` que combina consentimiento + canal permitido + categoría no silenciada.
+- **Persistencia**: tabla `notification_preferences` (clave primaria `user_id`, FK a `users`; `allowed_channels`/`muted_categories` como columnas `json`). `NotificationPreferenceRepository` con su implementación Eloquent (`updateOrCreate`, `findByUserId()`).
+- **CQRS**: `UpdateNotificationPreferenceCommand`/`UpdateNotificationPreferenceHandler`, `GiveNotificationConsentCommand`/`GiveNotificationConsentHandler`, `RevokeNotificationConsentCommand`/`RevokeNotificationConsentHandler`, `GetMyNotificationPreferenceQuery`/`GetMyNotificationPreferenceHandler` — todos usan `NotificationPreference::default($userId)` como valor de respaldo cuando el usuario no tiene un registro previo, en vez de exigir inicialización explícita. **Cambio en `SendNotificationHandler` (ENG-056)**: ahora recibe también `NotificationPreferenceRepository`, consulta `preference->allows()` antes de crear la `Notification`, y su firma cambia de `handle(): NotificationResponse` a `handle(): ?NotificationResponse` (`null` = descartada por preferencia, no es un error).
+- **API HTTP**: `GET /api/v1/notification/preferences/me`, `PUT /api/v1/notification/preferences/me`, `POST /api/v1/notification/preferences/me/consent`, `DELETE /api/v1/notification/preferences/me/consent` — las cuatro bajo `auth:sanctum` sin permiso nuevo (autoservicio). `NotificationController::store` ajustado: responde `200 OK` con `{"data": null}` cuando el envío se descarta por preferencia, `201 Created` con la notificación cuando se registra.
+- **Pruebas**: 27 tests nuevos/actualizados repartidos en dominio (`NotificationPreference`, incluyendo el horario de silencio y las transiciones de consentimiento), persistencia (repositorio Eloquent), aplicación (handlers de preferencia con repositorio en memoria, y `SendNotificationHandler` actualizado con el caso de descarte por canal no permitido) y feature (API HTTP completa, incluyendo la integración real: actualizar la preferencia de un usuario y confirmar que el envío subsecuente se descarta).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `50 passed (141 assertions)`.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=notification` ✅ — 8 rutas registradas (las 4 previas de ENG-056 + 4 de preferencias).
+
+**Estado:** Finalizado.
