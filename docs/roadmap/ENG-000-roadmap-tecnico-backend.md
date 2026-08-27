@@ -1143,17 +1143,27 @@ Consulta administrativa de todos los archivos de todos los usuarios.
 Metadatos adicionales definidos por el usuario.
 ENG-061 — Importaciones masivas
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-27): a diferencia de ENG-059/ENG-060, no introduce un módulo nuevo: extiende `Modules\Identity` (usuarios/estudiantes) y `Modules\Academic` (cursos, preguntas) con un mecanismo de importación masiva por archivo CSV, mismo criterio arquitectónico que `CreateBulkEnrollmentsHandler` ya existente en `Modules\Academic` (el handler de lote llama directamente al handler de creación individual por cada fila y acumula un reporte `total`/`created`/`failed`/`results[]`, sin bus de mensajería adicional ni cola de trabajos). Investigación previa: "Estudiante" no es un concepto propio (es un `User` con el rol `Student` asignado); "Grupo" no existe en absoluto en el backend (ni agregado, ni tabla, ni concepto equivalente); Cursos y Preguntas ya tenían creación individual madura; no había ninguna librería CSV/Excel instalada. Alcance acordado: Grupos diferido por completo (ninguna base sobre la cual importar); Usuarios y Estudiantes unificados en un solo mecanismo (columna `role` opcional, `Student` por defecto); validación previa integrada en la misma operación (sin modo "solo validar" separado); procesamiento síncrono en la misma petición HTTP, sin colas. Detalle completo en `docs/plans/2026-08-27-importaciones-masivas-eng061-design.md`.
 
 Incluye:
 
 Usuarios.
 Estudiantes.
-Grupos.
 Cursos.
 Preguntas.
 Validación previa.
 Reporte de errores.
+
+Diferido:
+
+Grupos (no existe ningún concepto base; historia propia futura).
+Soporte Excel/XLSX (solo CSV).
+Procesamiento asíncrono / cola de trabajos / archivos grandes (miles de filas).
+Modo "solo validar sin crear" como paso separado.
+Persistencia del archivo de origen subido.
+Plantillas de importación descargables, mapeo de columnas configurable.
 ENG-062 — Exportaciones
 
 Estado: Pendiente
@@ -1600,3 +1610,4 @@ Versión	Fecha	Descripción
 1.35.0	2026-08-26	Cierre de ENG-058 (Plantillas de comunicación) — última historia de la Fase 11: agregado `CommunicationTemplate` en `Modules\Notification`, independiente del envío de notificaciones (ENG-056/057 no se modificaron); versionado simple sin snapshots (mismo criterio que `Badge`); variables `{{variable}}` sustituidas por `str_replace`, declaradas como lista cerrada (`MissingTemplateVariable`, 422, si falta alguna al renderizar); idiomas modelados como fila por código+idioma, cada una versionada por separado; marca institucional como convención de variables reservadas, sin mecanismo nuevo; vista previa (`POST /templates/{id}/preview`) bajo `communication_templates.view`; `communication_templates.view` sin acceso de `Student` (herramienta administrativa/docente); integración con el envío, plantillas por organización, motor de plantillas real e historial de versiones diferidos explícitamente (IMP-058 en ENG-LOG.md). Con esto cierra por completo la Fase 11 — Comunicación y notificaciones (ENG-056 a ENG-058)
 1.36.0	2026-08-27	Cierre de ENG-059 (Panel administrativo API), primera historia de la Fase 12 (Administración y operación): Cursos/Evaluaciones reutilizados sin cambios (ya maduros en `Modules\Academic`); `Modules\Identity` gana listar/ver detalle/activar/desactivar usuarios (reutilizando `activate()`/`deactivate()` ya existentes); `Modules\Organization` gana ver detalle y actualizar (renombrar); nuevo módulo `Modules\Admin` con `SystemSetting` (clave-valor), un resumen agregado de conteos que lee directamente los modelos Eloquent de otros módulos (excepción documentada al aislamiento entre módulos, solo para este reporte de lectura), salud agregada (solo conectividad a base de datos) y lectura de auditoría (`Modules\Audit` extendido con `AuditRepository::all()`, antes solo tenía `save()`); permisos nuevos `users.manage`/`users.view`/`reports.view` (SuperAdmin + InstitutionalAdmin) y `system_settings.manage`/`system_settings.view`/`system_operations.view` (únicamente SuperAdmin, mismo criterio que `roles.manage`); reseteo de contraseña administrativo, acciones masivas, motor de reportes configurable y salud real por módulo diferidos explícitamente (IMP-059 en ENG-LOG.md)
 1.37.0	2026-08-27	Cierre de ENG-060 (Gestión de archivos), segunda historia de la Fase 12: nuevo módulo `Modules\FileStorage` (concepto de dominio propio, no una vista sobre `Modules\Admin`) con el agregado `StoredFile` (metadatos, estado de escaneo `pending`/`clean`/`infected` sin integración real con ningún motor antivirus); MinIO conectado de verdad vía `league/flysystem-aws-s3-v3` sobre el disco `s3` ya configurado (`S3FileStorage`), con `php artisan files:ensure-bucket` como paso de aprovisionamiento explícito e idempotente (verificado end-to-end contra el contenedor real); carga por el backend con límite de 20 MB por archivo, descarga vía URL temporal firmada (nunca reenviando bytes), cuota simple por usuario verificada antes de escribir en MinIO (lee `SystemSetting` `file_storage_quota_bytes` de `Modules\Admin`, con valor por defecto); eliminación real (no un estado "retirado", a diferencia de `Achievement`/`Badge`/`Challenge`) tanto en base de datos como en MinIO; patrón anti-fuga de pertenencia (`FileNotFound` uniforme) reutilizado para consulta/descarga/eliminación de un archivo ajeno; permisos nuevos `files.manage`/`files.view` (SuperAdmin + InstitutionalAdmin); integración real con un motor antivirus, carga directa con URL prefirmada, aplicación de política de bloqueo por estado de escaneo, cuotas por organización/rol y consulta administrativa de todos los archivos diferidos explícitamente (IMP-060 en ENG-LOG.md)
+1.38.0	2026-08-27	Cierre de ENG-061 (Importaciones masivas): sin módulo nuevo — extiende `Modules\Identity` (usuarios/estudiantes unificados en un solo mecanismo, columna `role` opcional con `Student` por defecto, transacción por fila para no dejar usuarios huérfanos sin rol) y `Modules\Academic` (cursos; preguntas, resolviendo `competency_code` a id y usando celdas JSON para `response`/`options`/`media`/`license_categories` dado que una fila CSV es intrínsecamente plana); cada importador reutiliza directamente el handler de creación individual por fila (mismo criterio que `CreateBulkEnrollmentsHandler` ya existente), acumulando un reporte `total`/`created`/`failed`/`results[]` con éxito parcial y `error_code` por fila (`league/csv` para el parseo, límite de 500 filas por archivo); Grupos diferido por completo (no existe ningún concepto base en el backend); procesamiento síncrono sin colas, sin modo "solo validar" separado, sin soporte Excel/XLSX (IMP-061 en ENG-LOG.md)
