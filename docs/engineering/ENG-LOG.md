@@ -1829,3 +1829,28 @@ Tercera y última historia de la Fase 11, extiende `Modules\Notification` con `C
 - `php artisan route:list --path=notification` ✅ — 14 rutas registradas (las 8 previas de ENG-056/057 + 6 de plantillas).
 
 **Estado:** Finalizado. Con esto cierra por completo la **Fase 11 — Comunicación y notificaciones** (ENG-056 a ENG-058).
+
+## 2026-08-27 — IMP-059 (Cierre de ENG-059 — Panel administrativo API)
+
+### Alcance acordado con el usuario
+
+Primera historia de la Fase 12 — Administración y operación. A diferencia de las historias anteriores, cubre siete áreas del roadmap con niveles de madurez muy distintos; antes de acordar el alcance se investigó el estado real del backend (agentes de exploración) para no proponer reconstruir lo que ya existía. Hallazgo: Cursos y Evaluaciones ya tenían CRUD completo y maduro en `Modules\Academic` (sin trabajo nuevo); Usuarios no tenía ninguna API administrativa; Organizaciones solo tenía listar y crear; Reportes, Configuración y Operación del sistema no existían (*greenfield*); Auditoría existía como servicio interno de escritura sin capa HTTP ni método de consulta. Alcance acordado: Usuarios — listar, ver detalle, activar/desactivar (sin reseteo de contraseña, acciones masivas ni impersonación); Organizaciones — agregar ver detalle y actualizar (renombrar); Reportes — un único endpoint de resumen agregado con conteos simples, sin motor configurable; Configuración — almacén clave-valor simple; Operación — salud agregada (solo conectividad a base de datos) y lectura de auditoría existente. Detalle en `docs/plans/2026-08-27-panel-administrativo-eng059-design.md`.
+
+### Completado
+
+- **Identity (Usuarios)**: `UserRepository::all()` nuevo (interfaz + Eloquent). `Application\Responses\UserResponse`. `ListUsersUseCase`/`GetUserUseCase` (nuevos). `DeactivateUserCommand`/`DeactivateUserResponse`/`DeactivateUserUseCase`, mismo patrón que `ActivateUserUseCase` ya existente — "suspender" se mapea a `User::deactivate()` (transición a `Inactive`), sin introducir un concepto nuevo de dominio. Controladores `ListUsersController`/`ShowUserController`/`DeactivateUserController`, mismo estilo invocable-por-acción que `ActivateUserController`. Nuevas rutas en `/api/v1/users` (`users.view`/`users.manage`); la ruta de activación de autoservicio existente (`/api/v1/auth/users/{userId}/activate`, sin permiso) se conserva intacta, y se agrega una segunda ruta administrativa reutilizando el mismo controlador bajo `permission:users.manage`.
+- **Organization**: `Organization::rename(OrganizationName): void` nuevo. `GetOrganizationQuery`/`GetOrganizationHandler` (reutiliza `OrganizationListItemResponse`) y `UpdateOrganizationCommand`/`UpdateOrganizationHandler`. Rutas `GET /{organizationId}` (mismo criterio que `index`, sin permiso adicional) y `PUT /{organizationId}` (`organizations.manage`, mismo permiso que `store`).
+- **Audit**: `AuditRepository::all(): list<AuditEntry>` nuevo (antes solo `save()`). `AuditEntry` ganó `?id`/`?occurredAt` opcionales para soportar la lectura (los escribe la base de datos, no el llamador). `EloquentAuditRepository::all()` ordena por `occurred_at` descendente.
+- **Nuevo módulo `Modules\Admin`** (bounded context de la Fase 12): agregado `SystemSetting` (`key`/`value`/`changedAt` — el campo se llama `changedAt`, no `updatedAt`, para evitar la colisión con la columna automática de Eloquent, mismo criterio que `Simulator::registeredAt()`); VO `SystemSettingKey` (regex `^[a-z][a-z0-9_]*$`). `SystemSummaryRepository`/`EloquentSystemSummaryRepository` — lee directamente `UserModel`/`EnrollmentModel`/`UserAchievementModel`/`CertificateModel`/`SimulationSessionModel` de otros módulos para producir conteos; documentado como excepción deliberada al aislamiento entre módulos, limitada a este reporte de solo lectura sin invariantes de dominio. `GetSystemHealthHandler` verifica conectividad a base de datos con `DB::select('SELECT 1')` envuelto en `try`/`catch`. `GetAuditLogsHandler` depende de `Modules\Audit\Application\Contracts\AuditRepository` (dependencia entre módulos documentada: "Operación del sistema" es una preocupación administrativa, no de auditoría en sí).
+- **Autorización**: permisos nuevos `users.manage`/`users.view`/`reports.view` (SuperAdmin + InstitutionalAdmin, mismo patrón que el resto de la sesión) y `system_settings.manage`/`system_settings.view`/`system_operations.view` (**únicamente SuperAdmin**, mismo criterio que `roles.manage` — configuración y operación global del sistema, no una preocupación por institución).
+- **API HTTP**: `/api/v1/users` (Identity), `/api/v1/organizations/{id}` show/update (Organization), y `/api/v1/admin/{settings,reports,operations}` (Admin, 7 rutas nuevas).
+- **Pruebas**: se corrigió además una regresión real detectada al correr la suite completa por primera vez esta sesión: `InMemoryVerificationUserRepository` (fake en `Modules\Certification\Tests\Unit\Application\VerifyCertificateHandlerTest.php`) no implementaba el nuevo método `UserRepository::all()`, causando un error fatal de clase abstracta — se corrigió agregando el método con el mismo patrón `throw new LogicException('No usado en esta prueba.')` que ya usaban los demás métodos no usados de ese fake.
+
+### Validaciones
+
+- Suite combinada de los cinco módulos tocados (`Identity`, `Organization`, `Authorization`, `Audit`, `Admin`) ✅ — `156 passed (425 assertions)`.
+- Suite de `Certification` tras corregir la regresión ✅ — `59 passed (129 assertions)`.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=admin` ✅ — 7 rutas registradas.
+
+**Estado:** Finalizado.
