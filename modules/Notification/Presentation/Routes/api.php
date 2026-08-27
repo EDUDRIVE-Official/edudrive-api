@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
+use Modules\Notification\Presentation\Http\Controllers\CommunicationTemplateController;
 use Modules\Notification\Presentation\Http\Controllers\NotificationController;
 use Modules\Notification\Presentation\Http\Controllers\NotificationPreferenceController;
 use Modules\Notification\Presentation\Http\Controllers\NotificationStatusController;
@@ -37,5 +38,31 @@ Route::prefix('api/v1/notification')
 
             Route::delete('/preferences/me/consent', [NotificationPreferenceController::class, 'revokeConsent'])
                 ->name('preferences.consent.revoke');
+
+            Route::middleware('permission:communication_templates.view')->group(function (): void {
+                Route::get('/templates', [CommunicationTemplateController::class, 'index'])
+                    ->name('templates.index');
+
+                Route::get('/templates/{templateId}', [CommunicationTemplateController::class, 'show'])
+                    ->whereUuid('templateId')
+                    ->name('templates.show');
+
+                Route::post('/templates/{templateId}/preview', [CommunicationTemplateController::class, 'preview'])
+                    ->whereUuid('templateId')
+                    ->name('templates.preview');
+            });
+
+            Route::middleware('permission:communication_templates.manage')->group(function (): void {
+                Route::post('/templates', [CommunicationTemplateController::class, 'store'])
+                    ->name('templates.store');
+
+                Route::put('/templates/{templateId}', [CommunicationTemplateController::class, 'update'])
+                    ->whereUuid('templateId')
+                    ->name('templates.update');
+
+                Route::post('/templates/{templateId}/retire', [CommunicationTemplateController::class, 'retire'])
+                    ->whereUuid('templateId')
+                    ->name('templates.retire');
+            });
         });
     });
