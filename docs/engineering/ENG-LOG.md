@@ -1758,3 +1758,28 @@ Cuarta y última historia de la Fase 10 — Gamificación. Retos individuales, g
 - `php artisan route:list --path=gamification` ✅ — 23 rutas registradas (las 16 previas de ENG-051/052/053 + 7 de retos).
 
 **Estado:** Finalizado. Con esto cierra por completo la **Fase 10 — Gamificación** (ENG-051 a ENG-054).
+
+## 2026-08-26 — IMP-056 (Cierre de ENG-056 — Motor de notificaciones)
+
+### Alcance acordado con el usuario
+
+Primera historia de la Fase 11 — Comunicación y notificaciones. Nuevo módulo `Modules\Notification`. Solo registro y seguimiento de la notificación — el canal es un metadato (`email`/`web`/`mobile`/`internal_message`); la entrega real por cada canal externo (SMTP, proveedor push) queda diferida como preocupación de infraestructura, mismo criterio que el catálogo real de vehículos/escenarios diferido en ENG-046. Envío manual vía `notifications.manage`, sin disparo automático desde otros módulos en esta historia. Seguimiento con estado de lectura simple `unread`/`read`, marcado en autoservicio por el propio destinatario. Cada notificación incluye una `category` en texto libre sin catálogo cerrado, pensada para ENG-057 (Preferencias de notificación). Diferido explícitamente: integración real de entrega, disparo automático desde eventos de otros módulos, estado de entrega granular con reintentos, catálogo cerrado de categorías, plantillas de comunicación (ENG-058). Detalle en `docs/plans/2026-08-26-motor-notificaciones-eng056-design.md`.
+
+### Completado
+
+- **Bootstrap**: módulo nuevo `Modules\Notification`, con `NotificationServiceProvider`, endpoint `/api/v1/notification/status` y registro en `bootstrap/providers.php`, mismo patrón de arranque que `Modules\Gamification` (ENG-051).
+- **Dominio**: `NotificationId` (mismo patrón que `AchievementId`); `NotificationChannel` (`Email`/`Web`/`Mobile`/`InternalMessage`); `NotificationStatus` (`Unread`/`Read`). Agregado `Notification` — no es un catálogo con grant separado como `Achievement`/`Badge`, es una entidad por notificación individual: `send()` estático (`status = Unread`), `markAsRead(DateTimeImmutable $at)` mutador con guarda de invariante (`InvalidNotificationTransition`, 422, si ya está `Read`).
+- **Persistencia**: tabla `notifications` (FK cascada a `users`, `channel`/`category`/`status` como columnas propias, `sent_at`/`read_at`). `NotificationRepository` con su implementación Eloquent (`updateOrCreate`, `findById()`, `allForUser()`).
+- **CQRS**: `SendNotificationCommand`/`SendNotificationHandler` (crea y guarda una `Notification` nueva). `MarkNotificationAsReadCommand`/`MarkNotificationAsReadHandler` — busca por id y **exige que `userId` coincida con el solicitante**; si no existe o no pertenece al solicitante, lanza `NotificationNotFound` uniformemente (patrón anti-fuga, mismo criterio que `RoadPassport`/`SimulationSession`). `GetMyNotificationsQuery`/`GetMyNotificationsHandler` (autoservicio, lista las notificaciones del usuario autenticado).
+- **Autorización**: un solo permiso nuevo, `notifications.manage` (SuperAdmin + InstitutionalAdmin). Sin `notifications.view` — no hay un catálogo administrable que listar, la consulta es autoservicio únicamente, mismo criterio que `experience.manage`.
+- **API HTTP**: `POST /api/v1/notification/notifications` bajo `notifications.manage`; `GET /api/v1/notification/notifications/me` y `POST /api/v1/notification/notifications/{notificationId}/read` bajo `auth:sanctum` sin permiso adicional (autoservicio, con verificación de pertenencia en el segundo).
+- **Pruebas**: 23 tests nuevos repartidos en bootstrap (endpoint de estado), dominio (`Notification`, incluyendo la transición `unread`→`read`), persistencia (repositorio Eloquent), aplicación (handlers con repositorio en memoria, incluyendo el rechazo anti-fuga), proveedor de servicios y feature (API HTTP completa, incluyendo el envío, la consulta y el marcado como leída propio vs. de otro usuario).
+
+### Validaciones
+
+- Suite completa del módulo ✅ — `23 passed (54 assertions)`.
+- Suite completa de Authorization ✅ — `51 passed (163 assertions)`, confirmando el permiso nuevo.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos de esta historia.
+- `php artisan route:list --path=notification` ✅ — 4 rutas registradas.
+
+**Estado:** Finalizado.
