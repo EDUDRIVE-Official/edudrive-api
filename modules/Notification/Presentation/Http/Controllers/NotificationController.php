@@ -28,7 +28,11 @@ final class NotificationController
             subject: (string) $data['subject'],
             body: (string) $data['body'],
         ));
-        assert($result instanceof NotificationResponse);
+        assert($result === null || $result instanceof NotificationResponse);
+
+        if ($result === null) {
+            return response()->json(['data' => null]);
+        }
 
         return response()->json(['data' => $result->toArray()], Response::HTTP_CREATED);
     }
