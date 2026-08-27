@@ -222,3 +222,10 @@ it('otorga permisos de retos al superadministrador', function (): void {
     expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageChallenges))->toBeTrue()
         ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewChallenges))->toBeTrue();
 });
+
+it('otorga el permiso de gestion de notificaciones al superadministrador y al administrador institucional, y a nadie mas', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageNotifications))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageNotifications))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageNotifications))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageNotifications))->toBeFalse();
+});

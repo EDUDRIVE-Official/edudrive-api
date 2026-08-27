@@ -37,4 +37,5 @@ enum Permission: string
     case ManageExperience = 'experience.manage';
     case ManageChallenges = 'challenges.manage';
     case ViewChallenges = 'challenges.view';
+    case ManageNotifications = 'notifications.manage';
 }

@@ -52,6 +52,7 @@ final class RolePermissions
                 Permission::ManageExperience,
                 Permission::ManageChallenges,
                 Permission::ViewChallenges,
+                Permission::ManageNotifications,
             ],
             Role::InstitutionalAdmin => [
                 Permission::ViewOrganizations,
@@ -78,6 +79,7 @@ final class RolePermissions
                 Permission::ManageExperience,
                 Permission::ManageChallenges,
                 Permission::ViewChallenges,
+                Permission::ManageNotifications,
             ],
             Role::Teacher => [
                 Permission::ViewOrganizations,
