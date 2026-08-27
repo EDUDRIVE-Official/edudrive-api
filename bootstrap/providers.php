@@ -8,6 +8,7 @@ use Modules\Admin\Infrastructure\Providers\AdminServiceProvider;
 use Modules\Audit\Infrastructure\Providers\AuditServiceProvider;
 use Modules\Authorization\Infrastructure\Providers\AuthorizationServiceProvider;
 use Modules\Certification\Infrastructure\Providers\CertificationServiceProvider;
+use Modules\FileStorage\Infrastructure\Providers\FileStorageServiceProvider;
 use Modules\Foundation\Providers\FoundationServiceProvider;
 use Modules\Gamification\Infrastructure\Providers\GamificationServiceProvider;
 use Modules\Identity\Providers\IdentityServiceProvider;
@@ -32,4 +33,5 @@ return [
     GamificationServiceProvider::class,
     NotificationServiceProvider::class,
     AdminServiceProvider::class,
+    FileStorageServiceProvider::class,
 ];
