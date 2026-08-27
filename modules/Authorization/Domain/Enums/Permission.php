@@ -38,4 +38,6 @@ enum Permission: string
     case ManageChallenges = 'challenges.manage';
     case ViewChallenges = 'challenges.view';
     case ManageNotifications = 'notifications.manage';
+    case ManageCommunicationTemplates = 'communication_templates.manage';
+    case ViewCommunicationTemplates = 'communication_templates.view';
 }

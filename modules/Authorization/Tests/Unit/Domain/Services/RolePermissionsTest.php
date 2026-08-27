@@ -229,3 +229,17 @@ it('otorga el permiso de gestion de notificaciones al superadministrador y al ad
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageNotifications))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageNotifications))->toBeFalse();
 });
+
+it('otorga manage y view de plantillas de comunicacion al administrador institucional, y view al docente pero no al estudiante', function (): void {
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageCommunicationTemplates))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewCommunicationTemplates))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageCommunicationTemplates))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ViewCommunicationTemplates))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageCommunicationTemplates))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ViewCommunicationTemplates))->toBeFalse();
+});
+
+it('otorga permisos de plantillas de comunicacion al superadministrador', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageCommunicationTemplates))->toBeTrue()
+        ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewCommunicationTemplates))->toBeTrue();
+});

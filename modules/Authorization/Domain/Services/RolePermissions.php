@@ -53,6 +53,8 @@ final class RolePermissions
                 Permission::ManageChallenges,
                 Permission::ViewChallenges,
                 Permission::ManageNotifications,
+                Permission::ManageCommunicationTemplates,
+                Permission::ViewCommunicationTemplates,
             ],
             Role::InstitutionalAdmin => [
                 Permission::ViewOrganizations,
@@ -80,6 +82,8 @@ final class RolePermissions
                 Permission::ManageChallenges,
                 Permission::ViewChallenges,
                 Permission::ManageNotifications,
+                Permission::ManageCommunicationTemplates,
+                Permission::ViewCommunicationTemplates,
             ],
             Role::Teacher => [
                 Permission::ViewOrganizations,
@@ -97,6 +101,7 @@ final class RolePermissions
                 Permission::ViewAchievements,
                 Permission::ViewBadges,
                 Permission::ViewChallenges,
+                Permission::ViewCommunicationTemplates,
             ],
             Role::Student => [
                 Permission::ViewOrganizations,
