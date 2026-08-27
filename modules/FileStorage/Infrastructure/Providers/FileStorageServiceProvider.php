@@ -5,11 +5,24 @@ declare(strict_types=1);
 namespace Modules\FileStorage\Infrastructure\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Modules\FileStorage\Application\Commands\DeleteFileCommand;
+use Modules\FileStorage\Application\Commands\SetFileScanStatusCommand;
+use Modules\FileStorage\Application\Commands\UploadFileCommand;
 use Modules\FileStorage\Application\Contracts\FileStorage;
+use Modules\FileStorage\Application\Queries\GetFileDownloadUrlQuery;
+use Modules\FileStorage\Application\Queries\GetFileQuery;
+use Modules\FileStorage\Application\Queries\GetMyFilesQuery;
+use Modules\FileStorage\Application\UseCases\DeleteFileHandler;
+use Modules\FileStorage\Application\UseCases\GetFileDownloadUrlHandler;
+use Modules\FileStorage\Application\UseCases\GetFileHandler;
+use Modules\FileStorage\Application\UseCases\GetMyFilesHandler;
+use Modules\FileStorage\Application\UseCases\SetFileScanStatusHandler;
+use Modules\FileStorage\Application\UseCases\UploadFileHandler;
 use Modules\FileStorage\Domain\Repositories\FileRepository;
 use Modules\FileStorage\Infrastructure\Console\Commands\EnsureFileBucketExists;
 use Modules\FileStorage\Infrastructure\Persistence\Eloquent\Repositories\EloquentFileRepository;
 use Modules\FileStorage\Infrastructure\Storage\S3FileStorage;
+use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
 
 final class FileStorageServiceProvider extends ServiceProvider
 {
@@ -19,8 +32,15 @@ final class FileStorageServiceProvider extends ServiceProvider
         $this->app->bind(FileStorage::class, S3FileStorage::class);
     }
 
-    public function boot(): void
+    public function boot(MessageHandlerRegistry $registry): void
     {
+        $registry->register(UploadFileCommand::class, UploadFileHandler::class);
+        $registry->register(DeleteFileCommand::class, DeleteFileHandler::class);
+        $registry->register(SetFileScanStatusCommand::class, SetFileScanStatusHandler::class);
+        $registry->register(GetFileQuery::class, GetFileHandler::class);
+        $registry->register(GetMyFilesQuery::class, GetMyFilesHandler::class);
+        $registry->register(GetFileDownloadUrlQuery::class, GetFileDownloadUrlHandler::class);
+
         $this->loadRoutesFrom(
             dirname(__DIR__, 2).'/Presentation/Routes/api.php',
         );
