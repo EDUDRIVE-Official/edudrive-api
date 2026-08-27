@@ -8,20 +8,33 @@ use Illuminate\Support\Str;
 use Modules\Notification\Application\Commands\SendNotificationCommand;
 use Modules\Notification\Application\Responses\NotificationResponse;
 use Modules\Notification\Domain\Aggregates\Notification;
+use Modules\Notification\Domain\Aggregates\NotificationPreference;
 use Modules\Notification\Domain\Enums\NotificationChannel;
+use Modules\Notification\Domain\Repositories\NotificationPreferenceRepository;
 use Modules\Notification\Domain\Repositories\NotificationRepository;
 use Modules\Notification\Domain\ValueObjects\NotificationId;
 
 final readonly class SendNotificationHandler
 {
-    public function __construct(private NotificationRepository $notifications) {}
+    public function __construct(
+        private NotificationRepository $notifications,
+        private NotificationPreferenceRepository $preferences,
+    ) {}
 
-    public function handle(SendNotificationCommand $command): NotificationResponse
+    public function handle(SendNotificationCommand $command): ?NotificationResponse
     {
+        $channel = NotificationChannel::from($command->channel);
+        $preference = $this->preferences->findByUserId($command->userId)
+            ?? NotificationPreference::default($command->userId);
+
+        if (! $preference->allows($channel, $command->category)) {
+            return null;
+        }
+
         $notification = Notification::send(
             id: NotificationId::fromString((string) Str::uuid()),
             userId: $command->userId,
-            channel: NotificationChannel::from($command->channel),
+            channel: $channel,
             category: $command->category,
             subject: $command->subject,
             body: $command->body,
