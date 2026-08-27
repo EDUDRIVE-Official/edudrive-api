@@ -40,4 +40,10 @@ enum Permission: string
     case ManageNotifications = 'notifications.manage';
     case ManageCommunicationTemplates = 'communication_templates.manage';
     case ViewCommunicationTemplates = 'communication_templates.view';
+    case ManageUsers = 'users.manage';
+    case ViewUsers = 'users.view';
+    case ViewReports = 'reports.view';
+    case ManageSystemSettings = 'system_settings.manage';
+    case ViewSystemSettings = 'system_settings.view';
+    case ViewSystemOperations = 'system_operations.view';
 }

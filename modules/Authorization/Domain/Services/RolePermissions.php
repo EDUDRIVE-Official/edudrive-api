@@ -55,6 +55,12 @@ final class RolePermissions
                 Permission::ManageNotifications,
                 Permission::ManageCommunicationTemplates,
                 Permission::ViewCommunicationTemplates,
+                Permission::ManageUsers,
+                Permission::ViewUsers,
+                Permission::ViewReports,
+                Permission::ManageSystemSettings,
+                Permission::ViewSystemSettings,
+                Permission::ViewSystemOperations,
             ],
             Role::InstitutionalAdmin => [
                 Permission::ViewOrganizations,
@@ -84,6 +90,9 @@ final class RolePermissions
                 Permission::ManageNotifications,
                 Permission::ManageCommunicationTemplates,
                 Permission::ViewCommunicationTemplates,
+                Permission::ManageUsers,
+                Permission::ViewUsers,
+                Permission::ViewReports,
             ],
             Role::Teacher => [
                 Permission::ViewOrganizations,

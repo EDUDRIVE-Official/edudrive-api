@@ -243,3 +243,29 @@ it('otorga permisos de plantillas de comunicacion al superadministrador', functi
     expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageCommunicationTemplates))->toBeTrue()
         ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewCommunicationTemplates))->toBeTrue();
 });
+
+it('otorga manage, view de usuarios y view de reportes al superadministrador y al administrador institucional, y a nadie mas', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageUsers))->toBeTrue()
+        ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewUsers))->toBeTrue()
+        ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewReports))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageUsers))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewUsers))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewReports))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageUsers))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ViewUsers))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ViewReports))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageUsers))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ViewUsers))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ViewReports))->toBeFalse();
+});
+
+it('otorga permisos de configuracion y operacion del sistema unicamente al superadministrador', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageSystemSettings))->toBeTrue()
+        ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewSystemSettings))->toBeTrue()
+        ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewSystemOperations))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageSystemSettings))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewSystemSettings))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewSystemOperations))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageSystemSettings))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ViewSystemOperations))->toBeFalse();
+});

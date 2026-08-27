@@ -93,3 +93,23 @@ it('actualiza el estado de un usuario existente', function (): void {
         ->and($persistedUser?->emailVerifiedAt())
         ->not->toBeNull();
 });
+
+it('lista todos los usuarios registrados', function (): void {
+    /** @var TestCase $this */
+    $repository = $this->app->make(UserRepository::class);
+
+    $repository->save(User::register(
+        id: '01900000-0000-7000-8000-000000000004',
+        name: 'Usuario Uno',
+        email: Email::fromString('uno@edudrive.cr'),
+        passwordHash: 'hashed-password',
+    ));
+    $repository->save(User::register(
+        id: '01900000-0000-7000-8000-000000000005',
+        name: 'Usuario Dos',
+        email: Email::fromString('dos@edudrive.cr'),
+        passwordHash: 'hashed-password',
+    ));
+
+    expect($repository->all())->toHaveCount(2);
+});

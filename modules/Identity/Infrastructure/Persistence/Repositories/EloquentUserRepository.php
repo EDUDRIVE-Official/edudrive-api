@@ -46,4 +46,16 @@ final class EloquentUserRepository implements UserRepository
             ->where('email', $email->value())
             ->exists();
     }
+
+    /** @return list<User> */
+    public function all(): array
+    {
+        return array_values(
+            UserModel::query()
+                ->orderBy('created_at')
+                ->get()
+                ->map(fn (UserModel $model): User => UserMapper::toDomain($model))
+                ->all(),
+        );
+    }
 }
