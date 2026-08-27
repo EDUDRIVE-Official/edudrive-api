@@ -82,6 +82,12 @@ final class InMemoryVerificationUserRepository implements UserRepository
     {
         throw new LogicException('No usado en esta prueba.');
     }
+
+    /** @return list<User> */
+    public function all(): array
+    {
+        throw new LogicException('No usado en esta prueba.');
+    }
 }
 
 final class InMemoryVerificationCourseRepository implements CourseRepository
