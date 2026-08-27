@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Providers\AppServiceProvider;
 use Modules\Academic\Infrastructure\Providers\AcademicServiceProvider;
+use Modules\Admin\Infrastructure\Providers\AdminServiceProvider;
 use Modules\Audit\Infrastructure\Providers\AuditServiceProvider;
 use Modules\Authorization\Infrastructure\Providers\AuthorizationServiceProvider;
 use Modules\Certification\Infrastructure\Providers\CertificationServiceProvider;
@@ -30,4 +31,5 @@ return [
     SimulationServiceProvider::class,
     GamificationServiceProvider::class,
     NotificationServiceProvider::class,
+    AdminServiceProvider::class,
 ];
