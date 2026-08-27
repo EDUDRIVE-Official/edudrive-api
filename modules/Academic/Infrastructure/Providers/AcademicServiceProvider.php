@@ -12,6 +12,7 @@ use Modules\Academic\Application\Commands\AnswerAttemptQuestionCommand;
 use Modules\Academic\Application\Commands\ApproveCourseCommand;
 use Modules\Academic\Application\Commands\ArchiveCourseCommand;
 use Modules\Academic\Application\Commands\ArchiveProgramCommand;
+use Modules\Academic\Application\Commands\BulkImportCoursesCommand;
 use Modules\Academic\Application\Commands\CancelEnrollmentCommand;
 use Modules\Academic\Application\Commands\CancelExamAttemptCommand;
 use Modules\Academic\Application\Commands\ChangeProgramAudienceCommand;
@@ -68,6 +69,7 @@ use Modules\Academic\Application\UseCases\AnswerAttemptQuestionHandler;
 use Modules\Academic\Application\UseCases\ApproveCourseHandler;
 use Modules\Academic\Application\UseCases\ArchiveCourseHandler;
 use Modules\Academic\Application\UseCases\ArchiveProgramHandler;
+use Modules\Academic\Application\UseCases\BulkImportCoursesHandler;
 use Modules\Academic\Application\UseCases\CancelEnrollmentHandler;
 use Modules\Academic\Application\UseCases\CancelExamAttemptHandler;
 use Modules\Academic\Application\UseCases\ChangeProgramAudienceHandler;
@@ -212,6 +214,11 @@ final class AcademicServiceProvider extends ServiceProvider
         $registry->register(
             CreateCourseCommand::class,
             CreateCourseHandler::class,
+        );
+
+        $registry->register(
+            BulkImportCoursesCommand::class,
+            BulkImportCoursesHandler::class,
         );
 
         $registry->register(

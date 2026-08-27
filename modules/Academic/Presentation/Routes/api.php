@@ -60,6 +60,9 @@ Route::prefix('api/v1/academic')
                 Route::post('/courses', [CourseController::class, 'store'])
                     ->name('courses.store');
 
+                Route::post('/courses/import', [CourseController::class, 'bulkImport'])
+                    ->name('courses.import');
+
                 Route::post('/courses/{courseId}/publish', [CourseController::class, 'publish'])
                     ->whereUuid('courseId')
                     ->name('courses.publish');

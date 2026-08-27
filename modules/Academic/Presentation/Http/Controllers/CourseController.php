@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Modules\Academic\Presentation\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\ValidationException;
+use League\Csv\Reader;
 use Modules\Academic\Application\Commands\ApproveCourseCommand;
 use Modules\Academic\Application\Commands\ArchiveCourseCommand;
+use Modules\Academic\Application\Commands\BulkImportCoursesCommand;
 use Modules\Academic\Application\Commands\CreateCourseCommand;
 use Modules\Academic\Application\Commands\PublishCourseCommand;
 use Modules\Academic\Application\Commands\ReopenCourseCommand;
@@ -24,6 +27,7 @@ use Modules\Academic\Application\Queries\GetUnitContentQuery;
 use Modules\Academic\Application\Queries\ListCoursesQuery;
 use Modules\Academic\Application\Queries\ListCourseVersionsQuery;
 use Modules\Academic\Application\Responses\ArchiveCourseResponse;
+use Modules\Academic\Application\Responses\BulkImportCoursesResponse;
 use Modules\Academic\Application\Responses\CourseCurriculumResponse;
 use Modules\Academic\Application\Responses\CourseListItemResponse;
 use Modules\Academic\Application\Responses\CourseStatusResponse;
@@ -32,6 +36,7 @@ use Modules\Academic\Application\Responses\CourseVersionResponse;
 use Modules\Academic\Application\Responses\CreateCourseResponse;
 use Modules\Academic\Application\Responses\PublishCourseResponse;
 use Modules\Academic\Application\Responses\UnitContentResponse;
+use Modules\Academic\Presentation\Http\Requests\BulkImportCoursesRequest;
 use Modules\Academic\Presentation\Http\Requests\CreateCourseRequest;
 use Modules\Academic\Presentation\Http\Requests\ReplaceCourseCurriculumRequest;
 use Modules\Academic\Presentation\Http\Requests\ReplaceUnitContentRequest;
@@ -41,6 +46,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class CourseController
 {
+    private const int MAX_IMPORT_ROWS = 500;
+
     public function index(
         QueryBus $queryBus,
     ): JsonResponse {
@@ -97,6 +104,39 @@ final class CourseController
             ],
             Response::HTTP_CREATED,
         );
+    }
+
+    public function bulkImport(BulkImportCoursesRequest $request, CommandBus $commandBus): JsonResponse
+    {
+        $file = $request->file('file');
+        assert($file !== null);
+
+        $csv = Reader::createFromPath((string) $file->getRealPath());
+        $csv->setHeaderOffset(0);
+
+        $rows = [];
+        foreach ($csv->getRecords() as $record) {
+            $rows[] = [
+                'code' => (string) ($record['code'] ?? ''),
+                'title' => (string) ($record['title'] ?? ''),
+                'description' => (string) ($record['description'] ?? ''),
+                'objectives' => (string) ($record['objectives'] ?? ''),
+                'prerequisites' => (string) ($record['prerequisites'] ?? ''),
+                'modality' => (string) ($record['modality'] ?? ''),
+                'duration_hours' => (string) ($record['duration_hours'] ?? ''),
+            ];
+        }
+
+        if (count($rows) > self::MAX_IMPORT_ROWS) {
+            throw ValidationException::withMessages([
+                'file' => [sprintf('El archivo no puede contener más de %d filas.', self::MAX_IMPORT_ROWS)],
+            ]);
+        }
+
+        $result = $commandBus->dispatch(new BulkImportCoursesCommand(rows: $rows));
+        assert($result instanceof BulkImportCoursesResponse);
+
+        return response()->json(['data' => $result->toArray()]);
     }
 
     public function publish(
