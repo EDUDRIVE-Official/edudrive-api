@@ -129,6 +129,8 @@ Route::prefix('api/v1/academic')
             Route::middleware('permission:questions.manage')->group(function (): void {
                 Route::post('/questions', [QuestionController::class, 'store'])
                     ->name('questions.store');
+                Route::post('/questions/import', [QuestionController::class, 'bulkImport'])
+                    ->name('questions.import');
                 Route::put('/questions/{questionId}', [QuestionController::class, 'update'])
                     ->whereUuid('questionId')
                     ->name('questions.update');

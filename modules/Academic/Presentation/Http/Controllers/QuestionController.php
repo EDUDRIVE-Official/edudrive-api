@@ -6,13 +6,18 @@ namespace Modules\Academic\Presentation\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use League\Csv\Reader;
+use Modules\Academic\Application\Commands\BulkImportQuestionsCommand;
 use Modules\Academic\Application\Commands\CreateQuestionCommand;
 use Modules\Academic\Application\Commands\DeleteQuestionCommand;
 use Modules\Academic\Application\Commands\UpdateQuestionCommand;
 use Modules\Academic\Application\Queries\GetQuestionQuery;
 use Modules\Academic\Application\Queries\ListQuestionsQuery;
+use Modules\Academic\Application\Responses\BulkImportQuestionsResponse;
 use Modules\Academic\Application\Responses\QuestionListItemResponse;
 use Modules\Academic\Application\Responses\QuestionResponse;
+use Modules\Academic\Presentation\Http\Requests\BulkImportQuestionsRequest;
 use Modules\Academic\Presentation\Http\Requests\CreateQuestionRequest;
 use Modules\Academic\Presentation\Http\Requests\UpdateQuestionRequest;
 use Modules\Foundation\Application\Bus\CommandBus;
@@ -21,6 +26,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class QuestionController
 {
+    private const int MAX_IMPORT_ROWS = 500;
+
     public function index(Request $request, QueryBus $queryBus): JsonResponse
     {
         $competencyId = $request->query('competency_id');
@@ -91,6 +98,43 @@ final class QuestionController
         $commandBus->dispatch(new DeleteQuestionCommand(questionId: $questionId));
 
         return response()->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    public function bulkImport(BulkImportQuestionsRequest $request, CommandBus $commandBus): JsonResponse
+    {
+        $file = $request->file('file');
+        assert($file !== null);
+
+        $csv = Reader::createFromPath((string) $file->getRealPath());
+        $csv->setHeaderOffset(0);
+
+        $rows = [];
+        foreach ($csv->getRecords() as $record) {
+            $rows[] = [
+                'competency_code' => (string) ($record['competency_code'] ?? ''),
+                'type' => (string) ($record['type'] ?? ''),
+                'prompt' => (string) ($record['prompt'] ?? ''),
+                'score' => (string) ($record['score'] ?? ''),
+                'response' => (string) ($record['response'] ?? ''),
+                'options' => (string) ($record['options'] ?? ''),
+                'explanation' => (string) ($record['explanation'] ?? ''),
+                'media' => (string) ($record['media'] ?? ''),
+                'source_kind' => (string) ($record['source_kind'] ?? ''),
+                'source_reference' => (string) ($record['source_reference'] ?? ''),
+                'license_categories' => (string) ($record['license_categories'] ?? ''),
+            ];
+        }
+
+        if (count($rows) > self::MAX_IMPORT_ROWS) {
+            throw ValidationException::withMessages([
+                'file' => [sprintf('El archivo no puede contener más de %d filas.', self::MAX_IMPORT_ROWS)],
+            ]);
+        }
+
+        $result = $commandBus->dispatch(new BulkImportQuestionsCommand(rows: $rows));
+        assert($result instanceof BulkImportQuestionsResponse);
+
+        return response()->json(['data' => $result->toArray()]);
     }
 
     /**
