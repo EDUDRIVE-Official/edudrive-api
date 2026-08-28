@@ -6,6 +6,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Modules\Authorization\Presentation\Http\Middleware\EnsurePermission;
@@ -98,6 +99,23 @@ return Application::configure(basePath: dirname(__DIR__))
                     message: $exception->getMessage(),
                     status: $exception->statusCode(),
                     code: $exception->errorCode(),
+                );
+            },
+        );
+
+        $exceptions->render(
+            static function (
+                ThrottleRequestsException $exception,
+                Request $request,
+            ) {
+                if (! $request->is('api/*') && ! $request->expectsJson()) {
+                    return null;
+                }
+
+                return ApiErrorResponse::make(
+                    message: 'Se realizaron demasiadas solicitudes. Intente de nuevo más tarde.',
+                    status: 429,
+                    code: 'TOO_MANY_REQUESTS',
                 );
             },
         );

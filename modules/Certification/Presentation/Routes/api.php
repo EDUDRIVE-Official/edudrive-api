@@ -14,6 +14,7 @@ Route::prefix('api/v1/certification')
 
         Route::get('/verify/{validationCode}', [CertificateController::class, 'verify'])
             ->where('validationCode', '^[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}$')
+            ->middleware('throttle:public-verification')
             ->name('verify');
 
         Route::middleware('auth:sanctum')->group(function (): void {

@@ -19,13 +19,16 @@ Route::middleware('api')
     ->prefix('api/v1/auth')
     ->group(function (): void {
         Route::post('/register', [AuthController::class, 'register'])
+            ->middleware('throttle:register')
             ->name('api.v1.auth.register');
 
         Route::post('/login', LoginController::class)
+            ->middleware('throttle:login')
             ->name('api.v1.auth.login');
 
         Route::post('/users/{userId}/activate', ActivateUserController::class)
             ->whereUuid('userId')
+            ->middleware('throttle:activate')
             ->name('api.v1.auth.users.activate');
 
         Route::middleware('auth:sanctum')->group(function (): void {

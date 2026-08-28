@@ -18,12 +18,12 @@ Route::prefix('api/v1/simulation')
 
         Route::post('/sessions/{sessionId}/telemetry', [TelemetryController::class, 'store'])
             ->whereUuid('sessionId')
-            ->middleware('simulator.auth')
+            ->middleware(['simulator.auth', 'throttle:simulator-integration'])
             ->name('sessions.telemetry.store');
 
         Route::post('/sessions/{sessionId}/decisions', [DecisionEngineController::class, 'store'])
             ->whereUuid('sessionId')
-            ->middleware('simulator.auth')
+            ->middleware(['simulator.auth', 'throttle:simulator-integration'])
             ->name('sessions.decisions.store');
 
         Route::middleware('auth:sanctum')->group(function (): void {
