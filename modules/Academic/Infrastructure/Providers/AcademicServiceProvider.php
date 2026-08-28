@@ -29,6 +29,8 @@ use Modules\Academic\Application\Commands\CreateProgramCommand;
 use Modules\Academic\Application\Commands\CreateQuestionCommand;
 use Modules\Academic\Application\Commands\DeleteExamCommand;
 use Modules\Academic\Application\Commands\DeleteQuestionCommand;
+use Modules\Academic\Application\Commands\ExportCoursesCommand;
+use Modules\Academic\Application\Commands\ExportEnrollmentsCommand;
 use Modules\Academic\Application\Commands\PublishCourseCommand;
 use Modules\Academic\Application\Commands\PublishProgramCommand;
 use Modules\Academic\Application\Commands\ReopenCourseCommand;
@@ -87,6 +89,8 @@ use Modules\Academic\Application\UseCases\CreateProgramHandler;
 use Modules\Academic\Application\UseCases\CreateQuestionHandler;
 use Modules\Academic\Application\UseCases\DeleteExamHandler;
 use Modules\Academic\Application\UseCases\DeleteQuestionHandler;
+use Modules\Academic\Application\UseCases\ExportCoursesHandler;
+use Modules\Academic\Application\UseCases\ExportEnrollmentsHandler;
 use Modules\Academic\Application\UseCases\GetCourseCurriculumHandler;
 use Modules\Academic\Application\UseCases\GetCourseVersionHandler;
 use Modules\Academic\Application\UseCases\GetEnrollmentCurriculumStatusHandler;
@@ -222,6 +226,9 @@ final class AcademicServiceProvider extends ServiceProvider
             BulkImportCoursesCommand::class,
             BulkImportCoursesHandler::class,
         );
+
+        $registry->register(ExportCoursesCommand::class, ExportCoursesHandler::class);
+        $registry->register(ExportEnrollmentsCommand::class, ExportEnrollmentsHandler::class);
 
         $registry->register(
             CreateEnrollmentCommand::class,

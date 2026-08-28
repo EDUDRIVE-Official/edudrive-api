@@ -62,7 +62,14 @@ Route::prefix('api/v1/academic')
 
                 Route::post('/courses/import', [CourseController::class, 'bulkImport'])
                     ->name('courses.import');
+            });
 
+            Route::middleware('permission:exports.view')->group(function (): void {
+                Route::post('/courses/export', [CourseController::class, 'export'])
+                    ->name('courses.export');
+            });
+
+            Route::middleware('permission:courses.manage')->group(function (): void {
                 Route::post('/courses/{courseId}/publish', [CourseController::class, 'publish'])
                     ->whereUuid('courseId')
                     ->name('courses.publish');
@@ -221,6 +228,11 @@ Route::prefix('api/v1/academic')
                 Route::post('/enrollments/{enrollmentId}/cancel', [EnrollmentController::class, 'cancel'])
                     ->whereUuid('enrollmentId')
                     ->name('enrollments.cancel');
+            });
+
+            Route::middleware('permission:exports.view')->group(function (): void {
+                Route::post('/enrollments/export', [EnrollmentController::class, 'export'])
+                    ->name('enrollments.export');
             });
 
             Route::post('/enrollments/{enrollmentId}/lessons/{lessonId}/complete', [EnrollmentProgressController::class, 'complete'])

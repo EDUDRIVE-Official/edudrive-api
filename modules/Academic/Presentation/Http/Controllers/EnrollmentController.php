@@ -11,6 +11,7 @@ use Modules\Academic\Application\Commands\CompleteEnrollmentCommand;
 use Modules\Academic\Application\Commands\CreateBulkEnrollmentsCommand;
 use Modules\Academic\Application\Commands\CreateEnrollmentCommand;
 use Modules\Academic\Application\Commands\CreateInstitutionalEnrollmentCommand;
+use Modules\Academic\Application\Commands\ExportEnrollmentsCommand;
 use Modules\Academic\Application\Queries\GetEnrollmentQuery;
 use Modules\Academic\Application\Queries\ListEnrollmentsQuery;
 use Modules\Academic\Application\Responses\BulkEnrollmentResponse;
@@ -22,6 +23,7 @@ use Modules\Academic\Presentation\Http\Requests\CreateInstitutionalEnrollmentReq
 use Modules\Academic\Presentation\Http\Requests\ListEnrollmentsRequest;
 use Modules\Foundation\Application\Bus\CommandBus;
 use Modules\Foundation\Application\Bus\QueryBus;
+use Modules\Foundation\Application\Responses\ExportResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 final class EnrollmentController
@@ -83,6 +85,14 @@ final class EnrollmentController
         assert($result instanceof BulkEnrollmentResponse);
 
         return response()->json(['data' => $result->toArray()], Response::HTTP_CREATED);
+    }
+
+    public function export(CommandBus $commandBus): JsonResponse
+    {
+        $result = $commandBus->dispatch(new ExportEnrollmentsCommand);
+        assert($result instanceof ExportResponse);
+
+        return response()->json(['data' => $result->toArray()]);
     }
 
     public function institutional(CreateInstitutionalEnrollmentRequest $request, CommandBus $commandBus): JsonResponse

@@ -11,6 +11,7 @@ use Modules\Academic\Application\Commands\ApproveCourseCommand;
 use Modules\Academic\Application\Commands\ArchiveCourseCommand;
 use Modules\Academic\Application\Commands\BulkImportCoursesCommand;
 use Modules\Academic\Application\Commands\CreateCourseCommand;
+use Modules\Academic\Application\Commands\ExportCoursesCommand;
 use Modules\Academic\Application\Commands\PublishCourseCommand;
 use Modules\Academic\Application\Commands\ReopenCourseCommand;
 use Modules\Academic\Application\Commands\ReplaceCourseCurriculumCommand;
@@ -42,6 +43,7 @@ use Modules\Academic\Presentation\Http\Requests\ReplaceCourseCurriculumRequest;
 use Modules\Academic\Presentation\Http\Requests\ReplaceUnitContentRequest;
 use Modules\Foundation\Application\Bus\CommandBus;
 use Modules\Foundation\Application\Bus\QueryBus;
+use Modules\Foundation\Application\Responses\ExportResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 final class CourseController
@@ -135,6 +137,14 @@ final class CourseController
 
         $result = $commandBus->dispatch(new BulkImportCoursesCommand(rows: $rows));
         assert($result instanceof BulkImportCoursesResponse);
+
+        return response()->json(['data' => $result->toArray()]);
+    }
+
+    public function export(CommandBus $commandBus): JsonResponse
+    {
+        $result = $commandBus->dispatch(new ExportCoursesCommand);
+        assert($result instanceof ExportResponse);
 
         return response()->json(['data' => $result->toArray()]);
     }
