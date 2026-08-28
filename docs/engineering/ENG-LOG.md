@@ -1930,3 +1930,29 @@ A diferencia de ENG-061, el roadmap no especifica QUÉ datos se exportan, solo l
 - `php artisan route:list --path=export` ✅ — 3 rutas registradas.
 
 **Estado:** Finalizado.
+
+## 2026-08-27 — IMP-063 (Cierre de ENG-063 — Reportes académicos)
+
+### Alcance acordado con el usuario
+
+Primera historia de la Fase 13 — Reportes y analítica. El roadmap lista seis reportes (Progreso, Rendimiento, Aprobación, Competencias, Actividad, Comparación por grupo) sin especificar cómo se calculan ni sobre qué se agrupan. Investigación previa: ninguna consulta de listado en `Modules\Academic` hace agregación SQL — todo el patrón existente (`PracticalResultCalculator`, `RoadPassportTrustCalculator`) es traer filas y calcular en PHP; `EnrollmentProgressRepository` solo consulta una inscripción a la vez; `ExamAttemptRepository::all()`/`ExamRepository::all()` ya soportan traer todos los intentos/exámenes de un curso, combinables sin cambios de esquema; "Actividad" no tenía ningún dato base (`User` no registraba ninguna marca de tiempo de sesión); "Grupo" (cohorte/sección) no existe como concepto en el backend, confirmado también en ENG-061. **Única historia de la sesión en la que el usuario rechazó explícitamente la opción recomendada**: se propuso reducir a tres reportes (unificando Rendimiento/Aprobación y difiriendo Actividad) y el usuario pidió los seis completos. Para "Comparación por grupo" sí se aceptó la reinterpretación propuesta: "por curso" en vez de un concepto de grupo inexistente — cada reporte acepta una lista de `course_ids` en vez de existir un endpoint de "comparar" separado. Calculado al vuelo sin persistencia (mismo patrón que los calculadores ya existentes); reutiliza `reports.view` (ENG-059) sin permiso nuevo. Detalle completo en `docs/plans/2026-08-27-reportes-academicos-eng063-design.md`.
+
+### Completado
+
+- **Identity — base para Actividad**: `User::recordLogin(DateTimeImmutable): void` nuevo + campo `lastLoginAt` (nullable, columna nueva vía migración separada, no se edita la migración original de `users`). `LoginUserUseCase::execute()` llama a `recordLogin()` y guarda el usuario en cada inicio de sesión exitoso — cubre tanto el login web (`LoginWebController`) como el de API, ya que ambos comparten el mismo caso de uso.
+- **Cinco reportes en `Modules\Academic`**, todos con la forma `Get{X}ReportQuery(list<string> $courseIds = [])` → `Get{X}ReportHandler` → `list<{X}ReportResponse>` (una fila por curso; sin `course_ids` cubre todos los cursos vía `CourseRepository::all()`):
+  - **Progreso**: reutiliza `CourseLessonCatalog` (ya existente) para el total de lecciones del curso y `EnrollmentProgressRepository::findByEnrollmentId()` por cada inscripción — promedio de % completado y conteo de inscripciones 100% completas.
+  - **Rendimiento** y **Aprobación**: comparten la misma fuente (intentos de examen `Submitted` de todos los exámenes del curso) a través de un servicio nuevo, `CourseExamAttemptsLookup` (curso → exámenes vía `ExamRepository::all($courseId)` → intentos vía `ExamAttemptRepository::all(examId:, status: Submitted)`), para no traer los intentos dos veces aunque se expongan como dos reportes separados (honrando que el usuario los quiso distintos).
+  - **Competencias**: agrega `competencyBreakdown()` de todos los intentos del curso, agrupando por `competencyId` (promedio de porcentaje, tamaño de muestra), resolviendo el código de competencia vía `CompetencyRepository::findById()`.
+  - **Actividad**: por cada inscripción del curso, resuelve el `User` vía `Modules\Identity\Domain\Repositories\UserRepository::findById()` (dependencia entre módulos documentada, mismo contrato público que ya usa `Modules\Authorization`) — cuenta activos en los últimos 30 días (umbral fijo), nunca-han-iniciado-sesión, y promedio de días desde el último login.
+  - **`ReportCourseResolver`** (compartido por los cinco): resuelve `course_ids` → `list<Course>`, o todos los cursos si la lista viene vacía; lanza `CourseNotFound` si un id explícito no existe.
+- **API HTTP**: `GET /api/v1/academic/reports/{progress,performance,approval,competencies,activity}?course_ids[]=...`, los cinco bajo `permission:reports.view` (reutilizado, sin permiso nuevo), agregados a un controlador nuevo, `AcademicReportController`.
+- **Pruebas**: 5 unitarias (una por reporte, con fixtures reales vía `ExamAttempt::restore()` construido directamente en vez de recorrer todo el flujo start→answer→submit, ya que `restore()` no valida consistencia entre `GradingResult` y el desglose — solo cada `CompetencyGrade` valida sus propios invariantes) + 5 de feature HTTP (permisos y filtro por `course_ids`) para los reportes, más 2 nuevas (feature + integración) para `lastLoginAt` en Identity — 12 tests nuevos en total.
+
+### Validaciones
+
+- Suite de `Modules\Identity` + `Modules\Authorization` ✅ — `83 passed (274 assertions)`.
+- Suites dirigidas de `Modules\Academic` (los cinco reportes + feature) ✅ — `10 passed (52 assertions)`; PHPStan nivel 8 y Pint limpios sobre el módulo completo (ejecutado en lotes acotados por el límite de memoria del entorno, igual que en IMP-059/061/062).
+- `php artisan route:list --path=academic/reports` ✅ — 5 rutas registradas.
+
+**Estado:** Finalizado.
