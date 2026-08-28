@@ -39,6 +39,30 @@ it('inicia sesión con credenciales válidas y redirige al panel de organizacion
     $this->assertAuthenticatedAs(UserModel::query()->findOrFail($user->id()));
 });
 
+it('registra la fecha de ultimo inicio de sesion al iniciar sesion', function (): void {
+    /** @var TestCase $this */
+    $repository = app(UserRepository::class);
+    $hasher = app(PasswordHasher::class);
+
+    $user = User::register(
+        id: (string) Str::uuid(),
+        name: 'Usuario Web',
+        email: Email::fromString(sprintf('%s@edudrive.cr', Str::uuid())),
+        passwordHash: $hasher->hash('clave-valida-123'),
+    );
+    $user->activate(new DateTimeImmutable);
+    $repository->save($user);
+
+    expect($repository->findById($user->id())?->lastLoginAt())->toBeNull();
+
+    $this->post('/login', [
+        'email' => $user->email()->value(),
+        'password' => 'clave-valida-123',
+    ]);
+
+    expect($repository->findById($user->id())?->lastLoginAt())->not->toBeNull();
+});
+
 it('rechaza credenciales inválidas y vuelve al formulario con un error', function (): void {
     /** @var TestCase $this */
     $repository = app(UserRepository::class);

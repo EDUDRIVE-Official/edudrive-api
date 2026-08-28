@@ -20,6 +20,7 @@ final class User
         private ?DateTimeImmutable $emailVerifiedAt,
         private readonly DateTimeImmutable $createdAt,
         private DateTimeImmutable $updatedAt,
+        private ?DateTimeImmutable $lastLoginAt,
     ) {}
 
     public static function register(
@@ -41,6 +42,7 @@ final class User
             emailVerifiedAt: null,
             createdAt: $registeredAt,
             updatedAt: $registeredAt,
+            lastLoginAt: null,
         );
     }
 
@@ -53,6 +55,7 @@ final class User
         ?DateTimeImmutable $emailVerifiedAt,
         DateTimeImmutable $createdAt,
         DateTimeImmutable $updatedAt,
+        ?DateTimeImmutable $lastLoginAt = null,
     ): self {
         return new self(
             id: $id,
@@ -63,6 +66,7 @@ final class User
             emailVerifiedAt: $emailVerifiedAt,
             createdAt: $createdAt,
             updatedAt: $updatedAt,
+            lastLoginAt: $lastLoginAt,
         );
     }
 
@@ -113,6 +117,11 @@ final class User
         $this->updatedAt = $occurredAt;
     }
 
+    public function recordLogin(DateTimeImmutable $occurredAt): void
+    {
+        $this->lastLoginAt = $occurredAt;
+    }
+
     public function id(): string
     {
         return $this->id;
@@ -151,6 +160,11 @@ final class User
     public function updatedAt(): DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    public function lastLoginAt(): ?DateTimeImmutable
+    {
+        return $this->lastLoginAt;
     }
 
     private static function normalizeName(string $name): string

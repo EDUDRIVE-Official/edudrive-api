@@ -23,6 +23,7 @@ final class UserMapper
             emailVerifiedAt: $model->email_verified_at?->toDateTimeImmutable(),
             createdAt: $model->created_at->toDateTimeImmutable(),
             updatedAt: $model->updated_at->toDateTimeImmutable(),
+            lastLoginAt: $model->last_login_at?->toDateTimeImmutable(),
         );
     }
 
@@ -40,6 +41,7 @@ final class UserMapper
             'email_verified_at' => $user->emailVerifiedAt(),
             'created_at' => $user->createdAt(),
             'updated_at' => $user->updatedAt(),
+            'last_login_at' => $user->lastLoginAt(),
         ];
     }
 }

@@ -17,6 +17,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property Carbon|null $email_verified_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * @property Carbon|null $last_login_at
  */
 class UserModel extends Authenticatable
 {
@@ -40,6 +41,7 @@ class UserModel extends Authenticatable
         'password',
         'status',
         'email_verified_at',
+        'last_login_at',
     ];
 
     /**
@@ -59,6 +61,7 @@ class UserModel extends Authenticatable
             'email_verified_at' => 'immutable_datetime',
             'created_at' => 'immutable_datetime',
             'updated_at' => 'immutable_datetime',
+            'last_login_at' => 'immutable_datetime',
         ];
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Identity\Application\UseCases;
 
+use DateTimeImmutable;
 use Modules\Audit\Application\DTO\AuditEntry;
 use Modules\Audit\Application\Services\AuditLogger;
 use Modules\Identity\Application\Commands\LoginUserCommand;
@@ -48,6 +49,9 @@ final readonly class LoginUserUseCase
             $user->id(),
             $command->tokenName,
         );
+
+        $user->recordLogin(new DateTimeImmutable);
+        $this->users->save($user);
 
         $this->auditLogger->log(
             new AuditEntry(

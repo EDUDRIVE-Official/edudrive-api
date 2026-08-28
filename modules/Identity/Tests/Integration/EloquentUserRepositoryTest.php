@@ -94,6 +94,28 @@ it('actualiza el estado de un usuario existente', function (): void {
         ->not->toBeNull();
 });
 
+it('guarda y recupera la fecha de ultimo inicio de sesion', function (): void {
+    /** @var TestCase $this */
+    $repository = $this->app->make(UserRepository::class);
+
+    $user = User::register(
+        id: '01900000-0000-7000-8000-000000000006',
+        name: 'Usuario EDUDRIVE',
+        email: Email::fromString('login@edudrive.cr'),
+        passwordHash: 'hashed-password',
+    );
+    $repository->save($user);
+
+    expect($repository->findById($user->id())?->lastLoginAt())->toBeNull();
+
+    $loginAt = new DateTimeImmutable('2026-08-27T10:00:00+00:00');
+    $user->recordLogin($loginAt);
+    $repository->save($user);
+
+    expect($repository->findById($user->id())?->lastLoginAt())
+        ->toEqual($loginAt);
+});
+
 it('lista todos los usuarios registrados', function (): void {
     /** @var TestCase $this */
     $repository = $this->app->make(UserRepository::class);
