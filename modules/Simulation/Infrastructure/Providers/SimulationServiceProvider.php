@@ -23,6 +23,10 @@ use Modules\Simulation\Application\Queries\GetPracticalResultQuery;
 use Modules\Simulation\Application\Queries\GetSessionTelemetryQuery;
 use Modules\Simulation\Application\Queries\GetSimulationSessionQuery;
 use Modules\Simulation\Application\Queries\GetSimulatorQuery;
+use Modules\Simulation\Application\Queries\GetUserEvolutionReportQuery;
+use Modules\Simulation\Application\Queries\GetUserRiskReportQuery;
+use Modules\Simulation\Application\Queries\GetUserSessionsReportQuery;
+use Modules\Simulation\Application\Queries\GetUserTelemetryReportQuery;
 use Modules\Simulation\Application\Queries\ListSimulationSessionsQuery;
 use Modules\Simulation\Application\Queries\ListSimulatorsQuery;
 use Modules\Simulation\Application\UseCases\CancelSimulationSessionHandler;
@@ -33,6 +37,10 @@ use Modules\Simulation\Application\UseCases\GetPracticalResultHandler;
 use Modules\Simulation\Application\UseCases\GetSessionTelemetryHandler;
 use Modules\Simulation\Application\UseCases\GetSimulationSessionHandler;
 use Modules\Simulation\Application\UseCases\GetSimulatorHandler;
+use Modules\Simulation\Application\UseCases\GetUserEvolutionReportHandler;
+use Modules\Simulation\Application\UseCases\GetUserRiskReportHandler;
+use Modules\Simulation\Application\UseCases\GetUserSessionsReportHandler;
+use Modules\Simulation\Application\UseCases\GetUserTelemetryReportHandler;
 use Modules\Simulation\Application\UseCases\ListSimulationSessionsHandler;
 use Modules\Simulation\Application\UseCases\ListSimulatorsHandler;
 use Modules\Simulation\Application\UseCases\ReactivateSimulatorHandler;
@@ -90,6 +98,11 @@ final class SimulationServiceProvider extends ServiceProvider
 
         $registry->register(SubmitDecisionPointsCommand::class, SubmitDecisionPointsHandler::class);
         $registry->register(GetDecisionEngineResultQuery::class, GetDecisionEngineResultHandler::class);
+
+        $registry->register(GetUserSessionsReportQuery::class, GetUserSessionsReportHandler::class);
+        $registry->register(GetUserTelemetryReportQuery::class, GetUserTelemetryReportHandler::class);
+        $registry->register(GetUserEvolutionReportQuery::class, GetUserEvolutionReportHandler::class);
+        $registry->register(GetUserRiskReportQuery::class, GetUserRiskReportHandler::class);
 
         $this->loadRoutesFrom(
             dirname(__DIR__, 2).'/Presentation/Routes/api.php',

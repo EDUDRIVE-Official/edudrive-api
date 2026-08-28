@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Modules\Simulation\Presentation\Http\Controllers\DecisionEngineController;
+use Modules\Simulation\Presentation\Http\Controllers\SimulationReportController;
 use Modules\Simulation\Presentation\Http\Controllers\SimulationSessionController;
 use Modules\Simulation\Presentation\Http\Controllers\SimulationStatusController;
 use Modules\Simulation\Presentation\Http\Controllers\SimulatorController;
@@ -93,6 +94,17 @@ Route::prefix('api/v1/simulation')
             Route::middleware('permission:simulation_sessions.view')->group(function (): void {
                 Route::get('/sessions', [SimulationSessionController::class, 'index'])
                     ->name('sessions.index');
+            });
+
+            Route::middleware('permission:reports.view')->group(function (): void {
+                Route::get('/reports/sessions', [SimulationReportController::class, 'sessions'])
+                    ->name('reports.sessions');
+                Route::get('/reports/telemetry', [SimulationReportController::class, 'telemetry'])
+                    ->name('reports.telemetry');
+                Route::get('/reports/evolution', [SimulationReportController::class, 'evolution'])
+                    ->name('reports.evolution');
+                Route::get('/reports/risks', [SimulationReportController::class, 'risks'])
+                    ->name('reports.risks');
             });
         });
     });
