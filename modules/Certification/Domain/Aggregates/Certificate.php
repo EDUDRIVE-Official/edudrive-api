@@ -17,7 +17,7 @@ final class Certificate
     /** @param list<CertificateHistoryEntry> $history */
     private function __construct(
         private CertificateId $id,
-        private string $userId,
+        private ?string $userId,
         private string $courseId,
         private ValidationCode $validationCode,
         private CertificateStatus $status,
@@ -49,7 +49,7 @@ final class Certificate
     /** @param list<CertificateHistoryEntry> $history */
     public static function restore(
         CertificateId $id,
-        string $userId,
+        ?string $userId,
         string $courseId,
         ValidationCode $validationCode,
         CertificateStatus $status,
@@ -75,7 +75,7 @@ final class Certificate
         return $this->id;
     }
 
-    public function userId(): string
+    public function userId(): ?string
     {
         return $this->userId;
     }

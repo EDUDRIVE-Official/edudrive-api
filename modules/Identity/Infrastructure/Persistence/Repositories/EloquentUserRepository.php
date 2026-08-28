@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Modules\Identity\Infrastructure\Persistence\Repositories;
 
+use DateTimeImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Repositories\UserRepository;
 use Modules\Identity\Domain\ValueObjects\Email;
@@ -47,11 +49,34 @@ final class EloquentUserRepository implements UserRepository
             ->exists();
     }
 
+    public function delete(string $id): void
+    {
+        UserModel::query()->whereKey($id)->delete();
+    }
+
     /** @return list<User> */
     public function all(): array
     {
         return array_values(
             UserModel::query()
+                ->orderBy('created_at')
+                ->get()
+                ->map(fn (UserModel $model): User => UserMapper::toDomain($model))
+                ->all(),
+        );
+    }
+
+    /** @return list<User> */
+    public function findInactiveBefore(DateTimeImmutable $threshold): array
+    {
+        return array_values(
+            UserModel::query()
+                ->where(function (Builder $query) use ($threshold): void {
+                    $query->where('last_login_at', '<', $threshold)
+                        ->orWhere(function (Builder $query) use ($threshold): void {
+                            $query->whereNull('last_login_at')->where('created_at', '<', $threshold);
+                        });
+                })
                 ->orderBy('created_at')
                 ->get()
                 ->map(fn (UserModel $model): User => UserMapper::toDomain($model))

@@ -1308,7 +1308,9 @@ Prohibición de secretos en Git.
 Gestión por ambiente.
 ENG-070 — Protección de datos personales
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-28): cuarta historia de la Fase 14, alcance completo (a diferencia de casi todas las historias previas de esta fase, donde se optó por el alcance reducido). Investigación previa confirmó que "Minimización" ya estaba satisfecha (ningún módulo recolecta datos de más). El resto requirió trabajo real y extenso: borrado físico real de cuentas (autoservicio `DELETE /api/v1/auth/me` y un job de retención `identity:purge-inactive-accounts` con 3 años de inactividad configurable), con dos correcciones de esquema (FK nueva en `authorization_role_assignments` con cascada, FK nueva en `audit_logs` con desvinculación) y un cambio de esquema (`certificates.user_id` pasa a nullable con desvinculación en vez de cascada, para que un certificado siga siendo verificable públicamente aunque la cuenta del titular se elimine — esto propagó un refactor de `userId` a `?string` en todo `Modules\Certification`). Nuevo módulo `Modules\Legal` para consentimiento versionado por política (no un simple booleano). Exportación de datos personales de autoservicio (`GET /api/v1/auth/me/data-export`) agregando datos de diez módulos. Detalle completo en `docs/plans/2026-08-28-proteccion-datos-personales-eng070-design.md`.
 
 Incluye:
 

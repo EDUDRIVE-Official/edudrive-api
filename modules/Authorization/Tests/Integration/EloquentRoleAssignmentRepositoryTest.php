@@ -6,13 +6,29 @@ use Illuminate\Support\Str;
 use Modules\Authorization\Domain\Entities\RoleAssignment;
 use Modules\Authorization\Domain\Enums\Role;
 use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
+use Modules\Identity\Domain\Entities\User;
+use Modules\Identity\Domain\Repositories\UserRepository;
+use Modules\Identity\Domain\ValueObjects\Email;
 use Tests\TestCase;
+
+function persistedRoleAssignmentUserId(): string
+{
+    $user = User::register(
+        id: (string) Str::uuid(),
+        name: 'Usuario de prueba',
+        email: Email::fromString(sprintf('%s@edudrive.cr', Str::uuid())),
+        passwordHash: 'hashed-password',
+    );
+    app(UserRepository::class)->save($user);
+
+    return $user->id();
+}
 
 it('guarda y recupera las asignaciones de rol de un usuario', function (): void {
     /** @var TestCase $this */
     $repository = $this->app->make(RoleAssignmentRepository::class);
 
-    $userId = (string) Str::uuid();
+    $userId = persistedRoleAssignmentUserId();
 
     $repository->save(RoleAssignment::assign(
         id: (string) Str::uuid(),
@@ -43,10 +59,10 @@ it('no devuelve asignaciones de otros usuarios', function (): void {
 
     $repository->save(RoleAssignment::assign(
         id: (string) Str::uuid(),
-        userId: (string) Str::uuid(),
+        userId: persistedRoleAssignmentUserId(),
         role: Role::Student,
         organizationId: null,
     ));
 
-    expect($repository->findByUserId((string) Str::uuid()))->toBe([]);
+    expect($repository->findByUserId(persistedRoleAssignmentUserId()))->toBe([]);
 });

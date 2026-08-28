@@ -116,6 +116,21 @@ it('reporta vigencia efectiva expired cuando la fecha de expiracion ya paso', fu
         ->toBe(CertificateEffectiveStatus::Expired);
 });
 
+it('restaura un certificado desvinculado de un usuario eliminado con userId nulo', function (): void {
+    $certificate = Certificate::restore(
+        id: CertificateId::fromString((string) Str::uuid()),
+        userId: null,
+        courseId: (string) Str::uuid(),
+        validationCode: ValidationCode::generate(),
+        status: CertificateStatus::Issued,
+        issuedAt: new DateTimeImmutable('2026-08-26T10:00:00+00:00'),
+        expiresAt: null,
+        history: [],
+    );
+
+    expect($certificate->userId())->toBeNull();
+});
+
 it('reporta vigencia efectiva revoked sin importar la fecha de expiracion', function (): void {
     $certificate = newCertificate(new DateTimeImmutable('2027-08-26T10:00:00+00:00'));
     $certificate->revoke('Fraude', new DateTimeImmutable('2026-08-27T00:00:00+00:00'));

@@ -13,6 +13,7 @@ use Modules\Foundation\Providers\FoundationServiceProvider;
 use Modules\Gamification\Infrastructure\Providers\GamificationServiceProvider;
 use Modules\Identity\Providers\IdentityServiceProvider;
 use Modules\Learning\Infrastructure\Providers\LearningServiceProvider;
+use Modules\Legal\Infrastructure\Providers\LegalServiceProvider;
 use Modules\Notification\Infrastructure\Providers\NotificationServiceProvider;
 use Modules\Organization\Infrastructure\Providers\OrganizationServiceProvider;
 use Modules\RoadPassport\Infrastructure\Providers\RoadPassportServiceProvider;
@@ -25,6 +26,7 @@ return [
     AuditServiceProvider::class,
     AcademicServiceProvider::class,
     LearningServiceProvider::class,
+    LegalServiceProvider::class,
     OrganizationServiceProvider::class,
     AuthorizationServiceProvider::class,
     RoadPassportServiceProvider::class,

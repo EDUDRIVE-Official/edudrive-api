@@ -13,7 +13,6 @@ use Modules\Certification\Application\Queries\VerifyCertificateQuery;
 use Modules\Certification\Application\Responses\CertificateVerificationResponse;
 use Modules\Certification\Domain\Repositories\CertificateRepository;
 use Modules\Certification\Domain\ValueObjects\ValidationCode;
-use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Repositories\UserRepository;
 
 final readonly class VerifyCertificateHandler
@@ -37,8 +36,7 @@ final readonly class VerifyCertificateHandler
             throw CertificateNotFound::withValidationCode($query->validationCode);
         }
 
-        $holder = $this->users->findById($certificate->userId());
-        assert($holder instanceof User);
+        $holder = $certificate->userId() === null ? null : $this->users->findById($certificate->userId());
 
         $course = $this->courses->findById(CourseId::fromString($certificate->courseId()));
         assert($course instanceof Course);
@@ -46,7 +44,7 @@ final readonly class VerifyCertificateHandler
         return CertificateVerificationResponse::fromCertificate(
             certificate: $certificate,
             courseName: $course->title()->value(),
-            holderName: $holder->name(),
+            holderName: $holder?->name(),
         );
     }
 }

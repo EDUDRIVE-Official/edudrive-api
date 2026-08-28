@@ -17,13 +17,13 @@ final readonly class CertificateVerificationResponse
         public ?string $expiresAt,
         public string $courseId,
         public string $courseName,
-        public string $holderName,
+        public ?string $holderName,
     ) {}
 
     public static function fromCertificate(
         Certificate $certificate,
         string $courseName,
-        string $holderName,
+        ?string $holderName,
         ?DateTimeImmutable $now = null,
     ): self {
         $now ??= new DateTimeImmutable('now');
@@ -47,7 +47,7 @@ final readonly class CertificateVerificationResponse
      *     expires_at: ?string,
      *     course_id: string,
      *     course_name: string,
-     *     holder_name: string,
+     *     holder_name: ?string,
      * }
      */
     public function toArray(): array

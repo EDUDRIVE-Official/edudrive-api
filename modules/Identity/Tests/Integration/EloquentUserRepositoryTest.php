@@ -6,6 +6,7 @@ use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Enums\UserStatus;
 use Modules\Identity\Domain\Repositories\UserRepository;
 use Modules\Identity\Domain\ValueObjects\Email;
+use Modules\Identity\Infrastructure\Persistence\Eloquent\Models\UserModel;
 use Tests\TestCase;
 
 it('guarda y recupera un usuario por identificador', function (): void {
@@ -114,6 +115,68 @@ it('guarda y recupera la fecha de ultimo inicio de sesion', function (): void {
 
     expect($repository->findById($user->id())?->lastLoginAt())
         ->toEqual($loginAt);
+});
+
+it('elimina un usuario existente', function (): void {
+    /** @var TestCase $this */
+    $repository = $this->app->make(UserRepository::class);
+
+    $user = User::register(
+        id: '01900000-0000-7000-8000-000000000007',
+        name: 'Usuario a eliminar',
+        email: Email::fromString('eliminar@edudrive.cr'),
+        passwordHash: 'hashed-password',
+    );
+    $repository->save($user);
+
+    $repository->delete($user->id());
+
+    expect($repository->findById($user->id()))->toBeNull();
+});
+
+it('encuentra usuarios inactivos antes de un umbral por ultimo inicio de sesion o fecha de registro', function (): void {
+    /** @var TestCase $this */
+    $repository = $this->app->make(UserRepository::class);
+
+    $inactiveByLogin = User::register(
+        id: '01900000-0000-7000-8000-000000000008',
+        name: 'Inactivo por login',
+        email: Email::fromString('inactivo-login@edudrive.cr'),
+        passwordHash: 'hashed-password',
+        registeredAt: new DateTimeImmutable('2020-01-01T00:00:00+00:00'),
+    );
+    $inactiveByLogin->recordLogin(new DateTimeImmutable('2020-06-01T00:00:00+00:00'));
+    $repository->save($inactiveByLogin);
+
+    $inactiveNeverLoggedIn = User::register(
+        id: '01900000-0000-7000-8000-000000000009',
+        name: 'Inactivo sin login',
+        email: Email::fromString('inactivo-sin-login@edudrive.cr'),
+        passwordHash: 'hashed-password',
+        registeredAt: new DateTimeImmutable('2020-01-01T00:00:00+00:00'),
+    );
+    $repository->save($inactiveNeverLoggedIn);
+    // Eloquent gestiona created_at automaticamente al guardar (ignora el valor del mapper),
+    // por lo que se fuerza directamente para simular un registro antiguo real.
+    UserModel::query()->whereKey($inactiveNeverLoggedIn->id())->update(['created_at' => '2020-01-01 00:00:00']);
+
+    $active = User::register(
+        id: '01900000-0000-7000-8000-000000000010',
+        name: 'Activo',
+        email: Email::fromString('activo@edudrive.cr'),
+        passwordHash: 'hashed-password',
+        registeredAt: new DateTimeImmutable('2020-01-01T00:00:00+00:00'),
+    );
+    $active->recordLogin(new DateTimeImmutable('now'));
+    $repository->save($active);
+
+    $inactive = $repository->findInactiveBefore(new DateTimeImmutable('-3 years'));
+
+    $inactiveIds = array_map(static fn (User $user): string => $user->id(), $inactive);
+
+    expect($inactiveIds)->toContain($inactiveByLogin->id())
+        ->and($inactiveIds)->toContain($inactiveNeverLoggedIn->id())
+        ->and($inactiveIds)->not->toContain($active->id());
 });
 
 it('lista todos los usuarios registrados', function (): void {

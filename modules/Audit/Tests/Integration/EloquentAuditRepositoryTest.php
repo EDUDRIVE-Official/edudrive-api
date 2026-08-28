@@ -11,7 +11,6 @@ it('guarda y lista los registros de auditoria', function (): void {
 
     $repository->save(new AuditEntry(
         action: 'user.activated',
-        userId: (string) Str::uuid(),
         entity: 'User',
         entityId: (string) Str::uuid(),
         metadata: ['source' => 'admin-panel'],

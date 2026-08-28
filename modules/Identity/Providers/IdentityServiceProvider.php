@@ -17,6 +17,7 @@ use Modules\Identity\Infrastructure\Security\SanctumAccessTokenIssuer;
 use Modules\Identity\Infrastructure\Security\SanctumAccessTokenRevoker;
 use Modules\Identity\Infrastructure\Security\SanctumSessionRepository;
 use Modules\Identity\Infrastructure\Support\LaravelUuidGenerator;
+use Modules\Identity\Presentation\Console\PurgeInactiveAccountsCommand;
 
 final class IdentityServiceProvider extends ServiceProvider
 {
@@ -66,5 +67,9 @@ final class IdentityServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(
             __DIR__.'/../routes/web.php',
         );
+
+        $this->commands([
+            PurgeInactiveAccountsCommand::class,
+        ]);
     }
 }

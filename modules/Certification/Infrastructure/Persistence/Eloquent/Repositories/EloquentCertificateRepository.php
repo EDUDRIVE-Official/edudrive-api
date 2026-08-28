@@ -93,10 +93,11 @@ final readonly class EloquentCertificateRepository implements CertificateReposit
         $historyModels = array_values($model->historyEntries->all());
 
         $expiresAt = $model->getAttribute('expires_at');
+        $userId = $model->getAttribute('user_id');
 
         return Certificate::restore(
             id: CertificateId::fromString((string) $model->getAttribute('id')),
-            userId: (string) $model->getAttribute('user_id'),
+            userId: $userId === null ? null : (string) $userId,
             courseId: (string) $model->getAttribute('course_id'),
             validationCode: ValidationCode::fromString((string) $model->getAttribute('validation_code')),
             status: CertificateStatus::from((string) $model->getAttribute('status')),

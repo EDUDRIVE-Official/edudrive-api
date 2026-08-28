@@ -287,3 +287,10 @@ it('otorga permisos de configuracion y operacion del sistema unicamente al super
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageSystemSettings))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ViewSystemOperations))->toBeFalse();
 });
+
+it('otorga la gestion de politicas legales unicamente al superadministrador', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageLegalPolicies))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageLegalPolicies))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageLegalPolicies))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageLegalPolicies))->toBeFalse();
+});

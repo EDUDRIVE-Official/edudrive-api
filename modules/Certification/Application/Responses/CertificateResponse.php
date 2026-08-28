@@ -15,7 +15,7 @@ final readonly class CertificateResponse
      */
     public function __construct(
         public string $id,
-        public string $userId,
+        public ?string $userId,
         public string $courseId,
         public string $validationCode,
         public string $status,
@@ -49,7 +49,7 @@ final readonly class CertificateResponse
     /**
      * @return array{
      *     id: string,
-     *     user_id: string,
+     *     user_id: ?string,
      *     course_id: string,
      *     validation_code: string,
      *     status: string,

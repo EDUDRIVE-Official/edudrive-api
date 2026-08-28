@@ -13,6 +13,7 @@ use Modules\Certification\Application\Queries\VerifyCertificateQuery;
 use Modules\Certification\Application\Responses\CertificateVerificationResponse;
 use Modules\Certification\Application\UseCases\VerifyCertificateHandler;
 use Modules\Certification\Domain\Aggregates\Certificate;
+use Modules\Certification\Domain\Enums\CertificateStatus;
 use Modules\Certification\Domain\Repositories\CertificateRepository;
 use Modules\Certification\Domain\ValueObjects\CertificateId;
 use Modules\Certification\Domain\ValueObjects\ValidationCode;
@@ -83,8 +84,19 @@ final class InMemoryVerificationUserRepository implements UserRepository
         throw new LogicException('No usado en esta prueba.');
     }
 
+    public function delete(string $id): void
+    {
+        throw new LogicException('No usado en esta prueba.');
+    }
+
     /** @return list<User> */
     public function all(): array
+    {
+        throw new LogicException('No usado en esta prueba.');
+    }
+
+    /** @return list<User> */
+    public function findInactiveBefore(DateTimeImmutable $threshold): array
     {
         throw new LogicException('No usado en esta prueba.');
     }
@@ -182,6 +194,31 @@ it('verifica un certificado valido por su codigo y expone el nombre del titular 
         ->and($response->courseName)->toBe('Manejo defensivo')
         ->and($response->holderName)->toBe('Ana Torres')
         ->and($response->expiresAt)->toBeNull();
+});
+
+it('verifica un certificado cuyo titular fue eliminado sin exponer nombre alguno', function (): void {
+    $certificates = new InMemoryVerificationCertificateRepository;
+    $users = new InMemoryVerificationUserRepository;
+    $courses = new InMemoryVerificationCourseRepository;
+
+    $course = persistedVerificationCourse($courses, 'Manejo defensivo');
+    $certificate = Certificate::restore(
+        id: CertificateId::fromString((string) Str::uuid()),
+        userId: null,
+        courseId: $course->id()->value(),
+        validationCode: ValidationCode::generate(),
+        status: CertificateStatus::Issued,
+        issuedAt: new DateTimeImmutable('2026-08-26T10:00:00+00:00'),
+        expiresAt: null,
+        history: [],
+    );
+    $certificates->save($certificate);
+
+    $response = (new VerifyCertificateHandler($certificates, $users, $courses))
+        ->handle(new VerifyCertificateQuery($certificate->validationCode()->value()));
+
+    expect($response->status)->toBe('valid')
+        ->and($response->holderName)->toBeNull();
 });
 
 it('normaliza el codigo de validacion recibido antes de buscarlo', function (): void {

@@ -7,6 +7,8 @@ use Modules\Identity\Presentation\Http\Controllers\ActivateUserController;
 use Modules\Identity\Presentation\Http\Controllers\AuthController;
 use Modules\Identity\Presentation\Http\Controllers\BulkImportUsersController;
 use Modules\Identity\Presentation\Http\Controllers\DeactivateUserController;
+use Modules\Identity\Presentation\Http\Controllers\DeleteAccountController;
+use Modules\Identity\Presentation\Http\Controllers\ExportMyDataController;
 use Modules\Identity\Presentation\Http\Controllers\ListUsersController;
 use Modules\Identity\Presentation\Http\Controllers\LoginController;
 use Modules\Identity\Presentation\Http\Controllers\LogoutAllController;
@@ -34,6 +36,12 @@ Route::middleware('api')
         Route::middleware('auth:sanctum')->group(function (): void {
             Route::get('/me', MeController::class)
                 ->name('api.v1.auth.me');
+
+            Route::delete('/me', DeleteAccountController::class)
+                ->name('api.v1.auth.me.delete');
+
+            Route::get('/me/data-export', ExportMyDataController::class)
+                ->name('api.v1.auth.me.data-export');
 
             Route::get('/sessions', SessionsController::class)
                 ->name('api.v1.auth.sessions');

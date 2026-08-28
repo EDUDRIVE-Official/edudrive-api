@@ -14,6 +14,7 @@ use Modules\Certification\Infrastructure\Persistence\Eloquent\Models\Certificate
 use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Repositories\UserRepository;
 use Modules\Identity\Domain\ValueObjects\Email;
+use Modules\Identity\Infrastructure\Persistence\Eloquent\Models\UserModel;
 
 uses(RefreshDatabase::class);
 
@@ -142,6 +143,26 @@ it('reemplaza el historial en vez de duplicarlo al guardar de nuevo', function (
     $found = $repository->findById($certificate->id());
 
     expect($found?->history())->toHaveCount(1);
+});
+
+it('conserva el certificado desvinculado cuando se elimina el usuario titular', function (): void {
+    $course = createDraftCourseForPublishing('CRT-'.strtoupper((string) Str::random(4)));
+    $userId = persistedCertificateUserId();
+    $repository = app(CertificateRepository::class);
+    $certificate = Certificate::create(
+        id: CertificateId::fromString((string) Str::uuid()),
+        userId: $userId,
+        courseId: $course->id()->value(),
+        validationCode: ValidationCode::generate(),
+    );
+    $repository->save($certificate);
+
+    UserModel::query()->where('id', $userId)->delete();
+
+    $found = $repository->findById($certificate->id());
+
+    expect($found)->not->toBeNull()
+        ->and($found?->userId())->toBeNull();
 });
 
 it('borra en cascada el historial al eliminar el certificado', function (): void {
