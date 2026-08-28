@@ -26,6 +26,7 @@ final class RoleAssignmentController
                 organizationId: isset($validated['organization_id'])
                     ? (string) $validated['organization_id']
                     : null,
+                actorId: (string) $request->user()?->getAuthIdentifier(),
             ),
         );
 

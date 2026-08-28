@@ -40,6 +40,7 @@ final class SystemSettingController
         $result = $commandBus->dispatch(new SetSystemSettingCommand(
             key: $key,
             value: (string) $data['value'],
+            actorId: (string) $request->user()?->getAuthIdentifier(),
         ));
         assert($result instanceof SystemSettingResponse);
 

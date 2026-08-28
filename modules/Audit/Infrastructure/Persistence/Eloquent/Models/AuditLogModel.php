@@ -16,6 +16,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $entity_id
  * @property string|null $ip
  * @property string|null $user_agent
+ * @property string|null $correlation_id
+ * @property string $outcome
  * @property array<string, mixed>|null $metadata
  * @property Carbon $occurred_at
  */

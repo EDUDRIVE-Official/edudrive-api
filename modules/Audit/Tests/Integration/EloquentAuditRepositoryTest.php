@@ -23,8 +23,27 @@ it('guarda y lista los registros de auditoria', function (): void {
         ->and($entries[0]->action)->toBe('user.activated')
         ->and($entries[0]->entity)->toBe('User')
         ->and($entries[0]->metadata)->toBe(['source' => 'admin-panel'])
+        ->and($entries[0]->outcome)->toBe('success')
         ->and($entries[0]->id)->not->toBeNull()
         ->and($entries[0]->occurredAt)->not->toBeNull();
+});
+
+it('guarda y recupera la ip, el correlation id y el resultado', function (): void {
+    $repository = app(AuditRepository::class);
+
+    $repository->save(new AuditEntry(
+        action: 'auth.login',
+        ip: '203.0.113.10',
+        correlationId: 'corr-1234',
+        outcome: 'failure',
+    ));
+
+    $entries = $repository->all();
+
+    expect($entries)->toHaveCount(1)
+        ->and($entries[0]->ip)->toBe('203.0.113.10')
+        ->and($entries[0]->correlationId)->toBe('corr-1234')
+        ->and($entries[0]->outcome)->toBe('failure');
 });
 
 it('lista los registros mas recientes primero', function (): void {

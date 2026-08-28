@@ -1279,7 +1279,9 @@ Cambiar `CACHE_STORE` a Redis para rate limiting de mayor rendimiento (el limita
 Límites configurables por entorno o panel administrativo.
 ENG-068 — Auditoría general
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-28): segunda historia de la Fase 14. El módulo `Modules\Audit` ya existía con Actor/Acción/Recurso/Fecha bien conectados desde antes, pero solo 3 casos de uso lo llamaban (login, logout, logout-all, todos en `Modules\Identity`), IP nunca se persistía pese a tener columna en la base de datos, Correlation ID no existía en absoluto, "Resultado" no existía (solo se auditaban logins exitosos, nunca los fallidos — un hueco real de seguridad), y `LogoutUserUseCase` nunca registraba el `userId` del actor. Alcance acordado: autenticación (extendida a login fallido) + asignación de roles (`Modules\Authorization`) + cambios de configuración del sistema (`Modules\Admin`) — no los casi 90 comandos de escritura de todo el backend. Detalle completo en `docs/plans/2026-08-28-auditoria-general-eng068-design.md`.
 
 Incluye:
 

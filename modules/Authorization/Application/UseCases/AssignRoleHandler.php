@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Modules\Authorization\Application\UseCases;
 
 use Illuminate\Support\Str;
+use Modules\Audit\Application\DTO\AuditEntry;
+use Modules\Audit\Application\Services\AuditLogger;
 use Modules\Authorization\Application\Commands\AssignRoleCommand;
 use Modules\Authorization\Application\Exceptions\UserNotFound;
 use Modules\Authorization\Application\Responses\RoleAssignmentResponse;
@@ -18,6 +20,7 @@ final readonly class AssignRoleHandler
     public function __construct(
         private RoleAssignmentRepository $assignments,
         private UserRepository $users,
+        private AuditLogger $auditLogger,
     ) {}
 
     public function handle(
@@ -35,6 +38,20 @@ final readonly class AssignRoleHandler
         );
 
         $this->assignments->save($assignment);
+
+        $this->auditLogger->log(
+            new AuditEntry(
+                action: 'authorization.role_assigned',
+                userId: $command->actorId,
+                entity: 'RoleAssignment',
+                entityId: $assignment->id(),
+                metadata: [
+                    'target_user_id' => $command->userId,
+                    'role' => $command->role,
+                    'organization_id' => $command->organizationId,
+                ],
+            ),
+        );
 
         return RoleAssignmentResponse::fromRoleAssignment($assignment);
     }

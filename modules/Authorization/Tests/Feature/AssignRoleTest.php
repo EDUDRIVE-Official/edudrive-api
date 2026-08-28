@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
+use Modules\Audit\Infrastructure\Persistence\Eloquent\Models\AuditLogModel;
 use Modules\Authorization\Domain\Entities\RoleAssignment;
 use Modules\Authorization\Domain\Enums\Role;
 use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
@@ -51,6 +52,24 @@ it('permite asignar un rol cuando quien llama es superadministrador', function (
         'user_id' => $targetUser->id,
         'role' => 'teacher',
     ]);
+});
+
+it('audita la asignacion de un rol con el id de quien la realiza', function (): void {
+    $actor = actingAsSuperAdminUser();
+
+    $targetUser = registerUserForAssignRoleTest();
+
+    postJson('/api/v1/authorization/role-assignments', [
+        'user_id' => $targetUser->id,
+        'role' => 'teacher',
+    ])->assertCreated();
+
+    $entry = AuditLogModel::query()->where('action', 'authorization.role_assigned')->latest('occurred_at')->first();
+
+    expect($entry)->not->toBeNull()
+        ->and($entry->user_id)->toBe($actor->id)
+        ->and($entry->metadata['target_user_id'])->toBe($targetUser->id)
+        ->and($entry->metadata['role'])->toBe('teacher');
 });
 
 it('rechaza la asignación de un rol a un usuario inexistente', function (): void {

@@ -37,7 +37,7 @@ final readonly class BulkImportUsersUseCase
             $rowNumber = $index + 1;
 
             try {
-                $results[] = $this->importRow($rowNumber, $row);
+                $results[] = $this->importRow($rowNumber, $row, $command->actorId);
                 $created++;
             } catch (EmailAlreadyExists) {
                 $failed++;
@@ -60,7 +60,7 @@ final readonly class BulkImportUsersUseCase
      * @param  array{name: string, email: string, password: string, role: string}  $row
      * @return array{row: int, created: bool, user_id: string, email: string}
      */
-    private function importRow(int $rowNumber, array $row): array
+    private function importRow(int $rowNumber, array $row, string $actorId): array
     {
         $name = trim($row['name']);
         $email = trim($row['email']);
@@ -73,7 +73,7 @@ final readonly class BulkImportUsersUseCase
 
         $role = Role::from($roleValue === '' ? Role::Student->value : $roleValue);
 
-        return DB::transaction(function () use ($name, $email, $password, $role, $rowNumber): array {
+        return DB::transaction(function () use ($name, $email, $password, $role, $rowNumber, $actorId): array {
             $registered = (new RegisterUserUseCase($this->users, $this->passwordHasher, $this->uuidGenerator))
                 ->execute(new RegisterUserCommand(name: $name, email: $email, password: $password));
 
@@ -81,6 +81,7 @@ final readonly class BulkImportUsersUseCase
                 userId: $registered->id,
                 role: $role->value,
                 organizationId: null,
+                actorId: $actorId,
             ));
 
             return [

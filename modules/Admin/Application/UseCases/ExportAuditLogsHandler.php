@@ -34,6 +34,9 @@ final readonly class ExportAuditLogsHandler
                 (string) $entry->userId,
                 (string) $entry->entity,
                 (string) $entry->entityId,
+                (string) $entry->ip,
+                (string) $entry->correlationId,
+                $entry->outcome,
                 json_encode($entry->metadata, JSON_THROW_ON_ERROR),
                 $entry->occurredAt?->format(DateTimeInterface::ATOM) ?? '',
             ],
@@ -41,7 +44,7 @@ final readonly class ExportAuditLogsHandler
         );
 
         $csv = $this->csvWriter->toString(
-            ['id', 'action', 'user_id', 'entity', 'entity_id', 'metadata', 'occurred_at'],
+            ['id', 'action', 'user_id', 'entity', 'entity_id', 'ip', 'correlation_id', 'outcome', 'metadata', 'occurred_at'],
             $rows,
         );
 

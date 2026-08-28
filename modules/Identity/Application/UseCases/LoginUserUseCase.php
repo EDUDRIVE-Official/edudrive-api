@@ -11,6 +11,7 @@ use Modules\Identity\Application\Commands\LoginUserCommand;
 use Modules\Identity\Application\Responses\LoginUserResponse;
 use Modules\Identity\Application\Services\AccessTokenIssuer;
 use Modules\Identity\Application\Services\PasswordHasher;
+use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Exceptions\InvalidCredentials;
 use Modules\Identity\Domain\Exceptions\UserCannotAuthenticate;
 use Modules\Identity\Domain\Repositories\UserRepository;
@@ -38,10 +39,14 @@ final readonly class LoginUserUseCase
                 $user->passwordHash(),
             )
         ) {
+            $this->logFailedLogin($command, $user);
+
             throw new InvalidCredentials;
         }
 
         if (! $user->status()->canAuthenticate()) {
+            $this->logFailedLogin($command, $user);
+
             throw new UserCannotAuthenticate;
         }
 
@@ -72,6 +77,22 @@ final readonly class LoginUserUseCase
             status: $user->status()->value,
             accessToken: $issuedToken->plainTextToken,
             tokenType: $issuedToken->tokenType,
+        );
+    }
+
+    private function logFailedLogin(LoginUserCommand $command, ?User $user): void
+    {
+        $this->auditLogger->log(
+            new AuditEntry(
+                action: 'auth.login',
+                userId: $user?->id(),
+                entity: 'User',
+                entityId: $user?->id(),
+                metadata: [
+                    'email' => $command->email,
+                ],
+                outcome: 'failure',
+            ),
         );
     }
 }

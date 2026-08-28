@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Audit\Infrastructure\Persistence\Eloquent\Models\AuditLogModel;
 use Modules\Authorization\Domain\Enums\Role;
 use Tests\TestCase;
 
@@ -16,6 +17,21 @@ it('establece una configuracion con el permiso system_settings.manage', function
         ->assertOk()
         ->assertJsonPath('data.key', 'maintenance_mode')
         ->assertJsonPath('data.value', 'true');
+});
+
+it('audita el cambio de una configuracion con el valor anterior y el nuevo', function (): void {
+    /** @var TestCase $this */
+    $actor = actingAsRole(Role::SuperAdmin);
+
+    $this->putJson('/api/v1/admin/settings/maintenance_mode', ['value' => 'true'])->assertOk();
+    $this->putJson('/api/v1/admin/settings/maintenance_mode', ['value' => 'false'])->assertOk();
+
+    $entry = AuditLogModel::query()->where('action', 'admin.system_setting_changed')->latest('occurred_at')->first();
+
+    expect($entry)->not->toBeNull()
+        ->and($entry->user_id)->toBe($actor->id)
+        ->and($entry->metadata['old_value'])->toBe('true')
+        ->and($entry->metadata['new_value'])->toBe('false');
 });
 
 it('rechaza establecer una configuracion sin el permiso system_settings.manage', function (): void {

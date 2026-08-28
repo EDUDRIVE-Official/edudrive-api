@@ -111,5 +111,5 @@ it('exporta una lista vacia cuando no hay registros de auditoria', function (): 
 
     expect($response->rowCount)->toBe(0);
     $storedCsv = array_values($fileStorage->stored)[0];
-    expect($storedCsv)->toBe("id,action,user_id,entity,entity_id,metadata,occurred_at\n");
+    expect($storedCsv)->toBe("id,action,user_id,entity,entity_id,ip,correlation_id,outcome,metadata,occurred_at\n");
 });

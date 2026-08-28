@@ -17,6 +17,9 @@ final readonly class AuditLogResponse
         public ?string $entity,
         public ?string $entityId,
         public array $metadata,
+        public ?string $ip,
+        public ?string $correlationId,
+        public string $outcome,
         public ?string $occurredAt,
     ) {}
 
@@ -29,6 +32,9 @@ final readonly class AuditLogResponse
             entity: $entry->entity,
             entityId: $entry->entityId,
             metadata: $entry->metadata,
+            ip: $entry->ip,
+            correlationId: $entry->correlationId,
+            outcome: $entry->outcome,
             occurredAt: $entry->occurredAt?->format(DateTimeInterface::ATOM),
         );
     }
@@ -43,6 +49,9 @@ final readonly class AuditLogResponse
             'entity' => $this->entity,
             'entity_id' => $this->entityId,
             'metadata' => $this->metadata,
+            'ip' => $this->ip,
+            'correlation_id' => $this->correlationId,
+            'outcome' => $this->outcome,
             'occurred_at' => $this->occurredAt,
         ];
     }

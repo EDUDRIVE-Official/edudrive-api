@@ -26,7 +26,10 @@ final class LogoutController extends Controller
 
         $accessToken = $authenticatedUser->currentAccessToken();
 
-        $this->useCase->execute((string) $accessToken->getKey());
+        $this->useCase->execute(
+            (string) $accessToken->getKey(),
+            (string) $authenticatedUser->getAuthIdentifier(),
+        );
 
         return ApiResponse::success(
             message: 'Sesión cerrada correctamente.',

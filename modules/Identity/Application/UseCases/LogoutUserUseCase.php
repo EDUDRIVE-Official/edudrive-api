@@ -15,13 +15,16 @@ final readonly class LogoutUserUseCase
         private AuditLogger $auditLogger,
     ) {}
 
-    public function execute(string $tokenId): void
+    public function execute(string $tokenId, string $userId): void
     {
         $this->tokens->revokeCurrent($tokenId);
 
         $this->auditLogger->log(
             new AuditEntry(
                 action: 'auth.logout',
+                userId: $userId,
+                entity: 'User',
+                entityId: $userId,
                 metadata: [
                     'token_id' => $tokenId,
                 ],

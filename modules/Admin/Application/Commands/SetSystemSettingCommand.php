@@ -11,5 +11,6 @@ final readonly class SetSystemSettingCommand implements Command
     public function __construct(
         public string $key,
         public string $value,
+        public string $actorId,
     ) {}
 }

@@ -44,7 +44,10 @@ final class BulkImportUsersController extends Controller
             ]);
         }
 
-        $result = $this->useCase->execute(new BulkImportUsersCommand(rows: $rows));
+        $result = $this->useCase->execute(new BulkImportUsersCommand(
+            rows: $rows,
+            actorId: (string) $request->user()?->getAuthIdentifier(),
+        ));
 
         return response()->json(['data' => $result->toArray()]);
     }

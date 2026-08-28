@@ -10,10 +10,15 @@ use Modules\Admin\Application\Responses\SystemSettingResponse;
 use Modules\Admin\Domain\Aggregates\SystemSetting;
 use Modules\Admin\Domain\Repositories\SystemSettingRepository;
 use Modules\Admin\Domain\ValueObjects\SystemSettingKey;
+use Modules\Audit\Application\DTO\AuditEntry;
+use Modules\Audit\Application\Services\AuditLogger;
 
 final readonly class SetSystemSettingHandler
 {
-    public function __construct(private SystemSettingRepository $settings) {}
+    public function __construct(
+        private SystemSettingRepository $settings,
+        private AuditLogger $auditLogger,
+    ) {}
 
     public function handle(SetSystemSettingCommand $command): SystemSettingResponse
     {
@@ -21,6 +26,7 @@ final readonly class SetSystemSettingHandler
         $now = new DateTimeImmutable('now');
 
         $setting = $this->settings->findByKey($key);
+        $oldValue = $setting?->value();
 
         if ($setting === null) {
             $setting = SystemSetting::set($key, $command->value, $now);
@@ -29,6 +35,19 @@ final readonly class SetSystemSettingHandler
         }
 
         $this->settings->save($setting);
+
+        $this->auditLogger->log(
+            new AuditEntry(
+                action: 'admin.system_setting_changed',
+                userId: $command->actorId,
+                entity: 'SystemSetting',
+                entityId: $command->key,
+                metadata: [
+                    'old_value' => $oldValue,
+                    'new_value' => $command->value,
+                ],
+            ),
+        );
 
         return SystemSettingResponse::fromSystemSetting($setting);
     }

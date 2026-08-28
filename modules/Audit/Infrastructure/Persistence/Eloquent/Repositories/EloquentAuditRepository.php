@@ -18,6 +18,9 @@ final class EloquentAuditRepository implements AuditRepository
             'action' => $entry->action,
             'entity' => $entry->entity,
             'entity_id' => $entry->entityId,
+            'ip' => $entry->ip,
+            'correlation_id' => $entry->correlationId,
+            'outcome' => $entry->outcome,
             'metadata' => $entry->metadata,
             'occurred_at' => CarbonImmutable::now(),
         ]);
@@ -36,6 +39,9 @@ final class EloquentAuditRepository implements AuditRepository
                     entity: $model->entity,
                     entityId: $model->entity_id,
                     metadata: $model->metadata ?? [],
+                    ip: $model->ip,
+                    correlationId: $model->correlation_id,
+                    outcome: $model->outcome,
                     id: $model->id,
                     occurredAt: $model->occurred_at->toDateTimeImmutable(),
                 ))

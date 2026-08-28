@@ -12,5 +12,6 @@ final readonly class AssignRoleCommand implements Command
         public string $userId,
         public string $role,
         public ?string $organizationId,
+        public ?string $actorId = null,
     ) {}
 }
