@@ -1981,3 +1981,32 @@ Segunda historia de la Fase 13 — Reportes y analítica. Mismo patrón ambiguo 
 - `php artisan route:list --path=simulation/reports` ✅ — 4 rutas registradas.
 
 **Estado:** Finalizado.
+
+## 2026-08-28 — IMP-065 (Cierre de ENG-065 — Indicadores institucionales)
+
+### Alcance acordado con el usuario
+
+Tercera y última historia de la Fase 13 — Reportes y analítica. Mismo patrón ambiguo que ENG-063/064: el roadmap lista seis indicadores sin especificar cómo se calculan ni sobre qué se agrupan. Investigación previa: `Organization` tiene `Campus` como entidad hija con id propio, pero nada la referencia — ni `Enrollment` ni `RoleAssignment` tienen `campusId`, solo `organizationId` — así que "Uso por sede" no tiene ningún dato hoy. `Certificate` (Certification), `RoadPassport` y los agregados de Gamification no tienen ningún campo de organización — "Impacto" no tiene ningún vínculo organizacional real en ninguna fuente candidata, sería una métrica especulativa. `EnrollmentRepository::all()` ya filtra por `organizationId` a nivel SQL, suficiente para recortar inscripciones por organización sin cambios de esquema. `ExamAttemptRepository`/`ExamRepository` no tienen ningún concepto de organización — un indicador de desempeño institucional requiere cruzar inscripciones → cursos → exámenes → intentos, filtrando a los usuarios inscritos institucionalmente en esa organización. Alcance acordado: cuatro indicadores — Participación, Finalización, Desempeño y Adopción — todos agregados por organización; Impacto y Uso por sede diferidos. Detalle completo en `docs/plans/2026-08-28-indicadores-institucionales-eng065-design.md`.
+
+### Completado
+
+- **Viven en `Modules\Academic`**, no en `Modules\Organization`: tres de los cuatro indicadores son mayoritariamente datos de Academic (Enrollment/EnrollmentProgress/ExamAttempt); Organization solo aporta la lista de organizaciones sobre la cual iterar — mismo criterio que el reporte de Actividad de ENG-063, que vivió en Academic aunque dependiera de `Identity\UserRepository`.
+- **`ReportOrganizationResolver`** (análogo a `ReportCourseResolver`/`ReportUserIdsResolver`): resuelve `organization_ids` explícitos, validando existencia vía `OrganizationRepository::findById()` — a diferencia de `ReportUserIdsResolver` (ENG-064), que no valida porque no hay un agregado `User` que consultar desde Simulation, aquí sí existe `Organization` como agregado real, así que un id inexistente lanza `Organization\Application\Exceptions\OrganizationNotFound` (reutilizada tal cual desde `Modules\Organization` — dependencia entre módulos documentada, el manejador de excepciones global ya renderiza cualquier `DomainException` ajena por su `errorCode()`/`statusCode()`). Sin `organization_ids`, cubre todas las organizaciones vía `OrganizationRepository::all()`.
+- **Cuatro indicadores**, todos con la forma `Get{X}ReportQuery(list<string> $organizationIds = [])` → `Get{X}ReportHandler` → `list<{X}ReportResponse>` (una fila por organización):
+  - **Participación**: distingue inscripción de participación real — cuenta inscripciones con al menos una lección completada (`EnrollmentProgress::completedLessonIds() !== []`), no solo inscripciones activas.
+  - **Finalización**: proporción de inscripciones en estado `Completed` (estado terminal real, distinto de `Active`/`Canceled`).
+  - **Desempeño**: reutiliza `CourseExamAttemptsLookup` (ya construido en ENG-063) por cada curso con inscripciones institucionales en la organización, filtrando los intentos devueltos a solo los `userId` inscritos institucionalmente en esa organización para ese curso — evita contar intentos de estudiantes de otras instituciones o autoinscritos individualmente en el mismo curso (verificado explícitamente con una prueba: un intento ajeno a la organización no se cuenta).
+  - **Adopción**: primera serie temporal de toda la Fase 13 — inscripciones nuevas agrupadas por mes (`enrolledAt` formateado `Y-m`), en orden cronológico, mismo patrón fetch-all-then-compute que el resto de los cálculos derivados de la sesión.
+- **API HTTP**: `GET /api/v1/academic/reports/organizations/{participation,completion,performance,adoption}?organization_ids[]=...`, los cuatro bajo `permission:reports.view` (reutilizado, sin permiso nuevo), agregados a un controlador nuevo, `OrganizationReportController`.
+- **Pruebas**: 6 unitarias (con repositorios reales vía `app()`, mismo estilo que `AcademicReportHandlerTest` de ENG-063, incluyendo una prueba dedicada a la exclusión de intentos ajenos a la organización y otra al `OrganizationNotFound`) + 4 de feature HTTP (permisos) — 10 tests nuevos en total.
+
+### Validaciones
+
+- Suites dirigidas de `Modules\Academic` (los cuatro indicadores nuevos) ✅ — `10 passed (38 assertions)`.
+- Suite completa de `Modules\Organization` (sin cambios propios, verificada por la nueva dependencia cruzada) ✅ — `42 passed (96 assertions)`.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=academic/reports/organizations` ✅ — 4 rutas registradas.
+
+Con esto cierra por completo la **Fase 13 — Reportes y analítica** (ENG-063 a ENG-065).
+
+**Estado:** Finalizado.
