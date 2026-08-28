@@ -1903,3 +1903,30 @@ A diferencia de ENG-059/ENG-060, no introduce ningún módulo nuevo: extiende `M
 - `php artisan route:list --path=import` ✅ — 3 rutas registradas (`users/import`, `courses/import`, `questions/import`).
 
 **Estado:** Finalizado.
+
+## 2026-08-27 — IMP-062 (Cierre de ENG-062 — Exportaciones)
+
+### Alcance acordado con el usuario
+
+A diferencia de ENG-061, el roadmap no especifica QUÉ datos se exportan, solo los mecanismos (CSV, XLSX, PDF, exportaciones asíncronas, control de acceso, auditoría). Investigación previa: ninguna consulta de listado tiene paginación hoy; `league/csv` (ya instalada en ENG-061) también sabe escribir CSV, pero nada la usaba para eso; no existe ninguna librería de XLSX ni PDF; no existe ningún `ShouldQueue` job en todo el backend — sería el primero — y `compose.yaml` no tiene worker de cola corriendo; `Modules\Audit` ya expone un `AuditLogger::log()` genérico, usado hoy solo desde `Identity`; `Modules\FileStorage` (ENG-060) ya expone una interfaz de bajo nivel (`store`/`temporaryDownloadUrl`) independiente del agregado `StoredFile` y su cuota. Alcance acordado: solo CSV (XLSX y PDF diferidos — cada uno requeriría una librería nueva y su renderizado); conjunto fijo y reducido de tres exportadores concretos — Auditoría, Cursos, Enrollments — reutilizando las consultas de listado ya existentes, en vez de un framework genérico; procesamiento síncrono en la misma petición HTTP, sin cola de trabajos; permiso nuevo y transversal `exports.view` (SuperAdmin + InstitutionalAdmin, mismo patrón que `reports.view`/`system_operations.view`) en vez de reutilizar el `.view` de cada recurso, porque exportar todas las filas de una vez es un riesgo distinto a ver una lista paginada. Detalle completo en `docs/plans/2026-08-27-exportaciones-eng062-design.md`.
+
+### Completado
+
+- **Sin módulo nuevo**: cada exportador vive en el módulo dueño de los datos (`Modules\Admin` para Auditoría, `Modules\Academic` para Cursos y Enrollments), mismo criterio que ENG-061.
+- **Infraestructura compartida en `Modules\Foundation`** (única excepción al criterio anterior, por ser infraestructura pura sin reglas de negocio, usada idénticamente por los tres exportadores): `Infrastructure\Export\CsvWriter` (envuelve `League\Csv\Writer`); `Infrastructure\Export\ExportFileWriter` (escribe el CSV a un archivo temporal, lo sube vía `Modules\FileStorage\Application\Contracts\FileStorage::store()` — la interfaz de bajo nivel, sin crear una fila `StoredFile` ni contar contra la cuota de un usuario, porque un archivo exportado es un artefacto generado por el sistema, no un adjunto propio — y devuelve una URL temporal de 15 minutos vía `temporaryDownloadUrl()`); `Application\Responses\ExportResponse` (DTO de respuesta genérico: `url`, `expires_at`, `row_count`, `format`). Extraída tras implementar el primer exportador (Auditoría) y notar que repetir la misma lógica de archivo temporal en los otros dos sería peor que centralizarla una vez.
+- **Admin (Auditoría)**: `ExportAuditLogsCommand`/`Handler` reutiliza `AuditRepository::all()` (la misma fuente que `GetAuditLogsHandler`), agregado a `SystemOperationController` existente. Ruta `POST /api/v1/admin/operations/audit-logs/export`.
+- **Academic (Cursos)**: `ExportCoursesCommand`/`Handler` reutiliza `CourseRepository::all()` (la misma fuente que `ListCoursesHandler`), agregado a `CourseController` existente. Ruta `POST /api/v1/academic/courses/export`.
+- **Academic (Enrollments)**: `ExportEnrollmentsCommand`/`Handler` reutiliza `EnrollmentRepository::all()` sin filtros (la misma fuente que `ListEnrollmentsHandler`, pero sin los parámetros de filtro — esta historia exporta el conjunto completo), agregado a `EnrollmentController` existente junto a `bulk()`. Ruta `POST /api/v1/academic/enrollments/export`.
+- **Auditoría de cada exportación**: los tres handlers llaman a `Modules\Audit\Application\Services\AuditLogger::log()` tras generar el archivo (`export.audit_logs`/`export.courses`/`export.enrollments`, con `row_count`/`format` en los metadatos) — sin entidad/id propios, por tratarse de una exportación masiva y no la acción sobre un recurso puntual.
+- **Autorización**: permiso nuevo `exports.view` (SuperAdmin + InstitutionalAdmin) protege los tres endpoints, independientemente del permiso `.view` de cada recurso.
+- **Pruebas**: 3 unitarias de `CsvWriter`; 3+2+2 unitarias de los tres handlers (con fakes de `FileStorage`/`AuditLogger`, nombrados con sufijo por historia para evitar colisiones de clases globales entre archivos de test); 4+3+6 de feature HTTP (incluyendo una exportación real contra el contenedor MinIO en ejecución) — 23 tests nuevos en total.
+
+### Validaciones
+
+- Suite de `Modules\Foundation` ✅ — `9 passed`.
+- Suite de `Modules\Admin` + `Modules\Authorization` + `Modules\FileStorage` tras el exportador de auditoría ✅ — `144 passed (387 assertions)`, incluyendo una exportación real contra MinIO.
+- Suites dirigidas de `Modules\Academic` (exportadores nuevos + `EnrollmentTest`/`CreateCourseTest`/`BulkEnrollmentHandlerTest` ya existentes, ejecutadas en lotes acotados por el límite de memoria del entorno, igual que en IMP-059/IMP-061) ✅ — sin fallas.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=export` ✅ — 3 rutas registradas.
+
+**Estado:** Finalizado.
