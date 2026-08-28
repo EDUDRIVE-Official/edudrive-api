@@ -1956,3 +1956,28 @@ Primera historia de la Fase 13 — Reportes y analítica. El roadmap lista seis 
 - `php artisan route:list --path=academic/reports` ✅ — 5 rutas registradas.
 
 **Estado:** Finalizado.
+
+## 2026-08-28 — IMP-064 (Cierre de ENG-064 — Reportes de simulación)
+
+### Alcance acordado con el usuario
+
+Segunda historia de la Fase 13 — Reportes y analítica. Mismo patrón ambiguo que ENG-063: el roadmap lista seis reportes sin especificar cómo se calculan ni sobre qué se agrupan. Investigación previa: ningún repositorio de `Modules\Simulation` filtra por nada hoy — `SimulationSessionRepository::all()`/`allForUser()` no aceptan parámetros, `TelemetryEventRepository`/`DecisionPointRepository` solo tienen `allForSession()` — aún más plano que `Modules\Academic` antes de ENG-063. `TelemetryEventType` (enum cerrado `Collision`/`Infraction`/`SignalUsage`/`Critical`) ya distingue "Infracción" como su propio caso, así que "Errores frecuentes" e "Infracciones" comparten exactamente la misma fuente. `PracticalResultCalculator`/`DecisionEngineCalculator` son servicios de dominio puros sin dependencias propias, ya calculan resultado/riesgo por sesión individual. `competenciesDemonstrated` es hoy una sola cadena de texto libre por sesión, sin ninguna estructura real que agregar. Alcance acordado: cuatro reportes — Sesiones, Errores e infracciones (unificados), Evolución y Riesgos detectados; agregados por usuario (`allForUser()` ya existente) en vez de por simulador (requeriría un método de repositorio nuevo); Competencias prácticas diferido por completo. Detalle completo en `docs/plans/2026-08-28-reportes-simulacion-eng064-design.md`.
+
+### Completado
+
+- **Cuatro reportes en `Modules\Simulation`**, todos con la forma `Get{X}ReportQuery(list<string> $userIds = [])` → `Get{X}ReportHandler` → `list<{X}ReportResponse>` (una fila por usuario; sin `user_ids` descubre todos los usuarios con sesiones existentes iterando `SimulationSessionRepository::all()`):
+  - **Sesiones**: por usuario, conteo total/completadas/canceladas y duración promedio (`actualDurationMinutes()`, ya existente) de las sesiones completadas.
+  - **Errores e infracciones** (unifica los dos puntos del roadmap): por cada sesión completada del usuario, cuenta la frecuencia de `TelemetryEvent` por cada caso de `TelemetryEventType`.
+  - **Evolución**: secuencia cronológica de resultados por sesión completada, reutilizando directamente `PracticalResultCalculator::calculate(session, events)` (servicio de dominio puro, sin dependencias) por cada sesión — `sessionId`/`scenario`/`scheduledAt`/`score`/`outcome` por entrada.
+  - **Riesgos detectados**: por cada sesión completada, reutiliza `DecisionEngineCalculator::calculate(sessionId, points)` y agrega entre sesiones — conteo apropiado/inapropiado global, promedio del `consistencyScore` ya calculado por sesión, y reacciones inapropiadas agrupadas por `DecisionRiskLevel` (la señal directamente accionable: en qué nivel de riesgo el conductor reaccionó mal, no solo el conteo total de puntos de decisión).
+  - **`ReportUserIdsResolver`** (compartido por los cuatro, análogo a `ReportCourseResolver` de ENG-063): resuelve `user_ids` explícitos o descubre todos los usuarios con sesiones si la lista viene vacía. A diferencia de `ReportCourseResolver`, no valida que el usuario "exista" — no hay un agregado `User` que consultar desde `Modules\Simulation`, así que un `user_id` sin sesiones simplemente produce un reporte vacío, sin error.
+- **API HTTP**: `GET /api/v1/simulation/reports/{sessions,telemetry,evolution,risks}?user_ids[]=...`, los cuatro bajo `permission:reports.view` (reutilizado, sin permiso nuevo), agregados a un controlador nuevo, `SimulationReportController`.
+- **Pruebas**: 5 unitarias (con fakes en memoria — `InMemoryReportSessionRepository`/`InMemoryReportEventRepository`/`InMemoryReportDecisionPointRepository`, mismo estilo ya usado por `PracticalResultHandlerTest`/`DecisionEngineHandlerTest` en este módulo, a diferencia del estilo "repositorio real vía `app()`" usado en `Modules\Academic`) + 4 de feature HTTP (permisos) — 9 tests nuevos en total.
+
+### Validaciones
+
+- Suite completa de `Modules\Simulation` ✅ — `190 passed (480 assertions)`.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia.
+- `php artisan route:list --path=simulation/reports` ✅ — 4 rutas registradas.
+
+**Estado:** Finalizado.
