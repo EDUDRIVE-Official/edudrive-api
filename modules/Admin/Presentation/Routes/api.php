@@ -40,5 +40,10 @@ Route::prefix('api/v1/admin')
                 Route::get('/operations/audit-logs', [SystemOperationController::class, 'auditLogs'])
                     ->name('operations.audit-logs');
             });
+
+            Route::middleware('permission:exports.view')->group(function (): void {
+                Route::post('/operations/audit-logs/export', [SystemOperationController::class, 'exportAuditLogs'])
+                    ->name('operations.audit-logs.export');
+            });
         });
     });

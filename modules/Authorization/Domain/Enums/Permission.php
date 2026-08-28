@@ -48,4 +48,5 @@ enum Permission: string
     case ViewSystemOperations = 'system_operations.view';
     case ManageFiles = 'files.manage';
     case ViewFiles = 'files.view';
+    case ViewExports = 'exports.view';
 }

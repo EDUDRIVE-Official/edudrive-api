@@ -63,6 +63,7 @@ final class RolePermissions
                 Permission::ViewSystemOperations,
                 Permission::ManageFiles,
                 Permission::ViewFiles,
+                Permission::ViewExports,
             ],
             Role::InstitutionalAdmin => [
                 Permission::ViewOrganizations,
@@ -97,6 +98,7 @@ final class RolePermissions
                 Permission::ViewReports,
                 Permission::ManageFiles,
                 Permission::ViewFiles,
+                Permission::ViewExports,
             ],
             Role::Teacher => [
                 Permission::ViewOrganizations,

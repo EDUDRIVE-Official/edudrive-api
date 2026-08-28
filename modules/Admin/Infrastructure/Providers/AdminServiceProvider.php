@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Modules\Admin\Infrastructure\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Modules\Admin\Application\Commands\ExportAuditLogsCommand;
 use Modules\Admin\Application\Commands\SetSystemSettingCommand;
 use Modules\Admin\Application\Queries\GetAuditLogsQuery;
 use Modules\Admin\Application\Queries\GetSystemHealthQuery;
 use Modules\Admin\Application\Queries\GetSystemSettingQuery;
 use Modules\Admin\Application\Queries\GetSystemSummaryQuery;
 use Modules\Admin\Application\Queries\ListSystemSettingsQuery;
+use Modules\Admin\Application\UseCases\ExportAuditLogsHandler;
 use Modules\Admin\Application\UseCases\GetAuditLogsHandler;
 use Modules\Admin\Application\UseCases\GetSystemHealthHandler;
 use Modules\Admin\Application\UseCases\GetSystemSettingHandler;
@@ -41,6 +43,7 @@ final class AdminServiceProvider extends ServiceProvider
 
         $registry->register(GetSystemHealthQuery::class, GetSystemHealthHandler::class);
         $registry->register(GetAuditLogsQuery::class, GetAuditLogsHandler::class);
+        $registry->register(ExportAuditLogsCommand::class, ExportAuditLogsHandler::class);
 
         $this->loadRoutesFrom(
             dirname(__DIR__, 2).'/Presentation/Routes/api.php',
