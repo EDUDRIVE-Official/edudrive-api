@@ -2010,3 +2010,25 @@ Tercera y última historia de la Fase 13 — Reportes y analítica. Mismo patró
 Con esto cierra por completo la **Fase 13 — Reportes y analítica** (ENG-063 a ENG-065).
 
 **Estado:** Finalizado.
+
+## 2026-08-28 — IMP-067 (Cierre de ENG-067 — Rate limiting)
+
+### Alcance acordado con el usuario
+
+Primera historia de la Fase 14 — Seguridad y cumplimiento. A diferencia de las historias recientes (reportes), Laravel ya trae soporte de primera clase para esto (`throttle:` + `RateLimiter::for()`), así que es mecánica de aplicar, aunque completamente greenfield — no existía ningún rate limiting en el backend, ni un alias de middleware registrado. Investigación previa: además de Login (`POST /api/v1/auth/login`, `POST /login`) y Registro (`POST /api/v1/auth/register`) ya conocidos, se encontró que `POST /api/v1/auth/users/{userId}/activate` también es público (sin `auth:sanctum`) — un endpoint no identificado antes de investigar, presumiblemente para un flujo de activación por enlace de correo. "Recuperación de contraseña" no existe en absoluto: ninguna ruta, controlador, ni lógica la implementa; `password_reset_tokens` es una tabla del scaffold de Laravel sin ningún consumidor — no se puede aplicar rate limiting a una funcionalidad que no existe. "Integraciones" son exactamente las dos rutas `simulator.auth` de `Modules\Simulation` (telemetría y decisiones). "Endpoints públicos" es la verificación pública de certificados. Alcance acordado: Login, Registro (incluida la activación pública), Integraciones y Endpoints públicos; Recuperación de contraseña diferida por completo. Detalle completo en `docs/plans/2026-08-28-rate-limiting-eng067-design.md`.
+
+### Completado
+
+- **Limitadores nombrados en `Modules\Foundation`** (`FoundationServiceProvider::boot()`, hasta ahora vacío): `login` (`Limit::perMinute(5)->by(email|ip)` — no solo IP, patrón estándar de Laravel contra *credential stuffing* dirigido a una cuenta específica desde múltiples IPs o contra múltiples cuentas desde una IP), `register` (5/min por IP), `activate` (10/min por IP — más permisivo porque un usuario legítimo puede reintentar un enlace de correo), `public-verification` (30/min por IP), `simulator-integration` (60/min por el `authenticated_simulator_id` que `AuthenticateSimulator` ya adjunta a los atributos de la petición tras autenticar — no por IP, ya que varios simuladores en un mismo laboratorio pueden compartir NAT/IP; aplicado después de `simulator.auth` en la cadena de middleware para poder leer ese atributo).
+- **Manejador dedicado para `ThrottleRequestsException`** en `bootstrap/app.php` (código `TOO_MANY_REQUESTS`, estado 429), mismo patrón que los manejadores ya existentes de `ValidationException`/`AuthenticationException`/`DomainException`/`NotFoundHttpException`. No se reenvían los encabezados `Retry-After`/`X-RateLimit-*` del limitador — ningún manejador existente en ese archivo reenvía encabezados tampoco, se mantiene la misma convención.
+- **Rutas afectadas**: `POST /api/v1/auth/login` y `POST /login` → `throttle:login`; `POST /api/v1/auth/register` → `throttle:register`; `POST /api/v1/auth/users/{userId}/activate` → `throttle:activate`; `GET /api/v1/certification/verify/{validationCode}` → `throttle:public-verification`; `POST /api/v1/simulation/sessions/{sessionId}/{telemetry,decisions}` → `simulator.auth` + `throttle:simulator-integration`. La ruta administrativa `POST /api/v1/users/{userId}/activate` (bajo `auth:sanctum` + `users.manage`) y el bulk import de usuarios (ENG-061) quedan sin throttle propio — son operaciones de un administrador autenticado, modelo de amenaza distinto al autoservicio anónimo.
+- **Pruebas**: 5 en `Modules\Identity` (login API, login web, registro, activación, y una que confirma que el límite de login no se acumula entre correos distintos), 1 en `Modules\Certification` (verificación pública), 3 en `Modules\Simulation` (telemetría, decisiones, y una que confirma que el límite de integración no se comparte entre simuladores distintos) — 9 tests nuevos en total. Se descubrió y corrigió un bug propio durante la escritura: la prueba de login web generaba un correo aleatorio distinto en cada iteración del bucle, por lo que la clave `email|ip` nunca se repetía y el límite nunca se alcanzaba — corregido fijando el correo antes del bucle.
+
+### Validaciones
+
+- Suite de `Modules\Foundation` ✅ — `10 passed`.
+- Suite de `Modules\Identity` + `Modules\Certification` ✅ — `91 passed (209 assertions)`.
+- Suite completa de `Modules\Simulation` ✅ — `193 passed (485 assertions)`.
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre todos los archivos nuevos/modificados de esta historia (incluyendo `bootstrap/app.php`, fuera de cualquier módulo).
+
+**Estado:** Finalizado.
