@@ -44,7 +44,12 @@ use Modules\Academic\Application\Commands\SubmitCourseForReviewCommand;
 use Modules\Academic\Application\Commands\SubmitExamAttemptCommand;
 use Modules\Academic\Application\Commands\UpdateExamCommand;
 use Modules\Academic\Application\Commands\UpdateQuestionCommand;
+use Modules\Academic\Application\Queries\GetCourseActivityReportQuery;
+use Modules\Academic\Application\Queries\GetCourseApprovalReportQuery;
+use Modules\Academic\Application\Queries\GetCourseCompetencyReportQuery;
 use Modules\Academic\Application\Queries\GetCourseCurriculumQuery;
+use Modules\Academic\Application\Queries\GetCoursePerformanceReportQuery;
+use Modules\Academic\Application\Queries\GetCourseProgressReportQuery;
 use Modules\Academic\Application\Queries\GetCourseVersionQuery;
 use Modules\Academic\Application\Queries\GetEnrollmentCurriculumStatusQuery;
 use Modules\Academic\Application\Queries\GetEnrollmentLearningRecommendationsQuery;
@@ -91,7 +96,12 @@ use Modules\Academic\Application\UseCases\DeleteExamHandler;
 use Modules\Academic\Application\UseCases\DeleteQuestionHandler;
 use Modules\Academic\Application\UseCases\ExportCoursesHandler;
 use Modules\Academic\Application\UseCases\ExportEnrollmentsHandler;
+use Modules\Academic\Application\UseCases\GetCourseActivityReportHandler;
+use Modules\Academic\Application\UseCases\GetCourseApprovalReportHandler;
+use Modules\Academic\Application\UseCases\GetCourseCompetencyReportHandler;
 use Modules\Academic\Application\UseCases\GetCourseCurriculumHandler;
+use Modules\Academic\Application\UseCases\GetCoursePerformanceReportHandler;
+use Modules\Academic\Application\UseCases\GetCourseProgressReportHandler;
 use Modules\Academic\Application\UseCases\GetCourseVersionHandler;
 use Modules\Academic\Application\UseCases\GetEnrollmentCurriculumStatusHandler;
 use Modules\Academic\Application\UseCases\GetEnrollmentHandler;
@@ -229,6 +239,12 @@ final class AcademicServiceProvider extends ServiceProvider
 
         $registry->register(ExportCoursesCommand::class, ExportCoursesHandler::class);
         $registry->register(ExportEnrollmentsCommand::class, ExportEnrollmentsHandler::class);
+
+        $registry->register(GetCourseProgressReportQuery::class, GetCourseProgressReportHandler::class);
+        $registry->register(GetCoursePerformanceReportQuery::class, GetCoursePerformanceReportHandler::class);
+        $registry->register(GetCourseApprovalReportQuery::class, GetCourseApprovalReportHandler::class);
+        $registry->register(GetCourseCompetencyReportQuery::class, GetCourseCompetencyReportHandler::class);
+        $registry->register(GetCourseActivityReportQuery::class, GetCourseActivityReportHandler::class);
 
         $registry->register(
             CreateEnrollmentCommand::class,

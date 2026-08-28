@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
+use Modules\Academic\Presentation\Http\Controllers\AcademicReportController;
 use Modules\Academic\Presentation\Http\Controllers\AcademicStatusController;
 use Modules\Academic\Presentation\Http\Controllers\CompetencyController;
 use Modules\Academic\Presentation\Http\Controllers\CourseController;
@@ -233,6 +234,19 @@ Route::prefix('api/v1/academic')
             Route::middleware('permission:exports.view')->group(function (): void {
                 Route::post('/enrollments/export', [EnrollmentController::class, 'export'])
                     ->name('enrollments.export');
+            });
+
+            Route::middleware('permission:reports.view')->group(function (): void {
+                Route::get('/reports/progress', [AcademicReportController::class, 'progress'])
+                    ->name('reports.progress');
+                Route::get('/reports/performance', [AcademicReportController::class, 'performance'])
+                    ->name('reports.performance');
+                Route::get('/reports/approval', [AcademicReportController::class, 'approval'])
+                    ->name('reports.approval');
+                Route::get('/reports/competencies', [AcademicReportController::class, 'competencies'])
+                    ->name('reports.competencies');
+                Route::get('/reports/activity', [AcademicReportController::class, 'activity'])
+                    ->name('reports.activity');
             });
 
             Route::post('/enrollments/{enrollmentId}/lessons/{lessonId}/complete', [EnrollmentProgressController::class, 'complete'])
