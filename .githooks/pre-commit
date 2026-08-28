@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+# Resguardo ligero contra el commit accidental de secretos.
+# No se activa por defecto: Git no ejecuta hooks de un directorio versionado
+# a menos que se le indique explícitamente. Para activarlo una sola vez por
+# clon del repositorio:
+#
+#   git config core.hooksPath .githooks
+#
+# Escanea únicamente las líneas agregadas en el diff en stage contra un
+# conjunto acotado de patrones de alta confianza (ver
+# Modules\Foundation\Infrastructure\Security\SecretPatternScanner). No
+# reemplaza una herramienta de escaneo completa (gitleaks, trufflehog); ese
+# alcance quedó diferido explícitamente (docs/plans/2026-08-28-gestion-secretos-eng069-design.md).
+
+set -e
+
+added_lines=$(git diff --cached --unified=0 -- . ':(exclude)vendor' ':(exclude)node_modules' | grep -E '^\+[^+]' | sed 's/^\+//' || true)
+
+if [ -z "$added_lines" ]; then
+    exit 0
+fi
+
+printf '%s\n' "$added_lines" | docker compose exec -T app php artisan secrets:scan

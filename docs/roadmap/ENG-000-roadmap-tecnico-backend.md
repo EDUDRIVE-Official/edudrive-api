@@ -1295,7 +1295,9 @@ Resultado.
 Datos modificados.
 ENG-069 — Gestión de secretos
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-28): tercera historia de la Fase 14. Investigación previa encontró que "Rotación" y "Llaves de integraciones" ya estaban resueltos por el mecanismo de rotación de llaves de simuladores construido junto con ENG-067 (hash SHA-256, revelado único, ciclo de vida completo) — no había ninguna otra integración externa activa en el sistema. El hueco real de "Rotación" estaba en Sanctum: los tokens de acceso nunca expiraban. Tampoco existía ninguna validación de variables de entorno requeridas al arrancar, ni ningún mecanismo de escaneo de secretos en Git (cero CI en todo el repositorio). Alcance acordado: expiración de tokens Sanctum, validación de variables requeridas en producción (falla rápido), y un resguardo ligero de escaneo de secretos en Git (script + hook local) — sin construir un pipeline de CI completo ni integrar un gestor de secretos externo. Detalle completo en `docs/plans/2026-08-28-gestion-secretos-eng069-design.md`.
 
 Incluye:
 
