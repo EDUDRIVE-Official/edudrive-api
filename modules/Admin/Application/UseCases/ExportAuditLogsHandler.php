@@ -4,25 +4,21 @@ declare(strict_types=1);
 
 namespace Modules\Admin\Application\UseCases;
 
-use DateTimeImmutable;
 use DateTimeInterface;
 use Illuminate\Support\Str;
 use Modules\Admin\Application\Commands\ExportAuditLogsCommand;
 use Modules\Audit\Application\Contracts\AuditRepository;
 use Modules\Audit\Application\DTO\AuditEntry;
 use Modules\Audit\Application\Services\AuditLogger;
-use Modules\FileStorage\Application\Contracts\FileStorage;
 use Modules\Foundation\Application\Responses\ExportResponse;
 use Modules\Foundation\Infrastructure\Export\CsvWriter;
-use RuntimeException;
+use Modules\Foundation\Infrastructure\Export\ExportFileWriter;
 
 final readonly class ExportAuditLogsHandler
 {
-    private const int URL_LIFETIME_MINUTES = 15;
-
     public function __construct(
         private AuditRepository $auditLogs,
-        private FileStorage $fileStorage,
+        private ExportFileWriter $exportFileWriter,
         private CsvWriter $csvWriter,
         private AuditLogger $auditLogger,
     ) {}
@@ -50,21 +46,7 @@ final readonly class ExportAuditLogsHandler
         );
 
         $storagePath = sprintf('exports/audit-logs/%s.csv', (string) Str::uuid());
-        $tmpPath = tempnam(sys_get_temp_dir(), 'export_');
-        if ($tmpPath === false) {
-            throw new RuntimeException('No se pudo crear un archivo temporal para la exportación.');
-        }
-
-        file_put_contents($tmpPath, $csv);
-
-        try {
-            $this->fileStorage->store($storagePath, $tmpPath);
-        } finally {
-            unlink($tmpPath);
-        }
-
-        $expiresAt = new DateTimeImmutable('+'.self::URL_LIFETIME_MINUTES.' minutes');
-        $url = $this->fileStorage->temporaryDownloadUrl($storagePath, $expiresAt);
+        $exported = $this->exportFileWriter->write($storagePath, $csv);
 
         $this->auditLogger->log(new AuditEntry(
             action: 'export.audit_logs',
@@ -72,8 +54,8 @@ final readonly class ExportAuditLogsHandler
         ));
 
         return new ExportResponse(
-            url: $url,
-            expiresAt: $expiresAt->format(DateTimeInterface::ATOM),
+            url: $exported->url,
+            expiresAt: $exported->expiresAt->format(DateTimeInterface::ATOM),
             rowCount: count($rows),
             format: 'csv',
         );

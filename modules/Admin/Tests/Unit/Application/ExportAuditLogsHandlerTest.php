@@ -10,6 +10,7 @@ use Modules\Audit\Application\Services\AuditLogger;
 use Modules\FileStorage\Application\Contracts\FileStorage;
 use Modules\Foundation\Application\Responses\ExportResponse;
 use Modules\Foundation\Infrastructure\Export\CsvWriter;
+use Modules\Foundation\Infrastructure\Export\ExportFileWriter;
 
 final class InMemoryAuditRepositoryForExport implements AuditRepository
 {
@@ -74,7 +75,7 @@ it('exporta los registros de auditoria a csv y devuelve una url de descarga', fu
     ));
     $fileStorage = new FakeFileStorageForExport;
     $auditLogger = new FakeAuditLoggerForExport;
-    $handler = new ExportAuditLogsHandler($auditLogs, $fileStorage, new CsvWriter, $auditLogger);
+    $handler = new ExportAuditLogsHandler($auditLogs, new ExportFileWriter($fileStorage), new CsvWriter, $auditLogger);
 
     $response = $handler->handle(new ExportAuditLogsCommand);
 
@@ -92,7 +93,7 @@ it('registra una entrada de auditoria por cada exportacion', function (): void {
     $auditLogs = new InMemoryAuditRepositoryForExport;
     $fileStorage = new FakeFileStorageForExport;
     $auditLogger = new FakeAuditLoggerForExport;
-    $handler = new ExportAuditLogsHandler($auditLogs, $fileStorage, new CsvWriter, $auditLogger);
+    $handler = new ExportAuditLogsHandler($auditLogs, new ExportFileWriter($fileStorage), new CsvWriter, $auditLogger);
 
     $handler->handle(new ExportAuditLogsCommand);
 
@@ -104,7 +105,7 @@ it('registra una entrada de auditoria por cada exportacion', function (): void {
 it('exporta una lista vacia cuando no hay registros de auditoria', function (): void {
     $auditLogs = new InMemoryAuditRepositoryForExport;
     $fileStorage = new FakeFileStorageForExport;
-    $handler = new ExportAuditLogsHandler($auditLogs, $fileStorage, new CsvWriter, new FakeAuditLoggerForExport);
+    $handler = new ExportAuditLogsHandler($auditLogs, new ExportFileWriter($fileStorage), new CsvWriter, new FakeAuditLoggerForExport);
 
     $response = $handler->handle(new ExportAuditLogsCommand);
 
