@@ -57,6 +57,10 @@ use Modules\Academic\Application\Queries\GetEnrollmentProgressQuery;
 use Modules\Academic\Application\Queries\GetEnrollmentQuery;
 use Modules\Academic\Application\Queries\GetExamAttemptQuery;
 use Modules\Academic\Application\Queries\GetExamQuery;
+use Modules\Academic\Application\Queries\GetOrganizationAdoptionReportQuery;
+use Modules\Academic\Application\Queries\GetOrganizationCompletionReportQuery;
+use Modules\Academic\Application\Queries\GetOrganizationParticipationReportQuery;
+use Modules\Academic\Application\Queries\GetOrganizationPerformanceReportQuery;
 use Modules\Academic\Application\Queries\GetQuestionQuery;
 use Modules\Academic\Application\Queries\GetTheoryExamQuery;
 use Modules\Academic\Application\Queries\GetUnitContentQuery;
@@ -109,6 +113,10 @@ use Modules\Academic\Application\UseCases\GetEnrollmentLearningRecommendationsHa
 use Modules\Academic\Application\UseCases\GetEnrollmentProgressHandler;
 use Modules\Academic\Application\UseCases\GetExamAttemptHandler;
 use Modules\Academic\Application\UseCases\GetExamHandler;
+use Modules\Academic\Application\UseCases\GetOrganizationAdoptionReportHandler;
+use Modules\Academic\Application\UseCases\GetOrganizationCompletionReportHandler;
+use Modules\Academic\Application\UseCases\GetOrganizationParticipationReportHandler;
+use Modules\Academic\Application\UseCases\GetOrganizationPerformanceReportHandler;
 use Modules\Academic\Application\UseCases\GetQuestionHandler;
 use Modules\Academic\Application\UseCases\GetTheoryExamHandler;
 use Modules\Academic\Application\UseCases\GetUnitContentHandler;
@@ -245,6 +253,11 @@ final class AcademicServiceProvider extends ServiceProvider
         $registry->register(GetCourseApprovalReportQuery::class, GetCourseApprovalReportHandler::class);
         $registry->register(GetCourseCompetencyReportQuery::class, GetCourseCompetencyReportHandler::class);
         $registry->register(GetCourseActivityReportQuery::class, GetCourseActivityReportHandler::class);
+
+        $registry->register(GetOrganizationParticipationReportQuery::class, GetOrganizationParticipationReportHandler::class);
+        $registry->register(GetOrganizationCompletionReportQuery::class, GetOrganizationCompletionReportHandler::class);
+        $registry->register(GetOrganizationPerformanceReportQuery::class, GetOrganizationPerformanceReportHandler::class);
+        $registry->register(GetOrganizationAdoptionReportQuery::class, GetOrganizationAdoptionReportHandler::class);
 
         $registry->register(
             CreateEnrollmentCommand::class,

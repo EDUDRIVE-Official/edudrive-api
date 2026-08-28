@@ -11,6 +11,7 @@ use Modules\Academic\Presentation\Http\Controllers\EnrollmentController;
 use Modules\Academic\Presentation\Http\Controllers\EnrollmentProgressController;
 use Modules\Academic\Presentation\Http\Controllers\ExamAttemptController;
 use Modules\Academic\Presentation\Http\Controllers\ExamController;
+use Modules\Academic\Presentation\Http\Controllers\OrganizationReportController;
 use Modules\Academic\Presentation\Http\Controllers\ProgramController;
 use Modules\Academic\Presentation\Http\Controllers\QuestionController;
 use Modules\Academic\Presentation\Http\Controllers\TheoryExamController;
@@ -247,6 +248,15 @@ Route::prefix('api/v1/academic')
                     ->name('reports.competencies');
                 Route::get('/reports/activity', [AcademicReportController::class, 'activity'])
                     ->name('reports.activity');
+
+                Route::get('/reports/organizations/participation', [OrganizationReportController::class, 'participation'])
+                    ->name('reports.organizations.participation');
+                Route::get('/reports/organizations/completion', [OrganizationReportController::class, 'completion'])
+                    ->name('reports.organizations.completion');
+                Route::get('/reports/organizations/performance', [OrganizationReportController::class, 'performance'])
+                    ->name('reports.organizations.performance');
+                Route::get('/reports/organizations/adoption', [OrganizationReportController::class, 'adoption'])
+                    ->name('reports.organizations.adoption');
             });
 
             Route::post('/enrollments/{enrollmentId}/lessons/{lessonId}/complete', [EnrollmentProgressController::class, 'complete'])
