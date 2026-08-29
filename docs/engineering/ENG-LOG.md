@@ -2326,3 +2326,28 @@ Segunda historia de la Fase 17. Roadmap con cinco viñetas sueltas sin documento
 - PHPStan (`--memory-limit=512M`) ✅ sin errores sobre los módulos tocados y sobre el repositorio completo.
 
 **Estado:** Finalizado.
+
+## 2026-08-29 — IMP-083 (Cierre de ENG-083 — Observabilidad)
+
+### Alcance acordado con el usuario
+
+Tercera historia de la Fase 17. Roadmap con seis viñetas sueltas sin documento de diseño: Logs estructurados, Métricas, Trazas, Correlation ID, Alertas, Dashboards. La investigación encontró que Correlation ID ya existía (`Modules\Foundation\Presentation\Http\Middleware\CorrelationId`, header `X-Correlation-ID`, reutiliza o genera un UUID vía `Context::add()`) pero solo lo consumía explícitamente `Modules\Audit`; los logs eran texto plano sin `JsonFormatter`; y Métricas, Trazas y Dashboards eran inexistentes, cada una requiriendo infraestructura externa nueva (Prometheus, OpenTelemetry+collector, Grafana) — a diferencia de ENG-081/082 donde bastaba activar algo ya presente. El usuario eligió el **alcance reducido recomendado**. Detalle completo en `docs/plans/2026-08-29-observabilidad-eng083-design.md`.
+
+### Completado
+
+- **Logs JSON estructurados**: los canales `single` y `daily` de `config/logging.php` (los que realmente escriben a disco en este proyecto) ganan `'formatter' => JsonFormatter::class`. Los demás canales (`slack`, `stderr`, `syslog`, `papertrail`) no se tocan.
+- **Correlation ID reforzado**:
+  - `ApiErrorResponse::make()`/`::unexpected()` (`Modules\Foundation`) incluyen `'correlation_id' => Context::get('correlation_id')` en el payload de error — el cliente puede reportar ese ID al soporte.
+  - Los 9 Jobs con `Log::warning(...)` en su método `failed()` (`ExportAuditLogsJob`, `ExportCoursesJob`, `ExportEnrollmentsJob`, `ImportCoursesJob`, `ImportQuestionsJob`, `ImportUsersJob`, `GenerateAnalyticsReportJob`, `SendMobilePushJob`, `SendEmailNotificationJob`) ganan una propiedad `correlationId` capturada en el constructor vía `Context::get()` — necesario porque los Jobs corren en un proceso de worker separado, sin el `Context` de la request HTTP original que los originó; el constructor se ejecuta en el proceso HTTP al momento de `dispatch()`, así que captura el valor correcto antes de que el Job se serialice.
+  - `bootstrap/app.php` gana `$exceptions->context(fn (): array => [...])` (mecanismo nativo de Laravel 11+) con `correlation_id`, `url`, `method` y `user_id` — se adjunta automáticamente a cada excepción reportada, sin tener que enriquecer cada `render(...)` individual ya existente.
+- **Alertas (canal Slack real)**: el canal `stack` incluye `slack` automáticamente solo cuando `LOG_SLACK_WEBHOOK_URL` está configurado, sin romper entornos sin webhook (desarrollo local). **Bug pre-existente corregido**: el canal `slack` heredaba `'level' => env('LOG_LEVEL', 'critical')` — la misma variable genérica usada para `single`/`daily` — de modo que con `LOG_LEVEL=debug` (como en este repo) una alerta a Slack se habría disparado para absolutamente todo, no solo errores críticos. Ahora usa su propia `LOG_SLACK_LEVEL` (default `critical`), independiente de `LOG_LEVEL`.
+- **Fuera de alcance a propósito**: endpoint `/metrics` (Prometheus), trazas distribuidas (OpenTelemetry/Jaeger/Zipkin) y dashboards (Grafana/Telescope/Horizon) — las tres requieren infraestructura o dependencias externas nuevas, no solo activación de código ya presente.
+
+### Validaciones
+
+- Suites afectadas: `Modules\Foundation` 28/28 (incluye 3 nuevos tests de configuración de logging y 2 nuevos de correlation_id en el payload de error); 9 Jobs con un nuevo test de captura de `correlation_id` cada uno (`Admin`+`Academic`+`Identity`+`Analytics`+`Mobile`+`Notification`, 30/30 en conjunto).
+- Suite completa de `Modules\Academic` (módulo más grande, varios Jobs tocados) sin regresiones más allá del mismo fallo preexistente ya señalado en ENG-081 (`GradingResultTest.php:99`).
+- Pint ✅ sobre todos los módulos y archivos tocados (`bootstrap/app.php`, `config/logging.php`); un `pint --test` sobre el repositorio completo solo encontró el mismo problema de estilo preexistente en `modules/Learning` ya señalado en cierres previos.
+- PHPStan (`--memory-limit=512M`) ✅ sin errores sobre los módulos tocados y sobre el repositorio completo.
+
+**Estado:** Finalizado.

@@ -1480,7 +1480,9 @@ Expiración.
 Mantenimiento.
 ENG-083 — Observabilidad
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-29): historia sin documento de diseño previo, solo seis viñetas sueltas. La investigación encontró que Correlation ID ya existía (`Modules\Foundation\Presentation\Http\Middleware\CorrelationId`, header `X-Correlation-ID`) pero solo lo consumía explícitamente `Modules\Audit`; los logs eran texto plano; y Métricas, Trazas y Dashboards eran inexistentes, cada una requiriendo infraestructura externa nueva (Prometheus, OpenTelemetry+collector, Grafana) a diferencia de ENG-081/082 donde bastaba activar algo ya presente. El usuario eligió el alcance reducido recomendado. Se activaron logs JSON estructurados reales (`Monolog\Formatter\JsonFormatter` en los canales `single`/`daily`); el correlation_id se reforzó para aparecer explícitamente en el payload de error (`ApiErrorResponse`) y en los 9 `Log::warning` existentes de Jobs en cola (ENG-081/082) — capturado en el constructor de cada Job vía `Context::get()`, ya que los Jobs corren en un proceso de worker separado sin el contexto de la request HTTP original; las excepciones no manejadas ganan contexto rico (`correlation_id`, `url`, `method`, `user_id`) vía `$exceptions->context(...)` de Laravel 11+; y se activó el canal Slack ya boilerplate como alerta real para errores críticos (solo si `LOG_SLACK_WEBHOOK_URL` está configurado), corrigiendo de paso un bug pre-existente donde ese canal heredaba el nivel genérico `LOG_LEVEL` en vez de tener su propio nivel dedicado. Métricas, trazas distribuidas y dashboards quedaron fuera de alcance a propósito. Detalle completo en `docs/plans/2026-08-29-observabilidad-eng083-design.md`.
 
 Incluye:
 
