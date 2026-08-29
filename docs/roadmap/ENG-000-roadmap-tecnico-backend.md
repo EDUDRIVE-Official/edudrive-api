@@ -1508,7 +1508,9 @@ Pruebas de recuperación.
 RPO y RTO.
 ENG-085 — Despliegue y ambientes
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-29): a diferencia de las historias anteriores de esta fase, ENG-085 no traía ninguna viñeta "Incluye", solo cinco ambientes previstos. Se interpretó como configuración y documentación real por ambiente, no el pipeline de despliegue en sí (eso es ENG-086, la siguiente historia). El usuario eligió el alcance reducido recomendado. Se publicó `config/cors.php` (no existía; el comportamiento CORS dependía de defaults internos sin declarar), con orígenes configurables vía `CORS_ALLOWED_ORIGINS` — verificado manualmente contra nginx real que la restricción por dominio funciona. Se actualizó `.env.example` para reflejar fielmente el setup Docker real (antes era el stock genérico de Laravel, desactualizado). Se encontró y corrigió un bug real preexistente: `DatabaseSeeder` llamaba a `User::factory()`, pero el modelo real no tiene `HasFactory` desde el refactor de ENG-009 — el seeder estaba roto, sin ningún test que lo cubriera. Se reescribió usando el patrón de dominio real, con guard de ambiente para que la cuenta de prueba nunca se cree fuera de local/testing. Se documentó la matriz real de diferencias entre los 5 ambientes en `docs/operaciones/ambientes.md`, atando lo ya construido en ENG-069/083/084. Detalle completo en `docs/plans/2026-08-29-despliegue-ambientes-eng085-design.md`.
 
 Ambientes previstos:
 

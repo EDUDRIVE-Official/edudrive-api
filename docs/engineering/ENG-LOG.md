@@ -2390,3 +2390,29 @@ Destino secundario/réplica geográfica, cifrado de los dumps, rotación/retenci
 - PHPStan (`--memory-limit=512M`) ✅ sin errores sobre los módulos tocados y sobre el repositorio completo.
 
 **Estado:** Finalizado.
+
+## 2026-08-29 — IMP-085 (Cierre de ENG-085 — Despliegue y ambientes)
+
+### Alcance acordado con el usuario
+
+Quinta historia de la Fase 17. A diferencia de las anteriores, ENG-085 no traía ninguna viñeta "Incluye" — solo cinco ambientes previstos (Local, Desarrollo, QA, Staging, Producción). Dado que la siguiente historia (ENG-086 — CI/CD) ya cubre explícitamente construcción de imágenes/despliegue/rollback, se interpretó ENG-085 como configuración y documentación real que varía entre ambientes, no el pipeline en sí. El usuario eligió el **alcance reducido recomendado**. Detalle completo en `docs/plans/2026-08-29-despliegue-ambientes-eng085-design.md`.
+
+### Completado
+
+- **`config/cors.php` publicado** (no existía — el comportamiento CORS dependía enteramente de los defaults internos del middleware `HandleCors` de Laravel sin ninguna decisión explícita). `allowed_origins` se lee de la variable nueva `CORS_ALLOWED_ORIGINS` (lista separada por comas, default `*` para no romper Local/Desarrollo). **Verificado manualmente contra nginx real**: con `CORS_ALLOWED_ORIGINS=*` el header de respuesta refleja `*`; restringido a `https://app.edudrive.cr`, el header refleja exactamente ese dominio — confirma que la restricción real funciona antes de depender de ella en QA/Staging/Producción.
+- **`.env.example` actualizado** para reflejar fielmente el setup Docker real del proyecto (antes era el stock genérico de Laravel con `DB_CONNECTION=sqlite`, desactualizado respecto al `.env` real usado en desarrollo) — gana también `CORS_ALLOWED_ORIGINS` y las variables de alerta por Slack de ENG-083 con comentarios explicando su rol por ambiente.
+- **Bug real preexistente encontrado y corregido**: `database/seeders/DatabaseSeeder.php` llamaba a `User::factory()`, pero `App\Models\User` extiende `Modules\Identity\...\UserModel` (sin trait `HasFactory`, `id` UUID no autoincremental) desde el refactor de ENG-009 que separó el modelo de compatibilidad de la lógica real de Identity — el seeder estaba **roto desde entonces**, sin que ningún test lo hubiera cubierto nunca (confirmado: la escritura del primer test para el guard de ambiente reveló el error `Call to undefined method App\Models\User::factory()`). Se reescribió usando el patrón de dominio real ya establecido en todo el proyecto (`User::register()` + `UserRepository` + `PasswordHasher`), con guard de ambiente (`! app()->environment(['local', 'testing'])`) para que la cuenta de prueba `test@example.com` nunca pueda crearse en QA/Staging/Producción, e idempotente (no duplica si ya existe).
+- **`docs/operaciones/ambientes.md`** (nuevo): matriz real de diferencias entre los 5 ambientes, atando explícitamente lo que ya varía disperso en historias anteriores (validación de secretos de ENG-069, canal Slack condicional de ENG-083, backup diario de ENG-084) junto con lo nuevo de esta historia (CORS, guard del seeder).
+
+### Fuera de alcance a propósito
+
+Archivos `compose.*.yaml` nuevos por ambiente, plantillas `.env.*.example` separadas, cualquier mecánica de construcción de imágenes, pipeline de despliegue o rollback — eso es ENG-086, la siguiente historia, no se toca aquí.
+
+### Validaciones
+
+- 5 tests nuevos en `tests/Feature/DatabaseSeederTest.php`: crea la cuenta en `local`/`testing`, no la crea en `production`/`staging`, no duplica si ya existe.
+- Suite raíz (`tests/Feature`, `tests/Unit`) y `Modules\Foundation` completas sin regresiones tras publicar `config/cors.php`.
+- Verificación manual real de CORS contra nginx (ver arriba).
+- Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo.
+
+**Estado:** Finalizado.
