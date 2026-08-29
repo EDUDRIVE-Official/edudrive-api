@@ -15,6 +15,7 @@ use Modules\Foundation\Presentation\Http\Middleware\CorrelationId;
 use Modules\Foundation\Presentation\Http\Responses\ApiErrorResponse;
 use Modules\Integration\Presentation\Http\Middleware\AuthenticateApiConsumer;
 use Modules\Integration\Presentation\Http\Middleware\EnsureApiConsumerScope;
+use Modules\Mobile\Presentation\Http\Middleware\EnsureMinimumAppVersion;
 use Modules\Simulation\Presentation\Http\Middleware\AuthenticateSimulator;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -33,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'simulator.auth' => AuthenticateSimulator::class,
             'api_consumer.auth' => AuthenticateApiConsumer::class,
             'scope' => EnsureApiConsumerScope::class,
+            'mobile.min_version' => EnsureMinimumAppVersion::class,
         ]);
 
         $middleware->redirectGuestsTo(

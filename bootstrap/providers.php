@@ -15,6 +15,7 @@ use Modules\Identity\Providers\IdentityServiceProvider;
 use Modules\Integration\Infrastructure\Providers\IntegrationServiceProvider;
 use Modules\Learning\Infrastructure\Providers\LearningServiceProvider;
 use Modules\Legal\Infrastructure\Providers\LegalServiceProvider;
+use Modules\Mobile\Infrastructure\Providers\MobileServiceProvider;
 use Modules\Notification\Infrastructure\Providers\NotificationServiceProvider;
 use Modules\Organization\Infrastructure\Providers\OrganizationServiceProvider;
 use Modules\RoadPassport\Infrastructure\Providers\RoadPassportServiceProvider;
@@ -40,4 +41,5 @@ return [
     FileStorageServiceProvider::class,
     IntegrationServiceProvider::class,
     WebhookServiceProvider::class,
+    MobileServiceProvider::class,
 ];

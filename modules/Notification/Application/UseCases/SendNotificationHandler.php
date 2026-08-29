@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Modules\Notification\Application\UseCases;
 
 use Illuminate\Support\Str;
+use Modules\Mobile\Application\Services\MobilePushSender;
+use Modules\Mobile\Domain\ValueObjects\MobilePushMessage;
 use Modules\Notification\Application\Commands\SendNotificationCommand;
 use Modules\Notification\Application\Responses\NotificationResponse;
 use Modules\Notification\Domain\Aggregates\Notification;
@@ -19,6 +21,7 @@ final readonly class SendNotificationHandler
     public function __construct(
         private NotificationRepository $notifications,
         private NotificationPreferenceRepository $preferences,
+        private MobilePushSender $mobilePushSender,
     ) {}
 
     public function handle(SendNotificationCommand $command): ?NotificationResponse
@@ -41,6 +44,14 @@ final readonly class SendNotificationHandler
         );
 
         $this->notifications->save($notification);
+
+        if ($channel === NotificationChannel::Mobile) {
+            $this->mobilePushSender->send(new MobilePushMessage(
+                userId: $command->userId,
+                title: $command->subject,
+                body: $command->body,
+            ));
+        }
 
         return NotificationResponse::fromNotification($notification);
     }

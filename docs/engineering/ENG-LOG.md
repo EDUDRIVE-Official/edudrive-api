@@ -2198,3 +2198,28 @@ Segunda historia de la Fase 15 — Integraciones. Investigación previa confirm�
 - PHPStan nivel 8 ✅ sin errores sobre el repositorio completo.
 
 **Estado:** Finalizado.
+
+## 2026-08-29 — IMP-075 (Cierre de ENG-075 — Integración con aplicaciones móviles)
+
+### Alcance acordado con el usuario
+
+Tercera historia de la Fase 15 — Integraciones. Investigación previa confirmó que ninguno de los cinco puntos del roadmap tenía mecanismo real: **versionado** era solo el prefijo fijo `api/v1/` repetido en cada módulo, sin negociación por header ni deprecación; **tokens por dispositivo** no existía como concepto — Sanctum's `createToken($name, $abilities)` acepta un `$name` de texto libre sin estructura, aunque `Modules\Identity` ya tiene una funcionalidad real de "mis sesiones activas" (`GET /auth/sessions`, `POST /auth/logout-all`) que no se toca; **notificaciones móviles** — `Modules\Notification`'s `Notification` ya tenía un canal `Mobile` en su enum, pero `SendNotificationHandler` solo persistía el registro, cero transporte de salida para cualquier canal; **sincronización** solo existía para telemetría de simuladores (ENG-050); **compatibilidad** no tenía concepto de versión mínima, pero el `SystemSetting` genérico de `Modules\Admin` servía tal cual sin cambios de esquema. Alcance acordado: módulo nuevo `Modules\Mobile` con registro de dispositivo, middleware de compatibilidad reutilizando `SystemSetting`, envío real de push vía cola, y un único endpoint ilustrativo de sincronización — sin retrofitear sincronización incremental a través de todos los módulos ni integrar SDKs reales de FCM/APNs. Detalle completo en `docs/plans/2026-08-29-integracion-moviles-eng075-design.md`.
+
+### Completado
+
+- **`Modules\Mobile` (módulo nuevo)** — `MobileDevice` (agregado): `deviceId` (reportado por el propio cliente), `userId`, `platform` (`DevicePlatform::Ios|Android`), `pushToken` opcional, `appVersion`, `lastSeenAt`; único por `(userId, deviceId)` a nivel de esquema (FK real a `users`, cascada al eliminar la cuenta). Re-registrar el mismo `(userId, deviceId)` **actualiza** el registro (nuevo push token, nueva versión, `lastSeenAt` refrescado) en vez de devolver el existente sin cambios — una decisión deliberadamente distinta del patrón de idempotencia de ENG-072, porque los metadatos de un dispositivo legítimamente cambian con el tiempo.
+- **Compatibilidad** — middleware `EnsureMinimumAppVersion` (alias `mobile.min_version`) lee la configuración `mobile_min_app_version` directamente del `SystemSettingRepository` de `Modules\Admin` (dependencia de solo lectura entre módulos) y compara contra el header `X-App-Version` con `version_compare()`: sin configuración, permisivo; con configuración pero sin header, 400 (`MISSING_APP_VERSION`); por debajo del mínimo, 426 Upgrade Required (`APP_VERSION_UNSUPPORTED`). Sin ningún endpoint administrativo nuevo — la configuración ya es gestionable vía el endpoint existente de `Modules\Admin` (`system_settings.manage`).
+- **Notificaciones push reales** — `Modules\Mobile\Application\Services\MobilePushSender` (puerto) implementado por `QueuedMobilePushSender`, que despacha un `SendMobilePushJob` (`ShouldQueue`) por cada dispositivo del usuario con push token registrado; el job hace un POST HTTP a un endpoint configurable (`config('mobile.push_endpoint')`, compatible con la forma de la API HTTP legacy de FCM) firmado con una clave de servidor configurable. Deliberadamente **sin** el aparato de registro de entregas/reintento con backoff/dead-letter de ENG-074 — un push best-effort se apoya en el reintento nativo por defecto de Laravel, sin modelo de dominio propio.
+- **Cableado**: `Modules\Notification`'s `SendNotificationHandler` gana una dependencia nueva (`MobilePushSender`) y, cuando el canal es `Mobile`, llama al puerto tras guardar la notificación — mismo patrón de dependencia cruzada de Aplicación a Aplicación ya usado en la sesión (Legal→Identity, Academic/Certification→Webhook).
+- **Sincronización** — `GET /api/v1/mobile/sync?since=<ISO8601>` (`GetMobileSyncHandler`) devuelve las inscripciones y notificaciones del usuario autenticado creadas después de `since`, filtrando en memoria sobre lo que ya devuelven `EnrollmentRepository::all(userId:)` y `NotificationRepository::allForUser()` — sin agregar parámetros nuevos a esas interfaces. Simplificación deliberada y documentada: rastrea *creación*, no *cambios* de estado.
+- **Presentation** — `MobileDeviceController` (registro/listado/baja individual, autoservicio bajo `auth:sanctum`, sin permiso especial) y `MobileSyncController`, ambos bajo `mobile.min_version`.
+
+### Validaciones
+
+- Suite completa de `Modules\Mobile` (dominio, aplicación, integración de persistencia, feature — incluyendo envío de push real con `Http::fake()`, middleware de compatibilidad, sincronización) ✅ — 4 dominio + 8 aplicación + 6 integración + 14 feature = `32 passed`.
+- Suite completa de `Modules\Notification` (afectada por la nueva dependencia de `SendNotificationHandler`) ✅ — `99 passed`, sin regresiones.
+- Suite completa de `Modules\Identity` (Feature, verificación de que nada relacionado con sesiones/Sanctum se rompió) ✅ — `45 passed`.
+- Pint ✅ sobre los directorios tocados por esta historia; un `pint --test` sobre el repositorio completo encontró el mismo problema de estilo preexistente y no relacionado en `modules/Learning` ya señalado en cierres previos — sigue fuera de alcance.
+- PHPStan nivel 8 ✅ sin errores sobre el repositorio completo.
+
+**Estado:** Finalizado.

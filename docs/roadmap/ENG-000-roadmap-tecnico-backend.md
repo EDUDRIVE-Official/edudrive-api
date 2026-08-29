@@ -1377,7 +1377,9 @@ Registro de entregas.
 Dead-letter handling.
 ENG-075 — Integración con aplicaciones móviles
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-29): tercera historia de la Fase 15 — Integraciones. Investigación previa encontró que ninguno de los cinco puntos tenía mecanismo real: el versionado era solo el prefijo fijo `api/v1/`, no existía ningún concepto de dispositivo (Sanctum solo guarda un nombre de texto libre), `Modules\Notification` nunca enviaba nada externamente pese a ya tener un canal `Mobile` en su enum, y "sincronización" solo existía para telemetría de simuladores. Se construyó un módulo nuevo `Modules\Mobile`: `MobileDevice` (identificación + push token opcional + versión de app, actualizado — no rechazado — al re-registrarse, a diferencia del patrón de idempotencia de ENG-072); compatibilidad vía una configuración `mobile_min_app_version` reutilizando el `SystemSetting` genérico ya existente de `Modules\Admin` más un middleware que compara el header `X-App-Version`; notificaciones push reales vía HTTP a un endpoint configurable (cola real, mismo patrón de `DeliverWebhookJob` de ENG-074, pero deliberadamente sin registro de entregas/reintento/dead-letter — un push best-effort no lo amerita); un único endpoint ilustrativo de sincronización incremental. Alcance reducido acordado: no se retrofiteó `updated_since`/cursor a través de todos los módulos existentes ni se integró un SDK real de FCM/APNs. Detalle completo en `docs/plans/2026-08-29-integracion-moviles-eng075-design.md`.
 
 Incluye:
 
