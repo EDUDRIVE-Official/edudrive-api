@@ -8,14 +8,21 @@ use Tests\TestCase;
 
 uses(RefreshDatabase::class);
 
-it('exporta los registros de auditoria a csv con el permiso exports.view', function (): void {
+it('exporta los registros de auditoria a csv de forma asincrona con el permiso exports.view', function (): void {
     /** @var TestCase $this */
     actingAsRole(Role::SuperAdmin);
 
-    $this->postJson('/api/v1/admin/operations/audit-logs/export')
+    $response = $this->postJson('/api/v1/admin/operations/audit-logs/export')
+        ->assertStatus(202)
+        ->assertJsonPath('data.status', 'pending')
+        ->assertJsonPath('data.type', 'export.audit_logs');
+
+    $asyncJobId = $response->json('data.id');
+
+    $this->getJson("/api/v1/async-jobs/{$asyncJobId}")
         ->assertOk()
-        ->assertJsonPath('data.format', 'csv')
-        ->assertJsonStructure(['data' => ['url', 'expires_at', 'row_count', 'format']]);
+        ->assertJsonPath('data.status', 'completed')
+        ->assertJsonPath('data.result.format', 'csv');
 });
 
 it('permite exportar auditoria al administrador institucional', function (): void {
@@ -23,7 +30,7 @@ it('permite exportar auditoria al administrador institucional', function (): voi
     actingAsRole(Role::InstitutionalAdmin);
 
     $this->postJson('/api/v1/admin/operations/audit-logs/export')
-        ->assertOk();
+        ->assertStatus(202);
 });
 
 it('rechaza exportar auditoria sin el permiso exports.view', function (): void {

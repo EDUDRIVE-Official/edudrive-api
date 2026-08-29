@@ -6,4 +6,9 @@ namespace Modules\Academic\Application\Commands;
 
 use Modules\Foundation\Application\Commands\Command;
 
-final readonly class ExportCoursesCommand implements Command {}
+final readonly class ExportCoursesCommand implements Command
+{
+    public function __construct(
+        public ?string $requestedByUserId,
+    ) {}
+}

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Academic\Presentation\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use League\Csv\Reader;
 use Modules\Academic\Application\Commands\ApproveCourseCommand;
@@ -28,7 +29,6 @@ use Modules\Academic\Application\Queries\GetUnitContentQuery;
 use Modules\Academic\Application\Queries\ListCoursesQuery;
 use Modules\Academic\Application\Queries\ListCourseVersionsQuery;
 use Modules\Academic\Application\Responses\ArchiveCourseResponse;
-use Modules\Academic\Application\Responses\BulkImportCoursesResponse;
 use Modules\Academic\Application\Responses\CourseCurriculumResponse;
 use Modules\Academic\Application\Responses\CourseListItemResponse;
 use Modules\Academic\Application\Responses\CourseStatusResponse;
@@ -41,9 +41,9 @@ use Modules\Academic\Presentation\Http\Requests\BulkImportCoursesRequest;
 use Modules\Academic\Presentation\Http\Requests\CreateCourseRequest;
 use Modules\Academic\Presentation\Http\Requests\ReplaceCourseCurriculumRequest;
 use Modules\Academic\Presentation\Http\Requests\ReplaceUnitContentRequest;
+use Modules\AsyncProcessing\Application\Responses\AsyncJobResponse;
 use Modules\Foundation\Application\Bus\CommandBus;
 use Modules\Foundation\Application\Bus\QueryBus;
-use Modules\Foundation\Application\Responses\ExportResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 final class CourseController
@@ -135,18 +135,23 @@ final class CourseController
             ]);
         }
 
-        $result = $commandBus->dispatch(new BulkImportCoursesCommand(rows: $rows));
-        assert($result instanceof BulkImportCoursesResponse);
+        $result = $commandBus->dispatch(new BulkImportCoursesCommand(
+            rows: $rows,
+            requestedByUserId: (string) $request->user()?->getAuthIdentifier(),
+        ));
+        assert($result instanceof AsyncJobResponse);
 
-        return response()->json(['data' => $result->toArray()]);
+        return response()->json(['data' => $result->toArray()], Response::HTTP_ACCEPTED);
     }
 
-    public function export(CommandBus $commandBus): JsonResponse
+    public function export(Request $request, CommandBus $commandBus): JsonResponse
     {
-        $result = $commandBus->dispatch(new ExportCoursesCommand);
-        assert($result instanceof ExportResponse);
+        $result = $commandBus->dispatch(new ExportCoursesCommand(
+            requestedByUserId: (string) $request->user()?->getAuthIdentifier(),
+        ));
+        assert($result instanceof AsyncJobResponse);
 
-        return response()->json(['data' => $result->toArray()]);
+        return response()->json(['data' => $result->toArray()], Response::HTTP_ACCEPTED);
     }
 
     public function publish(

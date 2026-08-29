@@ -11,7 +11,7 @@ use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Authorization\Domain\Enums\Role;
 use Tests\TestCase;
 
-it('exporta cursos a csv con el permiso exports.view', function (): void {
+it('exporta cursos a csv de forma asincrona con el permiso exports.view', function (): void {
     /** @var TestCase $this */
     actingAsRole(Role::SuperAdmin);
     app(CourseRepository::class)->save(Course::create(
@@ -20,10 +20,17 @@ it('exporta cursos a csv con el permiso exports.view', function (): void {
         title: CourseTitle::fromString('Curso feature para exportar'),
     ));
 
-    $this->postJson('/api/v1/academic/courses/export')
+    $response = $this->postJson('/api/v1/academic/courses/export')
+        ->assertStatus(202)
+        ->assertJsonPath('data.status', 'pending')
+        ->assertJsonPath('data.type', 'export.courses');
+
+    $asyncJobId = $response->json('data.id');
+
+    $this->getJson("/api/v1/async-jobs/{$asyncJobId}")
         ->assertOk()
-        ->assertJsonPath('data.format', 'csv')
-        ->assertJsonStructure(['data' => ['url', 'expires_at', 'row_count', 'format']]);
+        ->assertJsonPath('data.status', 'completed')
+        ->assertJsonPath('data.result.format', 'csv');
 });
 
 it('rechaza exportar cursos sin el permiso exports.view', function (): void {
@@ -38,14 +45,21 @@ it('requiere autenticacion para exportar cursos', function (): void {
     $this->postJson('/api/v1/academic/courses/export')->assertUnauthorized();
 });
 
-it('exporta enrollments a csv con el permiso exports.view', function (): void {
+it('exporta enrollments a csv de forma asincrona con el permiso exports.view', function (): void {
     /** @var TestCase $this */
     actingAsRole(Role::SuperAdmin);
 
-    $this->postJson('/api/v1/academic/enrollments/export')
+    $response = $this->postJson('/api/v1/academic/enrollments/export')
+        ->assertStatus(202)
+        ->assertJsonPath('data.status', 'pending')
+        ->assertJsonPath('data.type', 'export.enrollments');
+
+    $asyncJobId = $response->json('data.id');
+
+    $this->getJson("/api/v1/async-jobs/{$asyncJobId}")
         ->assertOk()
-        ->assertJsonPath('data.format', 'csv')
-        ->assertJsonStructure(['data' => ['url', 'expires_at', 'row_count', 'format']]);
+        ->assertJsonPath('data.status', 'completed')
+        ->assertJsonPath('data.result.format', 'csv');
 });
 
 it('rechaza exportar enrollments sin el permiso exports.view', function (): void {

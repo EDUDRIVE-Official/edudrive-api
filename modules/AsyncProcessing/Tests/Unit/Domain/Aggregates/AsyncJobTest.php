@@ -60,9 +60,20 @@ it('falla desde pendiente o procesando con una razon', function (): void {
         ->and($job->failureReason())->toBe('el proveedor externo no respondio');
 });
 
-it('rechaza iniciar un trabajo que no esta pendiente', function (): void {
+it('permite reiniciar un trabajo que ya esta procesando, sin perder la fecha original de inicio', function (): void {
     $job = anAsyncJob();
-    $job->start(new DateTimeImmutable('now'));
+    $firstStart = new DateTimeImmutable('2026-08-29T10:00:00+00:00');
+    $job->start($firstStart);
+
+    $job->start(new DateTimeImmutable('2026-08-29T10:05:00+00:00'));
+
+    expect($job->status())->toBe(AsyncJobStatus::Processing)
+        ->and($job->startedAt())->toBe($firstStart);
+});
+
+it('rechaza iniciar un trabajo ya finalizado', function (): void {
+    $job = anAsyncJob();
+    $job->complete(['ok' => true], new DateTimeImmutable('now'));
 
     expect(fn () => $job->start(new DateTimeImmutable('now')))
         ->toThrow(InvalidAsyncJobTransition::class);

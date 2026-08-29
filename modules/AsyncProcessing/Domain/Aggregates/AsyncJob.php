@@ -60,12 +60,12 @@ final class AsyncJob
 
     public function start(DateTimeImmutable $at): void
     {
-        if ($this->status !== AsyncJobStatus::Pending) {
+        if (in_array($this->status, [AsyncJobStatus::Completed, AsyncJobStatus::Failed], true)) {
             throw InvalidAsyncJobTransition::create();
         }
 
         $this->status = AsyncJobStatus::Processing;
-        $this->startedAt = $at;
+        $this->startedAt ??= $at;
     }
 
     /** @param array<string, mixed> $result */

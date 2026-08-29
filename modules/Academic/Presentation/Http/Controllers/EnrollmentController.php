@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Academic\Presentation\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Modules\Academic\Application\Commands\ActivateEnrollmentCommand;
 use Modules\Academic\Application\Commands\CancelEnrollmentCommand;
 use Modules\Academic\Application\Commands\CompleteEnrollmentCommand;
@@ -21,9 +22,9 @@ use Modules\Academic\Presentation\Http\Requests\CreateBulkEnrollmentsRequest;
 use Modules\Academic\Presentation\Http\Requests\CreateEnrollmentRequest;
 use Modules\Academic\Presentation\Http\Requests\CreateInstitutionalEnrollmentRequest;
 use Modules\Academic\Presentation\Http\Requests\ListEnrollmentsRequest;
+use Modules\AsyncProcessing\Application\Responses\AsyncJobResponse;
 use Modules\Foundation\Application\Bus\CommandBus;
 use Modules\Foundation\Application\Bus\QueryBus;
-use Modules\Foundation\Application\Responses\ExportResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 final class EnrollmentController
@@ -87,12 +88,14 @@ final class EnrollmentController
         return response()->json(['data' => $result->toArray()], Response::HTTP_CREATED);
     }
 
-    public function export(CommandBus $commandBus): JsonResponse
+    public function export(Request $request, CommandBus $commandBus): JsonResponse
     {
-        $result = $commandBus->dispatch(new ExportEnrollmentsCommand);
-        assert($result instanceof ExportResponse);
+        $result = $commandBus->dispatch(new ExportEnrollmentsCommand(
+            requestedByUserId: (string) $request->user()?->getAuthIdentifier(),
+        ));
+        assert($result instanceof AsyncJobResponse);
 
-        return response()->json(['data' => $result->toArray()]);
+        return response()->json(['data' => $result->toArray()], Response::HTTP_ACCEPTED);
     }
 
     public function institutional(CreateInstitutionalEnrollmentRequest $request, CommandBus $commandBus): JsonResponse

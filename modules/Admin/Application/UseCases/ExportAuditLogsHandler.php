@@ -4,63 +4,31 @@ declare(strict_types=1);
 
 namespace Modules\Admin\Application\UseCases;
 
-use DateTimeInterface;
 use Illuminate\Support\Str;
 use Modules\Admin\Application\Commands\ExportAuditLogsCommand;
-use Modules\Audit\Application\Contracts\AuditRepository;
-use Modules\Audit\Application\DTO\AuditEntry;
-use Modules\Audit\Application\Services\AuditLogger;
-use Modules\Foundation\Application\Responses\ExportResponse;
-use Modules\Foundation\Infrastructure\Export\CsvWriter;
-use Modules\Foundation\Infrastructure\Export\ExportFileWriter;
+use Modules\Admin\Infrastructure\Jobs\ExportAuditLogsJob;
+use Modules\AsyncProcessing\Application\Responses\AsyncJobResponse;
+use Modules\AsyncProcessing\Domain\Aggregates\AsyncJob;
+use Modules\AsyncProcessing\Domain\Repositories\AsyncJobRepository;
+use Modules\AsyncProcessing\Domain\ValueObjects\AsyncJobId;
 
 final readonly class ExportAuditLogsHandler
 {
     public function __construct(
-        private AuditRepository $auditLogs,
-        private ExportFileWriter $exportFileWriter,
-        private CsvWriter $csvWriter,
-        private AuditLogger $auditLogger,
+        private AsyncJobRepository $jobs,
     ) {}
 
-    public function handle(ExportAuditLogsCommand $command): ExportResponse
+    public function handle(ExportAuditLogsCommand $command): AsyncJobResponse
     {
-        $entries = $this->auditLogs->all();
-
-        $rows = array_map(
-            static fn (AuditEntry $entry): array => [
-                (string) $entry->id,
-                $entry->action,
-                (string) $entry->userId,
-                (string) $entry->entity,
-                (string) $entry->entityId,
-                (string) $entry->ip,
-                (string) $entry->correlationId,
-                $entry->outcome,
-                json_encode($entry->metadata, JSON_THROW_ON_ERROR),
-                $entry->occurredAt?->format(DateTimeInterface::ATOM) ?? '',
-            ],
-            $entries,
+        $job = AsyncJob::request(
+            id: AsyncJobId::fromString((string) Str::uuid()),
+            type: 'export.audit_logs',
+            requestedByUserId: $command->requestedByUserId,
         );
+        $this->jobs->save($job);
 
-        $csv = $this->csvWriter->toString(
-            ['id', 'action', 'user_id', 'entity', 'entity_id', 'ip', 'correlation_id', 'outcome', 'metadata', 'occurred_at'],
-            $rows,
-        );
+        ExportAuditLogsJob::dispatch($job->id()->value());
 
-        $storagePath = sprintf('exports/audit-logs/%s.csv', (string) Str::uuid());
-        $exported = $this->exportFileWriter->write($storagePath, $csv);
-
-        $this->auditLogger->log(new AuditEntry(
-            action: 'export.audit_logs',
-            metadata: ['row_count' => count($rows), 'format' => 'csv'],
-        ));
-
-        return new ExportResponse(
-            url: $exported->url,
-            expiresAt: $exported->expiresAt->format(DateTimeInterface::ATOM),
-            rowCount: count($rows),
-            format: 'csv',
-        );
+        return AsyncJobResponse::fromJob($job);
     }
 }
