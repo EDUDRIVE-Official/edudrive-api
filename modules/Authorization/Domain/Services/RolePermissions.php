@@ -66,6 +66,8 @@ final class RolePermissions
                 Permission::ViewExports,
                 Permission::ManageLegalPolicies,
                 Permission::ViewOrganizationConsents,
+                Permission::ManageApiConsumers,
+                Permission::ViewApiConsumers,
             ],
             Role::InstitutionalAdmin => [
                 Permission::ViewOrganizations,

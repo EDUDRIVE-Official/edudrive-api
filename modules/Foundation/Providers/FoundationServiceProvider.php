@@ -67,6 +67,12 @@ final class FoundationServiceProvider extends ServiceProvider
                 ->by((string) ($request->attributes->get('authenticated_simulator_id') ?? $request->ip())),
         );
 
+        RateLimiter::for(
+            'external-integration',
+            static fn (Request $request): Limit => Limit::perMinute(60)
+                ->by((string) ($request->attributes->get('authenticated_api_consumer_id') ?? $request->ip())),
+        );
+
         $this->commands([
             ScanForSecretsCommand::class,
         ]);

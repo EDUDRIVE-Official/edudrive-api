@@ -2145,3 +2145,27 @@ Sexta y última historia de la Fase 14 — Seguridad y cumplimiento (con este ci
 Con esto cierra por completo la **Fase 14 — Seguridad y cumplimiento** (ENG-067 a ENG-072).
 
 **Estado:** Finalizado.
+
+## 2026-08-29 — IMP-073 (Cierre de ENG-073 — API Keys para sistemas externos)
+
+### Alcance acordado con el usuario
+
+Primera historia de la Fase 15 — Integraciones. No existía ningún mecanismo de API key para consumidores externos (sistemas de terceros); el bounded context más cercano era la llave de integración de simuladores construida en `Modules\Simulation` (ENG-067). Alcance acordado: construir un módulo nuevo `Modules\Integration` clonando deliberadamente el patrón de llave de integración de Simulation (SHA-256, revelado único en texto plano, `fromHash()` para reconstitución) — sin extraerlo a un kernel compartido, por tratarse de dos bounded contexts DDD independientes y ser una clase pequeña (~20 líneas) — y añadiéndole las dos capacidades que Simulation nunca necesitó: alcances (scopes) y expiración. No se retrofiteó control de alcances a la superficie de API existente: se construyeron dos endpoints de humo nuevos para probar el mecanismo de punta a punta, dejando la decisión de qué endpoints existentes exponer a consumidores externos para ENG-076 (Integraciones institucionales). Detalle completo en `docs/plans/2026-08-29-api-keys-sistemas-externos-eng073-design.md`.
+
+### Completado
+
+- **`Modules\Integration` (módulo nuevo)** — agregado `ApiConsumer` (identificación, `scopes` como `list<string>`, `IntegrationKey`, expiración opcional, ciclo de vida `Active|Suspended|Revoked` con `suspend()`/`reactivate()`/`revoke()` terminal vía `InvalidApiConsumerTransition` uniforme, `rotateIntegrationKey()`, `isUsableAt()`, historial append-only `ApiConsumerHistoryEntry`); `ApiConsumerRepository` + `EloquentApiConsumerRepository` (mismo patrón transaccional de Simulation: `updateOrCreate` más borrado-y-recreación del historial); migración `integration_api_consumers` (llave `integration_key_hash` única) + `integration_api_consumer_history_entries` (FK cascada).
+- **Application** — cinco Commands (`RegisterApiConsumerCommand` valida cada scope contra `Modules\Authorization`'s `Permission::tryFrom()`, lanzando `InvalidApiConsumerScope` si no es un permiso válido) + dos Queries + siete handlers; cada acción administrativa (registrar/suspender/reactivar/revocar/rotar) audita vía `Modules\Audit`'s `AuditLogger` con `userId` del administrador que la realiza — deliberadamente **no** se audita cada autenticación de request de un consumidor, solo los cambios de ciclo de vida.
+- **Autenticación y autorización externa** — middleware `AuthenticateApiConsumer` (alias `api_consumer.auth`: hashea el bearer token, busca por hash, rechaza si no está `isUsableAt(now)`, adjunta `authenticated_api_consumer_id`/`authenticated_api_consumer_scopes` como atributos de request) y `EnsureApiConsumerScope` (alias `scope:*`, parametrizado con el scope requerido, 403 si no está presente). Limitador de tasa nombrado `external-integration` (60/min, por `authenticated_api_consumer_id` con fallback a IP) registrado en `FoundationServiceProvider`.
+- **Presentation** — `ApiConsumerController` (CRUD administrativo completo bajo `auth:sanctum` + permisos nuevos `api_consumers.manage`/`api_consumers.view`, otorgados únicamente a `SuperAdmin`) y dos endpoints de humo (`GET /api/v1/external/status`, `GET /api/v1/external/reports/ping` gateado con `scope:reports.view`) bajo `api_consumer.auth` + `throttle:external-integration`.
+- **`Modules\Authorization`** — `Permission::ManageApiConsumers`/`ViewApiConsumers` nuevos, otorgados solo a `SuperAdmin` en `RolePermissions` (mismo patrón que `legal_policies.manage`).
+- Registro en `bootstrap/providers.php` (`IntegrationServiceProvider`) y `bootstrap/app.php` (alias `api_consumer.auth`, `scope`).
+
+### Validaciones
+
+- Suite completa de `Modules\Integration` (dominio, aplicación, integración de persistencia, middlewares, feature, rate limiting) ✅ — `55 passed`.
+- `RolePermissionsTest` (`Modules\Authorization`) actualizado con el caso nuevo ✅ — `96 passed` en conjunto con la suite de Integration.
+- Pint ✅ sobre `modules/Integration`, `modules/Authorization` y `bootstrap` (los directorios tocados por esta historia). Un `pint --test` sobre el repositorio completo encontró un único problema de estilo preexistente y no relacionado en `modules/Learning/Tests/Unit/Application/GetEnrollmentLearningEventsHandlerTest.php` (confirmado sin cambios locales via `git status`) — fuera de alcance de esta historia, no corregido aquí.
+- PHPStan nivel 8 ✅ sin errores sobre el repositorio completo.
+
+**Estado:** Finalizado.

@@ -12,6 +12,7 @@ use Modules\FileStorage\Infrastructure\Providers\FileStorageServiceProvider;
 use Modules\Foundation\Providers\FoundationServiceProvider;
 use Modules\Gamification\Infrastructure\Providers\GamificationServiceProvider;
 use Modules\Identity\Providers\IdentityServiceProvider;
+use Modules\Integration\Infrastructure\Providers\IntegrationServiceProvider;
 use Modules\Learning\Infrastructure\Providers\LearningServiceProvider;
 use Modules\Legal\Infrastructure\Providers\LegalServiceProvider;
 use Modules\Notification\Infrastructure\Providers\NotificationServiceProvider;
@@ -36,4 +37,5 @@ return [
     NotificationServiceProvider::class,
     AdminServiceProvider::class,
     FileStorageServiceProvider::class,
+    IntegrationServiceProvider::class,
 ];

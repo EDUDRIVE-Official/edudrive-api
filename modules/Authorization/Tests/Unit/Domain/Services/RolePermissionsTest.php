@@ -301,3 +301,12 @@ it('otorga la consulta de consentimientos por organizacion al superadministrador
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewOrganizationConsents))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ViewOrganizationConsents))->toBeFalse();
 });
+
+it('otorga la gestion y consulta de consumidores de api unicamente al superadministrador', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageApiConsumers))->toBeTrue()
+        ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewApiConsumers))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageApiConsumers))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewApiConsumers))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageApiConsumers))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageApiConsumers))->toBeFalse();
+});

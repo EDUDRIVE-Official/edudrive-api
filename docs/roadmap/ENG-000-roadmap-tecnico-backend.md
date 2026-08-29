@@ -1349,7 +1349,9 @@ Operaciones críticas.
 21. Fase 15 — Integraciones
 ENG-073 — API Keys para sistemas externos
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-29): primera historia de la Fase 15 — Integraciones. No existía ningún mecanismo de API key para consumidores externos; el patrón más cercano era la llave de integración de simuladores de `Modules\Simulation` (ENG-067), que se clonó deliberadamente (sin extraer a un kernel compartido, por ser dos contextos acotados distintos) en un módulo nuevo `Modules\Integration`: agregado `ApiConsumer` con alcances (validados contra `Modules\Authorization`'s `Permission`), expiración opcional, ciclo de vida suspensión/reactivación/revocación terminal y rotación de llave; middleware de autenticación (`api_consumer.auth`) y de verificación de alcance (`scope:*`); limitador de tasa nombrado `external-integration` (60/min por consumidor); auditoría de las acciones administrativas (registrar/suspender/reactivar/revocar/rotar) con el id del administrador que las realiza, sin auditar cada autenticación de request. Alcance reducido acordado: se construyó el mecanismo completo más dos endpoints de humo (`GET /api/v1/external/status`, `GET /api/v1/external/reports/ping`) para probarlo de punta a punta; retrofitar alcances a la superficie de API existente se difirió explícitamente a ENG-076 (Integraciones institucionales), historia donde se decidirá caso por caso qué endpoints necesitan quedar expuestos a consumidores externos. Detalle completo en `docs/plans/2026-08-29-api-keys-sistemas-externos-eng073-design.md`.
 
 Incluye:
 
