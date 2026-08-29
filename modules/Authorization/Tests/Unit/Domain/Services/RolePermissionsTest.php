@@ -319,3 +319,12 @@ it('otorga la gestion y consulta de webhooks unicamente al superadministrador', 
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageWebhooks))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageWebhooks))->toBeFalse();
 });
+
+it('otorga la gestion y consulta del gobierno de IA unicamente al superadministrador', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageAiGovernance))->toBeTrue()
+        ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewAiGovernance))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageAiGovernance))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewAiGovernance))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageAiGovernance))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageAiGovernance))->toBeFalse();
+});

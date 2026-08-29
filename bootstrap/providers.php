@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Providers\AppServiceProvider;
 use Modules\Academic\Infrastructure\Providers\AcademicServiceProvider;
 use Modules\Admin\Infrastructure\Providers\AdminServiceProvider;
+use Modules\AiGovernance\Infrastructure\Providers\AiGovernanceServiceProvider;
 use Modules\Audit\Infrastructure\Providers\AuditServiceProvider;
 use Modules\Authorization\Infrastructure\Providers\AuthorizationServiceProvider;
 use Modules\Certification\Infrastructure\Providers\CertificationServiceProvider;
@@ -24,6 +25,7 @@ use Modules\Webhook\Infrastructure\Providers\WebhookServiceProvider;
 
 return [
     AppServiceProvider::class,
+    AiGovernanceServiceProvider::class,
     FoundationServiceProvider::class,
     IdentityServiceProvider::class,
     AuditServiceProvider::class,

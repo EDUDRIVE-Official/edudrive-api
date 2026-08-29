@@ -73,6 +73,11 @@ final class FoundationServiceProvider extends ServiceProvider
                 ->by((string) ($request->attributes->get('authenticated_api_consumer_id') ?? $request->ip())),
         );
 
+        RateLimiter::for(
+            'ai-gateway',
+            static fn (Request $request): Limit => Limit::perMinute(30)->by((string) $request->user()?->getAuthIdentifier()),
+        );
+
         $this->commands([
             ScanForSecretsCommand::class,
         ]);
