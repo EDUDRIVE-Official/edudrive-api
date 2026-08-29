@@ -13,5 +13,6 @@ final readonly class BulkImportCoursesCommand implements Command
      */
     public function __construct(
         public array $rows,
+        public ?string $requestedByUserId,
     ) {}
 }

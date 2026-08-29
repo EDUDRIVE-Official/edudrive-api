@@ -14,12 +14,12 @@ use Modules\Academic\Application\Commands\DeleteQuestionCommand;
 use Modules\Academic\Application\Commands\UpdateQuestionCommand;
 use Modules\Academic\Application\Queries\GetQuestionQuery;
 use Modules\Academic\Application\Queries\ListQuestionsQuery;
-use Modules\Academic\Application\Responses\BulkImportQuestionsResponse;
 use Modules\Academic\Application\Responses\QuestionListItemResponse;
 use Modules\Academic\Application\Responses\QuestionResponse;
 use Modules\Academic\Presentation\Http\Requests\BulkImportQuestionsRequest;
 use Modules\Academic\Presentation\Http\Requests\CreateQuestionRequest;
 use Modules\Academic\Presentation\Http\Requests\UpdateQuestionRequest;
+use Modules\AsyncProcessing\Application\Responses\AsyncJobResponse;
 use Modules\Foundation\Application\Bus\CommandBus;
 use Modules\Foundation\Application\Bus\QueryBus;
 use Symfony\Component\HttpFoundation\Response;
@@ -131,10 +131,13 @@ final class QuestionController
             ]);
         }
 
-        $result = $commandBus->dispatch(new BulkImportQuestionsCommand(rows: $rows));
-        assert($result instanceof BulkImportQuestionsResponse);
+        $result = $commandBus->dispatch(new BulkImportQuestionsCommand(
+            rows: $rows,
+            requestedByUserId: (string) $request->user()?->getAuthIdentifier(),
+        ));
+        assert($result instanceof AsyncJobResponse);
 
-        return response()->json(['data' => $result->toArray()]);
+        return response()->json(['data' => $result->toArray()], Response::HTTP_ACCEPTED);
     }
 
     /**

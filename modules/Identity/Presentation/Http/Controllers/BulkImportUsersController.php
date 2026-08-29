@@ -11,6 +11,7 @@ use League\Csv\Reader;
 use Modules\Identity\Application\Commands\BulkImportUsersCommand;
 use Modules\Identity\Application\UseCases\BulkImportUsersUseCase;
 use Modules\Identity\Presentation\Http\Requests\BulkImportUsersRequest;
+use Symfony\Component\HttpFoundation\Response;
 
 final class BulkImportUsersController extends Controller
 {
@@ -49,6 +50,6 @@ final class BulkImportUsersController extends Controller
             actorId: (string) $request->user()?->getAuthIdentifier(),
         ));
 
-        return response()->json(['data' => $result->toArray()]);
+        return response()->json(['data' => $result->toArray()], Response::HTTP_ACCEPTED);
     }
 }

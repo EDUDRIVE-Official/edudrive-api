@@ -24,18 +24,23 @@ it('importa usuarios en lote con el permiso users.manage, asignando student por 
         ."Ana Pérez,{$email},secret123,teacher\n"
         .'Carlos Ruiz,'.sprintf('%s@edudrive.cr', Str::uuid()).",secret123,\n";
 
-    $response = $this->post('/api/v1/users/import', ['file' => csvUploadFile($csv)], ['Accept' => 'application/json']);
+    $response = $this->post('/api/v1/users/import', ['file' => csvUploadFile($csv)], ['Accept' => 'application/json'])
+        ->assertStatus(202)
+        ->assertJsonPath('data.status', 'pending')
+        ->assertJsonPath('data.type', 'import.users');
 
-    $response->assertOk()
-        ->assertJsonPath('data.total', 2)
-        ->assertJsonPath('data.created', 2)
-        ->assertJsonPath('data.failed', 0);
+    $status = $this->getJson('/api/v1/async-jobs/'.$response->json('data.id'))
+        ->assertOk()
+        ->assertJsonPath('data.status', 'completed')
+        ->assertJsonPath('data.result.total', 2)
+        ->assertJsonPath('data.result.created', 2)
+        ->assertJsonPath('data.result.failed', 0);
 
-    $createdUserId = $response->json('data.results.0.user_id');
+    $createdUserId = $status->json('data.result.results.0.user_id');
     $roles = app(RoleAssignmentRepository::class)->findByUserId((string) $createdUserId);
     expect($roles)->toHaveCount(1)->and($roles[0]->role())->toBe(Role::Teacher);
 
-    $secondUserId = $response->json('data.results.1.user_id');
+    $secondUserId = $status->json('data.result.results.1.user_id');
     $secondRoles = app(RoleAssignmentRepository::class)->findByUserId((string) $secondUserId);
     expect($secondRoles)->toHaveCount(1)->and($secondRoles[0]->role())->toBe(Role::Student);
 });
@@ -55,14 +60,17 @@ it('reporta una fila fallida por correo ya existente sin detener el resto del lo
         ."Duplicado,{$existing->email()->value()},secret123,\n"
         .'Nuevo,'.sprintf('%s@edudrive.cr', Str::uuid()).",secret123,\n";
 
-    $this->post('/api/v1/users/import', ['file' => csvUploadFile($csv)], ['Accept' => 'application/json'])
+    $response = $this->post('/api/v1/users/import', ['file' => csvUploadFile($csv)], ['Accept' => 'application/json'])
+        ->assertStatus(202);
+
+    $this->getJson('/api/v1/async-jobs/'.$response->json('data.id'))
         ->assertOk()
-        ->assertJsonPath('data.total', 2)
-        ->assertJsonPath('data.created', 1)
-        ->assertJsonPath('data.failed', 1)
-        ->assertJsonPath('data.results.0.created', false)
-        ->assertJsonPath('data.results.0.error_code', 'EMAIL_ALREADY_EXISTS')
-        ->assertJsonPath('data.results.1.created', true);
+        ->assertJsonPath('data.result.total', 2)
+        ->assertJsonPath('data.result.created', 1)
+        ->assertJsonPath('data.result.failed', 1)
+        ->assertJsonPath('data.result.results.0.created', false)
+        ->assertJsonPath('data.result.results.0.error_code', 'EMAIL_ALREADY_EXISTS')
+        ->assertJsonPath('data.result.results.1.created', true);
 });
 
 it('reporta una fila fallida por rol invalido', function (): void {
@@ -71,10 +79,13 @@ it('reporta una fila fallida por rol invalido', function (): void {
     $csv = "name,email,password,role\n"
         .'Fila Invalida,'.sprintf('%s@edudrive.cr', Str::uuid()).",secret123,rol_inexistente\n";
 
-    $this->post('/api/v1/users/import', ['file' => csvUploadFile($csv)], ['Accept' => 'application/json'])
+    $response = $this->post('/api/v1/users/import', ['file' => csvUploadFile($csv)], ['Accept' => 'application/json'])
+        ->assertStatus(202);
+
+    $this->getJson('/api/v1/async-jobs/'.$response->json('data.id'))
         ->assertOk()
-        ->assertJsonPath('data.failed', 1)
-        ->assertJsonPath('data.results.0.error_code', 'IMPORT_ROW_INVALID');
+        ->assertJsonPath('data.result.failed', 1)
+        ->assertJsonPath('data.result.results.0.error_code', 'IMPORT_ROW_INVALID');
 });
 
 it('reporta una fila fallida por campos incompletos', function (): void {
@@ -82,10 +93,13 @@ it('reporta una fila fallida por campos incompletos', function (): void {
     actingAsRole(Role::SuperAdmin);
     $csv = "name,email,password,role\n,,,\n";
 
-    $this->post('/api/v1/users/import', ['file' => csvUploadFile($csv)], ['Accept' => 'application/json'])
+    $response = $this->post('/api/v1/users/import', ['file' => csvUploadFile($csv)], ['Accept' => 'application/json'])
+        ->assertStatus(202);
+
+    $this->getJson('/api/v1/async-jobs/'.$response->json('data.id'))
         ->assertOk()
-        ->assertJsonPath('data.failed', 1)
-        ->assertJsonPath('data.results.0.error_code', 'IMPORT_ROW_INVALID');
+        ->assertJsonPath('data.result.failed', 1)
+        ->assertJsonPath('data.result.results.0.error_code', 'IMPORT_ROW_INVALID');
 });
 
 it('rechaza un archivo con mas de 500 filas', function (): void {

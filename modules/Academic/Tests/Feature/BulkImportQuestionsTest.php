@@ -55,11 +55,17 @@ it('importa preguntas en lote con el permiso questions.manage', function (): voi
     $csv = "competency_code,type,prompt,score,response,options,explanation,media,source_kind,source_reference,license_categories\n"
         ."{$competencyCode},single_choice,¿Cuál es la velocidad máxima?,1,{$response},{$options},,,,,\n";
 
-    $this->post('/api/v1/academic/questions/import', ['file' => academicBulkQuestionImportCsvFile($csv)], ['Accept' => 'application/json'])
+    $response = $this->post('/api/v1/academic/questions/import', ['file' => academicBulkQuestionImportCsvFile($csv)], ['Accept' => 'application/json'])
+        ->assertStatus(202)
+        ->assertJsonPath('data.status', 'pending')
+        ->assertJsonPath('data.type', 'import.questions');
+
+    $this->getJson('/api/v1/async-jobs/'.$response->json('data.id'))
         ->assertOk()
-        ->assertJsonPath('data.total', 1)
-        ->assertJsonPath('data.created', 1)
-        ->assertJsonPath('data.failed', 0);
+        ->assertJsonPath('data.status', 'completed')
+        ->assertJsonPath('data.result.total', 1)
+        ->assertJsonPath('data.result.created', 1)
+        ->assertJsonPath('data.result.failed', 0);
 
     assertDatabaseCount('academic_questions', 1);
 });
@@ -78,13 +84,16 @@ it('reporta una fila fallida por competencia inexistente sin detener el resto de
         ."CODIGO-INEXISTENTE,single_choice,Pregunta invalida,1,{$response},{$options},,,,,\n"
         ."{$competencyCode},single_choice,Pregunta valida,1,{$response},{$options},,,,,\n";
 
-    $this->post('/api/v1/academic/questions/import', ['file' => academicBulkQuestionImportCsvFile($csv)], ['Accept' => 'application/json'])
+    $response = $this->post('/api/v1/academic/questions/import', ['file' => academicBulkQuestionImportCsvFile($csv)], ['Accept' => 'application/json'])
+        ->assertStatus(202);
+
+    $this->getJson('/api/v1/async-jobs/'.$response->json('data.id'))
         ->assertOk()
-        ->assertJsonPath('data.total', 2)
-        ->assertJsonPath('data.created', 1)
-        ->assertJsonPath('data.failed', 1)
-        ->assertJsonPath('data.results.0.error_code', 'IMPORT_ROW_INVALID')
-        ->assertJsonPath('data.results.1.created', true);
+        ->assertJsonPath('data.result.total', 2)
+        ->assertJsonPath('data.result.created', 1)
+        ->assertJsonPath('data.result.failed', 1)
+        ->assertJsonPath('data.result.results.0.error_code', 'IMPORT_ROW_INVALID')
+        ->assertJsonPath('data.result.results.1.created', true);
 });
 
 it('rechaza importar preguntas sin el permiso questions.manage', function (): void {

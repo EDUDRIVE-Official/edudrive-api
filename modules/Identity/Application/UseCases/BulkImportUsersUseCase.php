@@ -4,92 +4,31 @@ declare(strict_types=1);
 
 namespace Modules\Identity\Application\UseCases;
 
-use Illuminate\Support\Facades\DB;
-use InvalidArgumentException;
-use Modules\Authorization\Application\Commands\AssignRoleCommand;
-use Modules\Authorization\Domain\Enums\Role;
-use Modules\Foundation\Application\Bus\CommandBus;
+use Illuminate\Support\Str;
+use Modules\AsyncProcessing\Application\Responses\AsyncJobResponse;
+use Modules\AsyncProcessing\Domain\Aggregates\AsyncJob;
+use Modules\AsyncProcessing\Domain\Repositories\AsyncJobRepository;
+use Modules\AsyncProcessing\Domain\ValueObjects\AsyncJobId;
 use Modules\Identity\Application\Commands\BulkImportUsersCommand;
-use Modules\Identity\Application\DTO\RegisterUserCommand;
-use Modules\Identity\Application\Exceptions\EmailAlreadyExists;
-use Modules\Identity\Application\Responses\BulkImportUsersResponse;
-use Modules\Identity\Application\Services\PasswordHasher;
-use Modules\Identity\Application\Services\UuidGenerator;
-use Modules\Identity\Domain\Repositories\UserRepository;
-use Throwable;
+use Modules\Identity\Infrastructure\Jobs\ImportUsersJob;
 
 final readonly class BulkImportUsersUseCase
 {
     public function __construct(
-        private UserRepository $users,
-        private PasswordHasher $passwordHasher,
-        private UuidGenerator $uuidGenerator,
-        private CommandBus $commandBus,
+        private AsyncJobRepository $jobs,
     ) {}
 
-    public function execute(BulkImportUsersCommand $command): BulkImportUsersResponse
+    public function execute(BulkImportUsersCommand $command): AsyncJobResponse
     {
-        $created = 0;
-        $failed = 0;
-        $results = [];
-
-        foreach ($command->rows as $index => $row) {
-            $rowNumber = $index + 1;
-
-            try {
-                $results[] = $this->importRow($rowNumber, $row, $command->actorId);
-                $created++;
-            } catch (EmailAlreadyExists) {
-                $failed++;
-                $results[] = ['row' => $rowNumber, 'created' => false, 'error_code' => 'EMAIL_ALREADY_EXISTS'];
-            } catch (Throwable) {
-                $failed++;
-                $results[] = ['row' => $rowNumber, 'created' => false, 'error_code' => 'IMPORT_ROW_INVALID'];
-            }
-        }
-
-        return new BulkImportUsersResponse(
-            total: count($command->rows),
-            created: $created,
-            failed: $failed,
-            results: $results,
+        $job = AsyncJob::request(
+            id: AsyncJobId::fromString((string) Str::uuid()),
+            type: 'import.users',
+            requestedByUserId: $command->actorId,
         );
-    }
+        $this->jobs->save($job);
 
-    /**
-     * @param  array{name: string, email: string, password: string, role: string}  $row
-     * @return array{row: int, created: bool, user_id: string, email: string}
-     */
-    private function importRow(int $rowNumber, array $row, string $actorId): array
-    {
-        $name = trim($row['name']);
-        $email = trim($row['email']);
-        $password = $row['password'];
-        $roleValue = trim($row['role']);
+        ImportUsersJob::dispatch($job->id()->value(), $command->rows, $command->actorId);
 
-        if ($name === '' || $email === '' || $password === '') {
-            throw new InvalidArgumentException('Fila incompleta: se requieren name, email y password.');
-        }
-
-        $role = Role::from($roleValue === '' ? Role::Student->value : $roleValue);
-
-        return DB::transaction(function () use ($name, $email, $password, $role, $rowNumber, $actorId): array {
-            $registered = (new RegisterUserUseCase($this->users, $this->passwordHasher, $this->uuidGenerator))
-                ->execute(new RegisterUserCommand(name: $name, email: $email, password: $password));
-
-            $this->commandBus->dispatch(new AssignRoleCommand(
-                userId: $registered->id,
-                role: $role->value,
-                organizationId: null,
-                actorId: $actorId,
-            ));
-
-            return [
-                'row' => $rowNumber,
-                'created' => true,
-                'user_id' => $registered->id,
-                'email' => $registered->email,
-            ];
-        });
+        return AsyncJobResponse::fromJob($job);
     }
 }
