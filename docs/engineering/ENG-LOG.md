@@ -2466,3 +2466,31 @@ Endpoint de revocación de un token específico por id (no lo pide la historia; 
 - Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo.
 
 **Estado:** Finalizado.
+
+## 2026-08-29 — IMP-088 (Cierre de ENG-009 — Recuperación de contraseña)
+
+### Alcance acordado con el usuario
+
+Mecanismo propio de token de recuperación (patrón `Identity` ya establecido con `AccessTokenIssuer`/`AccessTokenRevoker`), en vez de adaptar el broker nativo de Laravel (`PasswordBroker` + `Notifiable`), que rompería el patrón DDD ya establecido en todo el módulo.
+
+### Completado
+
+- Descubrimiento clave de la investigación: la tabla `password_reset_tokens` **ya existía** (creada de fábrica en la migración original de Identity, `2026_07_24_000001_create_identity_tables.php`) pero nunca se usó — reutilizada tal cual (PK `email`, columna `token` para el hash sha256, `created_at` para el cálculo de expiración), sin migración nueva.
+- **Domain**: `PasswordResetToken` (entidad, TTL de 60 minutos como invariante), `PasswordResetTokenRepository` (interfaz), `InvalidPasswordResetToken` (`DomainException`, 422, `INVALID_PASSWORD_RESET_TOKEN` — un único código para token inexistente, expirado o que no coincide, mismo principio que `InvalidCredentials` de ENG-008.8).
+- **Application**: `RequestPasswordResetUseCase` (genera token aleatorio de 64 caracteres, hash sha256, reemplaza cualquier token previo del usuario, envía correo vía `EmailNotificationSender` de `Modules\Notification`, audita) y `ResetPasswordUseCase` (valida token, actualiza contraseña, borra el token usado, invalida todas las sesiones anteriores vía `AccessTokenRevoker::revokeAllForUser`, audita).
+- **Infrastructure**: `PasswordResetTokenModel`/`PasswordResetTokenMapper`/`EloquentPasswordResetTokenRepository`, mismo patrón que `UserModel`/`UserMapper`/`EloquentUserRepository`.
+- **Presentation**: `POST /api/v1/auth/forgot-password` (siempre responde el mismo mensaje genérico, exista o no el correo) y `POST /api/v1/auth/reset-password` (email + token + password confirmado), con dos `RateLimiter` nuevos (`forgot-password` 5/min por email+ip, `reset-password` 10/min por ip).
+- El correo de recuperación incluye el token en texto plano con instrucciones, no un enlace clicable — no existe ningún `FRONTEND_URL` decidido en el proyecto.
+
+### Fuera de alcance a propósito
+
+Enlace clicable a un frontend, cualquier cambio a `UserModel` para usar el broker nativo de Laravel, y limpieza automática de tokens vencidos vía scheduler (un solo token activo por usuario, se reemplaza en cada nueva solicitud).
+
+### Validaciones
+
+- TDD por capa: Domain (5 tests), Application (8 tests), Infrastructure/Integration (4 tests), Presentation/Feature (6 tests, incluyendo el flujo completo end-to-end capturando el token real vía `Queue::fake()` sobre `SendEmailNotificationJob`).
+- Suite completa de `Modules\Identity`: 87 tests, 254 assertions, en verde.
+- Suite completa del repositorio (`tests/` + `modules/`): 2162 tests, 6003 assertions, en verde.
+- Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo.
+
+**Estado:** Finalizado.

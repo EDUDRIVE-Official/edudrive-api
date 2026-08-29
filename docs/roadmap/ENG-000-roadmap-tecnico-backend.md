@@ -270,7 +270,9 @@ Logout.
 Revocación de tokens.
 ENG-009 — Recuperación de contraseña
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-29): la investigación confirmó que no existía ningún mecanismo de recuperación de contraseña, pero que la tabla `password_reset_tokens` ya existía (de fábrica, en la migración original de Identity) sin usarse — se reutilizó en vez de crear una nueva. El broker nativo de Laravel no era compatible (`UserModel` no usa `Notifiable`, y el flujo nativo rompe el patrón DDD de dominio + repositorio explícito ya establecido), así que se construyó un mecanismo propio, mismo estilo que `AccessTokenIssuer`/`AccessTokenRevoker`: nueva entidad `PasswordResetToken` (token aleatorio, solo se guarda su hash sha256, TTL de 60 minutos), `RequestPasswordResetUseCase`/`ResetPasswordUseCase`, endpoints `POST /api/v1/auth/forgot-password` y `POST /api/v1/auth/reset-password`. El correo reutiliza `EmailNotificationSender` de `Modules\Notification` (ENG-081) con el token en texto plano (no un enlace, porque no existe ningún `FRONTEND_URL` decidido en el proyecto). Restablecer la contraseña invalida todas las sesiones anteriores (`AccessTokenRevoker::revokeAllForUser`, viñeta "Invalidación de sesiones anteriores") y borra el token usado. Se replica el patrón de `LoginUserUseCase` de no revelar si un correo existe (mismo mensaje genérico y mismo código de error `INVALID_PASSWORD_RESET_TOKEN` para token inexistente, expirado o que no coincide). Detalle completo en `docs/plans/2026-08-29-recuperacion-contrasena-eng009-design.md`.
 
 Incluye:
 
