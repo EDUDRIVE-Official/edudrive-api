@@ -2416,3 +2416,29 @@ Archivos `compose.*.yaml` nuevos por ambiente, plantillas `.env.*.example` separ
 - Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo.
 
 **Estado:** Finalizado.
+
+## 2026-08-29 — IMP-086 (Cierre de ENG-086 — CI/CD)
+
+### Alcance acordado con el usuario
+
+CI real (Pint + Larastan + Pest en GitHub Actions) + construcción y publicación de imagen Docker en GHCR + runbook manual documentado para migraciones/despliegue/rollback, sin automatizar estos tres últimos contra un servidor real — no existe ningún proveedor de hosting, registro ni servidor de destino decidido en ningún documento del proyecto, así que automatizarlos sería construir infraestructura hipotética no verificable.
+
+### Completado
+
+- **`.github/workflows/ci.yml`** (nuevo): tres jobs. `quality` (`composer format:test` para Pint + `composer analyse` para Larastan/PHPStan) y `test` (`composer test` para Pest, suite completa `tests/`+`modules/`), ambos en paralelo, PHP 8.4 (misma versión que `docker/php/Dockerfile`) con `memory_limit=512M` fijado a nivel de instalación de PHP (no como flag `-d`, que no se propaga al subproceso de Pest — quirk ya conocido de este proyecto). `build-image` (solo en `push` a `main`, dependiente de que los dos anteriores pasen) construye `docker/php/Dockerfile` — el mismo usado en desarrollo, sin duplicar uno "de producción" que pueda divergir — y lo publica en `ghcr.io/edudrive-official/edudrive-api` taggeado por SHA corto inmutable (referencia exacta para rollback) y `latest`, usando el `GITHUB_TOKEN` nativo del workflow sin secretos nuevos.
+- **`docs/operaciones/ci-cd.md`** (nuevo): runbook manual de migraciones controladas (respaldo previo con `backup:database` de ENG-084 + `migrate --force` como paso deliberado y separado, nunca automático al iniciar el contenedor por el riesgo de condiciones de carrera con réplicas), despliegue (extraer imagen por SHA, migrar, reemplazar contenedores, verificar salud) y rollback (redesplegar el SHA anterior conocido como bueno; `backup:restore` si además hay que revertir una migración).
+- **Dos bugs reales preexistentes, no relacionados, encontrados y corregidos al validar los tres gates de CI contra el repo completo por primera vez en esta forma**:
+  - Pint: problema de estilo (`ordered_imports`) en `modules/Learning/Tests/Unit/Application/GetEnrollmentLearningEventsHandlerTest.php` — corregido con el propio Pint.
+  - Pest: `modules/Academic/Domain/ValueObjects/GradingResult.php` — el constructor confiaba en que `array_map` con closures tipadas (`AttemptQuestionGrade`/`CompetencyGrade`) lanzara el error correcto ante un elemento de tipo inválido en los arrays de breakdown, pero PHP con `strict_types` lanza `TypeError` en ese caso, no la `InvalidArgumentException` que el dominio y su propio test esperaban. Corregido agregando un guard `instanceof` explícito antes de los `array_map`, con supresión `@phpstan-ignore instanceof.alwaysTrue` siguiendo la convención ya existente en `modules/Organization/Domain/Aggregates/Organization.php` para el mismo patrón (docblock `list<T>` no impuesto por PHP en tiempo de ejecución).
+
+### Fuera de alcance a propósito
+
+Cualquier workflow de despliegue/rollback automatizado contra un servidor real (SSH, Kubernetes, un PaaS), secrets de GitHub Actions para credenciales de un destino que no existe, un `Dockerfile` de producción separado del de desarrollo, y cualquier comando Artisan nuevo de "migración segura" — el procedimiento queda documentado como runbook manual con las herramientas que ya existen.
+
+### Validaciones
+
+- Suite completa de Pest (`tests/` + `modules/`, corrida directa vía `./vendor/bin/pest` con memoria suficiente ya que `artisan test` no propaga el límite): 2134 tests, 5938 assertions, todos en verde tras el fix de `GradingResult`.
+- Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo.
+- El workflow de GitHub Actions se validó por sintaxis; su ejecución real en GitHub queda pendiente de un push real (no se puede correr Actions localmente contra Docker-in-Docker en este entorno).
+
+**Estado:** Finalizado.
