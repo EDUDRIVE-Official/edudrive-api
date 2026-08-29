@@ -18,6 +18,24 @@ services:
       redis:
         condition: service_healthy
 
+  queue-worker:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: edudrive-queue-worker
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan queue:work redis --sleep=3 --max-time=3600
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - edudrive-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   nginx:
     image: nginx:alpine
     container_name: edudrive-nginx

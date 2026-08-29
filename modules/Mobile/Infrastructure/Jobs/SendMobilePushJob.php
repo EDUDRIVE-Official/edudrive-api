@@ -10,6 +10,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 final class SendMobilePushJob implements ShouldQueue
 {
@@ -18,11 +20,19 @@ final class SendMobilePushJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    public int $tries = 3;
+
     public function __construct(
         public readonly string $pushToken,
         public readonly string $title,
         public readonly string $body,
     ) {}
+
+    /** @return list<int> */
+    public function backoff(): array
+    {
+        return [10, 30, 60];
+    }
 
     public function handle(): void
     {
@@ -40,5 +50,13 @@ final class SendMobilePushJob implements ShouldQueue
                     ],
                 ],
             );
+    }
+
+    public function failed(?Throwable $exception): void
+    {
+        Log::warning('No se pudo enviar la notificacion push tras agotar los reintentos.', [
+            'push_token' => $this->pushToken,
+            'exception' => $exception?->getMessage(),
+        ]);
     }
 }
