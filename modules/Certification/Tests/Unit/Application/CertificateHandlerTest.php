@@ -65,6 +65,12 @@ final class InMemoryCertificateRepository implements CertificateRepository
             static fn (Certificate $certificate): bool => $certificate->userId() === $userId,
         ));
     }
+
+    /** @return list<Certificate> */
+    public function all(): array
+    {
+        return array_values($this->items);
+    }
 }
 
 function persistedCertificateFor(InMemoryCertificateRepository $repository, ?string $userId = null, ?string $courseId = null): Certificate

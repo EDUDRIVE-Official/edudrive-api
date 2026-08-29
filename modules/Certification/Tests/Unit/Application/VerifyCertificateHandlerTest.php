@@ -57,6 +57,12 @@ final class InMemoryVerificationCertificateRepository implements CertificateRepo
     {
         throw new LogicException('No usado en esta prueba.');
     }
+
+    /** @return list<Certificate> */
+    public function all(): array
+    {
+        throw new LogicException('No usado en esta prueba.');
+    }
 }
 
 final class InMemoryVerificationUserRepository implements UserRepository

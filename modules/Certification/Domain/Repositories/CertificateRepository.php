@@ -20,4 +20,7 @@ interface CertificateRepository
 
     /** @return list<Certificate> */
     public function allForUser(string $userId): array;
+
+    /** @return list<Certificate> */
+    public function all(): array;
 }

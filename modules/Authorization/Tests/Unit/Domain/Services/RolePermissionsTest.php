@@ -328,3 +328,10 @@ it('otorga la gestion y consulta del gobierno de IA unicamente al superadministr
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageAiGovernance))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageAiGovernance))->toBeFalse();
 });
+
+it('otorga la consulta de analitica unicamente al superadministrador', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ViewAnalytics))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewAnalytics))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ViewAnalytics))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ViewAnalytics))->toBeFalse();
+});

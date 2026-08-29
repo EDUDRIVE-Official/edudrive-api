@@ -57,4 +57,5 @@ enum Permission: string
     case ViewWebhooks = 'webhooks.view';
     case ManageAiGovernance = 'ai_governance.manage';
     case ViewAiGovernance = 'ai_governance.view';
+    case ViewAnalytics = 'analytics.view';
 }

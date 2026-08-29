@@ -87,6 +87,18 @@ final readonly class EloquentCertificateRepository implements CertificateReposit
         );
     }
 
+    /** @return list<Certificate> */
+    public function all(): array
+    {
+        return array_values(
+            CertificateModel::query()->with('historyEntries')
+                ->orderBy('issued_at')
+                ->get()
+                ->map(fn (CertificateModel $model): Certificate => $this->toDomain($model))
+                ->all(),
+        );
+    }
+
     private function toDomain(CertificateModel $model): Certificate
     {
         /** @var list<CertificateHistoryEntryModel> $historyModels */
