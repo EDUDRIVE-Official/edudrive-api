@@ -2351,3 +2351,42 @@ Tercera historia de la Fase 17. Roadmap con seis viñetas sueltas sin documento 
 - PHPStan (`--memory-limit=512M`) ✅ sin errores sobre los módulos tocados y sobre el repositorio completo.
 
 **Estado:** Finalizado.
+
+## 2026-08-29 — IMP-084 (Cierre de ENG-084 — Backups y recuperación)
+
+### Alcance acordado con el usuario
+
+Cuarta historia de la Fase 17. Roadmap con seis viñetas sueltas sin documento de diseño: PostgreSQL, MinIO, Configuración, Restauración, Pruebas de recuperación, RPO y RTO. A diferencia de ENG-081/082/083, la investigación confirmó que **no existía absolutamente nada construido**: sin paquete de backup, sin `pg_dump`/`pg_restore` en el `Dockerfile`, sin versionado en el bucket de MinIO, sin política de RPO/RTO documentada en ningún lugar del repo. El usuario eligió el **alcance reducido recomendado**. Detalle completo en `docs/plans/2026-08-29-backups-recuperacion-eng084-design.md`.
+
+### Completado
+
+- **Nuevo módulo `Modules\Backup`** (deliberadamente sin capa Domain — es infraestructura pura, sin invariantes de negocio ni agregados):
+  - `Application\Services\DatabaseDumper`/`DatabaseRestorer` (puertos) + `Infrastructure\Services\PgDumpDatabaseDumper`/`PgRestoreDatabaseRestorer` — ejecutan `pg_dump -Fc`/`pg_restore --clean --if-exists` vía `Symfony\Component\Process\Process`, leyendo credenciales de `config('database.connections.pgsql')`. Cada uno expone `commandLine()` como método público separado de la ejecución real — testeable sin Postgres real.
+  - `backup:database` (`BackupDatabaseCommand`): genera el dump a un temporal, lo sube a `FileStorage` bajo `backups/postgres/{fecha}_{hora}.dump` (mismo bucket S3/MinIO ya configurado, sin credenciales ni infraestructura nuevas), borra el temporal. Programado diario vía `Schedule::command('backup:database')->daily()` (scheduler activado en ENG-082).
+  - `backup:restore {path}` (`RestoreDatabaseCommand`): descarga el dump y ejecuta la restauración. **Exige confirmación explícita** (`$this->confirm(...)`, salvo `--force`) por ser destructivo.
+  - `docker/php/Dockerfile` gana el paquete `postgresql-client` — `pg_dump`/`pg_restore`/`psql` ahora disponibles en `app`/`queue-worker`/`scheduler` (comparten el mismo Dockerfile).
+- **`Modules\FileStorage` gana `readToLocalFile(string $storagePath, string $localTmpPath): void`** — no existía ninguna forma de leer contenido de vuelta (solo `store`/`delete`/`temporaryDownloadUrl`), necesario para descargar el dump antes de restaurarlo. Los 6 implementadores existentes (`S3FileStorage` real + 5 fakes de test de ENG-081/082/083) ganan el método.
+- **Versionado de objetos en MinIO**: `EnsureFileBucketExists` (`files:ensure-bucket`, ya existente) gana una llamada a `putBucketVersioning(['Status' => 'Enabled'])` — protege contra sobreescritura/borrado accidental sin necesitar destino secundario. Confirmado funcionando contra MinIO real (no todas las implementaciones S3-compatibles soportan todas las operaciones del SDK de AWS; esta sí).
+- **`docs/operaciones/backups-rpo-rto.md`** (nuevo, primer documento de este tipo en el repo): política real derivada de lo construido — **RPO = 24 horas** (backup diario), **RTO ≈ 10.5 segundos** medido en la validación manual (ver abajo, para el volumen de datos actual de desarrollo — cifra de partida, no garantía a futuro con más datos).
+
+### Restricción real encontrada y cómo se resolvió (Pruebas de recuperación)
+
+La suite de Pest corre con `DB_CONNECTION=sqlite`/`DB_DATABASE=:memory:` (`phpunit.xml`), no contra Postgres real — `pg_dump`/`pg_restore` reales **no son ejecutables dentro de la suite automatizada**. Se resolvió en dos niveles, tal como se documentó en el diseño antes de implementar:
+
+- **Automatizado** (Pest, sin Postgres real): tests unitarios de `commandLine()` para ambos servicios; tests de los comandos con un `DatabaseDumper`/`DatabaseRestorer`/`FileStorage` fakes verificando toda la orquestación (ruta con timestamp, subida/descarga, limpieza de temporales, confirmación requerida).
+- **Manual, real, end-to-end** (Docker, contra Postgres de desarrollo real): se reconstruyó la imagen con `postgresql-client`, se ejecutó `backup:database` real (dump real subido a MinIO real), se insertó una tabla marcador de prueba, se ejecutó `backup:restore --force` real (~10.5 s medidos) y se confirmó que los datos originales (`users`) se preservaron íntegros. **Hallazgo real durante esta validación**: la tabla marcador creada *después* del backup **no desapareció** tras la restauración — `pg_restore --clean --if-exists` solo elimina y recrea los objetos que existen dentro del propio respaldo, no purga objetos añadidos después. Documentado explícitamente en `docs/operaciones/backups-rpo-rto.md` como comportamiento esperado, no un bug: para una recuperación total ante desastre (base de datos nueva y vacía) es irrelevante; para restaurar sobre una base de datos que sigue viva, solo se repone el contenido que existía al momento del backup.
+
+### Fuera de alcance a propósito
+
+Destino secundario/réplica geográfica, cifrado de los dumps, rotación/retención automática de backups antiguos, alerta por Slack (ya activado en ENG-083) si el backup programado falla.
+
+### Validaciones
+
+- Suite de `Modules\Backup` 6/6 (2 unitarios de `commandLine()`, 1 feature de backup, 2 feature de restore con y sin confirmación).
+- Suite completa de `Modules\FileStorage` 45/45 tras el cambio de interfaz.
+- Tests afectados por el mismo cambio de interfaz en otros módulos (`Academic`, `Admin`, `AsyncProcessing`) 19/19.
+- Validación manual real (backup+restore contra Postgres de desarrollo) exitosa, ver sección anterior.
+- Pint ✅ sobre todos los módulos y archivos tocados (`docker/php/Dockerfile`, `routes/console.php`, `bootstrap/providers.php`); un `pint --test` sobre el repositorio completo solo encontró el mismo problema de estilo preexistente en `modules/Learning` ya señalado en cierres previos.
+- PHPStan (`--memory-limit=512M`) ✅ sin errores sobre los módulos tocados y sobre el repositorio completo.
+
+**Estado:** Finalizado.

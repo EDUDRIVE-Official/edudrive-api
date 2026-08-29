@@ -1494,7 +1494,9 @@ Alertas.
 Dashboards.
 ENG-084 — Backups y recuperación
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-29): a diferencia de ENG-081/082/083, la investigación confirmó que aquí no existía absolutamente nada construido: sin paquete de backup, sin `pg_dump`/`pg_restore` en el `Dockerfile`, sin versionado en el bucket de MinIO, sin política de RPO/RTO documentada en ningún lugar del repo. El usuario eligió el alcance reducido recomendado. Se construyó `Modules\Backup` (sin capa Domain, es infraestructura pura sin invariantes de negocio) con `backup:database` (`pg_dump -Fc` real, sube el dump al mismo storage S3/MinIO ya configurado bajo `backups/postgres/`, programado diario vía el scheduler de ENG-082) y `backup:restore {path}` (`pg_restore --clean --if-exists`, exige confirmación explícita por ser destructivo). `Modules\FileStorage` ganó `readToLocalFile()` (no existía forma de leer contenido de vuelta) y `files:ensure-bucket` ahora habilita versionado de objetos en el bucket. Restricción real encontrada durante el diseño: la suite de Pest usa SQLite en memoria, así que `pg_dump`/`pg_restore` reales no son ejecutables dentro de ella — se probó en dos niveles, automatizado (fakes verificando la orquestación) y manual real (backup+restore real contra Postgres de desarrollo, ~10.5s medidos), confirmando además que `pg_restore --clean --if-exists` no purga objetos creados después del backup que no formen parte de él. Política de RPO/RTO documentada en `docs/operaciones/backups-rpo-rto.md`. Detalle completo en `docs/plans/2026-08-29-backups-recuperacion-eng084-design.md`.
 
 Incluye:
 
