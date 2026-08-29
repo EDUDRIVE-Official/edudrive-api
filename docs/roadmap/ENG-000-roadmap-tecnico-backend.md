@@ -1467,7 +1467,9 @@ Analítica.
 Reintentos.
 ENG-082 — Scheduler
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-29): historia sin documento de diseño previo, solo cinco viñetas sueltas. La investigación encontró que ya existía un `Schedule::command('identity:purge-inactive-accounts')->daily()` en `routes/console.php`, pero ningún proceso ejecutaba `schedule:run`/`schedule:work` — exactamente el mismo tipo de gap que ENG-081 resolvió para colas (Redis configurado, sin worker), aquí para el scheduler. El usuario eligió el alcance reducido recomendado (a diferencia de ENG-070/078/081, donde había elegido el completo). Se activó el scheduler real: nuevo servicio `scheduler` en `compose.yaml` (`php artisan schedule:work`, mismo patrón que `queue-worker` de ENG-081). "Limpieza de tokens" se resolvió sin código nuevo: Sanctum ya trae de fábrica `sanctum:prune-expired`, solo se programó (`->daily()`, junto al comando de cuentas inactivas ya existente). "Mantenimiento" cerró un gap real encontrado en la investigación: `ExportFileWriter` (ENG-062/081) generaba una URL firmada de 15 minutos pero nunca borraba el objeto subyacente, dejando archivos huérfanos indefinidamente en MinIO/S3 — nuevo comando `async-processing:cleanup` (`Modules\AsyncProcessing`) que borra esos archivos y purga los `AsyncJob`s terminales más allá de la retención configurada (`ASYNC_JOB_RETENTION_HOURS`, default 24h). "Notificaciones" (digest `NotificationFrequency::Daily/Weekly`), "Reportes programados" (cron sobre `Modules\Analytics`) y "Expiración" proactiva (avisar antes de que venza un `Certificate`/`ApiConsumer`) quedaron fuera de alcance a propósito — son features de negocio nuevas, no solo activación de infraestructura ya presente. Detalle completo en `docs/plans/2026-08-29-scheduler-eng082-design.md`.
 
 Incluye:
 

@@ -2304,3 +2304,25 @@ Primera historia de la Fase 17 — Plataforma y operación avanzada. El roadmap 
 - PHPStan (`--memory-limit=512M`) ✅ sin errores sobre los módulos tocados y sobre el repositorio completo.
 
 **Estado:** Finalizado.
+
+## 2026-08-29 — IMP-082 (Cierre de ENG-082 — Scheduler)
+
+### Alcance acordado con el usuario
+
+Segunda historia de la Fase 17. Roadmap con cinco viñetas sueltas sin documento de diseño: Limpieza de tokens, Notificaciones, Reportes programados, Expiración, Mantenimiento. La investigación encontró que ya existía `Schedule::command('identity:purge-inactive-accounts')->daily()` en `routes/console.php`, pero ningún proceso ejecutaba `schedule:run`/`schedule:work` — el mismo tipo de gap que ENG-081 resolvió para colas (Redis configurado, sin worker), aquí para el scheduler, dejando esa única entrada inerte. El usuario eligió el **alcance reducido recomendado** (a diferencia de ENG-070/078/081, donde había elegido el completo). Detalle completo en `docs/plans/2026-08-29-scheduler-eng082-design.md`.
+
+### Completado
+
+- **Scheduler real**: nuevo servicio `scheduler` en `compose.yaml` (`php artisan schedule:work`), mismo patrón que `queue-worker` de ENG-081. Confirmado en ejecución: `php artisan schedule:list` desde el contenedor `app` muestra las tres tareas con su próxima ejecución.
+- **Limpieza de tokens**: sin código nuevo — Sanctum ya trae de fábrica `sanctum:prune-expired`, solo se agregó `Schedule::command('sanctum:prune-expired --hours=24')->daily()`.
+- **Mantenimiento**: cierra un gap real encontrado en la investigación — `ExportFileWriter` (ENG-062/081) generaba una URL firmada de 15 minutos pero nunca borraba el objeto subyacente, dejando archivos huérfanos indefinidamente en MinIO/S3. Los tres Jobs de exportación de ENG-081 (`ExportAuditLogsJob`, `ExportCoursesJob`, `ExportEnrollmentsJob`) ahora guardan `storage_path` en el `result` del `AsyncJob` (distinto de la URL firmada). Nuevo comando `Modules\AsyncProcessing\Presentation\Console\CleanupAsyncJobsCommand` (`async-processing:cleanup`, `->daily()`): purga los `AsyncJob`s en estado terminal (Completed/Failed) más antiguos que `config('async_processing.retention_hours')` (env `ASYNC_JOB_RETENTION_HOURS`, default 24h) — para los de tipo `export.*` completados, borra primero el archivo vía `FileStorage::delete()`; los de otros tipos (`import.*`, `analytics.*`) solo se purgan de la tabla. `AsyncJobRepository` ganó `allCompletedOrFailedBefore()` y `delete()`.
+- **Fuera de alcance a propósito**: digest real de `NotificationFrequency::Daily/Weekly`, programación periódica de reportes de `Modules\Analytics`, y barrido proactivo de expiración de `Certificate`/`ApiConsumer` — las tres son features de negocio nuevas (agregación temporal, ventanas de digest, decisiones de producto), no solo activación de infraestructura ya presente.
+
+### Validaciones
+
+- Suite de `Modules\AsyncProcessing` 24/24 (incluye 3 nuevos tests del comando de limpieza con un `FileStorage` fake, y 2 nuevos tests de integración del repositorio).
+- Suites afectadas por el cambio de interfaz (`AsyncJobRepository` ganó 2 métodos, 15 fakes de test en 6 módulos actualizados): `Admin`+`Academic`+`Identity`+`Analytics` 28/28, `Modules\Identity` completo 55/55.
+- Pint ✅ sobre todos los módulos y archivos tocados (`compose.yaml`, `routes/console.php`, `config/async_processing.php`); un `pint --test` sobre el repositorio completo solo encontró el mismo problema de estilo preexistente en `modules/Learning` ya señalado en cierres previos.
+- PHPStan (`--memory-limit=512M`) ✅ sin errores sobre los módulos tocados y sobre el repositorio completo.
+
+**Estado:** Finalizado.
