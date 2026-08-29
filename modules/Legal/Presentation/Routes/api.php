@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Modules\Legal\Presentation\Http\Controllers\ConsentController;
+use Modules\Legal\Presentation\Http\Controllers\OrganizationConsentsController;
 use Modules\Legal\Presentation\Http\Controllers\PolicyController;
 
 Route::prefix('api/v1/legal')
@@ -23,5 +24,11 @@ Route::prefix('api/v1/legal')
 
             Route::get('/me/consents', [ConsentController::class, 'index'])
                 ->name('me.consents');
+
+            Route::middleware('permission:organization_consents.view')->group(function (): void {
+                Route::get('/organizations/{organizationId}/minors-consents', [OrganizationConsentsController::class, 'index'])
+                    ->whereUuid('organizationId')
+                    ->name('organizations.minors-consents');
+            });
         });
     });

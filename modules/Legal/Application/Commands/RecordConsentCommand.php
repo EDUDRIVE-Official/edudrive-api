@@ -11,5 +11,6 @@ final readonly class RecordConsentCommand implements Command
     public function __construct(
         public string $userId,
         public string $policyKey,
+        public ?string $guardianDeclaration = null,
     ) {}
 }

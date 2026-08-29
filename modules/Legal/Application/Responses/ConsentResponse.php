@@ -14,6 +14,7 @@ final readonly class ConsentResponse
         public string $policyKey,
         public int $policyVersion,
         public string $acceptedAt,
+        public ?string $guardianDeclaration,
     ) {}
 
     public static function fromUserConsent(UserConsent $consent): self
@@ -23,10 +24,11 @@ final readonly class ConsentResponse
             policyKey: $consent->policyKey()->value(),
             policyVersion: $consent->policyVersion(),
             acceptedAt: $consent->acceptedAt()->format(DateTimeInterface::ATOM),
+            guardianDeclaration: $consent->guardianDeclaration(),
         );
     }
 
-    /** @return array{id: string, policy_key: string, policy_version: int, accepted_at: string} */
+    /** @return array{id: string, policy_key: string, policy_version: int, accepted_at: string, guardian_declaration: ?string} */
     public function toArray(): array
     {
         return [
@@ -34,6 +36,7 @@ final readonly class ConsentResponse
             'policy_key' => $this->policyKey,
             'policy_version' => $this->policyVersion,
             'accepted_at' => $this->acceptedAt,
+            'guardian_declaration' => $this->guardianDeclaration,
         ];
     }
 }

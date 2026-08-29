@@ -24,6 +24,9 @@ final class AuthController extends Controller
                 name: (string) $request->input('name'),
                 email: (string) $request->input('email'),
                 password: (string) $request->input('password'),
+                dateOfBirth: $request->input('date_of_birth') === null
+                    ? null
+                    : (string) $request->input('date_of_birth'),
             ),
         );
 

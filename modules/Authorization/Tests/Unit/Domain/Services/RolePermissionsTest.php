@@ -294,3 +294,10 @@ it('otorga la gestion de politicas legales unicamente al superadministrador', fu
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageLegalPolicies))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageLegalPolicies))->toBeFalse();
 });
+
+it('otorga la consulta de consentimientos por organizacion al superadministrador y al administrador institucional', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ViewOrganizationConsents))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewOrganizationConsents))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ViewOrganizationConsents))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ViewOrganizationConsents))->toBeFalse();
+});

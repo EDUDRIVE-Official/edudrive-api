@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Str;
+use Modules\Identity\Domain\Entities\User;
+use Modules\Identity\Domain\Repositories\UserRepository;
+use Modules\Identity\Domain\ValueObjects\Email;
 use Modules\Legal\Application\Commands\PublishPolicyVersionCommand;
 use Modules\Legal\Application\Commands\RecordConsentCommand;
 use Modules\Legal\Application\Queries\GetMyConsentsQuery;
@@ -15,6 +18,7 @@ use Modules\Legal\Application\UseCases\PublishPolicyVersionHandler;
 use Modules\Legal\Application\UseCases\RecordConsentHandler;
 use Modules\Legal\Domain\Aggregates\ConsentPolicy;
 use Modules\Legal\Domain\Entities\UserConsent;
+use Modules\Legal\Domain\Exceptions\GuardianDeclarationRequired;
 use Modules\Legal\Domain\Exceptions\PolicyNotFound;
 use Modules\Legal\Domain\Repositories\ConsentPolicyRepository;
 use Modules\Legal\Domain\Repositories\UserConsentRepository;
@@ -73,6 +77,71 @@ final class InMemoryUserConsentRepository implements UserConsentRepository
     }
 }
 
+final class InMemoryLegalUserRepository implements UserRepository
+{
+    /** @var array<string, User> */
+    public array $users = [];
+
+    public function save(User $user): void
+    {
+        $this->users[$user->id()] = $user;
+    }
+
+    public function findById(string $id): ?User
+    {
+        return $this->users[$id] ?? null;
+    }
+
+    public function findByEmail(Email $email): ?User
+    {
+        throw new LogicException('No usado en esta prueba.');
+    }
+
+    public function existsByEmail(Email $email): bool
+    {
+        throw new LogicException('No usado en esta prueba.');
+    }
+
+    public function delete(string $id): void
+    {
+        throw new LogicException('No usado en esta prueba.');
+    }
+
+    /** @return list<User> */
+    public function all(): array
+    {
+        throw new LogicException('No usado en esta prueba.');
+    }
+
+    /** @return list<User> */
+    public function findInactiveBefore(DateTimeImmutable $threshold): array
+    {
+        throw new LogicException('No usado en esta prueba.');
+    }
+}
+
+function legalAdultUser(): User
+{
+    return User::register(
+        id: (string) Str::uuid(),
+        name: 'Usuario adulto',
+        email: Email::fromString(sprintf('%s@edudrive.cr', Str::uuid())),
+        passwordHash: 'hashed-password',
+        dateOfBirth: new DateTimeImmutable('-30 years'),
+    );
+}
+
+function legalMinorUser(): User
+{
+    return User::register(
+        id: (string) Str::uuid(),
+        name: 'Usuario menor',
+        email: Email::fromString(sprintf('%s@edudrive.cr', Str::uuid())),
+        passwordHash: 'hashed-password',
+        dateOfBirth: new DateTimeImmutable('-15 years'),
+    );
+}
+
 it('publica la primera version de una politica nueva', function (): void {
     $policies = new InMemoryConsentPolicyRepository;
 
@@ -93,27 +162,64 @@ it('incrementa la version al publicar de nuevo la misma politica', function (): 
     expect($response->version)->toBe(2);
 });
 
-it('registra el consentimiento de un usuario a la version vigente', function (): void {
+it('registra el consentimiento de un usuario adulto a la version vigente', function (): void {
     $policies = new InMemoryConsentPolicyRepository;
     $consents = new InMemoryUserConsentRepository;
+    $users = new InMemoryLegalUserRepository;
     (new PublishPolicyVersionHandler($policies))->handle(new PublishPolicyVersionCommand(key: 'terms_of_service'));
 
-    $userId = (string) Str::uuid();
-    $response = (new RecordConsentHandler($policies, $consents))
-        ->handle(new RecordConsentCommand(userId: $userId, policyKey: 'terms_of_service'));
+    $user = legalAdultUser();
+    $users->save($user);
+
+    $response = (new RecordConsentHandler($policies, $consents, $users))
+        ->handle(new RecordConsentCommand(userId: $user->id(), policyKey: 'terms_of_service'));
 
     expect($response)->toBeInstanceOf(ConsentResponse::class)
         ->and($response->policyVersion)->toBe(1)
-        ->and($consents->findByUserId($userId))->toHaveCount(1);
+        ->and($response->guardianDeclaration)->toBeNull()
+        ->and($consents->findByUserId($user->id()))->toHaveCount(1);
 });
 
 it('rechaza registrar consentimiento a una politica inexistente', function (): void {
     $policies = new InMemoryConsentPolicyRepository;
     $consents = new InMemoryUserConsentRepository;
+    $users = new InMemoryLegalUserRepository;
 
-    expect(fn () => (new RecordConsentHandler($policies, $consents))
+    expect(fn () => (new RecordConsentHandler($policies, $consents, $users))
         ->handle(new RecordConsentCommand(userId: (string) Str::uuid(), policyKey: 'inexistente')))
         ->toThrow(PolicyNotFound::class);
+});
+
+it('exige la declaracion de un tutor para registrar el consentimiento de un menor', function (): void {
+    $policies = new InMemoryConsentPolicyRepository;
+    $consents = new InMemoryUserConsentRepository;
+    $users = new InMemoryLegalUserRepository;
+    (new PublishPolicyVersionHandler($policies))->handle(new PublishPolicyVersionCommand(key: 'privacy_policy'));
+
+    $minor = legalMinorUser();
+    $users->save($minor);
+
+    expect(fn () => (new RecordConsentHandler($policies, $consents, $users))
+        ->handle(new RecordConsentCommand(userId: $minor->id(), policyKey: 'privacy_policy')))
+        ->toThrow(GuardianDeclarationRequired::class);
+});
+
+it('registra la declaracion del tutor al aceptar el consentimiento de un menor', function (): void {
+    $policies = new InMemoryConsentPolicyRepository;
+    $consents = new InMemoryUserConsentRepository;
+    $users = new InMemoryLegalUserRepository;
+    (new PublishPolicyVersionHandler($policies))->handle(new PublishPolicyVersionCommand(key: 'privacy_policy'));
+
+    $minor = legalMinorUser();
+    $users->save($minor);
+
+    $response = (new RecordConsentHandler($policies, $consents, $users))->handle(new RecordConsentCommand(
+        userId: $minor->id(),
+        policyKey: 'privacy_policy',
+        guardianDeclaration: 'María Pérez',
+    ));
+
+    expect($response->guardianDeclaration)->toBe('María Pérez');
 });
 
 it('lista unicamente la version vigente de cada politica', function (): void {
@@ -138,13 +244,15 @@ it('lista unicamente la version vigente de cada politica', function (): void {
 it('lista el historial de consentimientos de un usuario', function (): void {
     $policies = new InMemoryConsentPolicyRepository;
     $consents = new InMemoryUserConsentRepository;
+    $users = new InMemoryLegalUserRepository;
     (new PublishPolicyVersionHandler($policies))->handle(new PublishPolicyVersionCommand(key: 'privacy_policy'));
 
-    $userId = (string) Str::uuid();
-    (new RecordConsentHandler($policies, $consents))
-        ->handle(new RecordConsentCommand(userId: $userId, policyKey: 'privacy_policy'));
+    $user = legalAdultUser();
+    $users->save($user);
+    (new RecordConsentHandler($policies, $consents, $users))
+        ->handle(new RecordConsentCommand(userId: $user->id(), policyKey: 'privacy_policy'));
 
-    $responses = (new GetMyConsentsHandler($consents))->handle(new GetMyConsentsQuery(userId: $userId));
+    $responses = (new GetMyConsentsHandler($consents))->handle(new GetMyConsentsQuery(userId: $user->id()));
 
     expect($responses)->toHaveCount(1)
         ->and($responses[0])->toBeInstanceOf(ConsentResponse::class)

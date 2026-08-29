@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Identity\Application\UseCases;
 
+use DateTimeImmutable;
 use Modules\Identity\Application\DTO\RegisterUserCommand;
 use Modules\Identity\Application\DTO\RegisterUserResponse;
 use Modules\Identity\Application\Exceptions\EmailAlreadyExists;
@@ -34,6 +35,7 @@ final readonly class RegisterUserUseCase
             name: $command->name,
             email: $email,
             passwordHash: $this->passwordHasher->hash($command->password),
+            dateOfBirth: $command->dateOfBirth === null ? null : new DateTimeImmutable($command->dateOfBirth),
         );
 
         $this->users->save($user);

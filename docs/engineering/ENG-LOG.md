@@ -2102,3 +2102,24 @@ Cuarta historia de la Fase 14 — Seguridad y cumplimiento, y la primera de esta
 - Se descubrió y corrigió durante la escritura de pruebas: el guard de Sanctum (`Illuminate\Auth\RequestGuard`) memoiza el usuario autenticado por instancia, que persiste entre múltiples peticiones dentro de un mismo método de prueba — una prueba que verificaba que un token quedara invalidado tras eliminar la cuenta necesitó `Auth::forgetGuards()` entre ambas peticiones para forzar una resolución nueva.
 
 **Estado:** Finalizado.
+
+## 2026-08-28 — IMP-071 (Cierre de ENG-071 — Seguridad para menores de edad)
+
+### Alcance acordado con el usuario
+
+Quinta y última historia planificada de la Fase 14 — Seguridad y cumplimiento (queda ENG-072 — Idempotencia, aún dentro de la fase). Investigación previa encontró un bloqueo real: no existía ningún campo de fecha de nacimiento ni edad en ningún módulo (`Modules\Identity`, `Modules\Academic`, `Modules\Organization`) — sin ese dato, "menor de edad" no tenía ninguna condición que lo disparara. Se confirmó una sola fuga de datos personales (`GET /api/v1/certification/verify/{code}` exponía el nombre completo del titular sin autenticación) y que "protección de perfiles" ya estaba satisfecha (ningún leaderboard ni perfil público existe en `Modules\Gamification`). Hallazgo adyacente no accionado: `InstitutionalAdmin` puede gestionar cualquier usuario del sistema sin límite de organización (`ListUsersUseCase`/`DeactivateUserUseCase` sin scoping) — problema de autorización general, no específico de menores, dejado fuera de esta historia. Alcance acordado: fecha de nacimiento opcional, consentimiento parental autodeclarado (sin verificar la identidad real de un tutor), corrección de la fuga confirmada, y consulta institucional de consentimiento parental por organización. Detalle completo en `docs/plans/2026-08-28-seguridad-menores-eng071-design.md`.
+
+### Completado
+
+- **Detección de minoría de edad**: `User` gana `?DateTimeImmutable $dateOfBirth` (nullable, opcional) y el método de dominio `isMinor(?DateTimeImmutable $asOf = null): bool` (menor de 18 años; `false` cuando no hay fecha registrada — limitación conocida y documentada, no un error silencioso). Solo `POST /api/v1/auth/register` gana el campo opcional `date_of_birth` — la importación masiva de usuarios (ENG-061) y otros flujos administrativos de creación de cuentas quedan fuera de esta historia.
+- **Consentimiento parental autodeclarado**: `Modules\Legal`'s `UserConsent` gana `?string $guardianDeclaration`. `RecordConsentHandler` pasa a depender de `Modules\Identity`'s `UserRepository`; si el usuario que acepta es menor según su fecha de nacimiento *actual*, exige `guardian_declaration` en la petición (nueva excepción `GuardianDeclarationRequired`, 422) — no se modela un tutor como entidad propia con cuenta o verificación.
+- **Corrección de la fuga confirmada**: `VerifyCertificateHandler` suprime `holderName` (ya nullable desde ENG-070) cuando el titular es menor *hoy*, no en la fecha de emisión del certificado — protege a la persona mientras siga siendo menor. La respuesta pública ya no distingue "el titular es menor" de "el titular eliminó su cuenta" (ENG-070); ambos casos simplemente omiten el nombre.
+- **Controles institucionales**: nuevo permiso `organization_consents.view` (SuperAdmin + InstitutionalAdmin). Nueva consulta en `Modules\Legal` (`GetOrganizationMinorsConsentsQuery`/`Handler`) que, dado un `organizationId`, resuelve los usuarios inscritos vía `Modules\Academic`'s `EnrollmentRepository::all(organizationId:)` (dependencia cruzada de solo lectura), filtra a los menores, y devuelve su historial de consentimiento — un adulto inscrito no aparece en este listado. Ruta: `GET /api/v1/legal/organizations/{organizationId}/minors-consents`.
+
+### Validaciones
+
+- Suites completas de `Modules\Identity`, `Modules\Legal`, `Modules\Certification`, `Modules\Authorization` y `tests/Unit/UserTest.php` ✅ — `253 passed` en conjunto (incluye 3 nuevas de registro con fecha de nacimiento, 4 de `isMinor()`, 4 de exigencia/registro de declaración de tutor a nivel unitario y HTTP, 1 de supresión de nombre para menores en verificación pública, 4 de consulta institucional de consentimientos por organización).
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre el repositorio completo.
+- Se descubrió y corrigió durante la escritura de pruebas: `Enrollment::assertValid()` rechaza una inscripción con `organizationId` no nulo a menos que `source` sea explícitamente `EnrollmentSource::Institutional` (el valor por defecto es `Individual`) — los nuevos fixtures de prueba que simulaban inscripciones institucionales no lo especificaban.
+
+**Estado:** Finalizado.

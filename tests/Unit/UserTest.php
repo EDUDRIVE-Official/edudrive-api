@@ -87,6 +87,43 @@ it('devuelve el usuario a pendiente cuando cambia su correo', function (): void 
         ->toEqual($changedAt);
 });
 
+it('no se considera menor sin fecha de nacimiento registrada', function (): void {
+    $user = User::register(
+        id: '01900000-0000-7000-8000-000000000001',
+        name: 'Abel Campos',
+        email: Email::fromString('abel@edudrive.cr'),
+        passwordHash: 'hashed-password',
+    );
+
+    expect($user->dateOfBirth())->toBeNull()
+        ->and($user->isMinor())->toBeFalse();
+});
+
+it('se considera menor cuando aun no cumple 18 anos', function (): void {
+    $user = User::register(
+        id: '01900000-0000-7000-8000-000000000001',
+        name: 'Abel Campos',
+        email: Email::fromString('abel@edudrive.cr'),
+        passwordHash: 'hashed-password',
+        dateOfBirth: new DateTimeImmutable('2015-08-28'),
+    );
+
+    expect($user->isMinor(new DateTimeImmutable('2026-08-28')))->toBeTrue();
+});
+
+it('deja de considerarse menor exactamente al cumplir 18 anos', function (): void {
+    $user = User::register(
+        id: '01900000-0000-7000-8000-000000000001',
+        name: 'Abel Campos',
+        email: Email::fromString('abel@edudrive.cr'),
+        passwordHash: 'hashed-password',
+        dateOfBirth: new DateTimeImmutable('2008-08-28'),
+    );
+
+    expect($user->isMinor(new DateTimeImmutable('2026-08-28')))->toBeFalse()
+        ->and($user->isMinor(new DateTimeImmutable('2026-08-27')))->toBeTrue();
+});
+
 it('rechaza un nombre vacío', function (): void {
     User::register(
         id: '01900000-0000-7000-8000-000000000001',

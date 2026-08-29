@@ -10,5 +10,6 @@ final readonly class RegisterUserCommand
         public string $name,
         public string $email,
         public string $password,
+        public ?string $dateOfBirth = null,
     ) {}
 }

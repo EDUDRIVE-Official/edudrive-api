@@ -21,6 +21,7 @@ final class User
         private readonly DateTimeImmutable $createdAt,
         private DateTimeImmutable $updatedAt,
         private ?DateTimeImmutable $lastLoginAt,
+        private ?DateTimeImmutable $dateOfBirth,
     ) {}
 
     public static function register(
@@ -29,6 +30,7 @@ final class User
         Email $email,
         string $passwordHash,
         ?DateTimeImmutable $registeredAt = null,
+        ?DateTimeImmutable $dateOfBirth = null,
     ): self {
         $normalizedName = self::normalizeName($name);
         $registeredAt ??= new DateTimeImmutable;
@@ -43,6 +45,7 @@ final class User
             createdAt: $registeredAt,
             updatedAt: $registeredAt,
             lastLoginAt: null,
+            dateOfBirth: $dateOfBirth,
         );
     }
 
@@ -56,6 +59,7 @@ final class User
         DateTimeImmutable $createdAt,
         DateTimeImmutable $updatedAt,
         ?DateTimeImmutable $lastLoginAt = null,
+        ?DateTimeImmutable $dateOfBirth = null,
     ): self {
         return new self(
             id: $id,
@@ -67,6 +71,7 @@ final class User
             createdAt: $createdAt,
             updatedAt: $updatedAt,
             lastLoginAt: $lastLoginAt,
+            dateOfBirth: $dateOfBirth,
         );
     }
 
@@ -165,6 +170,22 @@ final class User
     public function lastLoginAt(): ?DateTimeImmutable
     {
         return $this->lastLoginAt;
+    }
+
+    public function dateOfBirth(): ?DateTimeImmutable
+    {
+        return $this->dateOfBirth;
+    }
+
+    public function isMinor(?DateTimeImmutable $asOf = null): bool
+    {
+        if ($this->dateOfBirth === null) {
+            return false;
+        }
+
+        $asOf ??= new DateTimeImmutable;
+
+        return $this->dateOfBirth->diff($asOf)->y < 18;
     }
 
     private static function normalizeName(string $name): string

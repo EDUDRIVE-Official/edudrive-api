@@ -1322,7 +1322,9 @@ Exportación de datos personales.
 Consentimiento.
 ENG-071 — Seguridad para menores de edad
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-28): quinta y última historia planificada de la Fase 14, alcance reducido. Bloqueo real encontrado: no existía ningún campo de fecha de nacimiento en el sistema, así que "menor de edad" no tenía ninguna condición que lo disparara — se agregó `date_of_birth` opcional a `User` (nueva recolección justificada por el propósito de cumplimiento) con un método de dominio `isMinor()`. Consentimiento parental autodeclarado (el propio menor confirma contar con autorización de su tutor, sin verificar la identidad real de un tercero) vía un campo nuevo en `Modules\Legal`'s `UserConsent`. Se corrigió la única fuga de datos confirmada: la verificación pública de certificados dejó de exponer el nombre del titular cuando es menor de edad. "Protección de perfiles" se confirmó ya satisfecha (no existe ningún leaderboard ni perfil público). "Controles institucionales" se limitó a que una organización consulte el estado de consentimiento parental de sus propios estudiantes menores. Detalle completo en `docs/plans/2026-08-28-seguridad-menores-eng071-design.md`.
 
 Incluye:
 

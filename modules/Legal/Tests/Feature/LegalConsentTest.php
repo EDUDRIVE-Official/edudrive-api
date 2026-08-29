@@ -3,10 +3,48 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Laravel\Sanctum\Sanctum;
+use Modules\Authorization\Domain\Entities\RoleAssignment;
 use Modules\Authorization\Domain\Enums\Role;
+use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
+use Modules\Identity\Domain\Entities\User;
+use Modules\Identity\Domain\Repositories\UserRepository;
+use Modules\Identity\Domain\ValueObjects\Email;
+use Modules\Identity\Infrastructure\Persistence\Eloquent\Models\UserModel;
 use Tests\TestCase;
 
 uses(RefreshDatabase::class);
+
+function actingAsMinorStudent(): UserModel
+{
+    $repository = app(UserRepository::class);
+
+    $user = User::register(
+        id: (string) Str::uuid(),
+        name: 'Estudiante menor',
+        email: Email::fromString(sprintf('%s@edudrive.cr', Str::uuid())),
+        passwordHash: 'hashed-password',
+        dateOfBirth: new DateTimeImmutable('-15 years'),
+    );
+
+    $repository->save($user);
+
+    $model = UserModel::query()->findOrFail($user->id());
+
+    app(RoleAssignmentRepository::class)->save(
+        RoleAssignment::assign(
+            id: (string) Str::uuid(),
+            userId: $user->id(),
+            role: Role::Student,
+            organizationId: null,
+        ),
+    );
+
+    Sanctum::actingAs($model);
+
+    return $model;
+}
 
 it('el endpoint de politicas vigentes no requiere autenticacion', function (): void {
     /** @var TestCase $this */
@@ -62,6 +100,33 @@ it('registra el consentimiento del usuario autenticado a una politica vigente', 
     $this->getJson('/api/v1/legal/me/consents')
         ->assertOk()
         ->assertJsonPath('data.0.policy_key', 'privacy_policy');
+});
+
+it('exige la declaracion de un tutor para registrar el consentimiento de un menor', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::SuperAdmin);
+    $this->postJson('/api/v1/legal/policies', ['key' => 'privacy_policy'])->assertCreated();
+
+    actingAsMinorStudent();
+
+    $this->postJson('/api/v1/legal/consents', ['policy_key' => 'privacy_policy'])
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'GUARDIAN_DECLARATION_REQUIRED');
+});
+
+it('registra el consentimiento de un menor junto con la declaracion del tutor', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::SuperAdmin);
+    $this->postJson('/api/v1/legal/policies', ['key' => 'privacy_policy'])->assertCreated();
+
+    actingAsMinorStudent();
+
+    $this->postJson('/api/v1/legal/consents', [
+        'policy_key' => 'privacy_policy',
+        'guardian_declaration' => 'María Pérez',
+    ])
+        ->assertCreated()
+        ->assertJsonPath('data.guardian_declaration', 'María Pérez');
 });
 
 it('rechaza registrar consentimiento a una politica inexistente', function (): void {

@@ -44,7 +44,7 @@ final readonly class VerifyCertificateHandler
         return CertificateVerificationResponse::fromCertificate(
             certificate: $certificate,
             courseName: $course->title()->value(),
-            holderName: $holder?->name(),
+            holderName: $holder !== null && ! $holder->isMinor() ? $holder->name() : null,
         );
     }
 }

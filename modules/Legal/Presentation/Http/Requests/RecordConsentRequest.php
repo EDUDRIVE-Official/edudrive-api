@@ -18,6 +18,7 @@ final class RecordConsentRequest extends FormRequest
     {
         return [
             'policy_key' => ['required', 'string', 'max:100'],
+            'guardian_declaration' => ['nullable', 'string', 'max:150'],
         ];
     }
 }

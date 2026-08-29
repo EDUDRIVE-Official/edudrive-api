@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
  * @property string $policy_key
  * @property int $policy_version
  * @property Carbon $accepted_at
+ * @property string|null $guardian_declaration
  */
 final class UserConsentModel extends Model
 {

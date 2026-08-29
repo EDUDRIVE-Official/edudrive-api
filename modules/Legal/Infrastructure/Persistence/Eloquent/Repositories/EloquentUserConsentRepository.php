@@ -20,6 +20,7 @@ final class EloquentUserConsentRepository implements UserConsentRepository
                 'policy_key' => $consent->policyKey()->value(),
                 'policy_version' => $consent->policyVersion(),
                 'accepted_at' => $consent->acceptedAt(),
+                'guardian_declaration' => $consent->guardianDeclaration(),
             ],
         );
     }
@@ -45,6 +46,9 @@ final class EloquentUserConsentRepository implements UserConsentRepository
             policyKey: PolicyKey::fromString((string) $model->getAttribute('policy_key')),
             policyVersion: (int) $model->getAttribute('policy_version'),
             acceptedAt: $model->accepted_at->toDateTimeImmutable(),
+            guardianDeclaration: $model->getAttribute('guardian_declaration') === null
+                ? null
+                : (string) $model->getAttribute('guardian_declaration'),
         );
     }
 }

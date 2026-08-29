@@ -50,4 +50,5 @@ enum Permission: string
     case ViewFiles = 'files.view';
     case ViewExports = 'exports.view';
     case ManageLegalPolicies = 'legal_policies.manage';
+    case ViewOrganizationConsents = 'organization_consents.view';
 }

@@ -9,8 +9,10 @@ use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
 use Modules\Legal\Application\Commands\PublishPolicyVersionCommand;
 use Modules\Legal\Application\Commands\RecordConsentCommand;
 use Modules\Legal\Application\Queries\GetMyConsentsQuery;
+use Modules\Legal\Application\Queries\GetOrganizationMinorsConsentsQuery;
 use Modules\Legal\Application\Queries\ListPoliciesQuery;
 use Modules\Legal\Application\UseCases\GetMyConsentsHandler;
+use Modules\Legal\Application\UseCases\GetOrganizationMinorsConsentsHandler;
 use Modules\Legal\Application\UseCases\ListPoliciesHandler;
 use Modules\Legal\Application\UseCases\PublishPolicyVersionHandler;
 use Modules\Legal\Application\UseCases\RecordConsentHandler;
@@ -33,6 +35,7 @@ final class LegalServiceProvider extends ServiceProvider
         $registry->register(RecordConsentCommand::class, RecordConsentHandler::class);
         $registry->register(ListPoliciesQuery::class, ListPoliciesHandler::class);
         $registry->register(GetMyConsentsQuery::class, GetMyConsentsHandler::class);
+        $registry->register(GetOrganizationMinorsConsentsQuery::class, GetOrganizationMinorsConsentsHandler::class);
 
         $this->loadRoutesFrom(
             dirname(__DIR__, 2).'/Presentation/Routes/api.php',

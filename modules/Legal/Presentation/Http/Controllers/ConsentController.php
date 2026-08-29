@@ -37,6 +37,7 @@ final class ConsentController
         $result = $commandBus->dispatch(new RecordConsentCommand(
             userId: $userId,
             policyKey: (string) $data['policy_key'],
+            guardianDeclaration: isset($data['guardian_declaration']) ? (string) $data['guardian_declaration'] : null,
         ));
 
         assert($result instanceof ConsentResponse);

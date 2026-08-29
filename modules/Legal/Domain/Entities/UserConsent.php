@@ -15,6 +15,7 @@ final class UserConsent
         private PolicyKey $policyKey,
         private int $policyVersion,
         private DateTimeImmutable $acceptedAt,
+        private ?string $guardianDeclaration,
     ) {}
 
     public static function accept(
@@ -23,8 +24,16 @@ final class UserConsent
         PolicyKey $policyKey,
         int $policyVersion,
         ?DateTimeImmutable $acceptedAt = null,
+        ?string $guardianDeclaration = null,
     ): self {
-        return new self($id, $userId, $policyKey, $policyVersion, $acceptedAt ?? new DateTimeImmutable('now'));
+        return new self(
+            $id,
+            $userId,
+            $policyKey,
+            $policyVersion,
+            $acceptedAt ?? new DateTimeImmutable('now'),
+            $guardianDeclaration,
+        );
     }
 
     public static function restore(
@@ -33,8 +42,9 @@ final class UserConsent
         PolicyKey $policyKey,
         int $policyVersion,
         DateTimeImmutable $acceptedAt,
+        ?string $guardianDeclaration = null,
     ): self {
-        return new self($id, $userId, $policyKey, $policyVersion, $acceptedAt);
+        return new self($id, $userId, $policyKey, $policyVersion, $acceptedAt, $guardianDeclaration);
     }
 
     public function id(): string
@@ -60,5 +70,10 @@ final class UserConsent
     public function acceptedAt(): DateTimeImmutable
     {
         return $this->acceptedAt;
+    }
+
+    public function guardianDeclaration(): ?string
+    {
+        return $this->guardianDeclaration;
     }
 }

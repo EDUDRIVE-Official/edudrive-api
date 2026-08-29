@@ -24,6 +24,7 @@ final class UserMapper
             createdAt: $model->created_at->toDateTimeImmutable(),
             updatedAt: $model->updated_at->toDateTimeImmutable(),
             lastLoginAt: $model->last_login_at?->toDateTimeImmutable(),
+            dateOfBirth: $model->date_of_birth?->toDateTimeImmutable(),
         );
     }
 
@@ -42,6 +43,7 @@ final class UserMapper
             'created_at' => $user->createdAt(),
             'updated_at' => $user->updatedAt(),
             'last_login_at' => $user->lastLoginAt(),
+            'date_of_birth' => $user->dateOfBirth(),
         ];
     }
 }

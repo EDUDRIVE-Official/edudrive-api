@@ -157,6 +157,20 @@ function persistedVerificationUser(InMemoryVerificationUserRepository $repositor
     return $user;
 }
 
+function persistedVerificationMinorUser(InMemoryVerificationUserRepository $repository, string $name): User
+{
+    $user = User::register(
+        id: (string) Str::uuid(),
+        name: $name,
+        email: Email::fromString(sprintf('%s@edudrive.cr', Str::uuid())),
+        passwordHash: 'hashed-password',
+        dateOfBirth: new DateTimeImmutable('-15 years'),
+    );
+    $repository->save($user);
+
+    return $user;
+}
+
 function persistedVerificationCourse(InMemoryVerificationCourseRepository $repository, string $title): Course
 {
     $course = Course::create(
@@ -211,6 +225,28 @@ it('verifica un certificado cuyo titular fue eliminado sin exponer nombre alguno
         issuedAt: new DateTimeImmutable('2026-08-26T10:00:00+00:00'),
         expiresAt: null,
         history: [],
+    );
+    $certificates->save($certificate);
+
+    $response = (new VerifyCertificateHandler($certificates, $users, $courses))
+        ->handle(new VerifyCertificateQuery($certificate->validationCode()->value()));
+
+    expect($response->status)->toBe('valid')
+        ->and($response->holderName)->toBeNull();
+});
+
+it('verifica un certificado sin exponer el nombre cuando el titular es menor de edad', function (): void {
+    $certificates = new InMemoryVerificationCertificateRepository;
+    $users = new InMemoryVerificationUserRepository;
+    $courses = new InMemoryVerificationCourseRepository;
+
+    $user = persistedVerificationMinorUser($users, 'Estudiante Menor');
+    $course = persistedVerificationCourse($courses, 'Manejo defensivo');
+    $certificate = Certificate::create(
+        id: CertificateId::fromString((string) Str::uuid()),
+        userId: $user->id(),
+        courseId: $course->id()->value(),
+        validationCode: ValidationCode::generate(),
     );
     $certificates->save($certificate);
 
