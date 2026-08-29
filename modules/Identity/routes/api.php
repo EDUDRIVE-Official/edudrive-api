@@ -9,11 +9,13 @@ use Modules\Identity\Presentation\Http\Controllers\BulkImportUsersController;
 use Modules\Identity\Presentation\Http\Controllers\DeactivateUserController;
 use Modules\Identity\Presentation\Http\Controllers\DeleteAccountController;
 use Modules\Identity\Presentation\Http\Controllers\ExportMyDataController;
+use Modules\Identity\Presentation\Http\Controllers\ForgotPasswordController;
 use Modules\Identity\Presentation\Http\Controllers\ListUsersController;
 use Modules\Identity\Presentation\Http\Controllers\LoginController;
 use Modules\Identity\Presentation\Http\Controllers\LogoutAllController;
 use Modules\Identity\Presentation\Http\Controllers\LogoutController;
 use Modules\Identity\Presentation\Http\Controllers\MeController;
+use Modules\Identity\Presentation\Http\Controllers\ResetPasswordController;
 use Modules\Identity\Presentation\Http\Controllers\SessionsController;
 use Modules\Identity\Presentation\Http\Controllers\ShowUserController;
 
@@ -32,6 +34,14 @@ Route::middleware('api')
             ->whereUuid('userId')
             ->middleware('throttle:activate')
             ->name('api.v1.auth.users.activate');
+
+        Route::post('/forgot-password', ForgotPasswordController::class)
+            ->middleware('throttle:forgot-password')
+            ->name('api.v1.auth.forgot-password');
+
+        Route::post('/reset-password', ResetPasswordController::class)
+            ->middleware('throttle:reset-password')
+            ->name('api.v1.auth.reset-password');
 
         Route::middleware('auth:sanctum')->group(function (): void {
             Route::get('/me', MeController::class)
