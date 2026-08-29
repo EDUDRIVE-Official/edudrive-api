@@ -30,10 +30,17 @@ final readonly class AssignRoleHandler
             throw UserNotFound::withId($command->userId);
         }
 
+        $role = Role::from($command->role);
+
+        $existing = $this->findExisting($command->userId, $role, $command->organizationId);
+        if ($existing !== null) {
+            return RoleAssignmentResponse::fromRoleAssignment($existing);
+        }
+
         $assignment = RoleAssignment::assign(
             id: (string) Str::uuid(),
             userId: $command->userId,
-            role: Role::from($command->role),
+            role: $role,
             organizationId: $command->organizationId,
         );
 
@@ -54,5 +61,16 @@ final readonly class AssignRoleHandler
         );
 
         return RoleAssignmentResponse::fromRoleAssignment($assignment);
+    }
+
+    private function findExisting(string $userId, Role $role, ?string $organizationId): ?RoleAssignment
+    {
+        foreach ($this->assignments->findByUserId($userId) as $assignment) {
+            if ($assignment->role() === $role && $assignment->organizationId() === $organizationId) {
+                return $assignment;
+            }
+        }
+
+        return null;
     }
 }

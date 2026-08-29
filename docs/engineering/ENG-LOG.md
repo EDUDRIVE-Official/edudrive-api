@@ -2123,3 +2123,25 @@ Quinta y última historia planificada de la Fase 14 — Seguridad y cumplimiento
 - Se descubrió y corrigió durante la escritura de pruebas: `Enrollment::assertValid()` rechaza una inscripción con `organizationId` no nulo a menos que `source` sea explícitamente `EnrollmentSource::Institutional` (el valor por defecto es `Individual`) — los nuevos fixtures de prueba que simulaban inscripciones institucionales no lo especificaban.
 
 **Estado:** Finalizado.
+
+## 2026-08-28 — IMP-072 (Cierre de ENG-072 — Idempotencia)
+
+### Alcance acordado con el usuario
+
+Sexta y última historia de la Fase 14 — Seguridad y cumplimiento (con este cierre, la fase completa queda terminada; Fase 15 — Integraciones empieza en ENG-073). Investigación previa confirmó que "Registro de simulaciones" y "Sincronizaciones móviles" ya estaban resueltos desde ENG-050 — `Modules\Simulation`'s endpoints de telemetría/decisiones reciben un `id` generado por el cliente por cada muestra/evento, y los repositorios usan `insertOrIgnore()` sobre ese `id`; reenviar el mismo lote es un no-op silencioso. "Pagos" no tiene código que corregir porque el módulo no existe (es ENG-077, historia futura de Fase 15+). Huecos reales encontrados: `CreateEnrollmentHandler`/`CreateInstitutionalEnrollmentHandler` (Academic) e `IssueCertificateHandler` (Certification) verifican duplicados pero lanzan una excepción 409 en vez de devolver el recurso existente; `AssignRoleHandler` (Authorization) no tenía ninguna verificación de existencia — reintentar creaba filas duplicadas de `RoleAssignment` silenciosamente. Alcance acordado: corregir los tres huecos a nivel de aplicación devolviendo el recurso existente en vez de fallar. Detalle completo en `docs/plans/2026-08-28-idempotencia-eng072-design.md`.
+
+### Completado
+
+- **`CreateEnrollmentHandler` y `CreateInstitutionalEnrollmentHandler`** (`Modules\Academic`): cuando `findActiveOrPendingFor()` encuentra una inscripción activa/pendiente ya existente, se devuelve esa inscripción (`EnrollmentResponse::fromEnrollment($existing)`) en vez de lanzar `EnrollmentAlreadyExists` — la excepción quedó sin ningún llamador y se eliminó. `CreateBulkEnrollmentsHandler` no se modificó: su reporte de fila duplicada (`'created': false, 'error_code': 'ENROLLMENT_ALREADY_EXISTS'`) es un patrón de importación masiva ya establecido (ENG-061), no el mismo problema de reintento de una sola petición.
+- **`IssueCertificateHandler`** (`Modules\Certification`): mismo cambio — cuando `findByUserAndCourse()` encuentra un certificado existente, se devuelve ese certificado en vez de lanzar `CertificateAlreadyExists` (eliminada, sin llamadores). La verificación pública de certificados y el resto del módulo no cambian.
+- **`AssignRoleHandler`** (`Modules\Authorization`): gana un método `findExisting()` que busca, entre las asignaciones del usuario objetivo (`RoleAssignmentRepository::findByUserId()`), una con el mismo rol y organización antes de crear una nueva. Si existe, se devuelve sin crear una fila duplicada **ni registrar una segunda entrada de auditoría falsa** — `authorization.role_assigned` solo se registra cuando efectivamente se crea una asignación nueva.
+
+### Validaciones
+
+- Suites de `Modules\Certification` y `Modules\Authorization` completas ✅ — `125 passed` en conjunto (incluye las pruebas de idempotencia reescritas para certificados y asignación de roles).
+- Pruebas dirigidas de `Modules\Academic` (`EnrollmentTest.php`, `EnrollmentHandlerTest.php`, las únicas afectadas por este cambio) ✅ — `23 passed` (se evitó ejecutar la suite completa de `Modules\Academic`, que excede el límite de memoria por defecto de PHPStan/Pest en este entorno de forma independiente a este cambio — ya documentado en historias previas de esta sesión).
+- Pint ✅ y PHPStan nivel 8 ✅ sin errores sobre el repositorio completo.
+
+Con esto cierra por completo la **Fase 14 — Seguridad y cumplimiento** (ENG-067 a ENG-072).
+
+**Estado:** Finalizado.

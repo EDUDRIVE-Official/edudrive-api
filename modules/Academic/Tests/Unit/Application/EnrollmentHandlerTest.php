@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Illuminate\Support\Str;
 use Modules\Academic\Application\Commands\CreateEnrollmentCommand;
 use Modules\Academic\Application\Exceptions\CourseNotFound;
-use Modules\Academic\Application\Exceptions\EnrollmentAlreadyExists;
 use Modules\Academic\Application\Queries\GetEnrollmentQuery;
 use Modules\Academic\Application\Queries\ListEnrollmentsQuery;
 use Modules\Academic\Application\Responses\EnrollmentListItemResponse;
@@ -113,24 +112,28 @@ it('rechaza crear una matricula para un curso inexistente', function (): void {
     )))->toThrow(CourseNotFound::class);
 });
 
-it('rechaza duplicado activo o pending del mismo curso y usuario', function (): void {
+it('devuelve la matricula existente en vez de fallar ante un reintento (idempotencia)', function (): void {
     $repository = new InMemoryEnrollmentRepository;
     $course = enrollmentHandlerCourse();
     $userId = (string) Str::uuid();
-    $repository->save(Enrollment::create(
+    $existing = Enrollment::create(
         id: EnrollmentId::fromString((string) Str::uuid()),
         courseId: $course->id(),
         userId: $userId,
         status: EnrollmentStatus::Active,
         source: EnrollmentSource::Individual,
         enrolledAt: new DateTimeImmutable('2026-08-13T10:00:00+00:00'),
-    ));
+    );
+    $repository->save($existing);
     $handler = new CreateEnrollmentHandler($repository, app(CourseRepository::class));
 
-    expect(fn () => $handler->handle(new CreateEnrollmentCommand(
+    $response = $handler->handle(new CreateEnrollmentCommand(
         courseId: $course->id()->value(),
         userId: $userId,
-    )))->toThrow(EnrollmentAlreadyExists::class);
+    ));
+
+    expect($response->id)->toBe($existing->id()->value())
+        ->and($repository->items)->toHaveCount(1);
 });
 
 it('obtiene y lista matriculas con filtros', function (): void {

@@ -85,7 +85,7 @@ it('rechaza emitir un certificado sin el permiso certifications.manage', functio
     ])->assertForbidden();
 });
 
-it('rechaza emitir un segundo certificado para el mismo usuario y curso', function (): void {
+it('devuelve el certificado existente en vez de fallar ante un reintento (idempotencia)', function (): void {
     /** @var TestCase $this */
     actingAsRole(Role::SuperAdmin);
     $certificate = persistedCertificateFeature();
@@ -94,8 +94,8 @@ it('rechaza emitir un segundo certificado para el mismo usuario y curso', functi
         'user_id' => $certificate->userId(),
         'course_id' => $certificate->courseId(),
     ])
-        ->assertStatus(409)
-        ->assertJsonPath('code', 'CERTIFICATE_ALREADY_EXISTS');
+        ->assertCreated()
+        ->assertJsonPath('data.id', $certificate->id()->value());
 });
 
 it('lista los certificados del usuario autenticado', function (): void {

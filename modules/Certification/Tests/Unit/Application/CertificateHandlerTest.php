@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Illuminate\Support\Str;
 use Modules\Certification\Application\Commands\IssueCertificateCommand;
 use Modules\Certification\Application\Commands\RevokeCertificateCommand;
-use Modules\Certification\Application\Exceptions\CertificateAlreadyExists;
 use Modules\Certification\Application\Exceptions\CertificateNotFound;
 use Modules\Certification\Application\Queries\GetCertificateQuery;
 use Modules\Certification\Application\Queries\GetMyCertificatesQuery;
@@ -108,12 +107,15 @@ it('acepta una vigencia opcional al emitir', function (): void {
     expect($response->expiresAt)->toBe($expiresAt->format(DateTimeInterface::ATOM));
 });
 
-it('rechaza emitir un segundo certificado para el mismo usuario y curso', function (): void {
+it('devuelve el certificado existente en vez de fallar ante un reintento (idempotencia)', function (): void {
     $repository = new InMemoryCertificateRepository;
     $certificate = persistedCertificateFor($repository);
 
-    expect(fn () => (new IssueCertificateHandler($repository))->handle(new IssueCertificateCommand($certificate->userId(), $certificate->courseId())))
-        ->toThrow(CertificateAlreadyExists::class);
+    $response = (new IssueCertificateHandler($repository))
+        ->handle(new IssueCertificateCommand($certificate->userId(), $certificate->courseId()));
+
+    expect($response->id)->toBe($certificate->id()->value())
+        ->and($repository->items)->toHaveCount(1);
 });
 
 it('revoca un certificado existente', function (): void {

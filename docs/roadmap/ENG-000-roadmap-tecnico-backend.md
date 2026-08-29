@@ -1335,7 +1335,9 @@ Protección de perfiles.
 Controles institucionales.
 ENG-072 — Idempotencia
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-28): sexta y última historia de la Fase 14 — Seguridad y cumplimiento (con esto cierra por completo la fase). "Registro de simulaciones" y "Sincronizaciones móviles" ya estaban resueltos desde ENG-050 (id generado por el cliente + `insertOrIgnore`, sin tabla de llaves de idempotencia separada). "Pagos" no tiene código que corregir — el módulo no existe aún (ENG-077, Fase 15+); el patrón establecido aquí servirá de plantilla cuando se construya. Huecos reales corregidos: `CreateEnrollmentHandler`/`CreateInstitutionalEnrollmentHandler` e `IssueCertificateHandler` lanzaban un error 409 al reintentar una operación ya completada en vez de devolver el recurso existente; `AssignRoleHandler` no tenía ninguna protección y creaba asignaciones de rol duplicadas silenciosamente ante un reintento. Diferido explícitamente: restricciones de unicidad a nivel de base de datos para condiciones de carrera bajo concurrencia real, y eliminación de cuenta idempotente (su explotabilidad práctica es limitada porque el token de autenticación se elimina en cascada tras el primer borrado exitoso). Detalle completo en `docs/plans/2026-08-28-idempotencia-eng072-design.md`.
 
 Incluye:
 

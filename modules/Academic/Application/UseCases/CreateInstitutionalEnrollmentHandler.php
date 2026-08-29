@@ -9,7 +9,6 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Modules\Academic\Application\Commands\CreateInstitutionalEnrollmentCommand;
 use Modules\Academic\Application\Exceptions\CourseNotFound;
-use Modules\Academic\Application\Exceptions\EnrollmentAlreadyExists;
 use Modules\Academic\Application\Responses\EnrollmentResponse;
 use Modules\Academic\Domain\Aggregates\Enrollment;
 use Modules\Academic\Domain\Enums\EnrollmentSource;
@@ -35,8 +34,9 @@ final readonly class CreateInstitutionalEnrollmentHandler
             throw CourseNotFound::withId($command->courseId);
         }
 
-        if ($this->enrollments->findActiveOrPendingFor($courseId, $command->userId) !== null) {
-            throw EnrollmentAlreadyExists::create();
+        $existing = $this->enrollments->findActiveOrPendingFor($courseId, $command->userId);
+        if ($existing !== null) {
+            return EnrollmentResponse::fromEnrollment($existing);
         }
 
         try {

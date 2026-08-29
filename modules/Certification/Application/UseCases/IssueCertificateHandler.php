@@ -6,7 +6,6 @@ namespace Modules\Certification\Application\UseCases;
 
 use Illuminate\Support\Str;
 use Modules\Certification\Application\Commands\IssueCertificateCommand;
-use Modules\Certification\Application\Exceptions\CertificateAlreadyExists;
 use Modules\Certification\Application\Responses\CertificateResponse;
 use Modules\Certification\Domain\Aggregates\Certificate;
 use Modules\Certification\Domain\Repositories\CertificateRepository;
@@ -19,8 +18,9 @@ final readonly class IssueCertificateHandler
 
     public function handle(IssueCertificateCommand $command): CertificateResponse
     {
-        if ($this->certificates->findByUserAndCourse($command->userId, $command->courseId) !== null) {
-            throw CertificateAlreadyExists::create();
+        $existing = $this->certificates->findByUserAndCourse($command->userId, $command->courseId);
+        if ($existing !== null) {
+            return CertificateResponse::fromCertificate($existing);
         }
 
         $certificate = Certificate::create(

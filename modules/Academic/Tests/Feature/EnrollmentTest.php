@@ -153,6 +153,30 @@ it('crea una inscripcion institucional', function (): void {
         ->assertJsonPath('data.source', 'institutional');
 });
 
+it('devuelve la inscripcion institucional existente en vez de fallar ante un reintento', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::InstitutionalAdmin);
+    $course = createDraftCourseForPublishing('ENR-INS-02');
+    $userId = persistedEnrollmentUserId();
+    $organizationId = (string) Str::uuid();
+
+    $first = $this->postJson('/api/v1/academic/enrollments/institutional', [
+        'course_id' => $course->id()->value(),
+        'user_id' => $userId,
+        'organization_id' => $organizationId,
+        'status' => 'active',
+    ])->assertCreated();
+
+    $second = $this->postJson('/api/v1/academic/enrollments/institutional', [
+        'course_id' => $course->id()->value(),
+        'user_id' => $userId,
+        'organization_id' => $organizationId,
+        'status' => 'active',
+    ])->assertCreated();
+
+    expect($second->json('data.id'))->toBe($first->json('data.id'));
+});
+
 it('valida payloads invalidos en create endpoints', function (): void {
     /** @var TestCase $this */
     actingAsRole(Role::InstitutionalAdmin);
@@ -188,24 +212,25 @@ it('rechaza crear un enrollment para un curso inexistente', function (): void {
         ->assertJsonPath('code', 'COURSE_NOT_FOUND');
 });
 
-it('rechaza un enrollment duplicado activo o pending', function (): void {
+it('devuelve el enrollment existente en vez de fallar ante un reintento (idempotencia)', function (): void {
     /** @var TestCase $this */
     actingAsRole(Role::InstitutionalAdmin);
     $course = createDraftCourseForPublishing('ENR-DUP-01');
     $userId = persistedEnrollmentUserId();
 
-    $this->postJson('/api/v1/academic/enrollments', [
+    $first = $this->postJson('/api/v1/academic/enrollments', [
         'course_id' => $course->id()->value(),
         'user_id' => $userId,
         'status' => 'pending',
     ])->assertCreated();
 
-    $this->postJson('/api/v1/academic/enrollments', [
+    $second = $this->postJson('/api/v1/academic/enrollments', [
         'course_id' => $course->id()->value(),
         'user_id' => $userId,
         'status' => 'pending',
-    ])->assertStatus(409)
-        ->assertJsonPath('code', 'ENROLLMENT_ALREADY_EXISTS');
+    ])->assertCreated();
+
+    expect($second->json('data.id'))->toBe($first->json('data.id'));
 });
 
 it('forbids creating enrollments to teachers', function (): void {

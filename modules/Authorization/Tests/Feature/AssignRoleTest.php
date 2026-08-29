@@ -72,6 +72,28 @@ it('audita la asignacion de un rol con el id de quien la realiza', function (): 
         ->and($entry->metadata['role'])->toBe('teacher');
 });
 
+it('devuelve la asignacion existente en vez de duplicarla ante un reintento (idempotencia)', function (): void {
+    actingAsSuperAdminUser();
+
+    $targetUser = registerUserForAssignRoleTest();
+
+    $first = postJson('/api/v1/authorization/role-assignments', [
+        'user_id' => $targetUser->id,
+        'role' => 'teacher',
+    ])->assertCreated();
+
+    $second = postJson('/api/v1/authorization/role-assignments', [
+        'user_id' => $targetUser->id,
+        'role' => 'teacher',
+    ])->assertCreated();
+
+    expect($second->json('data.id'))->toBe($first->json('data.id'));
+
+    /** @var TestCase $this */
+    expect($this->app->make(RoleAssignmentRepository::class)->findByUserId($targetUser->id))->toHaveCount(1)
+        ->and(AuditLogModel::query()->where('action', 'authorization.role_assigned')->count())->toBe(1);
+});
+
 it('rechaza la asignación de un rol a un usuario inexistente', function (): void {
     $superAdmin = registerUserForAssignRoleTest();
 
