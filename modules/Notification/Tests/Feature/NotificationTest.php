@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Modules\Authorization\Domain\Enums\Role;
 use Modules\Identity\Domain\Entities\User;
@@ -12,6 +13,7 @@ use Modules\Notification\Domain\Aggregates\Notification;
 use Modules\Notification\Domain\Enums\NotificationChannel;
 use Modules\Notification\Domain\Repositories\NotificationRepository;
 use Modules\Notification\Domain\ValueObjects\NotificationId;
+use Modules\Notification\Infrastructure\Mail\NotificationMail;
 use Tests\TestCase;
 
 uses(RefreshDatabase::class);
@@ -59,6 +61,27 @@ it('envia una notificacion con el permiso notifications.manage', function (): vo
         ->assertCreated()
         ->assertJsonPath('data.user_id', $userId)
         ->assertJsonPath('data.status', 'unread');
+});
+
+it('envia un correo real cuando el canal es email', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::SuperAdmin);
+    $userId = persistedNotificationFeatureUserId();
+    $user = app(UserRepository::class)->findById($userId);
+    Mail::fake();
+
+    $this->postJson('/api/v1/notification/notifications', [
+        'user_id' => $userId,
+        'channel' => 'email',
+        'category' => 'certificado',
+        'subject' => 'Tu certificado esta listo',
+        'body' => 'Descarga tu certificado desde el panel.',
+    ])->assertCreated();
+
+    Mail::assertSent(NotificationMail::class, function (NotificationMail $mail) use ($user): bool {
+        return $mail->hasTo($user?->email()->value())
+            && $mail->notificationSubject === 'Tu certificado esta listo';
+    });
 });
 
 it('rechaza enviar una notificacion sin el permiso notifications.manage', function (): void {

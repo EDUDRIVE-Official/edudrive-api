@@ -19,6 +19,7 @@ use Modules\Notification\Application\Queries\GetMyNotificationPreferenceQuery;
 use Modules\Notification\Application\Queries\GetMyNotificationsQuery;
 use Modules\Notification\Application\Queries\ListCommunicationTemplatesQuery;
 use Modules\Notification\Application\Queries\PreviewCommunicationTemplateQuery;
+use Modules\Notification\Application\Services\EmailNotificationSender;
 use Modules\Notification\Application\UseCases\CreateCommunicationTemplateHandler;
 use Modules\Notification\Application\UseCases\GetCommunicationTemplateHandler;
 use Modules\Notification\Application\UseCases\GetMyNotificationPreferenceHandler;
@@ -38,6 +39,7 @@ use Modules\Notification\Domain\Repositories\NotificationRepository;
 use Modules\Notification\Infrastructure\Persistence\Eloquent\Repositories\EloquentCommunicationTemplateRepository;
 use Modules\Notification\Infrastructure\Persistence\Eloquent\Repositories\EloquentNotificationPreferenceRepository;
 use Modules\Notification\Infrastructure\Persistence\Eloquent\Repositories\EloquentNotificationRepository;
+use Modules\Notification\Infrastructure\Services\QueuedEmailNotificationSender;
 
 final class NotificationServiceProvider extends ServiceProvider
 {
@@ -46,6 +48,7 @@ final class NotificationServiceProvider extends ServiceProvider
         $this->app->bind(NotificationRepository::class, EloquentNotificationRepository::class);
         $this->app->bind(NotificationPreferenceRepository::class, EloquentNotificationPreferenceRepository::class);
         $this->app->bind(CommunicationTemplateRepository::class, EloquentCommunicationTemplateRepository::class);
+        $this->app->bind(EmailNotificationSender::class, QueuedEmailNotificationSender::class);
     }
 
     public function boot(MessageHandlerRegistry $registry): void

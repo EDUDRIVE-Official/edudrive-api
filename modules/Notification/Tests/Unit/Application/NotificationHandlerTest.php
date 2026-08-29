@@ -9,6 +9,7 @@ use Modules\Notification\Application\Commands\SendNotificationCommand;
 use Modules\Notification\Application\Exceptions\NotificationNotFound;
 use Modules\Notification\Application\Queries\GetMyNotificationsQuery;
 use Modules\Notification\Application\Responses\NotificationResponse;
+use Modules\Notification\Application\Services\EmailNotificationSender;
 use Modules\Notification\Application\UseCases\GetMyNotificationsHandler;
 use Modules\Notification\Application\UseCases\MarkNotificationAsReadHandler;
 use Modules\Notification\Application\UseCases\SendNotificationHandler;
@@ -61,12 +62,24 @@ final class InMemoryNotificationPreferenceRepository implements NotificationPref
     }
 }
 
+final class FakeEmailNotificationSender implements EmailNotificationSender
+{
+    /** @var list<array{userId: string, subject: string, body: string}> */
+    public array $sent = [];
+
+    public function send(string $userId, string $subject, string $body): void
+    {
+        $this->sent[] = ['userId' => $userId, 'subject' => $subject, 'body' => $body];
+    }
+}
+
 it('envia una notificacion nueva a un usuario', function (): void {
     $notifications = new InMemoryNotificationRepository;
     $preferences = new InMemoryNotificationPreferenceRepository;
+    $emailSender = new FakeEmailNotificationSender;
     $userId = (string) Str::uuid();
 
-    $response = (new SendNotificationHandler($notifications, $preferences, app(MobilePushSender::class)))->handle(new SendNotificationCommand(
+    $response = (new SendNotificationHandler($notifications, $preferences, app(MobilePushSender::class), $emailSender))->handle(new SendNotificationCommand(
         userId: $userId,
         channel: 'web',
         category: 'logro',
@@ -80,9 +93,29 @@ it('envia una notificacion nueva a un usuario', function (): void {
         ->and($response->status)->toBe('unread');
 });
 
+it('envia un correo cuando el canal es email', function (): void {
+    $notifications = new InMemoryNotificationRepository;
+    $preferences = new InMemoryNotificationPreferenceRepository;
+    $emailSender = new FakeEmailNotificationSender;
+    $userId = (string) Str::uuid();
+
+    (new SendNotificationHandler($notifications, $preferences, app(MobilePushSender::class), $emailSender))->handle(new SendNotificationCommand(
+        userId: $userId,
+        channel: 'email',
+        category: 'certificado',
+        subject: 'Tu certificado esta listo',
+        body: 'Descarga tu certificado desde el panel.',
+    ));
+
+    expect($emailSender->sent)->toHaveCount(1)
+        ->and($emailSender->sent[0]['userId'])->toBe($userId)
+        ->and($emailSender->sent[0]['subject'])->toBe('Tu certificado esta listo');
+});
+
 it('descarta el envio cuando la preferencia no permite el canal', function (): void {
     $notifications = new InMemoryNotificationRepository;
     $preferences = new InMemoryNotificationPreferenceRepository;
+    $emailSender = new FakeEmailNotificationSender;
     $userId = (string) Str::uuid();
     $preference = NotificationPreference::default($userId);
     $preference->update(
@@ -94,7 +127,7 @@ it('descarta el envio cuando la preferencia no permite el canal', function (): v
     );
     $preferences->save($preference);
 
-    $response = (new SendNotificationHandler($notifications, $preferences, app(MobilePushSender::class)))->handle(new SendNotificationCommand($userId, 'web', 'logro', 'Asunto', 'Cuerpo'));
+    $response = (new SendNotificationHandler($notifications, $preferences, app(MobilePushSender::class), $emailSender))->handle(new SendNotificationCommand($userId, 'web', 'logro', 'Asunto', 'Cuerpo'));
 
     expect($response)->toBeNull()
         ->and($notifications->allForUser($userId))->toBe([]);
@@ -103,8 +136,9 @@ it('descarta el envio cuando la preferencia no permite el canal', function (): v
 it('marca como leida una notificacion propia', function (): void {
     $notifications = new InMemoryNotificationRepository;
     $preferences = new InMemoryNotificationPreferenceRepository;
+    $emailSender = new FakeEmailNotificationSender;
     $userId = (string) Str::uuid();
-    $sent = (new SendNotificationHandler($notifications, $preferences, app(MobilePushSender::class)))->handle(new SendNotificationCommand($userId, 'web', 'logro', 'Asunto', 'Cuerpo'));
+    $sent = (new SendNotificationHandler($notifications, $preferences, app(MobilePushSender::class), $emailSender))->handle(new SendNotificationCommand($userId, 'web', 'logro', 'Asunto', 'Cuerpo'));
     assert($sent instanceof NotificationResponse);
 
     $response = (new MarkNotificationAsReadHandler($notifications))->handle(new MarkNotificationAsReadCommand($sent->id, $userId));
@@ -122,7 +156,8 @@ it('rechaza marcar como leida una notificacion inexistente', function (): void {
 it('rechaza marcar como leida una notificacion de otro usuario', function (): void {
     $notifications = new InMemoryNotificationRepository;
     $preferences = new InMemoryNotificationPreferenceRepository;
-    $sent = (new SendNotificationHandler($notifications, $preferences, app(MobilePushSender::class)))->handle(new SendNotificationCommand((string) Str::uuid(), 'web', 'logro', 'Asunto', 'Cuerpo'));
+    $emailSender = new FakeEmailNotificationSender;
+    $sent = (new SendNotificationHandler($notifications, $preferences, app(MobilePushSender::class), $emailSender))->handle(new SendNotificationCommand((string) Str::uuid(), 'web', 'logro', 'Asunto', 'Cuerpo'));
     assert($sent instanceof NotificationResponse);
 
     expect(fn () => (new MarkNotificationAsReadHandler($notifications))->handle(new MarkNotificationAsReadCommand($sent->id, (string) Str::uuid())))
@@ -132,10 +167,11 @@ it('rechaza marcar como leida una notificacion de otro usuario', function (): vo
 it('lista las notificaciones del usuario autenticado', function (): void {
     $notifications = new InMemoryNotificationRepository;
     $preferences = new InMemoryNotificationPreferenceRepository;
+    $emailSender = new FakeEmailNotificationSender;
     $userId = (string) Str::uuid();
-    (new SendNotificationHandler($notifications, $preferences, app(MobilePushSender::class)))->handle(new SendNotificationCommand($userId, 'web', 'logro', 'Asunto 1', 'Cuerpo 1'));
-    (new SendNotificationHandler($notifications, $preferences, app(MobilePushSender::class)))->handle(new SendNotificationCommand($userId, 'email', 'certificado', 'Asunto 2', 'Cuerpo 2'));
-    (new SendNotificationHandler($notifications, $preferences, app(MobilePushSender::class)))->handle(new SendNotificationCommand((string) Str::uuid(), 'web', 'logro', 'De otro usuario', 'Cuerpo'));
+    (new SendNotificationHandler($notifications, $preferences, app(MobilePushSender::class), $emailSender))->handle(new SendNotificationCommand($userId, 'web', 'logro', 'Asunto 1', 'Cuerpo 1'));
+    (new SendNotificationHandler($notifications, $preferences, app(MobilePushSender::class), $emailSender))->handle(new SendNotificationCommand($userId, 'email', 'certificado', 'Asunto 2', 'Cuerpo 2'));
+    (new SendNotificationHandler($notifications, $preferences, app(MobilePushSender::class), $emailSender))->handle(new SendNotificationCommand((string) Str::uuid(), 'web', 'logro', 'De otro usuario', 'Cuerpo'));
 
     $responses = (new GetMyNotificationsHandler($notifications))->handle(new GetMyNotificationsQuery($userId));
 

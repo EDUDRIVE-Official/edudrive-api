@@ -9,6 +9,7 @@ use Modules\Mobile\Application\Services\MobilePushSender;
 use Modules\Mobile\Domain\ValueObjects\MobilePushMessage;
 use Modules\Notification\Application\Commands\SendNotificationCommand;
 use Modules\Notification\Application\Responses\NotificationResponse;
+use Modules\Notification\Application\Services\EmailNotificationSender;
 use Modules\Notification\Domain\Aggregates\Notification;
 use Modules\Notification\Domain\Aggregates\NotificationPreference;
 use Modules\Notification\Domain\Enums\NotificationChannel;
@@ -22,6 +23,7 @@ final readonly class SendNotificationHandler
         private NotificationRepository $notifications,
         private NotificationPreferenceRepository $preferences,
         private MobilePushSender $mobilePushSender,
+        private EmailNotificationSender $emailNotificationSender,
     ) {}
 
     public function handle(SendNotificationCommand $command): ?NotificationResponse
@@ -51,6 +53,8 @@ final readonly class SendNotificationHandler
                 title: $command->subject,
                 body: $command->body,
             ));
+        } elseif ($channel === NotificationChannel::Email) {
+            $this->emailNotificationSender->send($command->userId, $command->subject, $command->body);
         }
 
         return NotificationResponse::fromNotification($notification);
