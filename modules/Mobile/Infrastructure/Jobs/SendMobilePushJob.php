@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -22,11 +23,15 @@ final class SendMobilePushJob implements ShouldQueue
 
     public int $tries = 3;
 
+    public readonly ?string $correlationId;
+
     public function __construct(
         public readonly string $pushToken,
         public readonly string $title,
         public readonly string $body,
-    ) {}
+    ) {
+        $this->correlationId = Context::get('correlation_id');
+    }
 
     /** @return list<int> */
     public function backoff(): array
@@ -56,6 +61,7 @@ final class SendMobilePushJob implements ShouldQueue
     {
         Log::warning('No se pudo enviar la notificacion push tras agotar los reintentos.', [
             'push_token' => $this->pushToken,
+            'correlation_id' => $this->correlationId,
             'exception' => $exception?->getMessage(),
         ]);
     }

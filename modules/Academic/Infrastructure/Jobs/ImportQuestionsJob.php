@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use JsonException;
@@ -32,11 +33,15 @@ final class ImportQuestionsJob implements ShouldQueue
 
     public int $tries = 3;
 
+    public readonly ?string $correlationId;
+
     /** @param list<array{competency_code: string, type: string, prompt: string, score: string, response: string, options: string, explanation: string, media: string, source_kind: string, source_reference: string, license_categories: string}> $rows */
     public function __construct(
         public readonly string $asyncJobId,
         public readonly array $rows,
-    ) {}
+    ) {
+        $this->correlationId = Context::get('correlation_id');
+    }
 
     /** @return list<int> */
     public function backoff(): array
@@ -231,6 +236,7 @@ final class ImportQuestionsJob implements ShouldQueue
 
         Log::warning('Fallo la importacion asincrona de preguntas.', [
             'async_job_id' => $this->asyncJobId,
+            'correlation_id' => $this->correlationId,
             'exception' => $exception?->getMessage(),
         ]);
     }

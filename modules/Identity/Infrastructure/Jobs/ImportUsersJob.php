@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
@@ -35,12 +36,16 @@ final class ImportUsersJob implements ShouldQueue
 
     public int $tries = 3;
 
+    public readonly ?string $correlationId;
+
     /** @param list<array{name: string, email: string, password: string, role: string}> $rows */
     public function __construct(
         public readonly string $asyncJobId,
         public readonly array $rows,
         public readonly string $actorId,
-    ) {}
+    ) {
+        $this->correlationId = Context::get('correlation_id');
+    }
 
     /** @return list<int> */
     public function backoff(): array
@@ -147,6 +152,7 @@ final class ImportUsersJob implements ShouldQueue
 
         Log::warning('Fallo la importacion asincrona de usuarios.', [
             'async_job_id' => $this->asyncJobId,
+            'correlation_id' => $this->correlationId,
             'exception' => $exception?->getMessage(),
         ]);
     }

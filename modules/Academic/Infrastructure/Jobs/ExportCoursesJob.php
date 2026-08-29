@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Modules\Academic\Domain\Aggregates\Course;
@@ -32,9 +33,13 @@ final class ExportCoursesJob implements ShouldQueue
 
     public int $tries = 3;
 
+    public readonly ?string $correlationId;
+
     public function __construct(
         public readonly string $asyncJobId,
-    ) {}
+    ) {
+        $this->correlationId = Context::get('correlation_id');
+    }
 
     /** @return list<int> */
     public function backoff(): array
@@ -108,6 +113,7 @@ final class ExportCoursesJob implements ShouldQueue
 
         Log::warning('Fallo la exportacion asincrona de cursos.', [
             'async_job_id' => $this->asyncJobId,
+            'correlation_id' => $this->correlationId,
             'exception' => $exception?->getMessage(),
         ]);
     }

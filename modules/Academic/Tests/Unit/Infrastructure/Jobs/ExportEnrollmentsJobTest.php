@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Str;
 use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Aggregates\Enrollment;
@@ -141,4 +142,12 @@ it('genera el csv de enrollments y completa el trabajo asincrono', function (): 
 
     $storedCsv = array_values($fileStorage->stored)[0];
     expect($storedCsv)->toContain($course->id()->value());
+});
+
+it('captura el correlation_id activo al momento de crear el job', function (): void {
+    Context::add('correlation_id', 'mi-correlation-id');
+
+    $job = new ExportEnrollmentsJob((string) Str::uuid());
+
+    expect($job->correlationId)->toBe('mi-correlation-id');
 });

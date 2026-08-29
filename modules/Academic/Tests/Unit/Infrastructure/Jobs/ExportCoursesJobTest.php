@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Str;
 use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Repositories\CourseRepository;
@@ -111,4 +112,12 @@ it('genera el csv de cursos y completa el trabajo asincrono', function (): void 
 
     $storedCsv = array_values($fileStorage->stored)[0];
     expect($storedCsv)->toContain('Curso para exportar');
+});
+
+it('captura el correlation_id activo al momento de crear el job', function (): void {
+    Context::add('correlation_id', 'mi-correlation-id');
+
+    $job = new ExportCoursesJob((string) Str::uuid());
+
+    expect($job->correlationId)->toBe('mi-correlation-id');
 });

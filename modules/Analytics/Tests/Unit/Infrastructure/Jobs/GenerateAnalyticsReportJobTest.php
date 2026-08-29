@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Str;
 use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Aggregates\Enrollment;
@@ -148,4 +149,12 @@ it('genera el resumen de usuarios agrupado por estado', function (): void {
 
     $completed = $jobs->findById($asyncJobId);
     expect($completed?->result()['total'])->toBe(1);
+});
+
+it('captura el correlation_id activo al momento de crear el job', function (): void {
+    Context::add('correlation_id', 'mi-correlation-id');
+
+    $job = new GenerateAnalyticsReportJob((string) Str::uuid(), 'users_summary');
+
+    expect($job->correlationId)->toBe('mi-correlation-id');
 });

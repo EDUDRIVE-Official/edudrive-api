@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Str;
 use Modules\Admin\Infrastructure\Jobs\ExportAuditLogsJob;
 use Modules\AsyncProcessing\Domain\Aggregates\AsyncJob;
@@ -144,4 +145,12 @@ it('no falla si el trabajo asincrono ya no existe', function (): void {
     );
 
     expect($fileStorage->stored)->toBeEmpty();
+});
+
+it('captura el correlation_id activo al momento de crear el job', function (): void {
+    Context::add('correlation_id', 'mi-correlation-id');
+
+    $job = new ExportAuditLogsJob((string) Str::uuid());
+
+    expect($job->correlationId)->toBe('mi-correlation-id');
 });

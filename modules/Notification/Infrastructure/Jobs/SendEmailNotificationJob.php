@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Modules\Identity\Domain\Repositories\UserRepository;
@@ -24,11 +25,15 @@ final class SendEmailNotificationJob implements ShouldQueue
 
     public int $tries = 3;
 
+    public readonly ?string $correlationId;
+
     public function __construct(
         public readonly string $userId,
         public readonly string $subject,
         public readonly string $body,
-    ) {}
+    ) {
+        $this->correlationId = Context::get('correlation_id');
+    }
 
     /** @return list<int> */
     public function backoff(): array
@@ -50,6 +55,7 @@ final class SendEmailNotificationJob implements ShouldQueue
     {
         Log::warning('No se pudo enviar el correo de notificacion tras agotar los reintentos.', [
             'user_id' => $this->userId,
+            'correlation_id' => $this->correlationId,
             'exception' => $exception?->getMessage(),
         ]);
     }

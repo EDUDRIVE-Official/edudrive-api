@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Str;
 use Modules\AsyncProcessing\Domain\Aggregates\AsyncJob;
 use Modules\AsyncProcessing\Domain\Enums\AsyncJobStatus;
@@ -119,4 +120,12 @@ it('reporta una fila fallida por correo ya existente sin detener el resto del lo
         ->and($completed?->result()['failed'])->toBe(1)
         ->and($completed?->result()['results'][0]['error_code'])->toBe('EMAIL_ALREADY_EXISTS')
         ->and($completed?->result()['results'][1]['created'])->toBeTrue();
+});
+
+it('captura el correlation_id activo al momento de crear el job', function (): void {
+    Context::add('correlation_id', 'mi-correlation-id');
+
+    $job = new ImportUsersJob((string) Str::uuid(), [], (string) Str::uuid());
+
+    expect($job->correlationId)->toBe('mi-correlation-id');
 });

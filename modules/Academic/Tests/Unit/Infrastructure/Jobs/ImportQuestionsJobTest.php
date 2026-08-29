@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Str;
 use Modules\Academic\Domain\Aggregates\Competency;
 use Modules\Academic\Domain\Enums\CompetencyCategory;
@@ -131,4 +132,12 @@ it('reporta una fila fallida por json invalido en response', function (): void {
     $completed = $jobs->findById($asyncJobId);
     expect($completed?->result()['failed'])->toBe(1)
         ->and($completed?->result()['results'][0]['error_code'])->toBe('IMPORT_ROW_INVALID');
+});
+
+it('captura el correlation_id activo al momento de crear el job', function (): void {
+    Context::add('correlation_id', 'mi-correlation-id');
+
+    $job = new ImportQuestionsJob((string) Str::uuid(), []);
+
+    expect($job->correlationId)->toBe('mi-correlation-id');
 });

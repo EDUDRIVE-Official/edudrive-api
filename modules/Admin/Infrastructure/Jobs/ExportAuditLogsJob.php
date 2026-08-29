@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Modules\AsyncProcessing\Domain\Repositories\AsyncJobRepository;
@@ -31,9 +32,13 @@ final class ExportAuditLogsJob implements ShouldQueue
 
     public int $tries = 3;
 
+    public readonly ?string $correlationId;
+
     public function __construct(
         public readonly string $asyncJobId,
-    ) {}
+    ) {
+        $this->correlationId = Context::get('correlation_id');
+    }
 
     /** @return list<int> */
     public function backoff(): array
@@ -110,6 +115,7 @@ final class ExportAuditLogsJob implements ShouldQueue
 
         Log::warning('Fallo la exportacion asincrona de logs de auditoria.', [
             'async_job_id' => $this->asyncJobId,
+            'correlation_id' => $this->correlationId,
             'exception' => $exception?->getMessage(),
         ]);
     }

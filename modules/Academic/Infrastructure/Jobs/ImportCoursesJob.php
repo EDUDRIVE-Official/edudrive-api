@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Modules\Academic\Application\Commands\CreateCourseCommand;
@@ -29,11 +30,15 @@ final class ImportCoursesJob implements ShouldQueue
 
     public int $tries = 3;
 
+    public readonly ?string $correlationId;
+
     /** @param list<array{code: string, title: string, description: string, objectives: string, prerequisites: string, modality: string, duration_hours: string}> $rows */
     public function __construct(
         public readonly string $asyncJobId,
         public readonly array $rows,
-    ) {}
+    ) {
+        $this->correlationId = Context::get('correlation_id');
+    }
 
     /** @return list<int> */
     public function backoff(): array
@@ -135,6 +140,7 @@ final class ImportCoursesJob implements ShouldQueue
 
         Log::warning('Fallo la importacion asincrona de cursos.', [
             'async_job_id' => $this->asyncJobId,
+            'correlation_id' => $this->correlationId,
             'exception' => $exception?->getMessage(),
         ]);
     }

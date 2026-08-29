@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Foundation\Presentation\Http\Responses;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Context;
 use Throwable;
 
 final class ApiErrorResponse
@@ -22,6 +23,7 @@ final class ApiErrorResponse
             'success' => false,
             'message' => $message,
             'code' => $code,
+            'correlation_id' => Context::get('correlation_id'),
         ];
 
         if ($errors !== null) {
@@ -37,6 +39,7 @@ final class ApiErrorResponse
             'success' => false,
             'message' => 'Ocurrió un error interno inesperado.',
             'code' => 'INTERNAL_SERVER_ERROR',
+            'correlation_id' => Context::get('correlation_id'),
         ];
 
         if (config('app.debug')) {

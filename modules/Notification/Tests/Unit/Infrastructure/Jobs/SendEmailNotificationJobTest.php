@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Modules\Identity\Domain\Entities\User;
@@ -38,4 +39,12 @@ it('no envia ningun correo cuando el usuario no existe', function (): void {
         ->handle(app(UserRepository::class));
 
     Mail::assertNothingSent();
+});
+
+it('captura el correlation_id activo al momento de crear el job', function (): void {
+    Context::add('correlation_id', 'mi-correlation-id');
+
+    $job = new SendEmailNotificationJob((string) Str::uuid(), 'Asunto', 'Cuerpo');
+
+    expect($job->correlationId)->toBe('mi-correlation-id');
 });

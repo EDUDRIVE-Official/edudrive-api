@@ -8,6 +8,8 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Validation\ValidationException;
 use Modules\Authorization\Presentation\Http\Middleware\EnsurePermission;
 use Modules\Foundation\Domain\Exceptions\DomainException;
@@ -52,6 +54,13 @@ return Application::configure(basePath: dirname(__DIR__))
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->context(static fn (): array => [
+            'correlation_id' => Context::get('correlation_id'),
+            'url' => request()?->fullUrl(),
+            'method' => request()?->method(),
+            'user_id' => Auth::id(),
+        ]);
+
         $exceptions->shouldRenderJsonWhen(
             static fn (Request $request, Throwable $exception): bool => $request->is('api/*')
                 || $request->expectsJson(),
