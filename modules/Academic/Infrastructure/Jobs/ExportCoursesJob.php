@@ -90,6 +90,7 @@ final class ExportCoursesJob implements ShouldQueue
             'expires_at' => $exported->expiresAt->format(DateTimeInterface::ATOM),
             'row_count' => count($rows),
             'format' => 'csv',
+            'storage_path' => $storagePath,
         ], new DateTimeImmutable('now'));
         $jobs->save($job);
     }

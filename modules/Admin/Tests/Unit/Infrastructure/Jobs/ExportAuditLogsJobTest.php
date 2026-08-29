@@ -29,6 +29,17 @@ final class InMemoryAsyncJobRepositoryForAuditExportJob implements AsyncJobRepos
     {
         return $this->items[$id->value()] ?? null;
     }
+
+    /** @return list<AsyncJob> */
+    public function allCompletedOrFailedBefore(DateTimeImmutable $threshold): array
+    {
+        return [];
+    }
+
+    public function delete(AsyncJobId $id): void
+    {
+        unset($this->items[$id->value()]);
+    }
 }
 
 final class InMemoryAuditRepositoryForExportJob implements AuditRepository
@@ -110,6 +121,7 @@ it('genera el csv de auditoria y completa el trabajo asincrono', function (): vo
     expect($completed?->status())->toBe(AsyncJobStatus::Completed)
         ->and($completed?->result()['row_count'])->toBe(1)
         ->and($completed?->result()['format'])->toBe('csv')
+        ->and($completed?->result()['storage_path'])->toStartWith('exports/audit-logs/')
         ->and($fileStorage->stored)->toHaveCount(1)
         ->and($auditLogger->logged)->toHaveCount(1)
         ->and($auditLogger->logged[0]->action)->toBe('export.audit_logs');

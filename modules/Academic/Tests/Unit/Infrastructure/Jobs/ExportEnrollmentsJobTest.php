@@ -57,6 +57,17 @@ final class InMemoryAsyncJobRepositoryForEnrollmentsExportJob implements AsyncJo
     {
         return $this->items[$id->value()] ?? null;
     }
+
+    /** @return list<AsyncJob> */
+    public function allCompletedOrFailedBefore(DateTimeImmutable $threshold): array
+    {
+        return [];
+    }
+
+    public function delete(AsyncJobId $id): void
+    {
+        unset($this->items[$id->value()]);
+    }
 }
 
 final class FakeFileStorageForEnrollmentsExportJob implements FileStorage
@@ -124,6 +135,7 @@ it('genera el csv de enrollments y completa el trabajo asincrono', function (): 
     $completed = $jobs->findById($asyncJobId);
     expect($completed?->status())->toBe(AsyncJobStatus::Completed)
         ->and($completed?->result()['row_count'])->toBe(1)
+        ->and($completed?->result()['storage_path'])->toStartWith('exports/enrollments/')
         ->and($fileStorage->stored)->toHaveCount(1)
         ->and($auditLogger->logged[0]->action)->toBe('export.enrollments');
 

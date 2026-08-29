@@ -64,3 +64,33 @@ it('guarda y recupera la razon de fallo', function (): void {
 it('retorna null para un identificador inexistente', function (): void {
     expect(app(AsyncJobRepository::class)->findById(AsyncJobId::fromString((string) Str::uuid())))->toBeNull();
 });
+
+it('lista los trabajos completados o fallidos anteriores a un umbral', function (): void {
+    $repository = app(AsyncJobRepository::class);
+
+    $old = newPersistableAsyncJob();
+    $old->complete(['ok' => true], new DateTimeImmutable('2026-08-01T00:00:00+00:00'));
+    $repository->save($old);
+
+    $recent = newPersistableAsyncJob();
+    $recent->fail('razon', new DateTimeImmutable('2026-08-29T09:00:00+00:00'));
+    $repository->save($recent);
+
+    $stillPending = newPersistableAsyncJob();
+    $repository->save($stillPending);
+
+    $found = $repository->allCompletedOrFailedBefore(new DateTimeImmutable('2026-08-15T00:00:00+00:00'));
+
+    expect($found)->toHaveCount(1)
+        ->and($found[0]->id()->equals($old->id()))->toBeTrue();
+});
+
+it('elimina un trabajo asincrono existente', function (): void {
+    $repository = app(AsyncJobRepository::class);
+    $job = newPersistableAsyncJob();
+    $repository->save($job);
+
+    $repository->delete($job->id());
+
+    expect($repository->findById($job->id()))->toBeNull();
+});

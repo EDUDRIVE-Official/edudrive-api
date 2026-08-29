@@ -43,6 +43,17 @@ final class InMemoryAsyncJobRepositoryForAnalyticsJob implements AsyncJobReposit
     {
         return $this->items[$id->value()] ?? null;
     }
+
+    /** @return list<AsyncJob> */
+    public function allCompletedOrFailedBefore(DateTimeImmutable $threshold): array
+    {
+        return [];
+    }
+
+    public function delete(AsyncJobId $id): void
+    {
+        unset($this->items[$id->value()]);
+    }
 }
 
 function persistedAnalyticsUserId(): string

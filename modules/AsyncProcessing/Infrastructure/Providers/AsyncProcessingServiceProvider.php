@@ -9,6 +9,7 @@ use Modules\AsyncProcessing\Application\Queries\GetAsyncJobQuery;
 use Modules\AsyncProcessing\Application\UseCases\GetAsyncJobHandler;
 use Modules\AsyncProcessing\Domain\Repositories\AsyncJobRepository;
 use Modules\AsyncProcessing\Infrastructure\Persistence\Eloquent\Repositories\EloquentAsyncJobRepository;
+use Modules\AsyncProcessing\Presentation\Console\CleanupAsyncJobsCommand;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
 
 final class AsyncProcessingServiceProvider extends ServiceProvider
@@ -29,5 +30,9 @@ final class AsyncProcessingServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(
             dirname(__DIR__).'/Persistence/Migrations',
         );
+
+        $this->commands([
+            CleanupAsyncJobsCommand::class,
+        ]);
     }
 }

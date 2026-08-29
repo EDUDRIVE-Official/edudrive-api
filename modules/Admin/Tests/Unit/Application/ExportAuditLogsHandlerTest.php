@@ -25,6 +25,17 @@ final class InMemoryAsyncJobRepositoryForAuditExport implements AsyncJobReposito
     {
         return $this->items[$id->value()] ?? null;
     }
+
+    /** @return list<AsyncJob> */
+    public function allCompletedOrFailedBefore(DateTimeImmutable $threshold): array
+    {
+        return [];
+    }
+
+    public function delete(AsyncJobId $id): void
+    {
+        unset($this->items[$id->value()]);
+    }
 }
 
 it('crea un trabajo asincrono pendiente y despacha el job de exportacion', function (): void {

@@ -31,6 +31,17 @@ final class InMemoryAsyncJobRepositoryForCoursesImportJob implements AsyncJobRep
     {
         return $this->items[$id->value()] ?? null;
     }
+
+    /** @return list<AsyncJob> */
+    public function allCompletedOrFailedBefore(DateTimeImmutable $threshold): array
+    {
+        return [];
+    }
+
+    public function delete(AsyncJobId $id): void
+    {
+        unset($this->items[$id->value()]);
+    }
 }
 
 /** @return array{code: string, title: string, description: string, objectives: string, prerequisites: string, modality: string, duration_hours: string} */

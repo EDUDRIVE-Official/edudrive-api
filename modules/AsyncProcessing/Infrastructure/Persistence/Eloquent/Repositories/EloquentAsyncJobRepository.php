@@ -40,6 +40,24 @@ final readonly class EloquentAsyncJobRepository implements AsyncJobRepository
         return $model === null ? null : $this->toDomain($model);
     }
 
+    /** @return list<AsyncJob> */
+    public function allCompletedOrFailedBefore(DateTimeImmutable $threshold): array
+    {
+        return array_values(
+            AsyncJobModel::query()
+                ->whereIn('status', [AsyncJobStatus::Completed->value, AsyncJobStatus::Failed->value])
+                ->where('completed_at', '<', $threshold)
+                ->get()
+                ->map(fn (AsyncJobModel $model): AsyncJob => $this->toDomain($model))
+                ->all(),
+        );
+    }
+
+    public function delete(AsyncJobId $id): void
+    {
+        AsyncJobModel::query()->where('id', $id->value())->delete();
+    }
+
     private function toDomain(AsyncJobModel $model): AsyncJob
     {
         $startedAt = $model->getAttribute('started_at');
