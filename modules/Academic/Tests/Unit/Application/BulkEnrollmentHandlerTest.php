@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 use Illuminate\Support\Str;
 use Modules\Academic\Application\Commands\CreateBulkEnrollmentsCommand;
+use Modules\Academic\Application\Commands\CreateBulkInstitutionalEnrollmentsCommand;
 use Modules\Academic\Application\Commands\CreateInstitutionalEnrollmentCommand;
 use Modules\Academic\Application\Exceptions\CourseNotFound;
 use Modules\Academic\Application\Responses\BulkEnrollmentResponse;
 use Modules\Academic\Application\Responses\EnrollmentResponse;
 use Modules\Academic\Application\UseCases\CreateBulkEnrollmentsHandler;
+use Modules\Academic\Application\UseCases\CreateBulkInstitutionalEnrollmentsHandler;
 use Modules\Academic\Application\UseCases\CreateInstitutionalEnrollmentHandler;
 use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Aggregates\Enrollment;
@@ -137,4 +139,49 @@ it('crea una matricula institucional y exige organization id', function (): void
         organizationId: '   ',
         status: 'active',
     )))->toThrow(InvalidEnrollment::class);
+});
+
+it('crea matriculas institucionales masivas y devuelve resultado parcial por usuario', function (): void {
+    $repository = new BulkEnrollmentRepository;
+    $course = bulkEnrollmentCourse();
+    $organizationId = (string) Str::uuid();
+    $existingUser = (string) Str::uuid();
+    $newUser = (string) Str::uuid();
+    $repository->save(Enrollment::create(
+        id: EnrollmentId::fromString((string) Str::uuid()),
+        courseId: $course->id(),
+        userId: $existingUser,
+        status: EnrollmentStatus::Active,
+        source: EnrollmentSource::Individual,
+    ));
+    $handler = new CreateBulkInstitutionalEnrollmentsHandler($repository, app(CourseRepository::class));
+
+    $response = $handler->handle(new CreateBulkInstitutionalEnrollmentsCommand(
+        courseId: $course->id()->value(),
+        organizationId: $organizationId,
+        userIds: [$existingUser, $newUser],
+        status: 'active',
+    ));
+
+    expect($response)->toBeInstanceOf(BulkEnrollmentResponse::class)
+        ->and($response->total)->toBe(2)
+        ->and($response->created)->toBe(1)
+        ->and($response->failed)->toBe(1)
+        ->and($response->results[0]['error_code'])->toBe('ENROLLMENT_ALREADY_EXISTS')
+        ->and($response->results[1]['created'])->toBeTrue();
+
+    $created = $repository->findById(EnrollmentId::fromString($response->results[1]['enrollment_id']));
+    expect($created?->source())->toBe(EnrollmentSource::Institutional)
+        ->and($created?->organizationId()?->value())->toBe(strtolower($organizationId));
+});
+
+it('rechaza matricula institucional masiva para un curso inexistente', function (): void {
+    $repository = new BulkEnrollmentRepository;
+    $handler = new CreateBulkInstitutionalEnrollmentsHandler($repository, app(CourseRepository::class));
+
+    expect(fn () => $handler->handle(new CreateBulkInstitutionalEnrollmentsCommand(
+        courseId: (string) Str::uuid(),
+        organizationId: (string) Str::uuid(),
+        userIds: [(string) Str::uuid()],
+    )))->toThrow(CourseNotFound::class);
 });

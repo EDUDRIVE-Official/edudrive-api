@@ -2223,3 +2223,28 @@ Tercera historia de la Fase 15 — Integraciones. Investigación previa confirm�
 - PHPStan nivel 8 ✅ sin errores sobre el repositorio completo.
 
 **Estado:** Finalizado.
+
+## 2026-08-29 — IMP-076 (Cierre de ENG-076 — Integraciones institucionales)
+
+### Alcance acordado con el usuario
+
+Cuarta y última historia planificada de la Fase 15 — Integraciones (con este cierre, la fase completa queda terminada). A diferencia de las historias anteriores, sus cinco puntos son tipos de institución (Centros educativos, Empresas, Universidades, Entidades públicas, Sistemas académicos externos), no capacidades técnicas. Investigación previa encontró que `Modules\Organization`'s `OrganizationType` ya cubría tres de cinco (faltaba "Universidad" como caso propio) y que el punto real detrás de la historia era el que el propio diseño de ENG-073 dejó explícitamente pendiente: *"No se retro-adapta el control de alcances al resto de la API existente ... eso lo decidirá ENG-076 caso por caso."* Además se encontró un hueco de seguridad real: `RegisterApiConsumerHandler` validaba cada alcance únicamente contra `Permission::tryFrom()`, permitiendo otorgar a un consumidor externo **cualquier** permiso del sistema, incluidos `system_settings.manage` o `legal_policies.manage`, sin ninguna lista segura. Alcance acordado: agregar `OrganizationType::University`; introducir una lista curada de alcances externos permitidos; retro-adaptar un único flujo real de punta a punta (matrícula institucional masiva vía API key) como la interpretación concreta de "Sistemas académicos externos". El resto de endpoints administrativos existentes (import de cursos/preguntas/usuarios, ciclo de vida de certificados y pasaporte vial) se quedan como están, solo para usuarios humanos. Detalle completo en `docs/plans/2026-08-29-integraciones-institucionales-eng076-design.md`.
+
+### Completado
+
+- **`OrganizationType::University = 'university'`** con etiqueta `'Universidad'` en el `match` de `label()`. La regla de validación (`new Enum(OrganizationType::class)`) y el listado del formulario web (`OrganizationType::cases()`) ya eran genéricos — sin cambios adicionales.
+- **`Modules\Integration\Domain\Services\ExternalScopeAllowlist`** (mismo patrón estático que `RolePermissions`): lista curada de cinco alcances externos permitidos — `enrollments.manage`, `enrollments.view`, `certifications.view`, `road_passports.view`, `reports.view` — deliberadamente de solo lectura salvo matrícula, excluyendo cualquier permiso administrativo, de sistema, legal o de gestión de usuarios/archivos. `RegisterApiConsumerHandler` cambia de validar contra el enum `Permission` completo a `ExternalScopeAllowlist::allows()`; mismo error `InvalidApiConsumerScope` (422), mensaje reformulado ("no es un alcance externo válido").
+- **Matrícula institucional masiva vía API key**: `CreateBulkInstitutionalEnrollmentsCommand`/`Handler` nuevos en `Modules\Academic` (mismo patrón exacto que `CreateBulkEnrollmentsHandler` — duplicados por fila reportados como `ENROLLMENT_ALREADY_EXISTS`, patrón de importación masiva ya establecido desde ENG-061 — pero delegando a `CreateInstitutionalEnrollmentHandler` por cada usuario, exigiendo `organizationId`). Deliberadamente sin publicar el evento de webhook `enrollment.created` — consistente con la limitación ya documentada en el cierre de ENG-074 (`CreateInstitutionalEnrollmentHandler` no está cableado a webhooks; no se amplía esa cobertura aquí).
+- **Nuevo endpoint externo**: `POST /api/v1/external/institutional/enrollments` bajo el prefijo `api/v1/external` ya existente de `Modules\Integration`, gateado por `api_consumer.auth` + `throttle:external-integration` + `scope:enrollments.manage`. El controlador (`ExternalInstitutionalEnrollmentController`) vive en `Modules\Integration` y despacha el `Command` de `Modules\Academic` vía `CommandBus` — sin acoplarse a su Dominio/handlers, misma convención ya usada en toda la sesión. El `organization_id` se recibe explícitamente en el payload (sin agregar un campo nuevo a `ApiConsumer` solo para este flujo).
+
+### Validaciones
+
+- Suite completa de `Modules\Integration` (incluyendo el nuevo `ExternalScopeAllowlistTest` y `ExternalInstitutionalEnrollmentTest`) ✅ — `24 passed` a nivel feature más las suites unitarias afectadas.
+- Suite dirigida de `Modules\Academic` (`BulkEnrollmentHandlerTest`, `EnrollmentTest` a nivel feature) ✅ — sin regresiones.
+- Suite completa de `Modules\Organization` (afectada por el caso nuevo de `OrganizationType`) ✅ — `62 passed`.
+- Pint ✅ sobre los directorios tocados por esta historia; un `pint --test` sobre el repositorio completo encontró el mismo problema de estilo preexistente y no relacionado en `modules/Learning` ya señalado en cierres previos — sigue fuera de alcance.
+- PHPStan nivel 8 ✅ sin errores sobre el repositorio completo.
+
+Con esto cierra por completo la **Fase 15 — Integraciones** (ENG-073 a ENG-076).
+
+**Estado:** Finalizado.

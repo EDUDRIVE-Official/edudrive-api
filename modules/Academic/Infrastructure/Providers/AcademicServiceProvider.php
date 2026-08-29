@@ -20,6 +20,7 @@ use Modules\Academic\Application\Commands\ChangeProgramAudienceCommand;
 use Modules\Academic\Application\Commands\CompleteEnrollmentCommand;
 use Modules\Academic\Application\Commands\CompleteLessonCommand;
 use Modules\Academic\Application\Commands\CreateBulkEnrollmentsCommand;
+use Modules\Academic\Application\Commands\CreateBulkInstitutionalEnrollmentsCommand;
 use Modules\Academic\Application\Commands\CreateCompetencyCommand;
 use Modules\Academic\Application\Commands\CreateCourseCommand;
 use Modules\Academic\Application\Commands\CreateEnrollmentCommand;
@@ -89,6 +90,7 @@ use Modules\Academic\Application\UseCases\ChangeProgramAudienceHandler;
 use Modules\Academic\Application\UseCases\CompleteEnrollmentHandler;
 use Modules\Academic\Application\UseCases\CompleteLessonHandler;
 use Modules\Academic\Application\UseCases\CreateBulkEnrollmentsHandler;
+use Modules\Academic\Application\UseCases\CreateBulkInstitutionalEnrollmentsHandler;
 use Modules\Academic\Application\UseCases\CreateCompetencyHandler;
 use Modules\Academic\Application\UseCases\CreateCourseHandler;
 use Modules\Academic\Application\UseCases\CreateEnrollmentHandler;
@@ -272,6 +274,11 @@ final class AcademicServiceProvider extends ServiceProvider
         $registry->register(
             CreateInstitutionalEnrollmentCommand::class,
             CreateInstitutionalEnrollmentHandler::class,
+        );
+
+        $registry->register(
+            CreateBulkInstitutionalEnrollmentsCommand::class,
+            CreateBulkInstitutionalEnrollmentsHandler::class,
         );
 
         $registry->register(

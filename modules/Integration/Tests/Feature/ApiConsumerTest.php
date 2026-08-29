@@ -66,6 +66,18 @@ it('rechaza registrar un consumidor con un alcance que no es un permiso valido',
         ->assertJsonPath('code', 'INVALID_API_CONSUMER_SCOPE');
 });
 
+it('rechaza registrar un consumidor con un permiso valido que no esta en la lista de alcances externos', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::SuperAdmin);
+
+    $this->postJson('/api/v1/integration/api-consumers', [
+        'name' => 'Sistema externo',
+        'scopes' => ['system_settings.manage'],
+    ])
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'INVALID_API_CONSUMER_SCOPE');
+});
+
 it('audita el registro de un consumidor con el id de quien lo realiza', function (): void {
     /** @var TestCase $this */
     $actor = actingAsSuperAdminUser();

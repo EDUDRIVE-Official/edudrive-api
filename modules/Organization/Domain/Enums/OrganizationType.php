@@ -10,6 +10,7 @@ enum OrganizationType: string
     case DrivingSchool = 'driving_school';
     case Company = 'company';
     case PublicInstitution = 'public_institution';
+    case University = 'university';
     case Other = 'other';
 
     public function label(): string
@@ -19,6 +20,7 @@ enum OrganizationType: string
             self::DrivingSchool => 'Escuela de manejo',
             self::Company => 'Empresa',
             self::PublicInstitution => 'Institución pública',
+            self::University => 'Universidad',
             self::Other => 'Otro',
         };
     }

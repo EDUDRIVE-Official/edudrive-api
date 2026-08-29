@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Modules\Integration\Presentation\Http\Controllers\ApiConsumerController;
+use Modules\Integration\Presentation\Http\Controllers\ExternalInstitutionalEnrollmentController;
 use Modules\Integration\Presentation\Http\Controllers\ExternalReportsPingController;
 use Modules\Integration\Presentation\Http\Controllers\ExternalStatusController;
 
@@ -17,6 +18,10 @@ Route::prefix('api/v1/external')
         Route::get('/reports/ping', ExternalReportsPingController::class)
             ->middleware('scope:reports.view')
             ->name('reports.ping');
+
+        Route::post('/institutional/enrollments', [ExternalInstitutionalEnrollmentController::class, 'store'])
+            ->middleware('scope:enrollments.manage')
+            ->name('institutional.enrollments.store');
     });
 
 Route::prefix('api/v1/integration')

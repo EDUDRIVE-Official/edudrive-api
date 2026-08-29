@@ -121,6 +121,20 @@ it('rechaza registrar un consumidor con un alcance que no es un permiso valido',
     expect($auditLogger->logged)->toBe([]);
 });
 
+it('rechaza registrar un consumidor con un permiso valido que no esta en la lista de alcances externos', function (): void {
+    $repository = new InMemoryApiConsumerRepository;
+    $auditLogger = new FakeAuditLoggerForApiConsumers;
+
+    expect(fn () => (new RegisterApiConsumerHandler($repository, $auditLogger))->handle(new RegisterApiConsumerCommand(
+        name: 'Sistema externo',
+        scopes: ['system_settings.manage'],
+        expiresAt: null,
+        actorId: 'actor-1',
+    )))->toThrow(InvalidApiConsumerScope::class);
+
+    expect($auditLogger->logged)->toBe([]);
+});
+
 it('suspende, reactiva y revoca un consumidor existente auditando cada accion', function (): void {
     $repository = new InMemoryApiConsumerRepository;
     $auditLogger = new FakeAuditLoggerForApiConsumers;

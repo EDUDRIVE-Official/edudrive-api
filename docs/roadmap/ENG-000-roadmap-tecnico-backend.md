@@ -1390,7 +1390,9 @@ Tokens por dispositivo.
 Notificaciones móviles.
 ENG-076 — Integraciones institucionales
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-29): cuarta y última historia planificada de la Fase 15 — Integraciones (con esto cierra por completo la fase). A diferencia de las anteriores, sus vinetas son tipos de institución, no capacidades técnicas. Se agregó `OrganizationType::University` (las otras tres — Centros educativos, Empresas, Entidades públicas — ya existían). El punto real de la historia era el que ENG-073 dejó explícitamente pendiente: retro-adaptar el control de alcances de `Modules\Integration` a la API de negocio real. La investigación encontró un hueco de seguridad — cualquier permiso del sistema (incluso `system_settings.manage`) podía otorgarse como alcance externo sin restricción — cerrado con `ExternalScopeAllowlist`, una lista curada de solo cinco alcances seguros para consumidores externos. Como interpretación concreta de "Sistemas académicos externos" se construyó un flujo real de punta a punta: matrícula institucional masiva vía API key (`POST /api/v1/external/institutional/enrollments`, alcance `enrollments.manage`), reutilizando el patrón ya establecido de matrícula institucional de `Modules\Academic`. El resto de endpoints administrativos existentes se quedan como están, solo para usuarios humanos. Detalle completo en `docs/plans/2026-08-29-integraciones-institucionales-eng076-design.md`.
 
 Incluye:
 

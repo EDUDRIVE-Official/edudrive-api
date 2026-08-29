@@ -11,7 +11,7 @@ final class InvalidApiConsumerScope extends DomainException
     public static function withValue(string $scope): self
     {
         return new self(
-            message: "El alcance {$scope} no es un permiso valido.",
+            message: "El alcance {$scope} no es un alcance externo valido.",
             errorCode: 'INVALID_API_CONSUMER_SCOPE',
             statusCode: 422,
         );

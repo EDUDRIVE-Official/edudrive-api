@@ -8,12 +8,12 @@ use DateTimeImmutable;
 use Illuminate\Support\Str;
 use Modules\Audit\Application\DTO\AuditEntry;
 use Modules\Audit\Application\Services\AuditLogger;
-use Modules\Authorization\Domain\Enums\Permission;
 use Modules\Integration\Application\Commands\RegisterApiConsumerCommand;
 use Modules\Integration\Application\Exceptions\InvalidApiConsumerScope;
 use Modules\Integration\Application\Responses\ApiConsumerResponse;
 use Modules\Integration\Domain\Aggregates\ApiConsumer;
 use Modules\Integration\Domain\Repositories\ApiConsumerRepository;
+use Modules\Integration\Domain\Services\ExternalScopeAllowlist;
 use Modules\Integration\Domain\ValueObjects\ApiConsumerId;
 use Modules\Integration\Domain\ValueObjects\IntegrationKey;
 
@@ -27,7 +27,7 @@ final readonly class RegisterApiConsumerHandler
     public function handle(RegisterApiConsumerCommand $command): ApiConsumerResponse
     {
         foreach ($command->scopes as $scope) {
-            if (Permission::tryFrom($scope) === null) {
+            if (! ExternalScopeAllowlist::allows($scope)) {
                 throw InvalidApiConsumerScope::withValue($scope);
             }
         }
