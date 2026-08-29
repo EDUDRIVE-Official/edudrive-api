@@ -1363,7 +1363,9 @@ Rate limiting.
 Auditoría.
 ENG-074 — Webhooks
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-29): segunda historia de la Fase 15 — Integraciones. Investigación previa encontró que esta historia era enteramente nueva: no existía ningún mecanismo de eventos de dominio, ningún cliente HTTP saliente, y la cola de Laravel estaba configurada pero nunca usada (cero `Job`/`ShouldQueue` en todo el repositorio) — este es el primer uso real de la cola. Se construyó un módulo nuevo `Modules\Webhook`: `WebhookSubscription` (url, secreto cifrado reversiblemente con `Crypt` — a diferencia del hash irreversible de `IntegrationKey`, un secreto de firma debe poder recuperarse en cada entrega —, alcance de eventos, ciclo de vida `Active/Suspended`) y `WebhookDelivery` (una fila por entrega: estado `Pending/Delivered/Failed/DeadLettered`, intentos, última respuesta, próximo reintento). Firma HMAC-SHA256 sobre el payload exacto enviado (`X-Webhook-Signature`, sin ventana anti-replay, mismo convenio que GitHub). Entrega vía `DeliverWebhookJob` real con reintentos por backoff exponencial (30s·2^n, techo 1h) gestionados por el propio dominio en vez de la maquinaria nativa de colas; dead-letter tras 5 intentos con recuperación manual vía endpoint administrativo. Idempotencia orientada al receptor mediante un header `X-Webhook-Delivery-Id` estable entre reintentos. Alcance reducido acordado: se cablearon solo dos eventos de dominio reales (`enrollment.created` en `Modules\Academic`, `certificate.issued` en `Modules\Certification`) como prueba de punta a punta, en vez de retrofitear un bus de eventos genérico a través de todos los módulos. Detalle completo en `docs/plans/2026-08-29-webhooks-eng074-design.md`.
 
 Incluye:
 

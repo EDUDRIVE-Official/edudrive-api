@@ -310,3 +310,12 @@ it('otorga la gestion y consulta de consumidores de api unicamente al superadmin
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageApiConsumers))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageApiConsumers))->toBeFalse();
 });
+
+it('otorga la gestion y consulta de webhooks unicamente al superadministrador', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageWebhooks))->toBeTrue()
+        ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewWebhooks))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageWebhooks))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewWebhooks))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageWebhooks))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageWebhooks))->toBeFalse();
+});

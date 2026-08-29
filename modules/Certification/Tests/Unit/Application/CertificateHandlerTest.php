@@ -18,6 +18,7 @@ use Modules\Certification\Domain\Exceptions\InvalidCertificateTransition;
 use Modules\Certification\Domain\Repositories\CertificateRepository;
 use Modules\Certification\Domain\ValueObjects\CertificateId;
 use Modules\Certification\Domain\ValueObjects\ValidationCode;
+use Modules\Webhook\Application\Services\WebhookEventPublisher;
 
 final class InMemoryCertificateRepository implements CertificateRepository
 {
@@ -84,7 +85,7 @@ it('emite un certificado nuevo con un codigo de validacion', function (): void {
     $userId = (string) Str::uuid();
     $courseId = (string) Str::uuid();
 
-    $response = (new IssueCertificateHandler($repository))->handle(new IssueCertificateCommand($userId, $courseId));
+    $response = (new IssueCertificateHandler($repository, app(WebhookEventPublisher::class)))->handle(new IssueCertificateCommand($userId, $courseId));
 
     expect($response)->toBeInstanceOf(CertificateResponse::class)
         ->and($response->userId)->toBe($userId)
@@ -98,7 +99,7 @@ it('acepta una vigencia opcional al emitir', function (): void {
     $repository = new InMemoryCertificateRepository;
     $expiresAt = new DateTimeImmutable('2027-08-26T00:00:00+00:00');
 
-    $response = (new IssueCertificateHandler($repository))->handle(new IssueCertificateCommand(
+    $response = (new IssueCertificateHandler($repository, app(WebhookEventPublisher::class)))->handle(new IssueCertificateCommand(
         (string) Str::uuid(),
         (string) Str::uuid(),
         $expiresAt,
@@ -111,7 +112,7 @@ it('devuelve el certificado existente en vez de fallar ante un reintento (idempo
     $repository = new InMemoryCertificateRepository;
     $certificate = persistedCertificateFor($repository);
 
-    $response = (new IssueCertificateHandler($repository))
+    $response = (new IssueCertificateHandler($repository, app(WebhookEventPublisher::class)))
         ->handle(new IssueCertificateCommand($certificate->userId(), $certificate->courseId()));
 
     expect($response->id)->toBe($certificate->id()->value())

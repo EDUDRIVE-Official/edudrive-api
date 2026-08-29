@@ -11,10 +11,16 @@ use Modules\Certification\Domain\Aggregates\Certificate;
 use Modules\Certification\Domain\Repositories\CertificateRepository;
 use Modules\Certification\Domain\ValueObjects\CertificateId;
 use Modules\Certification\Domain\ValueObjects\ValidationCode;
+use Modules\Webhook\Application\Services\WebhookEventPublisher;
+use Modules\Webhook\Domain\Enums\WebhookEventName;
+use Modules\Webhook\Domain\ValueObjects\WebhookEvent;
 
 final readonly class IssueCertificateHandler
 {
-    public function __construct(private CertificateRepository $certificates) {}
+    public function __construct(
+        private CertificateRepository $certificates,
+        private WebhookEventPublisher $webhookEventPublisher,
+    ) {}
 
     public function handle(IssueCertificateCommand $command): CertificateResponse
     {
@@ -32,6 +38,16 @@ final readonly class IssueCertificateHandler
         );
 
         $this->certificates->save($certificate);
+
+        $this->webhookEventPublisher->publish(new WebhookEvent(
+            name: WebhookEventName::CertificateIssued,
+            payload: [
+                'certificate_id' => $certificate->id()->value(),
+                'user_id' => $certificate->userId(),
+                'course_id' => $certificate->courseId(),
+            ],
+            occurredAt: $certificate->issuedAt(),
+        ));
 
         return CertificateResponse::fromCertificate($certificate);
     }

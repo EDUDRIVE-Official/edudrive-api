@@ -22,6 +22,7 @@ use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Academic\Domain\ValueObjects\EnrollmentId;
+use Modules\Webhook\Application\Services\WebhookEventPublisher;
 
 final class InMemoryEnrollmentRepository implements EnrollmentRepository
 {
@@ -85,7 +86,7 @@ function enrollmentHandlerCourse(): Course
 it('crea una matricula individual y devuelve su response', function (): void {
     $repository = new InMemoryEnrollmentRepository;
     $course = enrollmentHandlerCourse();
-    $handler = new CreateEnrollmentHandler($repository, app(CourseRepository::class));
+    $handler = new CreateEnrollmentHandler($repository, app(CourseRepository::class), app(WebhookEventPublisher::class));
 
     $response = $handler->handle(new CreateEnrollmentCommand(
         courseId: $course->id()->value(),
@@ -104,7 +105,7 @@ it('crea una matricula individual y devuelve su response', function (): void {
 
 it('rechaza crear una matricula para un curso inexistente', function (): void {
     $repository = new InMemoryEnrollmentRepository;
-    $handler = new CreateEnrollmentHandler($repository, app(CourseRepository::class));
+    $handler = new CreateEnrollmentHandler($repository, app(CourseRepository::class), app(WebhookEventPublisher::class));
 
     expect(fn () => $handler->handle(new CreateEnrollmentCommand(
         courseId: (string) Str::uuid(),
@@ -125,7 +126,7 @@ it('devuelve la matricula existente en vez de fallar ante un reintento (idempote
         enrolledAt: new DateTimeImmutable('2026-08-13T10:00:00+00:00'),
     );
     $repository->save($existing);
-    $handler = new CreateEnrollmentHandler($repository, app(CourseRepository::class));
+    $handler = new CreateEnrollmentHandler($repository, app(CourseRepository::class), app(WebhookEventPublisher::class));
 
     $response = $handler->handle(new CreateEnrollmentCommand(
         courseId: $course->id()->value(),

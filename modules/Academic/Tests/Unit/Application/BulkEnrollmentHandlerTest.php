@@ -21,6 +21,7 @@ use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Academic\Domain\ValueObjects\EnrollmentId;
+use Modules\Webhook\Application\Services\WebhookEventPublisher;
 
 final class BulkEnrollmentRepository implements EnrollmentRepository
 {
@@ -86,7 +87,7 @@ it('crea matriculas masivas y devuelve resultado parcial por usuario', function 
         status: EnrollmentStatus::Active,
         source: EnrollmentSource::Individual,
     ));
-    $handler = new CreateBulkEnrollmentsHandler($repository, app(CourseRepository::class));
+    $handler = new CreateBulkEnrollmentsHandler($repository, app(CourseRepository::class), app(WebhookEventPublisher::class));
 
     $response = $handler->handle(new CreateBulkEnrollmentsCommand(
         courseId: $course->id()->value(),
@@ -106,7 +107,7 @@ it('crea matriculas masivas y devuelve resultado parcial por usuario', function 
 
 it('rechaza bulk para un curso inexistente', function (): void {
     $repository = new BulkEnrollmentRepository;
-    $handler = new CreateBulkEnrollmentsHandler($repository, app(CourseRepository::class));
+    $handler = new CreateBulkEnrollmentsHandler($repository, app(CourseRepository::class), app(WebhookEventPublisher::class));
 
     expect(fn () => $handler->handle(new CreateBulkEnrollmentsCommand(
         courseId: (string) Str::uuid(),

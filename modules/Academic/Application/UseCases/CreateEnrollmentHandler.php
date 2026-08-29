@@ -16,12 +16,16 @@ use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\EnrollmentRepository;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\EnrollmentId;
+use Modules\Webhook\Application\Services\WebhookEventPublisher;
+use Modules\Webhook\Domain\Enums\WebhookEventName;
+use Modules\Webhook\Domain\ValueObjects\WebhookEvent;
 
 final readonly class CreateEnrollmentHandler
 {
     public function __construct(
         private EnrollmentRepository $enrollments,
         private CourseRepository $courses,
+        private WebhookEventPublisher $webhookEventPublisher,
     ) {}
 
     public function handle(CreateEnrollmentCommand $command): EnrollmentResponse
@@ -48,6 +52,17 @@ final readonly class CreateEnrollmentHandler
         );
 
         $this->enrollments->save($enrollment);
+
+        $this->webhookEventPublisher->publish(new WebhookEvent(
+            name: WebhookEventName::EnrollmentCreated,
+            payload: [
+                'enrollment_id' => $enrollment->id()->value(),
+                'course_id' => $enrollment->courseId()->value(),
+                'user_id' => $enrollment->userId(),
+                'organization_id' => $enrollment->organizationId()?->value(),
+            ],
+            occurredAt: $enrollment->enrolledAt(),
+        ));
 
         return EnrollmentResponse::fromEnrollment($enrollment);
     }

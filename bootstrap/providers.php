@@ -19,6 +19,7 @@ use Modules\Notification\Infrastructure\Providers\NotificationServiceProvider;
 use Modules\Organization\Infrastructure\Providers\OrganizationServiceProvider;
 use Modules\RoadPassport\Infrastructure\Providers\RoadPassportServiceProvider;
 use Modules\Simulation\Infrastructure\Providers\SimulationServiceProvider;
+use Modules\Webhook\Infrastructure\Providers\WebhookServiceProvider;
 
 return [
     AppServiceProvider::class,
@@ -38,4 +39,5 @@ return [
     AdminServiceProvider::class,
     FileStorageServiceProvider::class,
     IntegrationServiceProvider::class,
+    WebhookServiceProvider::class,
 ];

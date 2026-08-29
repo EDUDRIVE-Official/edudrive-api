@@ -11,12 +11,14 @@ use Modules\Academic\Application\Responses\BulkEnrollmentResponse;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\EnrollmentRepository;
 use Modules\Academic\Domain\ValueObjects\CourseId;
+use Modules\Webhook\Application\Services\WebhookEventPublisher;
 
 final readonly class CreateBulkEnrollmentsHandler
 {
     public function __construct(
         private EnrollmentRepository $enrollments,
         private CourseRepository $courses,
+        private WebhookEventPublisher $webhookEventPublisher,
     ) {}
 
     public function handle(CreateBulkEnrollmentsCommand $command): BulkEnrollmentResponse
@@ -42,7 +44,7 @@ final readonly class CreateBulkEnrollmentsHandler
                 continue;
             }
 
-            $response = (new CreateEnrollmentHandler($this->enrollments, $this->courses))->handle(
+            $response = (new CreateEnrollmentHandler($this->enrollments, $this->courses, $this->webhookEventPublisher))->handle(
                 new CreateEnrollmentCommand(
                     courseId: $command->courseId,
                     userId: $userId,

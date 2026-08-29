@@ -68,6 +68,8 @@ final class RolePermissions
                 Permission::ViewOrganizationConsents,
                 Permission::ManageApiConsumers,
                 Permission::ViewApiConsumers,
+                Permission::ManageWebhooks,
+                Permission::ViewWebhooks,
             ],
             Role::InstitutionalAdmin => [
                 Permission::ViewOrganizations,
