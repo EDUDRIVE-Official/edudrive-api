@@ -252,9 +252,11 @@ Endpoint:
 POST /api/v1/auth/logout-all
 ENG-008.8 — Pruebas de autenticación
 
-Estado: Pendiente
+Estado: Completado
 
 Nota (2026-07-29): los endpoints de login, /me, logout y logout-all funcionan y fueron validados manualmente, pero no existen todavía pruebas Feature automatizadas para ellos (solo hay un test de integración del repositorio de usuarios). Queda pendiente.
+
+Nota (2026-08-29): la investigación confirmó que la nota anterior estaba desactualizada — sí existían tests que tocaban estos endpoints, pero incidentalmente, con otro propósito (auditoría, throttling, expiración de token), ninguno cubría explícitamente los 8 casos pedidos. Se creó `modules/Identity/Tests/Feature/LoginTest.php` con los 8 casos. Se encontró y corrigió un bug real preexistente: `InvalidCredentials` (lanzada tanto para contraseña incorrecta como para email inexistente, práctica de seguridad correcta) extendía `RuntimeException` plano en vez del `DomainException` base que usan sus hermanas `UserCannotAuthenticate`/`UserNotFound`, así que Laravel no la mapeaba a un error propio y producía HTTP 500 en vez de un 401 semántico — corregido, y actualizado `AuthAuditLogTest` que dependía del 500 incorrecto. También se encontró y corrigió un artefacto conocido de las pruebas de Laravel: el guard de Sanctum cachea el usuario resuelto dentro del mismo test, por lo que verificar la revocación de un token requirió `Auth::forgetGuards()` explícito entre la revocación y la petición que confirma el rechazo. "Usuario inactivo" y "Revocación de tokens" ya tenían la lógica de dominio construida (`UserStatus::canAuthenticate()`, `AccessTokenRevoker`); solo faltaban las pruebas. Detalle completo en `docs/plans/2026-08-29-pruebas-autenticacion-eng0088-design.md`.
 
 Incluye pruebas para:
 

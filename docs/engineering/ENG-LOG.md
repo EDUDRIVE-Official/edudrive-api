@@ -2442,3 +2442,27 @@ Cualquier workflow de despliegue/rollback automatizado contra un servidor real (
 - El workflow de GitHub Actions se validó por sintaxis; su ejecución real en GitHub queda pendiente de un push real (no se puede correr Actions localmente contra Docker-in-Docker en este entorno).
 
 **Estado:** Finalizado.
+
+## 2026-08-29 — IMP-087 (Cierre de ENG-008.8 — Pruebas de autenticación)
+
+### Alcance acordado con el usuario
+
+Tests Feature para los 8 casos pedidos por la historia (login correcto, credenciales inválidas, usuario inexistente, usuario inactivo, acceso sin/con token, logout, revocación de tokens) más la corrección de un bug real encontrado en el manejo de excepciones de login, en vez de fijar en el propio test un comportamiento HTTP incorrecto.
+
+### Completado
+
+- **`modules/Identity/Domain/Exceptions/InvalidCredentials.php`**: pasa de extender `RuntimeException` plano a `Modules\Foundation\Domain\Exceptions\DomainException` (`errorCode: INVALID_CREDENTIALS`, `statusCode: 401`), mismo patrón que `UserCannotAuthenticate`/`UserNotFound`. Bug real preexistente: al no ser `DomainException`, Laravel no la mapeaba a un `ApiErrorResponse` propio y login con credenciales inválidas o usuario inexistente producía HTTP 500 en vez de un 401 semántico. Verificado que `LoginWebController` la captura por nombre de clase exacto, sin riesgo de regresión en el flujo web.
+- **`modules/Identity/Tests/Feature/LoginTest.php`** (nuevo): 8 tests cubriendo cada viñeta pedida. "Usuario inactivo" y "revocación de tokens" ya tenían la lógica de dominio construida (`UserStatus::canAuthenticate()` para lo primero, `AccessTokenRevoker::revokeCurrent()`/`revokeAllForUser()` para logout/logout-all); solo faltaban las pruebas.
+- **`modules/Identity/Tests/Feature/AuthAuditLogTest.php`**: `assertStatus(500)` → `assertStatus(401)`, quedaba desactualizado tras el fix de `InvalidCredentials`.
+- **Artefacto de testing encontrado y corregido**: el guard de Sanctum (`Illuminate\Auth\RequestGuard`) cachea el usuario resuelto en memoria una vez autenticado dentro del mismo test (`GuardHelpers::$user`), así que una petición posterior con el mismo token seguía "autenticada" aunque el token ya se hubiera borrado de la base de datos al revocarlo — corregido llamando `Auth::forgetGuards()` entre la revocación (logout/logout-all) y la petición que verifica el rechazo.
+
+### Fuera de alcance a propósito
+
+Endpoint de revocación de un token específico por id (no lo pide la historia; el concepto ya está cubierto por logout/logout-all), y cualquier cambio a `UserCannotAuthenticate`/`UserNotFound` (ya seguían el patrón correcto).
+
+### Validaciones
+
+- 8 tests nuevos en `LoginTest`, suite completa de `Modules\Identity` (64 tests, 192 assertions) en verde.
+- Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo.
+
+**Estado:** Finalizado.
