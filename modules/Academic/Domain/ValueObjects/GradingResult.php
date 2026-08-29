@@ -46,6 +46,20 @@ final readonly class GradingResult
             throw new InvalidArgumentException('El breakdown por competencia no puede estar vacio.');
         }
 
+        foreach ($this->questionBreakdown as $questionGrade) {
+            // @phpstan-ignore instanceof.alwaysTrue (runtime guard: el docblock `list<AttemptQuestionGrade>` no lo impone PHP en tiempo de ejecucion)
+            if (! $questionGrade instanceof AttemptQuestionGrade) {
+                throw new InvalidArgumentException('El breakdown por pregunta contiene un elemento invalido.');
+            }
+        }
+
+        foreach ($this->competencyBreakdown as $competencyGrade) {
+            // @phpstan-ignore instanceof.alwaysTrue (runtime guard: el docblock `list<CompetencyGrade>` no lo impone PHP en tiempo de ejecucion)
+            if (! $competencyGrade instanceof CompetencyGrade) {
+                throw new InvalidArgumentException('El breakdown por competencia contiene un elemento invalido.');
+            }
+        }
+
         $questionScore = array_sum(array_map(
             static fn (AttemptQuestionGrade $grade): int => $grade->score(),
             $this->questionBreakdown,

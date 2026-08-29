@@ -10,6 +10,9 @@ use Modules\Academic\Domain\Enums\EnrollmentSource;
 use Modules\Academic\Domain\Enums\EnrollmentStatus;
 use Modules\Academic\Domain\Repositories\EnrollmentRepository;
 use Modules\Academic\Domain\ValueObjects\EnrollmentId;
+use Modules\Identity\Domain\Entities\User;
+use Modules\Identity\Domain\Repositories\UserRepository;
+use Modules\Identity\Domain\ValueObjects\Email;
 use Modules\Learning\Application\Queries\GetEnrollmentLearningEventsQuery;
 use Modules\Learning\Application\Responses\LearningEventResponse;
 use Modules\Learning\Application\UseCases\GetEnrollmentLearningEventsHandler;
@@ -17,9 +20,6 @@ use Modules\Learning\Domain\Entities\LearningEvent;
 use Modules\Learning\Domain\Repositories\LearningEventRepository;
 use Modules\Learning\Domain\ValueObjects\LearningEventId;
 use Modules\Learning\Domain\ValueObjects\LearningVerb;
-use Modules\Identity\Domain\Entities\User;
-use Modules\Identity\Domain\Repositories\UserRepository;
-use Modules\Identity\Domain\ValueObjects\Email;
 
 uses(RefreshDatabase::class);
 
