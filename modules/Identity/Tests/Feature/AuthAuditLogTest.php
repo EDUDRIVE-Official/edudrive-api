@@ -32,7 +32,7 @@ it('audita un inicio de sesion fallido por credenciales invalidas', function ():
     $this->postJson('/api/v1/auth/login', [
         'email' => $user->email()->value(),
         'password' => 'clave-incorrecta',
-    ])->assertStatus(500);
+    ])->assertStatus(401);
 
     $entry = AuditLogModel::query()->where('action', 'auth.login')->latest('occurred_at')->first();
 

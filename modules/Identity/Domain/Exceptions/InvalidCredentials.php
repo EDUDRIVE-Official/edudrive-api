@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Modules\Identity\Domain\Exceptions;
 
-use RuntimeException;
+use Modules\Foundation\Domain\Exceptions\DomainException;
 
-final class InvalidCredentials extends RuntimeException
+final class InvalidCredentials extends DomainException
 {
     public function __construct()
     {
-        parent::__construct('The provided credentials are invalid.');
+        parent::__construct(
+            message: 'The provided credentials are invalid.',
+            errorCode: 'INVALID_CREDENTIALS',
+            statusCode: 401,
+        );
     }
 }
