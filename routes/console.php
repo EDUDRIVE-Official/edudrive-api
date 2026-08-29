@@ -13,3 +13,4 @@ Artisan::command('inspire', function () {
 Schedule::command('identity:purge-inactive-accounts')->daily();
 Schedule::command('sanctum:prune-expired --hours=24')->daily();
 Schedule::command('async-processing:cleanup')->daily();
+Schedule::command('backup:database')->daily();

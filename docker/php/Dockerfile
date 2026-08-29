@@ -18,6 +18,7 @@ RUN apt-get update \
         libpng-dev \
         libjpeg62-turbo-dev \
         libfreetype6-dev \
+        postgresql-client \
     && docker-php-ext-configure gd \
         --with-freetype \
         --with-jpeg \

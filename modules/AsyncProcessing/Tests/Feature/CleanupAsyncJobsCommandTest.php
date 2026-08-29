@@ -25,6 +25,11 @@ final class FakeFileStorageForCleanupCommand implements FileStorage
     {
         return "https://minio.local/{$storagePath}";
     }
+
+    public function readToLocalFile(string $storagePath, string $localTmpPath): void
+    {
+        file_put_contents($localTmpPath, '');
+    }
 }
 
 it('borra el archivo de una exportacion completada vencida y purga el trabajo', function (): void {

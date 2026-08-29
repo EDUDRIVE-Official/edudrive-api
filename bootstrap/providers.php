@@ -10,6 +10,7 @@ use Modules\Analytics\Infrastructure\Providers\AnalyticsServiceProvider;
 use Modules\AsyncProcessing\Infrastructure\Providers\AsyncProcessingServiceProvider;
 use Modules\Audit\Infrastructure\Providers\AuditServiceProvider;
 use Modules\Authorization\Infrastructure\Providers\AuthorizationServiceProvider;
+use Modules\Backup\Infrastructure\Providers\BackupServiceProvider;
 use Modules\Certification\Infrastructure\Providers\CertificationServiceProvider;
 use Modules\FileStorage\Infrastructure\Providers\FileStorageServiceProvider;
 use Modules\Foundation\Providers\FoundationServiceProvider;
@@ -30,6 +31,7 @@ return [
     AiGovernanceServiceProvider::class,
     AnalyticsServiceProvider::class,
     AsyncProcessingServiceProvider::class,
+    BackupServiceProvider::class,
     FoundationServiceProvider::class,
     IdentityServiceProvider::class,
     AuditServiceProvider::class,

@@ -36,12 +36,16 @@ final class EnsureFileBucketExists extends Command
 
         if ($client->doesBucketExist($bucket)) {
             $this->info("El bucket \"{$bucket}\" ya existe.");
-
-            return self::SUCCESS;
+        } else {
+            $client->createBucket(['Bucket' => $bucket]);
+            $this->info("Bucket \"{$bucket}\" creado.");
         }
 
-        $client->createBucket(['Bucket' => $bucket]);
-        $this->info("Bucket \"{$bucket}\" creado.");
+        $client->putBucketVersioning([
+            'Bucket' => $bucket,
+            'VersioningConfiguration' => ['Status' => 'Enabled'],
+        ]);
+        $this->info("Versionado de objetos habilitado en \"{$bucket}\".");
 
         return self::SUCCESS;
     }

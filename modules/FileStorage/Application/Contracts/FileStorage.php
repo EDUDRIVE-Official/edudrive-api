@@ -13,4 +13,6 @@ interface FileStorage
     public function delete(string $storagePath): void;
 
     public function temporaryDownloadUrl(string $storagePath, DateTimeImmutable $expiresAt): string;
+
+    public function readToLocalFile(string $storagePath, string $localTmpPath): void;
 }

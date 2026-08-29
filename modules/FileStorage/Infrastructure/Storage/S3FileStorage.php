@@ -37,4 +37,28 @@ final readonly class S3FileStorage implements FileStorage
     {
         return Storage::disk(self::DISK)->temporaryUrl($storagePath, $expiresAt);
     }
+
+    public function readToLocalFile(string $storagePath, string $localTmpPath): void
+    {
+        $stream = Storage::disk(self::DISK)->readStream($storagePath);
+
+        if ($stream === null) {
+            throw new RuntimeException("No se pudo leer el archivo \"{$storagePath}\".");
+        }
+
+        $destination = fopen($localTmpPath, 'w');
+
+        if ($destination === false) {
+            fclose($stream);
+
+            throw new RuntimeException("No se pudo crear el archivo temporal \"{$localTmpPath}\".");
+        }
+
+        try {
+            stream_copy_to_stream($stream, $destination);
+        } finally {
+            fclose($stream);
+            fclose($destination);
+        }
+    }
 }

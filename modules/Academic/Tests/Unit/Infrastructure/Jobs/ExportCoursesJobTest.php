@@ -70,6 +70,11 @@ final class FakeFileStorageForCoursesExportJob implements FileStorage
     {
         return "https://minio.local/{$storagePath}?expires={$expiresAt->getTimestamp()}";
     }
+
+    public function readToLocalFile(string $storagePath, string $localTmpPath): void
+    {
+        file_put_contents($localTmpPath, $this->stored[$storagePath] ?? '');
+    }
 }
 
 final class FakeAuditLoggerForCoursesExportJob implements AuditLogger
