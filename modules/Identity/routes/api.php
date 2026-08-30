@@ -17,6 +17,7 @@ use Modules\Identity\Presentation\Http\Controllers\LogoutController;
 use Modules\Identity\Presentation\Http\Controllers\MeController;
 use Modules\Identity\Presentation\Http\Controllers\ResendEmailVerificationController;
 use Modules\Identity\Presentation\Http\Controllers\ResetPasswordController;
+use Modules\Identity\Presentation\Http\Controllers\RevokeSessionController;
 use Modules\Identity\Presentation\Http\Controllers\SessionsController;
 use Modules\Identity\Presentation\Http\Controllers\ShowUserController;
 use Modules\Identity\Presentation\Http\Controllers\VerifyEmailController;
@@ -60,6 +61,10 @@ Route::middleware('api')
 
             Route::get('/sessions', SessionsController::class)
                 ->name('api.v1.auth.sessions');
+
+            Route::delete('/sessions/{tokenId}', RevokeSessionController::class)
+                ->whereNumber('tokenId')
+                ->name('api.v1.auth.sessions.revoke');
 
             Route::post('/logout', LogoutController::class)
                 ->name('api.v1.auth.logout');
