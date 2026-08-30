@@ -12,9 +12,11 @@ use Modules\Identity\Application\Services\SessionRepository;
 use Modules\Identity\Application\Services\UuidGenerator;
 use Modules\Identity\Domain\Repositories\EmailVerificationTokenRepository;
 use Modules\Identity\Domain\Repositories\PasswordResetTokenRepository;
+use Modules\Identity\Domain\Repositories\StudentProfileRepository;
 use Modules\Identity\Domain\Repositories\UserRepository;
 use Modules\Identity\Infrastructure\Persistence\Repositories\EloquentEmailVerificationTokenRepository;
 use Modules\Identity\Infrastructure\Persistence\Repositories\EloquentPasswordResetTokenRepository;
+use Modules\Identity\Infrastructure\Persistence\Repositories\EloquentStudentProfileRepository;
 use Modules\Identity\Infrastructure\Persistence\Repositories\EloquentUserRepository;
 use Modules\Identity\Infrastructure\Security\LaravelPasswordHasher;
 use Modules\Identity\Infrastructure\Security\SanctumAccessTokenIssuer;
@@ -65,6 +67,11 @@ final class IdentityServiceProvider extends ServiceProvider
         $this->app->bind(
             EmailVerificationTokenRepository::class,
             EloquentEmailVerificationTokenRepository::class,
+        );
+
+        $this->app->bind(
+            StudentProfileRepository::class,
+            EloquentStudentProfileRepository::class,
         );
     }
 
