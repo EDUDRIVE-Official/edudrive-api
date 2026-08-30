@@ -53,13 +53,30 @@ it('limita los registros a 5 por minuto', function (): void {
         ->assertJsonPath('code', 'TOO_MANY_REQUESTS');
 });
 
-it('limita las activaciones publicas a 10 por minuto', function (): void {
+it('limita la verificacion de correo a 10 por minuto', function (): void {
     /** @var TestCase $this */
     for ($attempt = 1; $attempt <= 10; $attempt++) {
-        $this->postJson('/api/v1/auth/users/'.Str::uuid().'/activate');
+        $this->postJson('/api/v1/auth/verify-email', [
+            'email' => sprintf('%s@edudrive.cr', Str::uuid()),
+            'token' => 'token-invalido',
+        ]);
     }
 
-    $this->postJson('/api/v1/auth/users/'.Str::uuid().'/activate')
+    $this->postJson('/api/v1/auth/verify-email', [
+        'email' => sprintf('%s@edudrive.cr', Str::uuid()),
+        'token' => 'token-invalido',
+    ])->assertStatus(429);
+});
+
+it('limita el reenvio de verificacion a 5 por minuto', function (): void {
+    /** @var TestCase $this */
+    $email = sprintf('%s@edudrive.cr', Str::uuid());
+
+    for ($attempt = 1; $attempt <= 5; $attempt++) {
+        $this->postJson('/api/v1/auth/resend-verification', ['email' => $email]);
+    }
+
+    $this->postJson('/api/v1/auth/resend-verification', ['email' => $email])
         ->assertStatus(429);
 });
 

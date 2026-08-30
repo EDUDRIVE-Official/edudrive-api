@@ -15,9 +15,11 @@ use Modules\Identity\Presentation\Http\Controllers\LoginController;
 use Modules\Identity\Presentation\Http\Controllers\LogoutAllController;
 use Modules\Identity\Presentation\Http\Controllers\LogoutController;
 use Modules\Identity\Presentation\Http\Controllers\MeController;
+use Modules\Identity\Presentation\Http\Controllers\ResendEmailVerificationController;
 use Modules\Identity\Presentation\Http\Controllers\ResetPasswordController;
 use Modules\Identity\Presentation\Http\Controllers\SessionsController;
 use Modules\Identity\Presentation\Http\Controllers\ShowUserController;
+use Modules\Identity\Presentation\Http\Controllers\VerifyEmailController;
 
 Route::middleware('api')
     ->prefix('api/v1/auth')
@@ -30,10 +32,13 @@ Route::middleware('api')
             ->middleware('throttle:login')
             ->name('api.v1.auth.login');
 
-        Route::post('/users/{userId}/activate', ActivateUserController::class)
-            ->whereUuid('userId')
-            ->middleware('throttle:activate')
-            ->name('api.v1.auth.users.activate');
+        Route::post('/verify-email', VerifyEmailController::class)
+            ->middleware('throttle:verify-email')
+            ->name('api.v1.auth.verify-email');
+
+        Route::post('/resend-verification', ResendEmailVerificationController::class)
+            ->middleware('throttle:resend-verification')
+            ->name('api.v1.auth.resend-verification');
 
         Route::post('/forgot-password', ForgotPasswordController::class)
             ->middleware('throttle:forgot-password')

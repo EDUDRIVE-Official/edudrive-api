@@ -57,12 +57,15 @@ final class FoundationServiceProvider extends ServiceProvider
 
         RateLimiter::for('register', static fn (Request $request): Limit => Limit::perMinute(5)->by((string) $request->ip()));
 
-        RateLimiter::for('activate', static fn (Request $request): Limit => Limit::perMinute(10)->by((string) $request->ip()));
-
         RateLimiter::for('forgot-password', static fn (Request $request): Limit => Limit::perMinute(5)
             ->by(Str::lower((string) $request->input('email', '')).'|'.$request->ip()));
 
         RateLimiter::for('reset-password', static fn (Request $request): Limit => Limit::perMinute(10)->by((string) $request->ip()));
+
+        RateLimiter::for('resend-verification', static fn (Request $request): Limit => Limit::perMinute(5)
+            ->by(Str::lower((string) $request->input('email', '')).'|'.$request->ip()));
+
+        RateLimiter::for('verify-email', static fn (Request $request): Limit => Limit::perMinute(10)->by((string) $request->ip()));
 
         RateLimiter::for('public-verification', static fn (Request $request): Limit => Limit::perMinute(30)->by((string) $request->ip()));
 
