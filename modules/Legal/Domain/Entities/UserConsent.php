@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Legal\Domain\Entities;
 
 use DateTimeImmutable;
+use Modules\Legal\Domain\Exceptions\ConsentAlreadyRevoked;
 use Modules\Legal\Domain\ValueObjects\PolicyKey;
 
 final class UserConsent
@@ -16,6 +17,7 @@ final class UserConsent
         private int $policyVersion,
         private DateTimeImmutable $acceptedAt,
         private ?string $guardianDeclaration,
+        private ?DateTimeImmutable $revokedAt,
     ) {}
 
     public static function accept(
@@ -33,6 +35,7 @@ final class UserConsent
             $policyVersion,
             $acceptedAt ?? new DateTimeImmutable('now'),
             $guardianDeclaration,
+            null,
         );
     }
 
@@ -43,8 +46,18 @@ final class UserConsent
         int $policyVersion,
         DateTimeImmutable $acceptedAt,
         ?string $guardianDeclaration = null,
+        ?DateTimeImmutable $revokedAt = null,
     ): self {
-        return new self($id, $userId, $policyKey, $policyVersion, $acceptedAt, $guardianDeclaration);
+        return new self($id, $userId, $policyKey, $policyVersion, $acceptedAt, $guardianDeclaration, $revokedAt);
+    }
+
+    public function revoke(DateTimeImmutable $at): void
+    {
+        if ($this->revokedAt !== null) {
+            throw ConsentAlreadyRevoked::create();
+        }
+
+        $this->revokedAt = $at;
     }
 
     public function id(): string
@@ -75,5 +88,15 @@ final class UserConsent
     public function guardianDeclaration(): ?string
     {
         return $this->guardianDeclaration;
+    }
+
+    public function revokedAt(): ?DateTimeImmutable
+    {
+        return $this->revokedAt;
+    }
+
+    public function isRevoked(): bool
+    {
+        return $this->revokedAt !== null;
     }
 }

@@ -75,6 +75,20 @@ final class InMemoryUserConsentRepository implements UserConsentRepository
             static fn (UserConsent $consent): bool => $consent->userId() === $userId,
         ));
     }
+
+    public function findLatestActiveByUserAndPolicy(string $userId, PolicyKey $policyKey): ?UserConsent
+    {
+        $candidates = array_values(array_filter(
+            $this->items,
+            static fn (UserConsent $consent): bool => $consent->userId() === $userId
+                && $consent->policyKey()->equals($policyKey)
+                && ! $consent->isRevoked(),
+        ));
+
+        usort($candidates, static fn (UserConsent $a, UserConsent $b): int => $b->acceptedAt() <=> $a->acceptedAt());
+
+        return $candidates[0] ?? null;
+    }
 }
 
 final class InMemoryLegalUserRepository implements UserRepository

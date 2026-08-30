@@ -116,6 +116,11 @@ final class InMemoryOrgConsentsUserConsentRepository implements UserConsentRepos
             static fn (UserConsent $consent): bool => $consent->userId() === $userId,
         ));
     }
+
+    public function findLatestActiveByUserAndPolicy(string $userId, PolicyKey $policyKey): ?UserConsent
+    {
+        return null;
+    }
 }
 
 it('lista unicamente los estudiantes menores de una organizacion con su historial de consentimiento', function (): void {

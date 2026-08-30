@@ -21,6 +21,7 @@ final class EloquentUserConsentRepository implements UserConsentRepository
                 'policy_version' => $consent->policyVersion(),
                 'accepted_at' => $consent->acceptedAt(),
                 'guardian_declaration' => $consent->guardianDeclaration(),
+                'revoked_at' => $consent->revokedAt(),
             ],
         );
     }
@@ -38,6 +39,18 @@ final class EloquentUserConsentRepository implements UserConsentRepository
         );
     }
 
+    public function findLatestActiveByUserAndPolicy(string $userId, PolicyKey $policyKey): ?UserConsent
+    {
+        $model = UserConsentModel::query()
+            ->where('user_id', $userId)
+            ->where('policy_key', $policyKey->value())
+            ->whereNull('revoked_at')
+            ->orderByDesc('accepted_at')
+            ->first();
+
+        return $model instanceof UserConsentModel ? $this->toDomain($model) : null;
+    }
+
     private function toDomain(UserConsentModel $model): UserConsent
     {
         return UserConsent::restore(
@@ -49,6 +62,7 @@ final class EloquentUserConsentRepository implements UserConsentRepository
             guardianDeclaration: $model->getAttribute('guardian_declaration') === null
                 ? null
                 : (string) $model->getAttribute('guardian_declaration'),
+            revokedAt: $model->revoked_at?->toDateTimeImmutable(),
         );
     }
 }

@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property int $policy_version
  * @property Carbon $accepted_at
  * @property string|null $guardian_declaration
+ * @property Carbon|null $revoked_at
  */
 final class UserConsentModel extends Model
 {
@@ -33,6 +34,7 @@ final class UserConsentModel extends Model
     {
         return [
             'accepted_at' => 'datetime',
+            'revoked_at' => 'datetime',
             'policy_version' => 'integer',
         ];
     }
