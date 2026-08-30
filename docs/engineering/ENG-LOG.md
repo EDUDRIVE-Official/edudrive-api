@@ -2633,3 +2633,30 @@ Vínculo `Enrollment` → `Group` (campo `groupId`) — queda standalone, candid
 - Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo. Migración aplicada contra Postgres real de desarrollo.
 
 **Estado:** Finalizado.
+
+## 2026-08-30 — IMP-094 (Cierre de ENG-020 — Perfil del estudiante)
+
+### Alcance acordado con el usuario
+
+Texto libre validado (sin enums inventados) para nivel educativo/accesibilidad/preferencias de aprendizaje; nuevo `StudentProfile` en `Modules\Identity` con endpoint compuesto `GET/PUT /api/v1/auth/me/profile`.
+
+### Completado
+
+- Confirmado que "Edad o rango etario" (`User::dateOfBirth()`/`isMinor()`, ENG-071) y "Estado del Pasaporte Vial" (`Modules\RoadPassport`, completo) ya estaban resueltos sin trabajo nuevo.
+- **Domain**: `StudentProfile` (entidad — `userId`, `educationLevel`/`accessibilityNeeds`/`learningPreferences` como texto libre nullable, `updatedAt`), `StudentProfileRepository`.
+- **Infrastructure**: tabla `student_profiles` (`user_id` PK con FK real a `users`, `cascadeOnDelete`), `StudentProfileModel`/`StudentProfileMapper`/`EloquentStudentProfileRepository`, mismo patrón que `PasswordResetToken`/`EmailVerificationToken` de ENG-009/010.
+- **Application**: `UpdateStudentProfileHandler` (upsert — crea el perfil la primera vez que se edita) y `GetMyStudentProfileHandler`, que compone `UserRepository` + `StudentProfileRepository` + `RoadPassportRepository` + `EnrollmentRepository::all(userId: ...)` en una sola respuesta, mismo patrón de composición cross-módulo que `ExportMyDataUseCase` (ENG-070).
+- **Presentation**: `GET/PUT /api/v1/auth/me/profile`, dentro del grupo `auth:sanctum` ya existente, sin permiso adicional (siempre sobre el propio usuario).
+
+### Fuera de alcance a propósito
+
+Enums fijos para nivel educativo/accesibilidad/preferencias de aprendizaje. Endpoint para que un administrador/docente consulte el perfil de otro estudiante — el construido es exclusivamente `/me`. Cualquier lógica nueva de reportes académicos — "información académica" reutiliza `EnrollmentRepository::all()` tal cual.
+
+### Validaciones
+
+- TDD por capa: Domain (4 tests), Application (5 tests), Infrastructure/Integration (3 tests), Presentation/Feature (5 tests, incluyendo la composición real con `RoadPassport`).
+- Suite completa de `Modules\Identity`: 139 tests, 403 assertions, en verde.
+- Suite completa del repositorio (`tests/` + `modules/`): 2254 tests, 6231 assertions, en verde.
+- Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo. Migración aplicada contra Postgres real de desarrollo.
+
+**Estado:** Finalizado.

@@ -440,7 +440,9 @@ Periodos lectivos.
 10. Fase 4 — Perfiles educativos
 ENG-020 — Perfil del estudiante
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-30): la investigación confirmó que "Edad o rango etario" ya era derivable de `User::dateOfBirth()`/`isMinor()` (ENG-071) y que "Estado del Pasaporte Vial" ya estaba completamente resuelto por `Modules\RoadPassport` — ninguna de las dos requirió trabajo nuevo, solo componerse. Las otras cuatro viñetas (información académica, nivel educativo, necesidades de accesibilidad, preferencias de aprendizaje) no tenían ningún precedente. El usuario decidió no inventar taxonomías fijas (texto libre validado para nivel educativo/accesibilidad/preferencias) y construir un endpoint compuesto: nueva entidad `StudentProfile` en `Modules\Identity` (los 3 campos libres) + `GET/PUT /api/v1/auth/me/profile`, que compone nombre/edad/es-menor (`User`), los campos del perfil, el estado del pasaporte vial (`RoadPassport`, cross-módulo) y un resumen de matrículas (`EnrollmentRepository::all(userId: ...)`), mismo patrón de composición cross-módulo ya usado por `ExportMyDataUseCase` (ENG-070). Detalle completo en `docs/plans/2026-08-30-perfil-estudiante-eng020-design.md`.
 
 Incluye:
 
