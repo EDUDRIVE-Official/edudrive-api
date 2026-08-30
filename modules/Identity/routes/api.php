@@ -10,6 +10,7 @@ use Modules\Identity\Presentation\Http\Controllers\DeactivateUserController;
 use Modules\Identity\Presentation\Http\Controllers\DeleteAccountController;
 use Modules\Identity\Presentation\Http\Controllers\ExportMyDataController;
 use Modules\Identity\Presentation\Http\Controllers\ForgotPasswordController;
+use Modules\Identity\Presentation\Http\Controllers\GetMyStudentProfileController;
 use Modules\Identity\Presentation\Http\Controllers\ListUsersController;
 use Modules\Identity\Presentation\Http\Controllers\LoginController;
 use Modules\Identity\Presentation\Http\Controllers\LogoutAllController;
@@ -20,6 +21,7 @@ use Modules\Identity\Presentation\Http\Controllers\ResetPasswordController;
 use Modules\Identity\Presentation\Http\Controllers\RevokeSessionController;
 use Modules\Identity\Presentation\Http\Controllers\SessionsController;
 use Modules\Identity\Presentation\Http\Controllers\ShowUserController;
+use Modules\Identity\Presentation\Http\Controllers\UpdateStudentProfileController;
 use Modules\Identity\Presentation\Http\Controllers\VerifyEmailController;
 
 Route::middleware('api')
@@ -58,6 +60,12 @@ Route::middleware('api')
 
             Route::get('/me/data-export', ExportMyDataController::class)
                 ->name('api.v1.auth.me.data-export');
+
+            Route::get('/me/profile', GetMyStudentProfileController::class)
+                ->name('api.v1.auth.me.profile.show');
+
+            Route::put('/me/profile', UpdateStudentProfileController::class)
+                ->name('api.v1.auth.me.profile.update');
 
             Route::get('/sessions', SessionsController::class)
                 ->name('api.v1.auth.sessions');
