@@ -14,13 +14,20 @@ use Modules\Academic\Application\Responses\OrganizationAdoptionReportResponse;
 use Modules\Academic\Application\Responses\OrganizationCompletionReportResponse;
 use Modules\Academic\Application\Responses\OrganizationParticipationReportResponse;
 use Modules\Academic\Application\Responses\OrganizationPerformanceReportResponse;
+use Modules\Authorization\Application\Exceptions\OrganizationNotAccessible;
+use Modules\Authorization\Application\Services\AccessibleOrganizationsResolver;
+use Modules\Authorization\Domain\Enums\Permission;
 use Modules\Foundation\Application\Bus\QueryBus;
 
 final class OrganizationReportController
 {
+    public function __construct(
+        private readonly AccessibleOrganizationsResolver $accessibleOrganizations,
+    ) {}
+
     public function participation(Request $request, QueryBus $queryBus): JsonResponse
     {
-        $result = $queryBus->ask(new GetOrganizationParticipationReportQuery(organizationIds: self::organizationIds($request)));
+        $result = $queryBus->ask(new GetOrganizationParticipationReportQuery(organizationIds: $this->organizationIds($request)));
         assert(is_array($result));
 
         /** @var list<OrganizationParticipationReportResponse> $result */
@@ -32,7 +39,7 @@ final class OrganizationReportController
 
     public function completion(Request $request, QueryBus $queryBus): JsonResponse
     {
-        $result = $queryBus->ask(new GetOrganizationCompletionReportQuery(organizationIds: self::organizationIds($request)));
+        $result = $queryBus->ask(new GetOrganizationCompletionReportQuery(organizationIds: $this->organizationIds($request)));
         assert(is_array($result));
 
         /** @var list<OrganizationCompletionReportResponse> $result */
@@ -44,7 +51,7 @@ final class OrganizationReportController
 
     public function performance(Request $request, QueryBus $queryBus): JsonResponse
     {
-        $result = $queryBus->ask(new GetOrganizationPerformanceReportQuery(organizationIds: self::organizationIds($request)));
+        $result = $queryBus->ask(new GetOrganizationPerformanceReportQuery(organizationIds: $this->organizationIds($request)));
         assert(is_array($result));
 
         /** @var list<OrganizationPerformanceReportResponse> $result */
@@ -56,7 +63,7 @@ final class OrganizationReportController
 
     public function adoption(Request $request, QueryBus $queryBus): JsonResponse
     {
-        $result = $queryBus->ask(new GetOrganizationAdoptionReportQuery(organizationIds: self::organizationIds($request)));
+        $result = $queryBus->ask(new GetOrganizationAdoptionReportQuery(organizationIds: $this->organizationIds($request)));
         assert(is_array($result));
 
         /** @var list<OrganizationAdoptionReportResponse> $result */
@@ -67,7 +74,32 @@ final class OrganizationReportController
     }
 
     /** @return list<string> */
-    private static function organizationIds(Request $request): array
+    private function organizationIds(Request $request): array
+    {
+        $requested = self::requestedOrganizationIds($request);
+
+        $accessible = $this->accessibleOrganizations->resolveForPermission(
+            (string) $request->user()?->getAuthIdentifier(),
+            Permission::ViewReports,
+        );
+
+        if ($accessible === null) {
+            return $requested;
+        }
+
+        if ($requested === []) {
+            return $accessible;
+        }
+
+        if (array_diff($requested, $accessible) !== []) {
+            throw new OrganizationNotAccessible;
+        }
+
+        return $requested;
+    }
+
+    /** @return list<string> */
+    private static function requestedOrganizationIds(Request $request): array
     {
         $organizationIds = $request->query('organization_ids', []);
 
