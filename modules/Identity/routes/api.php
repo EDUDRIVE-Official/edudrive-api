@@ -11,6 +11,7 @@ use Modules\Identity\Presentation\Http\Controllers\DeleteAccountController;
 use Modules\Identity\Presentation\Http\Controllers\ExportMyDataController;
 use Modules\Identity\Presentation\Http\Controllers\ForgotPasswordController;
 use Modules\Identity\Presentation\Http\Controllers\GetMyStudentProfileController;
+use Modules\Identity\Presentation\Http\Controllers\GetMyTeacherProfileController;
 use Modules\Identity\Presentation\Http\Controllers\ListUsersController;
 use Modules\Identity\Presentation\Http\Controllers\LoginController;
 use Modules\Identity\Presentation\Http\Controllers\LogoutAllController;
@@ -22,6 +23,7 @@ use Modules\Identity\Presentation\Http\Controllers\RevokeSessionController;
 use Modules\Identity\Presentation\Http\Controllers\SessionsController;
 use Modules\Identity\Presentation\Http\Controllers\ShowUserController;
 use Modules\Identity\Presentation\Http\Controllers\UpdateStudentProfileController;
+use Modules\Identity\Presentation\Http\Controllers\UpdateTeacherProfileController;
 use Modules\Identity\Presentation\Http\Controllers\VerifyEmailController;
 
 Route::middleware('api')
@@ -66,6 +68,12 @@ Route::middleware('api')
 
             Route::put('/me/profile', UpdateStudentProfileController::class)
                 ->name('api.v1.auth.me.profile.update');
+
+            Route::get('/me/teacher-profile', GetMyTeacherProfileController::class)
+                ->name('api.v1.auth.me.teacher-profile.show');
+
+            Route::put('/me/teacher-profile', UpdateTeacherProfileController::class)
+                ->name('api.v1.auth.me.teacher-profile.update');
 
             Route::get('/sessions', SessionsController::class)
                 ->name('api.v1.auth.sessions');
