@@ -2604,3 +2604,32 @@ Solo el gap real encontrado (activación/desactivación administrativa de cuenta
 - Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo.
 
 **Estado:** Finalizado.
+
+## 2026-08-30 — IMP-093 (Cierre de ENG-019 — Grupos y cohortes)
+
+### Alcance acordado con el usuario
+
+Un único aggregate nuevo `Group` que unifica Secciones + Asignación de docentes + Periodos lectivos; Cohorte/Generación tratados como el nombre del grupo, no como conceptos separados; `Group` queda standalone, sin tocar `Enrollment`.
+
+### Completado
+
+- La investigación confirmó que ENG-019 era terreno 100% nuevo: ningún aggregate, columna ni relación reutilizable en ningún módulo para sección/grupo/cohorte/generación/periodo lectivo. `Course` no tiene `teacherId` ni fechas de dictado; la única relación de un docente con algo era `RoleAssignment(role: Teacher)`, sin vínculo a curso o grupo específico.
+- **Domain** (`Modules\Academic`): `Group` (aggregate — `courseId`, `organizationId` opcional, `name`, `teacherId` opcional, `startsAt`/`endsAt` con invariante `endsAt > startsAt`), `GroupId` (VO UUID, mismo patrón que `CourseId`), `InvalidGroupPeriod` (`DomainException`, 422).
+- **Infrastructure**: nueva tabla `academic_groups` (`course_id` FK real a `academic_courses` con `cascadeOnDelete`, `teacher_id` FK real a `users` con `nullOnDelete`, `organization_id` nullable sin FK — mismo patrón que `academic_enrollments`), `GroupModel`/`EloquentGroupRepository` (mapeo inline, sin clase Mapper separada — convención propia de `Academic`, distinta a `Identity`).
+- **Application**: `CreateGroupHandler` (valida que el curso exista, reutiliza `CourseNotFound`), `AssignGroupTeacherHandler` (`GroupNotFound` si no existe), `ListGroupsHandler` (filtro opcional por curso) — los tres vía CQRS (`CommandBus`/`QueryBus`), mismo patrón que `Competency`.
+- **Presentation**: `GET/POST /api/v1/academic/groups`, `POST /api/v1/academic/groups/{groupId}/assign-teacher`. Nuevos permisos `Permission::ManageGroups`/`ViewGroups`: `SuperAdmin`/`InstitutionalAdmin` con ambos, `Teacher` solo `ViewGroups`, `Student` sin acceso.
+- No se valida la existencia ni el rol de `teacherId` contra `Identity`/`Authorization` — confirmado que ningún otro aggregate de `Academic` (incluido `Enrollment`) hace ese cruce; se mantiene la misma convención de confiar en el id dado, protegido por el permiso de la ruta.
+
+### Fuera de alcance a propósito
+
+Vínculo `Enrollment` → `Group` (campo `groupId`) — queda standalone, candidato a una historia futura cuando haya una necesidad concreta. Cohorte/Generación como aggregate propio que agrupe varios `Group` bajo un mismo periodo de ingreso, sin importar el curso. Validación cruzada de `teacherId`. Filtrado de "mis grupos" para un docente autenticado.
+
+### Validaciones
+
+- TDD por capa: Domain (16 tests: `GroupIdTest` + `GroupTest`), Application (6 tests: `CreateGroupHandlerTest`, `AssignGroupTeacherHandlerTest`, `ListGroupsHandlerTest`), Infrastructure/Integration (5 tests), Presentation/Feature (8 tests). Encontrado y corregido en el camino el patrón recurrente de "FK en fixtures de test": el test de reasignación de docente usaba un UUID sintético para `teacherId`, violando la FK real a `users` — corregido persistiendo un usuario real.
+- 2 tests nuevos en `RolePermissionsTest` (permisos de grupos por rol).
+- Suite completa de `Modules\Authorization` (71 tests) y `Modules\Academic` (916 tests) en verde.
+- Suite completa del repositorio (`tests/` + `modules/`): 2237 tests, 6175 assertions, en verde.
+- Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo. Migración aplicada contra Postgres real de desarrollo.
+
+**Estado:** Finalizado.

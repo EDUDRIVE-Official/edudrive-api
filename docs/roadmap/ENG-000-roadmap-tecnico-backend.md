@@ -425,7 +425,9 @@ Fecha de ingreso.
 Historial de cambios.
 ENG-019 — Grupos y cohortes
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-30): la investigación confirmó que era terreno 100% nuevo — no existía ningún aggregate, columna ni relación reutilizable para sección/grupo/cohorte/generación/periodo lectivo en ningún módulo. El usuario confirmó unificar Secciones + Asignación de docentes + Periodos lectivos en un único aggregate nuevo `Group` (courseId, organizationId opcional, nombre, docente asignado opcional, periodo lectivo con invariante `endsAt > startsAt`), tratando "Cohorte"/"Generación" como el nombre que se le da al grupo (ej. "Generación 2026-I"), no como conceptos separados. Se decidió dejar `Group` como catálogo standalone sin vincularlo a `Enrollment` (sin campo `groupId`), evitando riesgo sobre la lógica de matrículas ya construida en muchas historias previas. Nuevos endpoints en `Modules\Academic`: `GET/POST /api/v1/academic/groups` y `POST /api/v1/academic/groups/{groupId}/assign-teacher`, con permisos nuevos `groups.manage`/`groups.view` (SuperAdmin/InstitutionalAdmin con ambos, Teacher solo consulta). No se valida la existencia ni el rol del `teacherId` contra Identity/Authorization — mismo criterio que el resto de `Academic`, que tampoco cruza `userId` de `Enrollment`. Detalle completo en `docs/plans/2026-08-30-grupos-cohortes-eng019-design.md`.
 
 Incluye:
 
