@@ -6,12 +6,15 @@ use Illuminate\Support\Facades\Route;
 use Modules\Identity\Presentation\Http\Controllers\ActivateUserController;
 use Modules\Identity\Presentation\Http\Controllers\AuthController;
 use Modules\Identity\Presentation\Http\Controllers\BulkImportUsersController;
+use Modules\Identity\Presentation\Http\Controllers\CreateGuardianRelationshipController;
 use Modules\Identity\Presentation\Http\Controllers\DeactivateUserController;
 use Modules\Identity\Presentation\Http\Controllers\DeleteAccountController;
 use Modules\Identity\Presentation\Http\Controllers\ExportMyDataController;
 use Modules\Identity\Presentation\Http\Controllers\ForgotPasswordController;
+use Modules\Identity\Presentation\Http\Controllers\GetLinkedMinorProgressController;
 use Modules\Identity\Presentation\Http\Controllers\GetMyStudentProfileController;
 use Modules\Identity\Presentation\Http\Controllers\GetMyTeacherProfileController;
+use Modules\Identity\Presentation\Http\Controllers\ListMyLinkedMinorsController;
 use Modules\Identity\Presentation\Http\Controllers\ListUsersController;
 use Modules\Identity\Presentation\Http\Controllers\LoginController;
 use Modules\Identity\Presentation\Http\Controllers\LogoutAllController;
@@ -19,6 +22,7 @@ use Modules\Identity\Presentation\Http\Controllers\LogoutController;
 use Modules\Identity\Presentation\Http\Controllers\MeController;
 use Modules\Identity\Presentation\Http\Controllers\ResendEmailVerificationController;
 use Modules\Identity\Presentation\Http\Controllers\ResetPasswordController;
+use Modules\Identity\Presentation\Http\Controllers\RevokeGuardianRelationshipController;
 use Modules\Identity\Presentation\Http\Controllers\RevokeSessionController;
 use Modules\Identity\Presentation\Http\Controllers\SessionsController;
 use Modules\Identity\Presentation\Http\Controllers\ShowUserController;
@@ -114,4 +118,24 @@ Route::middleware(['api', 'auth:sanctum'])
             Route::post('/import', BulkImportUsersController::class)
                 ->name('api.v1.users.import');
         });
+    });
+
+Route::middleware(['api', 'auth:sanctum'])
+    ->prefix('api/v1/guardians')
+    ->group(function (): void {
+        Route::middleware('permission:guardian_relationships.manage')->group(function (): void {
+            Route::post('/relationships', CreateGuardianRelationshipController::class)
+                ->name('api.v1.guardians.relationships.store');
+
+            Route::delete('/relationships/{relationshipId}', RevokeGuardianRelationshipController::class)
+                ->whereUuid('relationshipId')
+                ->name('api.v1.guardians.relationships.revoke');
+        });
+
+        Route::get('/me/minors', ListMyLinkedMinorsController::class)
+            ->name('api.v1.guardians.me.minors.index');
+
+        Route::get('/me/minors/{minorUserId}/progress', GetLinkedMinorProgressController::class)
+            ->whereUuid('minorUserId')
+            ->name('api.v1.guardians.me.minors.progress');
     });

@@ -349,3 +349,10 @@ it('otorga la consulta de analitica unicamente al superadministrador', function 
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewAnalytics))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ViewAnalytics))->toBeFalse();
 });
+
+it('otorga la gestion de relaciones tutor-menor al superadministrador y al administrador institucional, y a nadie mas', function (): void {
+    expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageGuardianRelationships))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageGuardianRelationships))->toBeTrue()
+        ->and(RolePermissions::grants(Role::Teacher, Permission::ManageGuardianRelationships))->toBeFalse()
+        ->and(RolePermissions::grants(Role::Student, Permission::ManageGuardianRelationships))->toBeFalse();
+});

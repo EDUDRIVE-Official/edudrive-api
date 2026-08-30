@@ -75,6 +75,7 @@ final class RolePermissions
                 Permission::ManageAiGovernance,
                 Permission::ViewAiGovernance,
                 Permission::ViewAnalytics,
+                Permission::ManageGuardianRelationships,
             ],
             Role::InstitutionalAdmin => [
                 Permission::ViewOrganizations,
@@ -113,6 +114,7 @@ final class RolePermissions
                 Permission::ViewFiles,
                 Permission::ViewExports,
                 Permission::ViewOrganizationConsents,
+                Permission::ManageGuardianRelationships,
             ],
             Role::Teacher => [
                 Permission::ViewOrganizations,

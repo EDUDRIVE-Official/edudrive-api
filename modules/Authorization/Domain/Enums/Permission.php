@@ -60,4 +60,5 @@ enum Permission: string
     case ManageAiGovernance = 'ai_governance.manage';
     case ViewAiGovernance = 'ai_governance.view';
     case ViewAnalytics = 'analytics.view';
+    case ManageGuardianRelationships = 'guardian_relationships.manage';
 }
