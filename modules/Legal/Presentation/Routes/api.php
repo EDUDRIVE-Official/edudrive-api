@@ -22,6 +22,9 @@ Route::prefix('api/v1/legal')
             Route::post('/consents', [ConsentController::class, 'store'])
                 ->name('consents.store');
 
+            Route::delete('/consents/{policyKey}', [ConsentController::class, 'destroy'])
+                ->name('consents.destroy');
+
             Route::get('/me/consents', [ConsentController::class, 'index'])
                 ->name('me.consents');
 

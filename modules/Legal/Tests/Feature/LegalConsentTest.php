@@ -143,3 +143,34 @@ it('requiere autenticacion para registrar consentimiento o consultar el historia
     $this->postJson('/api/v1/legal/consents', ['policy_key' => 'privacy_policy'])->assertUnauthorized();
     $this->getJson('/api/v1/legal/me/consents')->assertUnauthorized();
 });
+
+it('revoca el propio consentimiento y lo refleja en el historial', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::SuperAdmin);
+    $this->postJson('/api/v1/legal/policies', ['key' => 'privacy_policy'])->assertCreated();
+
+    actingAsRole(Role::Student);
+    $this->postJson('/api/v1/legal/consents', ['policy_key' => 'privacy_policy'])->assertCreated();
+
+    $this->deleteJson('/api/v1/legal/consents/privacy_policy')
+        ->assertOk()
+        ->assertJsonPath('data.policy_key', 'privacy_policy');
+
+    $history = $this->getJson('/api/v1/legal/me/consents')->assertOk();
+
+    expect($history->json('data.0.revoked_at'))->not->toBeNull();
+});
+
+it('rechaza revocar cuando no hay ningun consentimiento activo para la politica', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::Student);
+
+    $this->deleteJson('/api/v1/legal/consents/privacy_policy')
+        ->assertStatus(404)
+        ->assertJsonPath('code', 'CONSENT_NOT_FOUND');
+});
+
+it('requiere autenticacion para revocar un consentimiento', function (): void {
+    /** @var TestCase $this */
+    $this->deleteJson('/api/v1/legal/consents/privacy_policy')->assertUnauthorized();
+});

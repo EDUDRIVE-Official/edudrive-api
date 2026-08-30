@@ -8,6 +8,7 @@ use Illuminate\Support\ServiceProvider;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
 use Modules\Legal\Application\Commands\PublishPolicyVersionCommand;
 use Modules\Legal\Application\Commands\RecordConsentCommand;
+use Modules\Legal\Application\Commands\RevokeConsentCommand;
 use Modules\Legal\Application\Queries\GetMyConsentsQuery;
 use Modules\Legal\Application\Queries\GetOrganizationMinorsConsentsQuery;
 use Modules\Legal\Application\Queries\ListPoliciesQuery;
@@ -16,6 +17,7 @@ use Modules\Legal\Application\UseCases\GetOrganizationMinorsConsentsHandler;
 use Modules\Legal\Application\UseCases\ListPoliciesHandler;
 use Modules\Legal\Application\UseCases\PublishPolicyVersionHandler;
 use Modules\Legal\Application\UseCases\RecordConsentHandler;
+use Modules\Legal\Application\UseCases\RevokeConsentHandler;
 use Modules\Legal\Domain\Repositories\ConsentPolicyRepository;
 use Modules\Legal\Domain\Repositories\UserConsentRepository;
 use Modules\Legal\Infrastructure\Persistence\Eloquent\Repositories\EloquentConsentPolicyRepository;
@@ -33,6 +35,7 @@ final class LegalServiceProvider extends ServiceProvider
     {
         $registry->register(PublishPolicyVersionCommand::class, PublishPolicyVersionHandler::class);
         $registry->register(RecordConsentCommand::class, RecordConsentHandler::class);
+        $registry->register(RevokeConsentCommand::class, RevokeConsentHandler::class);
         $registry->register(ListPoliciesQuery::class, ListPoliciesHandler::class);
         $registry->register(GetMyConsentsQuery::class, GetMyConsentsHandler::class);
         $registry->register(GetOrganizationMinorsConsentsQuery::class, GetOrganizationMinorsConsentsHandler::class);

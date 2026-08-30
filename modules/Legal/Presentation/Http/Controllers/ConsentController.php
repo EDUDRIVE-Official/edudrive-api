@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Modules\Foundation\Application\Bus\CommandBus;
 use Modules\Foundation\Application\Bus\QueryBus;
 use Modules\Legal\Application\Commands\RecordConsentCommand;
+use Modules\Legal\Application\Commands\RevokeConsentCommand;
 use Modules\Legal\Application\Queries\GetMyConsentsQuery;
 use Modules\Legal\Application\Responses\ConsentResponse;
 use Modules\Legal\Presentation\Http\Requests\RecordConsentRequest;
@@ -43,5 +44,18 @@ final class ConsentController
         assert($result instanceof ConsentResponse);
 
         return response()->json(['data' => $result->toArray()], Response::HTTP_CREATED);
+    }
+
+    public function destroy(string $policyKey, Request $request, CommandBus $commandBus): JsonResponse
+    {
+        $userId = (string) $request->user()?->getAuthIdentifier();
+
+        $result = $commandBus->dispatch(new RevokeConsentCommand(
+            userId: $userId,
+            policyKey: $policyKey,
+        ));
+        assert($result instanceof ConsentResponse);
+
+        return response()->json(['data' => $result->toArray()]);
     }
 }

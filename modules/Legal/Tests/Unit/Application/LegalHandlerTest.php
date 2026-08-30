@@ -8,6 +8,8 @@ use Modules\Identity\Domain\Repositories\UserRepository;
 use Modules\Identity\Domain\ValueObjects\Email;
 use Modules\Legal\Application\Commands\PublishPolicyVersionCommand;
 use Modules\Legal\Application\Commands\RecordConsentCommand;
+use Modules\Legal\Application\Commands\RevokeConsentCommand;
+use Modules\Legal\Application\Exceptions\ConsentNotFound;
 use Modules\Legal\Application\Queries\GetMyConsentsQuery;
 use Modules\Legal\Application\Queries\ListPoliciesQuery;
 use Modules\Legal\Application\Responses\ConsentResponse;
@@ -16,6 +18,7 @@ use Modules\Legal\Application\UseCases\GetMyConsentsHandler;
 use Modules\Legal\Application\UseCases\ListPoliciesHandler;
 use Modules\Legal\Application\UseCases\PublishPolicyVersionHandler;
 use Modules\Legal\Application\UseCases\RecordConsentHandler;
+use Modules\Legal\Application\UseCases\RevokeConsentHandler;
 use Modules\Legal\Domain\Aggregates\ConsentPolicy;
 use Modules\Legal\Domain\Entities\UserConsent;
 use Modules\Legal\Domain\Exceptions\GuardianDeclarationRequired;
@@ -272,3 +275,30 @@ it('lista el historial de consentimientos de un usuario', function (): void {
         ->and($responses[0])->toBeInstanceOf(ConsentResponse::class)
         ->and($responses[0]->policyKey)->toBe('privacy_policy');
 });
+
+it('revoca el consentimiento activo mas reciente de un usuario para una politica', function (): void {
+    $policies = new InMemoryConsentPolicyRepository;
+    $consents = new InMemoryUserConsentRepository;
+    $users = new InMemoryLegalUserRepository;
+    (new PublishPolicyVersionHandler($policies))->handle(new PublishPolicyVersionCommand(key: 'privacy_policy'));
+
+    $user = legalAdultUser();
+    $users->save($user);
+    (new RecordConsentHandler($policies, $consents, $users))
+        ->handle(new RecordConsentCommand(userId: $user->id(), policyKey: 'privacy_policy'));
+
+    $response = (new RevokeConsentHandler($consents))
+        ->handle(new RevokeConsentCommand(userId: $user->id(), policyKey: 'privacy_policy'));
+
+    expect($response->revokedAt)->not->toBeNull();
+
+    $history = (new GetMyConsentsHandler($consents))->handle(new GetMyConsentsQuery(userId: $user->id()));
+    expect($history[0]->revokedAt)->not->toBeNull();
+});
+
+it('rechaza revocar cuando no hay ningun consentimiento activo para la politica', function (): void {
+    $consents = new InMemoryUserConsentRepository;
+
+    (new RevokeConsentHandler($consents))
+        ->handle(new RevokeConsentCommand(userId: (string) Str::uuid(), policyKey: 'privacy_policy'));
+})->throws(ConsentNotFound::class);
