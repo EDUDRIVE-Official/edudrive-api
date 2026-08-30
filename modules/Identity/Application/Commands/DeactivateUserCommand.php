@@ -8,5 +8,6 @@ final readonly class DeactivateUserCommand
 {
     public function __construct(
         public string $userId,
+        public string $actorId,
     ) {}
 }

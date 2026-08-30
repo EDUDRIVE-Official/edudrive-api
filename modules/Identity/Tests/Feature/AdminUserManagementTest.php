@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Str;
+use Modules\Audit\Infrastructure\Persistence\Eloquent\Models\AuditLogModel;
 use Modules\Authorization\Domain\Enums\Role;
 use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Enums\UserStatus;
@@ -54,11 +55,17 @@ it('consulta un usuario por id con el permiso users.view', function (): void {
 it('activa un usuario con el permiso users.manage', function (): void {
     /** @var TestCase $this */
     $user = persistedAdminManagedUser();
-    actingAsRole(Role::SuperAdmin);
+    $admin = actingAsRole(Role::SuperAdmin);
 
     $this->postJson("/api/v1/users/{$user->id()}/activate")
         ->assertOk()
         ->assertJsonPath('data.status', UserStatus::Active->value);
+
+    $entry = AuditLogModel::query()->where('action', 'identity.account_activated')->latest('occurred_at')->first();
+
+    expect($entry)->not->toBeNull()
+        ->and($entry->user_id)->toBe($admin->id)
+        ->and($entry->entity_id)->toBe($user->id());
 });
 
 it('rechaza activar un usuario sin el permiso users.manage', function (): void {
@@ -74,11 +81,17 @@ it('desactiva un usuario con el permiso users.manage', function (): void {
     $user = persistedAdminManagedUser();
     $user->activate(new DateTimeImmutable('now'));
     app(UserRepository::class)->save($user);
-    actingAsRole(Role::SuperAdmin);
+    $admin = actingAsRole(Role::SuperAdmin);
 
     $this->postJson("/api/v1/users/{$user->id()}/deactivate")
         ->assertOk()
         ->assertJsonPath('data.status', UserStatus::Inactive->value);
+
+    $entry = AuditLogModel::query()->where('action', 'identity.account_deactivated')->latest('occurred_at')->first();
+
+    expect($entry)->not->toBeNull()
+        ->and($entry->user_id)->toBe($admin->id)
+        ->and($entry->entity_id)->toBe($user->id());
 });
 
 it('rechaza desactivar un usuario sin el permiso users.manage', function (): void {

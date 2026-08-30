@@ -6,6 +6,7 @@ namespace Modules\Identity\Presentation\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Modules\Identity\Application\Commands\ActivateUserCommand;
 use Modules\Identity\Application\UseCases\ActivateUserUseCase;
 
@@ -15,11 +16,12 @@ final class ActivateUserController extends Controller
         private readonly ActivateUserUseCase $useCase,
     ) {}
 
-    public function __invoke(string $userId): JsonResponse
+    public function __invoke(Request $request, string $userId): JsonResponse
     {
         $response = $this->useCase->execute(
             new ActivateUserCommand(
                 userId: $userId,
+                actorId: (string) $request->user()?->getAuthIdentifier(),
             ),
         );
 
