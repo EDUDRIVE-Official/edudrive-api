@@ -24,6 +24,15 @@ final class SanctumAccessTokenRevoker implements AccessTokenRevoker
             ->delete();
     }
 
+    public function revokeForUser(string $userId, string $tokenId): bool
+    {
+        return PersonalAccessToken::query()
+            ->whereKey($tokenId)
+            ->where('tokenable_type', '=', $this->userModelType())
+            ->where('tokenable_id', '=', $userId)
+            ->delete() > 0;
+    }
+
     private function userModelType(): string
     {
         return config(

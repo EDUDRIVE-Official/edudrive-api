@@ -123,6 +123,11 @@ final class SpyAccessTokenRevokerForReset implements AccessTokenRevoker
     {
         $this->revokedForUsers[] = $userId;
     }
+
+    public function revokeForUser(string $userId, string $tokenId): bool
+    {
+        return false; // no aplica en estas pruebas
+    }
 }
 
 function registeredResetUser(): User
