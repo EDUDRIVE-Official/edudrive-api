@@ -14,6 +14,7 @@ use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
 use Modules\Foundation\Application\Bus\CommandBus;
 use Modules\Identity\Application\Services\PasswordHasher;
 use Modules\Identity\Application\Services\UuidGenerator;
+use Modules\Identity\Application\UseCases\SendEmailVerificationUseCase;
 use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Repositories\UserRepository;
 use Modules\Identity\Domain\ValueObjects\Email;
@@ -75,6 +76,7 @@ it('importa usuarios en lote y completa el trabajo asignando student por defecto
         app(UserRepository::class),
         app(PasswordHasher::class),
         app(UuidGenerator::class),
+        app(SendEmailVerificationUseCase::class),
         app(CommandBus::class),
     );
 
@@ -111,6 +113,7 @@ it('reporta una fila fallida por correo ya existente sin detener el resto del lo
         app(UserRepository::class),
         app(PasswordHasher::class),
         app(UuidGenerator::class),
+        app(SendEmailVerificationUseCase::class),
         app(CommandBus::class),
     );
 

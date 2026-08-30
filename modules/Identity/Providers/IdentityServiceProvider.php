@@ -10,8 +10,10 @@ use Modules\Identity\Application\Services\AccessTokenRevoker;
 use Modules\Identity\Application\Services\PasswordHasher;
 use Modules\Identity\Application\Services\SessionRepository;
 use Modules\Identity\Application\Services\UuidGenerator;
+use Modules\Identity\Domain\Repositories\EmailVerificationTokenRepository;
 use Modules\Identity\Domain\Repositories\PasswordResetTokenRepository;
 use Modules\Identity\Domain\Repositories\UserRepository;
+use Modules\Identity\Infrastructure\Persistence\Repositories\EloquentEmailVerificationTokenRepository;
 use Modules\Identity\Infrastructure\Persistence\Repositories\EloquentPasswordResetTokenRepository;
 use Modules\Identity\Infrastructure\Persistence\Repositories\EloquentUserRepository;
 use Modules\Identity\Infrastructure\Security\LaravelPasswordHasher;
@@ -58,6 +60,11 @@ final class IdentityServiceProvider extends ServiceProvider
         $this->app->bind(
             PasswordResetTokenRepository::class,
             EloquentPasswordResetTokenRepository::class,
+        );
+
+        $this->app->bind(
+            EmailVerificationTokenRepository::class,
+            EloquentEmailVerificationTokenRepository::class,
         );
     }
 

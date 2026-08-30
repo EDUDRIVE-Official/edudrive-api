@@ -24,6 +24,7 @@ use Modules\Identity\Application\Exceptions\EmailAlreadyExists;
 use Modules\Identity\Application\Services\PasswordHasher;
 use Modules\Identity\Application\Services\UuidGenerator;
 use Modules\Identity\Application\UseCases\RegisterUserUseCase;
+use Modules\Identity\Application\UseCases\SendEmailVerificationUseCase;
 use Modules\Identity\Domain\Repositories\UserRepository;
 use Throwable;
 
@@ -58,6 +59,7 @@ final class ImportUsersJob implements ShouldQueue
         UserRepository $users,
         PasswordHasher $passwordHasher,
         UuidGenerator $uuidGenerator,
+        SendEmailVerificationUseCase $emailVerification,
         CommandBus $commandBus,
     ): void {
         $job = $jobs->findById(AsyncJobId::fromString($this->asyncJobId));
@@ -76,7 +78,7 @@ final class ImportUsersJob implements ShouldQueue
             $rowNumber = $index + 1;
 
             try {
-                $results[] = $this->importRow($users, $passwordHasher, $uuidGenerator, $commandBus, $rowNumber, $row);
+                $results[] = $this->importRow($users, $passwordHasher, $uuidGenerator, $emailVerification, $commandBus, $rowNumber, $row);
                 $created++;
             } catch (EmailAlreadyExists) {
                 $failed++;
@@ -104,6 +106,7 @@ final class ImportUsersJob implements ShouldQueue
         UserRepository $users,
         PasswordHasher $passwordHasher,
         UuidGenerator $uuidGenerator,
+        SendEmailVerificationUseCase $emailVerification,
         CommandBus $commandBus,
         int $rowNumber,
         array $row,
@@ -119,8 +122,8 @@ final class ImportUsersJob implements ShouldQueue
 
         $role = Role::from($roleValue === '' ? Role::Student->value : $roleValue);
 
-        return DB::transaction(function () use ($users, $passwordHasher, $uuidGenerator, $commandBus, $name, $email, $password, $role, $rowNumber): array {
-            $registered = (new RegisterUserUseCase($users, $passwordHasher, $uuidGenerator))
+        return DB::transaction(function () use ($users, $passwordHasher, $uuidGenerator, $emailVerification, $commandBus, $name, $email, $password, $role, $rowNumber): array {
+            $registered = (new RegisterUserUseCase($users, $passwordHasher, $uuidGenerator, $emailVerification))
                 ->execute(new RegisterUserCommand(name: $name, email: $email, password: $password));
 
             $commandBus->dispatch(new AssignRoleCommand(
