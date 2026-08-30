@@ -176,7 +176,7 @@ Endpoint:
 POST /api/v1/auth/register
 ENG-008 — Autenticación con Sanctum
 
-Estado: En progreso (solo falta ENG-008.8)
+Estado: Completado
 
 ENG-008.1 — Instalación de Laravel Sanctum
 
