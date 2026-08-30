@@ -302,7 +302,9 @@ Registro de fecha de verificación.
 Restricción de acciones para correos no verificados.
 ENG-011 — Gestión de sesiones y dispositivos
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-30): la investigación confirmó que la mayoría de las viñetas ya estaban cubiertas: `GET /api/v1/auth/sessions` ya devuelve nombre, fecha de creación y último uso de cada token de Sanctum, y la expiración global de tokens (`SANCTUM_EXPIRATION_MINUTES`) ya es real, confirmada por un test existente. El gap real era la revocación individual — solo existía todo-o-nada (`logout`=token actual, `logout-all`=todos). Se agregó `AccessTokenRevoker::revokeForUser(userId, tokenId)` (verifica que el token pertenezca al usuario antes de borrarlo), `RevokeSessionUseCase` y `DELETE /api/v1/auth/sessions/{tokenId}` (mismo código `SESSION_NOT_FOUND` para token inexistente o ajeno, no revela cuál). El usuario decidió dejar fuera de alcance "Políticas de seguridad por aplicación" — no hay ninguna decisión de producto que especifique qué aplicaciones existen ni qué políticas deberían diferir; todos los tokens siguen teniendo las mismas abilities y expiración, sin importar el cliente. Detalle completo en `docs/plans/2026-08-30-gestion-sesiones-eng011-design.md`.
 
 Incluye:
 

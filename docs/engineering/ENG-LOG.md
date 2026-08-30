@@ -2522,3 +2522,31 @@ Middleware `EnsureEmailIsVerified` (el login ya es el gate real — `canAuthenti
 - Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo. Migración aplicada contra Postgres real de desarrollo.
 
 **Estado:** Finalizado.
+
+## 2026-08-30 — IMP-090 (Cierre de ENG-011 — Gestión de sesiones y dispositivos)
+
+### Alcance acordado con el usuario
+
+Revocación individual de sesiones (gap real encontrado); "políticas de seguridad por aplicación" queda fuera de alcance, sin decisión de producto que la sustente.
+
+### Completado
+
+- La investigación confirmó que "Nombre del dispositivo", "Fecha de creación del token" y "Último uso" ya los devolvía `GET /api/v1/auth/sessions` (columnas nativas de Sanctum), y que la expiración de tokens ya era real (`SANCTUM_EXPIRATION_MINUTES`, confirmado por `SanctumTokenExpirationTest` contra la base de datos real, no un mock).
+- **`AccessTokenRevoker::revokeForUser(userId, tokenId): bool`** (nuevo método en la interfaz existente, implementado en `SanctumAccessTokenRevoker`): borra el token solo si pertenece al usuario dado, devolviendo si realmente lo hizo.
+- **`RevokeSessionUseCase`**: llama al revoker; si no encontró/no pertenece, lanza `SessionNotFound` (`DomainException`, 404, `SESSION_NOT_FOUND` — mismo código para "no existe" y "no te pertenece"); si tiene éxito, audita (`auth.session_revoked`), mismo patrón que `LogoutUserUseCase`/`LogoutAllUsersUseCase`.
+- **`DELETE /api/v1/auth/sessions/{tokenId}`** (`whereNumber`, ya que el id de `personal_access_tokens` es un bigint autoincremental, no UUID), dentro del grupo `auth:sanctum` ya existente.
+- Se encontró de nuevo el artefacto de cacheo del guard de Sanctum en el test de "revocar la sesión de otro usuario" (`RequestGuard::user()` no reevalúa con un token distinto dentro del mismo test si ya resolvió un usuario) — corregido con `Auth::forgetGuards()`, mismo patrón ya usado en `LoginTest`/`PasswordResetTest` (ENG-008.8/ENG-009).
+- **Hallazgo colateral, no corregido (fuera de alcance de esta historia)**: `Modules\Identity\Application\Exceptions\EmailAlreadyExists` extiende `RuntimeException` plano, no `DomainException` — el mismo patrón de bug que se corrigió en `InvalidCredentials` (ENG-008.8). No se toca aquí porque no se tocó el flujo de registro directo en esta historia; queda como hallazgo a considerar en una futura historia sobre registro/errores de Identity.
+
+### Fuera de alcance a propósito
+
+Cualquier diferenciación de `abilities`/expiración por tipo de cliente/aplicación — no hay ninguna decisión de producto que especifique qué aplicaciones existen ni qué políticas necesitan.
+
+### Validaciones
+
+- 2 tests nuevos en `RevokeSessionUseCaseTest` (Application), 4 tests nuevos en `RevokeSessionTest` (Feature, flujo completo: revoca sin afectar otras sesiones, rechaza sesión ajena, rechaza inexistente, requiere autenticación).
+- Suite completa de `Modules\Identity`: 118 tests, 331 assertions, en verde.
+- Suite completa del repositorio (`tests/` + `modules/`): 2193 tests, 6080 assertions, en verde.
+- Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo.
+
+**Estado:** Finalizado.
