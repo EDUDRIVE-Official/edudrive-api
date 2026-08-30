@@ -2716,3 +2716,31 @@ Contenido/texto de las políticas legales (`ConsentPolicy` sigue sin almacenarlo
 - Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo. Migración aplicada contra Postgres real de desarrollo.
 
 **Estado:** Finalizado.
+
+## 2026-08-30 — IMP-097 (Cierre de ENG-022 — Tutores y encargados)
+
+### Alcance acordado con el usuario
+
+Solo vista de progreso bajo demanda para el tutor (sin notificaciones automáticas); relación tutor-menor administrada por un administrador (sin invitación/verificación real de identidad, mismo criterio ya usado en ENG-071); diseñada junto con ENG-023 por su fuerte acoplamiento, cerrada por separado.
+
+### Completado
+
+- Confirmado que no existía ningún concepto de relación tutor-estudiante (ninguna entidad, tabla, rol ni permiso) — terreno nuevo. El rol `Role` solo tiene `SuperAdmin`/`InstitutionalAdmin`/`Teacher`/`Student`; no se agregó un rol "Tutor" — la relación vive como entidad propia en `Identity`, no como rol del sistema de permisos.
+- **Domain**: `GuardianRelationship` (`Modules\Identity` — `id`, `guardianUserId`, `minorUserId`, `createdAt`, `revokedAt`), invariante estructural `guardianUserId !== minorUserId` (`InvalidGuardianRelationship::selfGuardianship()`), `revoke()`/`isActive()`. `GuardianRelationshipRepository` (`save`, `findById`, `findActiveByGuardianAndMinor`, `findActiveByGuardian`).
+- **Application**: `CreateGuardianRelationshipHandler` (valida que ambos usuarios existan, que el menor sea realmente menor vía `User::isMinor()` — si no, `GuardianRelationshipRequiresMinor` 422 —, y que no exista ya una relación activa para ese par — `GuardianRelationshipAlreadyExists` 409, mismo principio de deduplicación que `AssignRoleHandler`) y `RevokeGuardianRelationshipHandler` (`GuardianRelationshipNotFound` 404 si no existe), ambos auditados. Se extrajo `StudentProfileComposer` del cuerpo ya existente de `GetMyStudentProfileHandler` (ENG-020) — reutilizado por el propio handler (delegación fina) y por el nuevo `GetLinkedMinorProgressHandler`, evitando duplicar la agregación User+StudentProfile+RoadPassport+Enrollment. `ListMyLinkedMinorsHandler` lista los menores vinculados activamente al tutor autenticado.
+- **La única restricción de privacidad construida**: `GetLinkedMinorProgressHandler` exige que `findActiveByGuardianAndMinor()` no sea nulo antes de delegar en el composer, devolviendo el mismo `GUARDIAN_RELATIONSHIP_NOT_FOUND` (404) tanto si la relación no existe como si no pertenece a ese tutor — sin distinguir ambos casos, mismo patrón de "código de error único" ya usado en `InvalidCredentials`/`OrganizationNotAccessible`.
+- **Infrastructure**: tabla `guardian_relationships` (FK reales `guardian_user_id`/`minor_user_id` → `users`, `cascadeOnDelete`), `GuardianRelationshipModel`/`GuardianRelationshipMapper`/`EloquentGuardianRelationshipRepository`, mismo patrón de Mapper separado ya usado en `Modules\Identity`.
+- **Presentation**: nuevo permiso `Permission::ManageGuardianRelationships` (`guardian_relationships.manage`) para `SuperAdmin`/`InstitutionalAdmin` — crear/revocar relaciones es una acción administrativa, mismo criterio que ENG-071. Endpoints: `POST /api/v1/guardians/relationships` y `DELETE /api/v1/guardians/relationships/{relationshipId}` (gated por el permiso), `GET /api/v1/guardians/me/minors` y `GET /api/v1/guardians/me/minors/{minorUserId}/progress` (autoservicio del tutor autenticado, sin permiso adicional — la relación misma es el control de acceso).
+
+### Fuera de alcance a propósito
+
+Notificaciones automáticas al tutor (eventos de exámenes, certificados, etc.) — expandiría el alcance a `Modules\Notification` en varios módulos que hoy no disparan ningún evento observable externamente. Invitación/autoservicio del tutor para vincularse a un menor, o verificación real de su identidad — mismo criterio ya establecido en ENG-071. Nuevo rol "Tutor" en `Authorization\Domain\Enums\Role`.
+
+### Validaciones
+
+- TDD por capa: Domain (5 tests), Application (16 tests nuevos entre `CreateGuardianRelationshipHandlerTest`, `RevokeGuardianRelationshipHandlerTest`, `GetLinkedMinorProgressHandlerTest`, `ListMyLinkedMinorsHandlerTest`, más el ajuste mínimo de `GetMyStudentProfileHandlerTest` a la extracción del composer), Infrastructure/Integration (5 tests), Presentation/Feature (9 tests) y 1 test nuevo en `RolePermissionsTest`.
+- Suite completa de `Modules\Identity`: Application 45 tests/121 assertions en verde tras la extracción del composer.
+- Suite completa del repositorio (`tests/` + `modules/`): 2311 tests, 6378 assertions, en verde.
+- Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre `modules/Identity` y `modules/Authorization`.
+
+**Estado:** Finalizado.

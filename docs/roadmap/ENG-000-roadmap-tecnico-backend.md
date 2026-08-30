@@ -467,7 +467,9 @@ Grupos asignados.
 Permisos de evaluación.
 ENG-022 — Tutores y encargados
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-30): la investigación confirmó que no existía ningún concepto de relación tutor-estudiante (ninguna entidad, tabla, rol ni permiso) — terreno nuevo. Se construyó `GuardianRelationship` en `Modules\Identity` (guardianUserId/minorUserId/revokedAt, invariante `guardianUserId !== minorUserId`), gestionada administrativamente (`CreateGuardianRelationshipHandler`/`RevokeGuardianRelationshipHandler`, permiso nuevo `guardian_relationships.manage` para SuperAdmin/InstitutionalAdmin) — sin invitación ni verificación real de identidad, mismo criterio ya usado en ENG-071. Para "Visualización de progreso" se extrajo `StudentProfileComposer` (Application service) del cuerpo ya existente de `GetMyStudentProfileHandler` (ENG-020), reutilizado por el propio handler y por el nuevo `GetLinkedMinorProgressHandler`, evitando duplicar la agregación User+StudentProfile+RoadPassport+Enrollment. La única restricción de privacidad construida es la existencia misma de una relación activa: `GetLinkedMinorProgressHandler` exige `findActiveByGuardianAndMinor()` no nulo antes de delegar en el composer, devolviendo el mismo `GUARDIAN_RELATIONSHIP_NOT_FOUND` (404) tanto si la relación no existe como si no pertenece al tutor. "Consentimientos" se resolvió enteramente en `Modules\Legal` (ver ENG-023). Quedaron fuera de alcance, documentados explícitamente: notificaciones automáticas al tutor, invitación/autoservicio del tutor para vincularse, y un rol "Tutor" en el sistema de permisos (la relación vive como entidad propia en `Identity`, no como rol). Endpoints: `POST/DELETE /api/v1/guardians/relationships{,/{relationshipId}}` (permiso), `GET /api/v1/guardians/me/minors` y `GET /api/v1/guardians/me/minors/{minorUserId}/progress` (autoservicio del tutor). Detalle completo en `docs/plans/2026-08-30-tutores-consentimientos-eng022-eng023-design.md`.
 
 Incluye:
 
