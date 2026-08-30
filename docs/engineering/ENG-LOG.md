@@ -2660,3 +2660,31 @@ Enums fijos para nivel educativo/accesibilidad/preferencias de aprendizaje. Endp
 - Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo. Migración aplicada contra Postgres real de desarrollo.
 
 **Estado:** Finalizado.
+
+## 2026-08-30 — IMP-095 (Cierre de ENG-021 — Perfil del docente o instructor)
+
+### Alcance acordado con el usuario
+
+Texto libre nuevo para especialidades/certificaciones (sin reutilizar `Modules\Certification`, concepto distinto); "permisos de evaluación" solo se exponen, sin restringir el acceso a exámenes por grupo asignado.
+
+### Completado
+
+- Confirmado que "Organizaciones relacionadas" era componible por `RoleAssignmentRepository::findByUserId()` filtrado por `role === Teacher`, y que "Permisos de evaluación" ya existían (`ViewExams`/`ViewExamAttempts` del rol Teacher, calificación 100% automática).
+- **Domain**: `TeacherProfile` (entidad — `userId`, `specialties`/`certifications` como texto libre nullable, `updatedAt`), `TeacherProfileRepository`, mismo patrón que `StudentProfile` (ENG-020).
+- **`GroupRepository::all()`** (`Modules\Academic`) gana un filtro opcional aditivo `teacherId` — diferido explícitamente en ENG-019, cerrado aquí. Actualizados 3 fakes de test + 1 test de integración nuevo.
+- **Infrastructure**: tabla `teacher_profiles` (mismo esquema que `student_profiles`), `TeacherProfileModel`/`TeacherProfileMapper`/`EloquentTeacherProfileRepository`.
+- **Application**: `UpdateTeacherProfileHandler` (upsert) y `GetMyTeacherProfileHandler`, que compone `UserRepository` + `TeacherProfileRepository` + `RoleAssignmentRepository` (organizaciones relacionadas, filtradas por rol Teacher) + `GroupRepository::all(teacherId: ...)` (grupos asignados) + una lista fija de permisos de evaluación verificados con `RolePermissions::grants()` contra cada asignación del usuario.
+- **Presentation**: `GET/PUT /api/v1/auth/me/teacher-profile`, mismo patrón que `StudentProfile`.
+
+### Fuera de alcance a propósito
+
+Reutilización de `Modules\Certification` para "certificaciones" del docente. Restricción de acceso a intentos de examen por grupo/curso asignado (reabriría la decisión de ENG-019 de no vincular `Enrollment`↔`Group`). Cualquier acción de calificación manual (no existe tal concepto). Endpoint para que un administrador consulte el perfil de otro docente.
+
+### Validaciones
+
+- TDD por capa: Domain (4 tests), `GroupRepository` filtro aditivo (1 test de integración nuevo + 3 fakes actualizados), Application (5 tests), Infrastructure/Integration (3 tests), Presentation/Feature (5 tests, incluyendo composición real con `RoleAssignment`+`Group`).
+- Suite completa de `Modules\Identity`: 156 tests, 458 assertions, en verde.
+- Suite completa del repositorio (`tests/` + `modules/`): 2272 tests, 6288 assertions, en verde.
+- Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo. Migración aplicada contra Postgres real de desarrollo.
+
+**Estado:** Finalizado.

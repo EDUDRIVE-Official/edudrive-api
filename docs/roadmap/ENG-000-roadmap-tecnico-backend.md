@@ -454,7 +454,9 @@ Preferencias de aprendizaje.
 Estado del Pasaporte Vial.
 ENG-021 — Perfil del docente o instructor
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-30): la investigación confirmó que "Organizaciones relacionadas" era trivialmente componible (`RoleAssignmentRepository::findByUserId()` filtrado por `role === Teacher`) y que "Permisos de evaluación" ya existían como permisos de solo lectura del rol Teacher (`ViewExams`/`ViewExamAttempts`), sin restricción por grupo asignado — la calificación es 100% automática, no existe ninguna acción manual de "calificar". El usuario decidió no reutilizar `Modules\Certification` (certificados de curso de un estudiante, concepto distinto) para "Certificaciones" — texto libre nuevo, igual que "Especialidades" — y solo exponer los permisos de evaluación ya otorgados, sin restringir el acceso a exámenes por grupo (eso reabriría una decisión ya tomada en ENG-019). Se construyó `TeacherProfile` en `Modules\Identity` (specialties/certifications como texto libre) con endpoint compuesto `GET/PUT /api/v1/auth/me/teacher-profile` que agrega nombre, perfil, organizaciones relacionadas, grupos asignados (requirió agregar un filtro `teacherId` aditivo a `GroupRepository::all()`, diferido explícitamente en ENG-019) y permisos de evaluación. Detalle completo en `docs/plans/2026-08-30-perfil-docente-eng021-design.md`.
 
 Incluye:
 
