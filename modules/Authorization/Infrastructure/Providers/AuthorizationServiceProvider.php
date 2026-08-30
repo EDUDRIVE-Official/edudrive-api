@@ -7,11 +7,13 @@ namespace Modules\Authorization\Infrastructure\Providers;
 use Illuminate\Support\ServiceProvider;
 use Modules\Authorization\Application\Commands\AssignRoleCommand;
 use Modules\Authorization\Application\Queries\ListMyRolesQuery;
+use Modules\Authorization\Application\Services\AccessibleOrganizationsResolver;
 use Modules\Authorization\Application\Services\PermissionChecker;
 use Modules\Authorization\Application\UseCases\AssignRoleHandler;
 use Modules\Authorization\Application\UseCases\ListMyRolesHandler;
 use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
 use Modules\Authorization\Infrastructure\Persistence\Eloquent\Repositories\EloquentRoleAssignmentRepository;
+use Modules\Authorization\Infrastructure\Services\RoleAssignmentAccessibleOrganizationsResolver;
 use Modules\Authorization\Infrastructure\Services\RoleAssignmentPermissionChecker;
 use Modules\Authorization\Presentation\Console\AssignRoleConsoleCommand;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
@@ -28,6 +30,11 @@ final class AuthorizationServiceProvider extends ServiceProvider
         $this->app->bind(
             PermissionChecker::class,
             RoleAssignmentPermissionChecker::class,
+        );
+
+        $this->app->bind(
+            AccessibleOrganizationsResolver::class,
+            RoleAssignmentAccessibleOrganizationsResolver::class,
         );
     }
 
