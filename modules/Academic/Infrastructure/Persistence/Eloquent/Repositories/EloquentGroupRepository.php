@@ -34,12 +34,16 @@ final class EloquentGroupRepository implements GroupRepository
         return $model === null ? null : $this->toDomain($model);
     }
 
-    public function all(?CourseId $courseId = null): array
+    public function all(?CourseId $courseId = null, ?string $teacherId = null): array
     {
         $query = GroupModel::query()->orderBy('starts_at');
 
         if ($courseId !== null) {
             $query->where('course_id', $courseId->value());
+        }
+
+        if ($teacherId !== null) {
+            $query->where('teacher_id', $teacherId);
         }
 
         return array_values(

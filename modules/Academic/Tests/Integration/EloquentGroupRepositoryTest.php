@@ -141,3 +141,34 @@ it('devuelve null cuando el grupo no existe', function (): void {
 
     expect($repository->findById(GroupId::fromString((string) Str::uuid())))->toBeNull();
 });
+
+it('filtra los grupos por docente asignado', function (): void {
+    /** @var TestCase $this */
+    $course = persistedGroupTestCourse();
+    $teacherId = persistedGroupTestTeacherId();
+    $repository = app(GroupRepository::class);
+
+    $repository->save(Group::create(
+        id: GroupId::fromString((string) Str::uuid()),
+        courseId: $course->id(),
+        organizationId: null,
+        name: 'Grupo con docente',
+        teacherId: $teacherId,
+        startsAt: new DateTimeImmutable('2026-01-15'),
+        endsAt: new DateTimeImmutable('2026-06-15'),
+    ));
+    $repository->save(Group::create(
+        id: GroupId::fromString((string) Str::uuid()),
+        courseId: $course->id(),
+        organizationId: null,
+        name: 'Grupo sin docente',
+        teacherId: null,
+        startsAt: new DateTimeImmutable('2026-01-15'),
+        endsAt: new DateTimeImmutable('2026-06-15'),
+    ));
+
+    $result = $repository->all(teacherId: $teacherId);
+
+    expect($result)->toHaveCount(1)
+        ->and($result[0]->name())->toBe('Grupo con docente');
+});

@@ -26,7 +26,7 @@ final class InMemoryGroupRepositoryForAssignTeacher implements GroupRepository
     }
 
     /** @return list<Group> */
-    public function all(?CourseId $courseId = null): array
+    public function all(?CourseId $courseId = null, ?string $teacherId = null): array
     {
         return array_values($this->groups);
     }
