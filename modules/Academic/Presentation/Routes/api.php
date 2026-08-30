@@ -11,6 +11,7 @@ use Modules\Academic\Presentation\Http\Controllers\EnrollmentController;
 use Modules\Academic\Presentation\Http\Controllers\EnrollmentProgressController;
 use Modules\Academic\Presentation\Http\Controllers\ExamAttemptController;
 use Modules\Academic\Presentation\Http\Controllers\ExamController;
+use Modules\Academic\Presentation\Http\Controllers\GroupController;
 use Modules\Academic\Presentation\Http\Controllers\OrganizationReportController;
 use Modules\Academic\Presentation\Http\Controllers\ProgramController;
 use Modules\Academic\Presentation\Http\Controllers\QuestionController;
@@ -37,6 +38,19 @@ Route::prefix('api/v1/academic')
                 Route::post('/competencies/{competencyId}/subcompetencies/{subcompetencyCode}/indicators', [CompetencyController::class, 'addIndicator'])
                     ->whereUuid('competencyId')
                     ->name('competencies.indicators.store');
+            });
+
+            Route::middleware('permission:groups.view')->group(function (): void {
+                Route::get('/groups', [GroupController::class, 'index'])
+                    ->name('groups.index');
+            });
+
+            Route::middleware('permission:groups.manage')->group(function (): void {
+                Route::post('/groups', [GroupController::class, 'store'])
+                    ->name('groups.store');
+                Route::post('/groups/{groupId}/assign-teacher', [GroupController::class, 'assignTeacher'])
+                    ->whereUuid('groupId')
+                    ->name('groups.assign-teacher');
             });
 
             Route::middleware('permission:courses.view')->group(function (): void {
