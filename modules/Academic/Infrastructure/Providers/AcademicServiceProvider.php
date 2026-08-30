@@ -12,6 +12,7 @@ use Modules\Academic\Application\Commands\AnswerAttemptQuestionCommand;
 use Modules\Academic\Application\Commands\ApproveCourseCommand;
 use Modules\Academic\Application\Commands\ArchiveCourseCommand;
 use Modules\Academic\Application\Commands\ArchiveProgramCommand;
+use Modules\Academic\Application\Commands\AssignGroupTeacherCommand;
 use Modules\Academic\Application\Commands\BulkImportCoursesCommand;
 use Modules\Academic\Application\Commands\BulkImportQuestionsCommand;
 use Modules\Academic\Application\Commands\CancelEnrollmentCommand;
@@ -25,6 +26,7 @@ use Modules\Academic\Application\Commands\CreateCompetencyCommand;
 use Modules\Academic\Application\Commands\CreateCourseCommand;
 use Modules\Academic\Application\Commands\CreateEnrollmentCommand;
 use Modules\Academic\Application\Commands\CreateExamCommand;
+use Modules\Academic\Application\Commands\CreateGroupCommand;
 use Modules\Academic\Application\Commands\CreateInstitutionalEnrollmentCommand;
 use Modules\Academic\Application\Commands\CreateProgramCommand;
 use Modules\Academic\Application\Commands\CreateQuestionCommand;
@@ -71,6 +73,7 @@ use Modules\Academic\Application\Queries\ListCourseVersionsQuery;
 use Modules\Academic\Application\Queries\ListEnrollmentsQuery;
 use Modules\Academic\Application\Queries\ListExamAttemptsQuery;
 use Modules\Academic\Application\Queries\ListExamsQuery;
+use Modules\Academic\Application\Queries\ListGroupsQuery;
 use Modules\Academic\Application\Queries\ListProgramsQuery;
 use Modules\Academic\Application\Queries\ListQuestionsQuery;
 use Modules\Academic\Application\Queries\ListTheoryExamAttemptsQuery;
@@ -82,6 +85,7 @@ use Modules\Academic\Application\UseCases\AnswerAttemptQuestionHandler;
 use Modules\Academic\Application\UseCases\ApproveCourseHandler;
 use Modules\Academic\Application\UseCases\ArchiveCourseHandler;
 use Modules\Academic\Application\UseCases\ArchiveProgramHandler;
+use Modules\Academic\Application\UseCases\AssignGroupTeacherHandler;
 use Modules\Academic\Application\UseCases\BulkImportCoursesHandler;
 use Modules\Academic\Application\UseCases\BulkImportQuestionsHandler;
 use Modules\Academic\Application\UseCases\CancelEnrollmentHandler;
@@ -95,6 +99,7 @@ use Modules\Academic\Application\UseCases\CreateCompetencyHandler;
 use Modules\Academic\Application\UseCases\CreateCourseHandler;
 use Modules\Academic\Application\UseCases\CreateEnrollmentHandler;
 use Modules\Academic\Application\UseCases\CreateExamHandler;
+use Modules\Academic\Application\UseCases\CreateGroupHandler;
 use Modules\Academic\Application\UseCases\CreateInstitutionalEnrollmentHandler;
 use Modules\Academic\Application\UseCases\CreateProgramHandler;
 use Modules\Academic\Application\UseCases\CreateQuestionHandler;
@@ -128,6 +133,7 @@ use Modules\Academic\Application\UseCases\ListCourseVersionsHandler;
 use Modules\Academic\Application\UseCases\ListEnrollmentsHandler;
 use Modules\Academic\Application\UseCases\ListExamAttemptsHandler;
 use Modules\Academic\Application\UseCases\ListExamsHandler;
+use Modules\Academic\Application\UseCases\ListGroupsHandler;
 use Modules\Academic\Application\UseCases\ListProgramsHandler;
 use Modules\Academic\Application\UseCases\ListQuestionsHandler;
 use Modules\Academic\Application\UseCases\ListTheoryExamAttemptsHandler;
@@ -152,6 +158,7 @@ use Modules\Academic\Domain\Repositories\EnrollmentProgressRepository;
 use Modules\Academic\Domain\Repositories\EnrollmentRepository;
 use Modules\Academic\Domain\Repositories\ExamAttemptRepository;
 use Modules\Academic\Domain\Repositories\ExamRepository;
+use Modules\Academic\Domain\Repositories\GroupRepository;
 use Modules\Academic\Domain\Repositories\ProgramRepository;
 use Modules\Academic\Domain\Repositories\QuestionRepository;
 use Modules\Academic\Domain\Repositories\UnitContentRepository;
@@ -162,6 +169,7 @@ use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentEn
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentEnrollmentRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentExamAttemptRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentExamRepository;
+use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentGroupRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentProgramRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentQuestionRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentUnitContentRepository;
@@ -174,6 +182,11 @@ final class AcademicServiceProvider extends ServiceProvider
         $this->app->bind(
             CompetencyRepository::class,
             EloquentCompetencyRepository::class,
+        );
+
+        $this->app->bind(
+            GroupRepository::class,
+            EloquentGroupRepository::class,
         );
 
         $this->app->bind(
@@ -226,6 +239,9 @@ final class AcademicServiceProvider extends ServiceProvider
         $registry->register(AddSubcompetencyCommand::class, AddSubcompetencyHandler::class);
         $registry->register(AddCompetencyIndicatorCommand::class, AddCompetencyIndicatorHandler::class);
         $registry->register(ListCompetenciesQuery::class, ListCompetenciesHandler::class);
+        $registry->register(CreateGroupCommand::class, CreateGroupHandler::class);
+        $registry->register(AssignGroupTeacherCommand::class, AssignGroupTeacherHandler::class);
+        $registry->register(ListGroupsQuery::class, ListGroupsHandler::class);
         $registry->register(ReplaceCourseCurriculumCommand::class, ReplaceCourseCurriculumHandler::class);
         $registry->register(GetCourseCurriculumQuery::class, GetCourseCurriculumHandler::class);
         $registry->register(ReplaceUnitContentCommand::class, ReplaceUnitContentHandler::class);
