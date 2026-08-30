@@ -9,6 +9,7 @@ use Modules\Academic\Domain\Repositories\EnrollmentRepository;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\EnrollmentId;
 use Modules\Identity\Application\Queries\GetMyStudentProfileQuery;
+use Modules\Identity\Application\Services\StudentProfileComposer;
 use Modules\Identity\Application\UseCases\GetMyStudentProfileHandler;
 use Modules\Identity\Domain\Entities\StudentProfile;
 use Modules\Identity\Domain\Entities\User;
@@ -182,7 +183,7 @@ it('compone el perfil del usuario, su edad, su pasaporte vial y sus matriculas',
         ),
     ]);
 
-    $handler = new GetMyStudentProfileHandler($users, $profiles, $roadPassports, $enrollments);
+    $handler = new GetMyStudentProfileHandler(new StudentProfileComposer($users, $profiles, $roadPassports, $enrollments));
     $response = $handler->handle(new GetMyStudentProfileQuery(userId: 'user-1'));
 
     expect($response->name)->toBe('Abel Campos')
@@ -198,12 +199,12 @@ it('devuelve null en perfil y pasaporte vial cuando el usuario no los tiene', fu
     $users = new InMemoryUserRepositoryForMyProfile;
     $users->save(myProfileTestUser());
 
-    $handler = new GetMyStudentProfileHandler(
+    $handler = new GetMyStudentProfileHandler(new StudentProfileComposer(
         $users,
         new InMemoryStudentProfileRepositoryForMyProfile,
         new InMemoryRoadPassportRepositoryForMyProfile,
         new InMemoryEnrollmentRepositoryForMyProfile,
-    );
+    ));
 
     $response = $handler->handle(new GetMyStudentProfileQuery(userId: 'user-1'));
 
@@ -213,12 +214,12 @@ it('devuelve null en perfil y pasaporte vial cuando el usuario no los tiene', fu
 });
 
 it('rechaza consultar el perfil de un usuario inexistente', function (): void {
-    $handler = new GetMyStudentProfileHandler(
+    $handler = new GetMyStudentProfileHandler(new StudentProfileComposer(
         new InMemoryUserRepositoryForMyProfile,
         new InMemoryStudentProfileRepositoryForMyProfile,
         new InMemoryRoadPassportRepositoryForMyProfile,
         new InMemoryEnrollmentRepositoryForMyProfile,
-    );
+    ));
 
     $handler->handle(new GetMyStudentProfileQuery(userId: 'no-existe'));
 })->throws(UserNotFound::class);
