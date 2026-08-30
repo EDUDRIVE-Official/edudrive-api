@@ -368,7 +368,9 @@ Cambio de contexto.
 Restricción de datos por institución.
 ENG-015 — Auditoría de accesos
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-30): la investigación confirmó que la mayoría de las viñetas ya estaban cubiertas por trabajo de esta misma sesión: inicio de sesión e intentos fallidos (`auth.login`), cierre de sesión (`auth.logout`/`auth.logout_all`), revocación de tokens (además `auth.session_revoked` de ENG-011) y cambios de roles (`authorization.role_assigned`). El único gap real dentro de alcance: `ActivateUserUseCase`/`DeactivateUserUseCase` (activación/desactivación administrativa de cuentas) no auditaban nada — se agregó `identity.account_activated`/`identity.account_deactivated` con el id de quien ejecuta la acción. El usuario decidió dejar fuera de alcance "Cambio de contraseña" y "Cambio de correo" autenticados — no existe ningún endpoint que dispare esas acciones hoy (`User::changeEmail()` existe en el dominio pero nadie lo invoca); construir features de perfil nuevas no es lo que pide una historia de auditoría, quedan bloqueadas hasta que exista el endpoint correspondiente. La revocación de asignaciones de rol ya estaba explícitamente diferida a ENG-018 (modelo de solo inserción), no se reconstruyó aquí. También se encontraron gaps reales en el propio `Modules\Audit` (sin filtros/paginación en la consulta, sin retención) que quedan fuera de alcance por ser limitaciones de la API de consulta, no del catálogo de eventos auditados. Detalle completo en `docs/plans/2026-08-30-auditoria-accesos-eng015-design.md`.
 
 Incluye:
 

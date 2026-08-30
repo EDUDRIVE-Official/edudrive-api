@@ -2577,3 +2577,30 @@ Retrofit de otros endpoints que ya aceptan `organization_id` (listado de enrollm
 - Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo.
 
 **Estado:** Finalizado.
+
+## 2026-08-30 — IMP-092 (Cierre de ENG-015 — Auditoría de accesos)
+
+### Alcance acordado con el usuario
+
+Solo el gap real encontrado (activación/desactivación administrativa de cuentas sin auditar); "Cambio de contraseña"/"Cambio de correo" quedan fuera de alcance porque no existe ningún endpoint que dispare esas acciones.
+
+### Completado
+
+- Confirmado que la mayoría de las viñetas ya estaban cubiertas por trabajo de esta misma sesión: `auth.login` (inicio de sesión e intentos fallidos), `auth.logout`/`auth.logout_all` (cierre de sesión), `auth.session_revoked` + los dos anteriores (revocación de tokens), `authorization.role_assigned` (cambios de roles).
+- **`ActivateUserCommand`/`DeactivateUserCommand`** ganan `actorId` (mismo patrón que `AssignRoleCommand`). **`ActivateUserUseCase`/`DeactivateUserUseCase`** ganan `AuditLogger`, auditan `identity.account_activated`/`identity.account_deactivated` con el id de quien ejecuta la acción (no el usuario objetivo). **`ActivateUserController`/`DeactivateUserController`** ganan `Request` para resolver ese actor.
+- Verificación Feature en `AdminUserManagementTest`: la entrada de auditoría queda registrada tras activar/desactivar una cuenta vía HTTP.
+
+### Fuera de alcance a propósito
+
+- Endpoints de cambio de contraseña/correo autenticados — no existen hoy (`User::changeEmail()` es un método de dominio huérfano, sin caso de uso ni ruta); construirlos es una historia de perfil de usuario, no de auditoría.
+- Revocación de asignaciones de rol — ya diferida explícitamente a ENG-018.
+- Filtros, paginación y retención en `Modules\Audit` (`GetAuditLogsQuery` no tiene parámetros, `AuditRepository::all()` devuelve todo sin paginar pese a que la tabla ya tiene los índices listos) — limitación de la API de consulta, no del catálogo de eventos, hallazgo documentado para una historia futura.
+
+### Validaciones
+
+- 4 tests nuevos (2 `ActivateUserUseCaseTest`, 2 `DeactivateUserUseCaseTest`), 2 tests Feature actualizados en `AdminUserManagementTest` con verificación de auditoría.
+- Suite completa de `Modules\Identity`: 122 tests, 341 assertions, en verde.
+- Suite completa del repositorio (`tests/` + `modules/`): 2204 tests, 6106 assertions, en verde.
+- Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo.
+
+**Estado:** Finalizado.
