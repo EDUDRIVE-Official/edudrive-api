@@ -353,9 +353,11 @@ Políticas de acceso.
 Pruebas de autorización.
 ENG-014 — Contexto organizacional
 
-Estado: Pendiente
+Estado: Completado
 
 Nota (2026-07-31): `RoleAssignment` incluye un campo `organizationId` opcional desde la historia de alcance reducido (ver sección 25), pero `PermissionChecker` lo ignora por completo: no hay cambio de contexto, ni restricción de datos por institución, ni ninguna otra lógica de autorización que lo utilice todavía. El campo existe en el modelo, pero no está funcionalmente conectado, por lo que esta historia se mantiene en Pendiente.
+
+Nota (2026-08-30): la investigación confirmó que ENG-014 es transversal (el núcleo `PermissionChecker` lo consume `EnsurePermission` en casi toda la aplicación) pero que solo existía UN consumidor real y demostrado del gap: `OrganizationReportController` (los 4 reportes institucionales de `Modules\Academic`) — un administrador institucional con el permiso `reports.view` veía los reportes de todas las organizaciones del sistema, no solo la suya, porque el filtro vacío caía a "todas". El usuario decidió no tocar `PermissionChecker::userHasPermission()` (su comportamiento global se preserva exactamente, evitando auditar cada ruta protegida por `permission:*` en toda la aplicación) y en su lugar se agregó una capacidad aditiva: `Modules\Authorization\Application\Services\AccessibleOrganizationsResolver`, que devuelve `null` (sin restricción) si el usuario tiene alguna asignación global (`organizationId === null`) que otorga el permiso en cuestión, o la lista de organizaciones de sus asignaciones con alcance institucional. Se aplicó esta primitiva únicamente al consumidor real ya demostrado: sin filtro explícito, un usuario con alcance restringido ve solo sus organizaciones; si pide explícitamente una organización fuera de su alcance, recibe 403 (`OrganizationNotAccessible`) en vez de un subconjunto silencioso. El resto de endpoints que ya aceptan `organization_id` (listado de enrollments, asignación de roles) queda documentado como candidato a retrofit incremental futuro, no se tocó aquí. No se construyó ningún mecanismo explícito de "cambio de contexto" (header/sesión) — el alcance se deriva implícitamente de las `RoleAssignment` del usuario en cada petición. Detalle completo en `docs/plans/2026-08-30-contexto-organizacional-eng014-design.md`.
 
 Incluye:
 

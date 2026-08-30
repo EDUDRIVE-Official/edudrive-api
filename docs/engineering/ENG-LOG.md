@@ -2550,3 +2550,30 @@ Cualquier diferenciación de `abilities`/expiración por tipo de cliente/aplicac
 - Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo.
 
 **Estado:** Finalizado.
+
+## 2026-08-30 — IMP-091 (Cierre de ENG-014 — Contexto organizacional)
+
+### Alcance acordado con el usuario
+
+Primitivas de autorización con alcance por organización, aplicadas únicamente al consumidor real ya demostrado (`OrganizationReportController`); el retrofit de otros endpoints que ya aceptan `organization_id` queda documentado como candidato futuro.
+
+### Completado
+
+- La investigación confirmó que `RoleAssignmentPermissionChecker::userHasPermission()` ignora `organizationId` por completo (booleano global por usuario), y que el único consumidor real y demostrado del gap era `OrganizationReportController`: un administrador institucional con `reports.view` veía los reportes de todas las organizaciones, no solo la suya.
+- **No se tocó `PermissionChecker`** — su comportamiento global se preservó exactamente, evitando el retrofit masivo de auditar cada ruta `permission:*` de la aplicación.
+- **`Modules\Authorization\Application\Services\AccessibleOrganizationsResolver`** (nueva interfaz, aditiva): `resolveForPermission(userId, permission): ?array` — `null` si el usuario tiene alguna `RoleAssignment` con `organizationId === null` que otorga ese permiso (grant global, ej. `SuperAdmin`); si no, la lista de organizaciones de sus asignaciones con alcance institucional. Implementación `RoleAssignmentAccessibleOrganizationsResolver`.
+- **`Modules\Authorization\Application\Exceptions\OrganizationNotAccessible`** (`DomainException`, 403) — se lanza cuando un usuario con alcance restringido pide explícitamente una organización fuera de su alcance, en vez de devolver un subconjunto silencioso.
+- **`OrganizationReportController`**: deja de ser estático, aplica el resolver antes de despachar cada uno de los 4 reportes institucionales. Sin filtro explícito, un usuario con alcance restringido ve solo sus organizaciones; con alcance global (ej. `SuperAdmin`), comportamiento idéntico al anterior.
+
+### Fuera de alcance a propósito
+
+Retrofit de otros endpoints que ya aceptan `organization_id` (listado de enrollments, asignación de roles); cualquier mecanismo explícito de "cambio de contexto" (header/sesión); cambios a `PermissionChecker`/`EnsurePermission`.
+
+### Validaciones
+
+- 4 tests nuevos en `RoleAssignmentAccessibleOrganizationsResolverTest` (Unit), 3 tests nuevos en `OrganizationReportTest` (Feature) — los 4 tests preexistentes de ese archivo (que usan el helper compartido `actingAsRole()`, siempre con `organizationId: null`) siguieron pasando sin cambios, confirmando que el comportamiento para asignaciones globales es idéntico al anterior.
+- Suite completa de `Modules\Authorization` (69 tests) y `Modules\Academic` (885 tests) en verde.
+- Suite completa del repositorio (`tests/` + `modules/`): 2200 tests, 6090 assertions, en verde.
+- Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo.
+
+**Estado:** Finalizado.
