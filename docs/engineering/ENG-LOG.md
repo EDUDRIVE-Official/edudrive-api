@@ -2494,3 +2494,31 @@ Enlace clicable a un frontend, cualquier cambio a `UserModel` para usar el broke
 - Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo.
 
 **Estado:** Finalizado.
+
+## 2026-08-30 — IMP-089 (Cierre de ENG-010 — Verificación de correo electrónico)
+
+### Alcance acordado con el usuario
+
+Mecanismo propio de token (mismo patrón que ENG-009), eliminando la ruta pública insegura de activación encontrada en la investigación, sin middleware nuevo para "restricción de acciones para correos no verificados" (el login ya es el gate real).
+
+### Completado
+
+- **Hallazgo de seguridad real corregido**: `POST /api/v1/auth/users/{userId}/activate` era una ruta pública (sin token, sin autenticación, solo `throttle:activate` por IP) que activaba cualquier cuenta conociendo su UUID — eliminada junto con el `RateLimiter` que solo ella usaba. La ruta administrativa equivalente (`/api/v1/users/{userId}/activate`, protegida por `permission:users.manage`) se mantuvo intacta.
+- **Domain**: `EmailVerificationToken` (mismo patrón que `PasswordResetToken`, TTL de 60 minutos), `EmailVerificationTokenRepository`, `InvalidEmailVerificationToken` (`DomainException`, 422).
+- **Infrastructure**: nueva tabla `email_verification_tokens` (a diferencia de ENG-009, aquí no había ninguna tabla reutilizable) + `EmailVerificationTokenModel`/`Mapper`/`EloquentEmailVerificationTokenRepository`, mismo patrón que sus equivalentes de `PasswordResetToken`.
+- **Application**: `SendEmailVerificationUseCase` (genera token, reemplaza el previo, envía correo, no hace nada si el usuario no existe o ya está verificado — reutilizado tanto para el envío automático como para el reenvío público) y `VerifyEmailUseCase` (valida token, `user->activate(now)`, borra el token, audita).
+- **`RegisterUserUseCase`** gana `SendEmailVerificationUseCase` como cuarta dependencia — todo registro dispara automáticamente el envío del correo de verificación. **`ImportUsersJob`** (importación masiva) actualizado igual, para que los usuarios importados en lote no queden permanentemente bloqueados sin forma de verificarse (antes de esta historia, nada más los activaba).
+- **Presentation**: `POST /api/v1/auth/verify-email` (email+token) y `POST /api/v1/auth/resend-verification` (email, mismo patrón de no revelar existencia que `forgot-password`), con dos `RateLimiter` nuevos.
+
+### Fuera de alcance a propósito
+
+Middleware `EnsureEmailIsVerified` (el login ya es el gate real — `canAuthenticate()` exige `Active`, alcanzable ahora vía este flujo de autoverificación), enlace clicable a un frontend (no existe `FRONTEND_URL`), cualquier cambio a la ruta administrativa de activación, limpieza de tokens vencidos vía scheduler.
+
+### Validaciones
+
+- TDD por capa: Domain (5 tests), Application (9 tests), Infrastructure/Integration (4 tests), Presentation/Feature (6 tests, flujo completo end-to-end desde el registro hasta el login post-verificación).
+- Suite completa de `Modules\Identity`: 112 tests, 318 assertions, en verde (incluye `BulkImportUsersTest`, `DateOfBirthRegistrationTest`, `AdminUserManagementTest` que dependen indirectamente de `RegisterUserUseCase`).
+- Suite completa del repositorio (`tests/` + `modules/`): 2187 tests, 6067 assertions, en verde.
+- Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo. Migración aplicada contra Postgres real de desarrollo.
+
+**Estado:** Finalizado.

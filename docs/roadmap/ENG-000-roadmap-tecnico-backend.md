@@ -289,7 +289,9 @@ POST /api/v1/auth/forgot-password
 POST /api/v1/auth/reset-password
 ENG-010 — Verificación de correo electrónico
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-30): la investigación encontró que el registro no enviaba ningún correo ni disparaba ninguna verificación, dejando al usuario sin forma de activarse a sí mismo. Encontró además un hallazgo de seguridad real: existía una ruta pública `POST /api/v1/auth/users/{userId}/activate` que activaba cualquier cuenta conociendo su UUID, sin token ni autenticación (`ActivateUserUseCase` no valida propiedad del correo). El usuario decidió eliminarla, reemplazada por el flujo de esta historia; la ruta administrativa equivalente (protegida por permiso) se mantuvo intacta. Se construyó el mismo patrón de token propio que ENG-009: entidad `EmailVerificationToken` (tabla nueva, `email_verification_tokens`, TTL de 60 minutos), `SendEmailVerificationUseCase` (reutilizado tanto para el envío automático al registrarse como para el reenvío público, sin revelar si un correo existe o ya fue verificado) y `VerifyEmailUseCase` (activa al usuario — `status=Active` + `emailVerifiedAt`, vía el `activate()` ya existente en la entidad `User` — borra el token, audita). Sobre la viñeta "Restricción de acciones para correos no verificados", el usuario decidió no construir un middleware nuevo: el login ya es el gate real, ya que `canAuthenticate()` exige `Active`, estado que ahora se alcanza a través de este flujo de autoverificación (antes solo alcanzable por activación administrativa). `RegisterUserUseCase` y la importación masiva de usuarios (`ImportUsersJob`) quedaron conectados al envío automático, para que ningún usuario nuevo quede permanentemente bloqueado sin forma de verificarse. Detalle completo en `docs/plans/2026-08-29-verificacion-correo-eng010-design.md`.
 
 Incluye:
 
