@@ -2688,3 +2688,31 @@ Reutilización de `Modules\Certification` para "certificaciones" del docente. Re
 - Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo. Migración aplicada contra Postgres real de desarrollo.
 
 **Estado:** Finalizado.
+
+## 2026-08-30 — IMP-096 (Cierre de ENG-023 — Consentimientos y privacidad)
+
+### Alcance acordado con el usuario
+
+Solo el gap real encontrado (revocación de consentimiento); implementada junto con ENG-022 por su fuerte acoplamiento.
+
+### Completado
+
+- Confirmado que `Modules\Legal` (ENG-070/071) ya cubría consentimiento informado/tratamiento de datos, consentimiento parental (autodeclaración), historial de aceptación (acumulación) y versionado de términos (incremental por `PolicyKey`).
+- **`UserConsent`** gana `revokedAt` (`?DateTimeImmutable`), `revoke(DateTimeImmutable $at)` (lanza `ConsentAlreadyRevoked` si ya estaba revocado), `revokedAt()`/`isRevoked()`.
+- **`UserConsentRepository`** gana `findLatestActiveByUserAndPolicy(userId, policyKey): ?UserConsent` (el más reciente por `accepted_at` con `revoked_at IS NULL`). Actualizados 2 fakes de test existentes.
+- **`RevokeConsentHandler`**: busca el consentimiento activo más reciente del usuario para una política; `ConsentNotFound` (404) si no existe.
+- **`DELETE /api/v1/legal/consents/{policyKey}`** (`auth:sanctum`, autoservicio, sin permiso adicional).
+- `ConsentResponse` gana `revoked_at`, reflejado en el historial ya expuesto por `GET /me/consents`.
+
+### Fuera de alcance a propósito
+
+Contenido/texto de las políticas legales (`ConsentPolicy` sigue sin almacenarlo) — ya diferido en ENG-070.
+
+### Validaciones
+
+- 3 tests nuevos en `UserConsentTest` (Domain), 2 en `LegalHandlerTest` (Application), 3 en `LegalConsentTest` (Feature).
+- Suite completa de `Modules\Legal`: 44 tests, 99 assertions, en verde.
+- Suite completa del repositorio (`tests/` + `modules/`): 2280 tests, 6305 assertions, en verde.
+- Pint ✅ y PHPStan (`--memory-limit=512M`) ✅ sin errores sobre el repositorio completo. Migración aplicada contra Postgres real de desarrollo.
+
+**Estado:** Finalizado.

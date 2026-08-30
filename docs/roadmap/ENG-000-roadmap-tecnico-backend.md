@@ -478,7 +478,9 @@ Notificaciones.
 Restricciones de privacidad.
 ENG-023 — Consentimientos y privacidad
 
-Estado: Pendiente
+Estado: Completado
+
+Nota (2026-08-30): la investigación confirmó que `Modules\Legal` (ENG-070/071, construido antes de esta sesión) ya cubría 5 de las 6 viñetas: consentimiento informado y tratamiento de datos (`ConsentPolicy` + `UserConsent::accept()`), consentimiento parental (autodeclaración de texto libre cuando `User::isMinor()`, sin verificación real de identidad del tutor — decisión ya tomada explícitamente en ENG-071), historial de aceptación (modelo de acumulación, cada aceptación inserta un registro nuevo, nunca sobrescribe) y versionado de términos (`ConsentPolicy` versiona incrementalmente por clave; el contenido/texto legal en sí sigue sin almacenarse, ya diferido en ENG-070). El único gap real: **revocación de consentimiento**. Se agregó `UserConsent::revoke()` (con invariante de no revocar dos veces), `UserConsentRepository::findLatestActiveByUserAndPolicy()`, y `DELETE /api/v1/legal/consents/{policyKey}` (autoservicio, el usuario revoca su propio consentimiento). Implementada junto con ENG-022 por su fuerte acoplamiento (ENG-022 incluye "Consentimientos" como viñeta, resuelta enteramente por este módulo). Detalle completo en `docs/plans/2026-08-30-tutores-consentimientos-eng022-eng023-design.md`.
 
 Incluye:
 
