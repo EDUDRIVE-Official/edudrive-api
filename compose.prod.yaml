@@ -1,0 +1,150 @@
+name: edudrive-prod
+
+# Compose de produccion para un unico VPS (ver docs/operaciones/despliegue-vps.md).
+# Diferencias clave frente al compose.yaml de desarrollo:
+#   - app/queue-worker/scheduler usan la imagen ya publicada por CI
+#     (ghcr.io/edudrive-official/edudrive-api), nunca un bind mount del
+#     codigo fuente.
+#   - nginx se construye localmente desde el target "nginx" del mismo
+#     Dockerfile (assets Vite ya compilados dentro de la imagen), en vez
+#     de servir archivos desde un volumen compartido.
+#   - postgres/redis/minio no exponen puertos al host: solo son
+#     alcanzables entre contenedores de este mismo compose.
+#   - Sin mailpit (correo real se configura via .env, ver
+#     .env.production.example).
+#   - Sin "container_name" fijos (a diferencia del compose.yaml de
+#     desarrollo): evita choques si alguna vez ambos compose corrieran en
+#     la misma maquina. Los comandos operan por nombre de servicio
+#     (ej. "docker compose -f compose.prod.yaml exec app ...").
+
+services:
+  app:
+    image: ghcr.io/edudrive-official/edudrive-api:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - edudrive-storage:/var/www/html/storage
+    networks:
+      - edudrive-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  queue-worker:
+    image: ghcr.io/edudrive-official/edudrive-api:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    command: php artisan queue:work redis --sleep=3 --max-time=3600
+    env_file:
+      - .env
+    volumes:
+      - edudrive-storage:/var/www/html/storage
+    networks:
+      - edudrive-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  scheduler:
+    image: ghcr.io/edudrive-official/edudrive-api:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    command: php artisan schedule:work
+    env_file:
+      - .env
+    volumes:
+      - edudrive-storage:/var/www/html/storage
+    networks:
+      - edudrive-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      target: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    networks:
+      - edudrive-network
+    depends_on:
+      - app
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --spider
+        - -q
+        - http://localhost/up
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-edudrive}
+      POSTGRES_USER: ${DB_USERNAME:-edudrive}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - edudrive-postgres-data:/var/lib/postgresql/data
+    networks:
+      - edudrive-network
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${DB_USERNAME:-edudrive} -d ${DB_DATABASE:-edudrive}
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+    volumes:
+      - edudrive-redis-data:/data
+    networks:
+      - edudrive-network
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - edudrive-minio-data:/data
+    networks:
+      - edudrive-network
+
+networks:
+  edudrive-network:
+    driver: bridge
+
+volumes:
+  edudrive-postgres-data:
+  edudrive-redis-data:
+  edudrive-minio-data:
+  edudrive-storage:

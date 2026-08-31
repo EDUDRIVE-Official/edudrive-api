@@ -28,12 +28,10 @@ validar el código.
 
 ## Runbook manual: migraciones, despliegue y rollback
 
-No existe, a la fecha, ningún servidor, orquestador ni proveedor de hosting
-real decidido para este proyecto (ver `docs/operaciones/ambientes.md`).
-Automatizar estos tres pasos contra un destino inventado sería construir
-infraestructura no verificable, así que quedan documentados como
-procedimiento manual, listo para conectarse a un workflow real el día que
-exista una decisión de infraestructura.
+Este runbook manual ya está automatizado (a mano, sin disparo automático
+desde CI) contra un destino real: un único VPS Contabo. Ver
+`docs/operaciones/despliegue-vps.md` y `scripts/deploy.sh`. Las secciones
+siguientes describen el procedimiento en el que se basa ese script.
 
 ### Migraciones controladas
 
