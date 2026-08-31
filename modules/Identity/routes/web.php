@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use Modules\Identity\Presentation\Http\Controllers\LoginWebController;
 use Modules\Identity\Presentation\Http\Controllers\LogoutWebController;
+use Modules\Identity\Presentation\Http\Controllers\StudentProfileWebController;
 use Modules\Identity\Presentation\Http\Controllers\UserWebController;
 
 Route::middleware('web')->group(function (): void {
@@ -15,6 +16,9 @@ Route::middleware('web')->group(function (): void {
 
     Route::middleware('auth')->group(function (): void {
         Route::post('/logout', LogoutWebController::class)->name('logout');
+
+        Route::get('/mi-perfil', [StudentProfileWebController::class, 'show'])->name('student-profile.show');
+        Route::put('/mi-perfil', [StudentProfileWebController::class, 'update'])->name('student-profile.update');
 
         Route::middleware('permission:users.view')->group(function (): void {
             Route::get('/users', [UserWebController::class, 'index'])->name('users.index');

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use DateTimeImmutable;
 use Illuminate\Support\Str;
+use Modules\Authorization\Domain\Entities\RoleAssignment;
+use Modules\Authorization\Domain\Enums\Role;
+use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
 use Modules\Identity\Application\Services\PasswordHasher;
 use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Repositories\UserRepository;
@@ -16,7 +19,7 @@ it('muestra el formulario de login a un invitado', function (): void {
     $this->get('/login')->assertOk()->assertSeeText('Ingresar');
 });
 
-it('inicia sesión con credenciales válidas y redirige al panel de organizaciones', function (): void {
+it('inicia sesión con credenciales válidas y redirige a mi perfil cuando no tiene permisos administrativos', function (): void {
     /** @var TestCase $this */
     $repository = app(UserRepository::class);
     $hasher = app(PasswordHasher::class);
@@ -35,8 +38,39 @@ it('inicia sesión con credenciales válidas y redirige al panel de organizacion
         'password' => 'clave-valida-123',
     ]);
 
-    $response->assertRedirect('/organizations');
+    $response->assertRedirect('/mi-perfil');
     $this->assertAuthenticatedAs(UserModel::query()->findOrFail($user->id()));
+});
+
+it('inicia sesión con credenciales válidas y redirige al panel de organizaciones cuando tiene permisos administrativos', function (): void {
+    /** @var TestCase $this */
+    $repository = app(UserRepository::class);
+    $hasher = app(PasswordHasher::class);
+
+    $user = User::register(
+        id: (string) Str::uuid(),
+        name: 'Administradora Web',
+        email: Email::fromString(sprintf('%s@edudrive.cr', Str::uuid())),
+        passwordHash: $hasher->hash('clave-valida-123'),
+    );
+    $user->activate(new DateTimeImmutable);
+    $repository->save($user);
+
+    app(RoleAssignmentRepository::class)->save(
+        RoleAssignment::assign(
+            id: (string) Str::uuid(),
+            userId: $user->id(),
+            role: Role::SuperAdmin,
+            organizationId: null,
+        ),
+    );
+
+    $response = $this->post('/login', [
+        'email' => $user->email()->value(),
+        'password' => 'clave-valida-123',
+    ]);
+
+    $response->assertRedirect('/organizations');
 });
 
 it('registra la fecha de ultimo inicio de sesion al iniciar sesion', function (): void {

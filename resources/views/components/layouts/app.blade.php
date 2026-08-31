@@ -25,6 +25,7 @@
                         <a href="{{ route('courses.index') }}" class="font-sans text-sm text-text hover:text-primary">Cursos</a>
                         <a href="{{ route('users.index') }}" class="font-sans text-sm text-text hover:text-primary">Usuarios</a>
                         <a href="{{ route('roles.assign') }}" class="font-sans text-sm text-text hover:text-primary">Asignar rol</a>
+                        <a href="{{ route('student-profile.show') }}" class="font-sans text-sm text-text hover:text-primary">Mi perfil</a>
                     </nav>
                 @endauth
             </div>

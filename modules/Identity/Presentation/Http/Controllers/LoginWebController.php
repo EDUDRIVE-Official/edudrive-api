@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Modules\Authorization\Application\Services\PermissionChecker;
+use Modules\Authorization\Domain\Enums\Permission;
 use Modules\Identity\Application\Commands\LoginUserCommand;
 use Modules\Identity\Application\UseCases\LoginUserUseCase;
 use Modules\Identity\Domain\Exceptions\InvalidCredentials;
@@ -19,6 +21,7 @@ final class LoginWebController extends Controller
 {
     public function __construct(
         private readonly LoginUserUseCase $useCase,
+        private readonly PermissionChecker $permissionChecker,
     ) {}
 
     public function create(): View
@@ -48,6 +51,11 @@ final class LoginWebController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect('/organizations');
+        $isAdministrator = $this->permissionChecker->userHasPermission(
+            $response->userId,
+            Permission::ManageUsers,
+        );
+
+        return redirect($isAdministrator ? '/organizations' : '/mi-perfil');
     }
 }
