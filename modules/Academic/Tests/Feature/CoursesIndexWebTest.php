@@ -81,3 +81,37 @@ it('muestra el botón "Nuevo curso" a un superadministrador', function (): void 
     $response->assertOk();
     $response->assertSee('href="'.route('courses.create').'"', false);
 });
+
+it('muestra el boton segun el estado de revision de cada curso', function (): void {
+    /** @var TestCase $this */
+    $user = actingAsSuperAdminUser();
+    $this->actingAs($user, 'web');
+
+    $draft = createDraftCourseForPublishing('EDU-305');
+
+    $underReview = createDraftCourseForPublishing('EDU-306');
+    $this->post("/courses/{$underReview->id()->value()}/submit-for-review");
+
+    $approved = createDraftCourseForPublishing('EDU-307');
+    $this->post("/courses/{$approved->id()->value()}/submit-for-review");
+    $this->post("/courses/{$approved->id()->value()}/approve");
+
+    $published = createDraftCourseForPublishing('EDU-308');
+    $this->post("/courses/{$published->id()->value()}/submit-for-review");
+    $this->post("/courses/{$published->id()->value()}/approve");
+    $this->post("/courses/{$published->id()->value()}/publish");
+
+    $response = $this->get('/courses');
+
+    $response->assertOk();
+    $response->assertSee('action="'.route('courses.submitForReview', $draft->id()->value()).'"', false);
+    $response->assertSee('action="'.route('courses.archive', $draft->id()->value()).'"', false);
+
+    $response->assertSee('action="'.route('courses.approve', $underReview->id()->value()).'"', false);
+
+    $response->assertSee('action="'.route('courses.publish', $approved->id()->value()).'"', false);
+
+    $response->assertDontSee('action="'.route('courses.submitForReview', $published->id()->value()).'"', false);
+    $response->assertDontSee('action="'.route('courses.approve', $published->id()->value()).'"', false);
+    $response->assertDontSee('action="'.route('courses.publish', $published->id()->value()).'"', false);
+});

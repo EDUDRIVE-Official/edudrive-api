@@ -16,6 +16,10 @@
             <p class="font-sans text-sm text-success">{{ session('status') }}</p>
         @endif
 
+        @if (session('error'))
+            <p class="font-sans text-sm text-danger-text">{{ session('error') }}</p>
+        @endif
+
         <x-ui.table>
             <x-slot:head>
                 <tr>
@@ -24,6 +28,7 @@
                     <th scope="col" class="px-4 py-2">Modalidad</th>
                     <th scope="col" class="px-4 py-2">Duración</th>
                     <th scope="col" class="px-4 py-2">Estado</th>
+                    <th scope="col" class="px-4 py-2">Acciones</th>
                 </tr>
             </x-slot:head>
             @forelse ($courses as $course)
@@ -47,10 +52,44 @@
                         @endphp
                         <x-ui.badge :variant="$statusVariant">{{ $status->label() }}</x-ui.badge>
                     </td>
+                    <td class="px-4 py-2">
+                        @if ($canManage)
+                            <div class="flex gap-2">
+                                @if ($status === \Modules\Academic\Domain\Enums\CourseStatus::Draft)
+                                    <form method="POST" action="{{ route('courses.submitForReview', $course['id']) }}">
+                                        @csrf
+                                        <x-ui.button type="submit" variant="secondary" size="sm">Enviar a revisión</x-ui.button>
+                                    </form>
+                                @endif
+                                @if ($status === \Modules\Academic\Domain\Enums\CourseStatus::UnderReview)
+                                    <form method="POST" action="{{ route('courses.approve', $course['id']) }}">
+                                        @csrf
+                                        <x-ui.button type="submit" variant="secondary" size="sm">Aprobar</x-ui.button>
+                                    </form>
+                                @endif
+                                @if ($status === \Modules\Academic\Domain\Enums\CourseStatus::Approved)
+                                    <form method="POST" action="{{ route('courses.publish', $course['id']) }}">
+                                        @csrf
+                                        <x-ui.button type="submit" variant="secondary" size="sm">Publicar</x-ui.button>
+                                    </form>
+                                @endif
+                                @if (! $status->isArchived())
+                                    <form
+                                        method="POST"
+                                        action="{{ route('courses.archive', $course['id']) }}"
+                                        onsubmit="return confirm('¿Seguro que querés archivar este curso? No se puede deshacer.');"
+                                    >
+                                        @csrf
+                                        <x-ui.button type="submit" variant="danger" size="sm">Archivar</x-ui.button>
+                                    </form>
+                                @endif
+                            </div>
+                        @endif
+                    </td>
                 </tr>
             @empty
                 <tr>
-                    <td class="px-4 py-2 text-text-secondary" colspan="5">Todavía no hay cursos registrados.</td>
+                    <td class="px-4 py-2 text-text-secondary" colspan="6">Todavía no hay cursos registrados.</td>
                 </tr>
             @endforelse
         </x-ui.table>

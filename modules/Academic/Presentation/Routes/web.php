@@ -17,5 +17,21 @@ Route::middleware(['web', 'auth'])->group(function (): void {
 
         Route::post('/courses', [CourseWebController::class, 'store'])
             ->name('courses.store');
+
+        Route::post('/courses/{courseId}/submit-for-review', [CourseWebController::class, 'submitForReview'])
+            ->whereUuid('courseId')
+            ->name('courses.submitForReview');
+
+        Route::post('/courses/{courseId}/approve', [CourseWebController::class, 'approve'])
+            ->whereUuid('courseId')
+            ->name('courses.approve');
+
+        Route::post('/courses/{courseId}/publish', [CourseWebController::class, 'publish'])
+            ->whereUuid('courseId')
+            ->name('courses.publish');
+
+        Route::post('/courses/{courseId}/archive', [CourseWebController::class, 'archive'])
+            ->whereUuid('courseId')
+            ->name('courses.archive');
     });
 });
