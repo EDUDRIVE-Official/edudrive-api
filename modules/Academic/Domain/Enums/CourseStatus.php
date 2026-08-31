@@ -36,4 +36,15 @@ enum CourseStatus: string
     {
         return $this === self::Archived;
     }
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Draft => 'Borrador',
+            self::UnderReview => 'En revisión',
+            self::Approved => 'Aprobado',
+            self::Published => 'Publicado',
+            self::Archived => 'Archivado',
+        };
+    }
 }
