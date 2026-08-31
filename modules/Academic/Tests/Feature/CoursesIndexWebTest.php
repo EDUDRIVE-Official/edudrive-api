@@ -70,3 +70,14 @@ it('muestra la lista con etiquetas legibles a un usuario con permiso de vista', 
     $response->assertSeeText('Virtual');
     $response->assertSeeText('Borrador');
 });
+
+it('muestra el botón "Nuevo curso" a un superadministrador', function (): void {
+    /** @var TestCase $this */
+    $user = actingAsSuperAdminUser();
+    $this->actingAs($user, 'web');
+
+    $response = $this->get('/courses');
+
+    $response->assertOk();
+    $response->assertSee('href="'.route('courses.create').'"', false);
+});

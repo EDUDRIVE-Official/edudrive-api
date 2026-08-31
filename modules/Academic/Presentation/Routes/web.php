@@ -10,4 +10,12 @@ Route::middleware(['web', 'auth'])->group(function (): void {
         Route::get('/courses', [CourseWebController::class, 'index'])
             ->name('courses.index');
     });
+
+    Route::middleware('permission:courses.manage')->group(function (): void {
+        Route::get('/courses/create', [CourseWebController::class, 'create'])
+            ->name('courses.create');
+
+        Route::post('/courses', [CourseWebController::class, 'store'])
+            ->name('courses.store');
+    });
 });

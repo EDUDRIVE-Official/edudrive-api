@@ -1,6 +1,16 @@
 <x-layouts.app title="EDUDRIVE — Cursos">
     <div class="flex flex-col gap-6">
-        <h1 class="font-heading text-2xl font-bold">Cursos</h1>
+        <div class="flex items-center justify-between">
+            <h1 class="font-heading text-2xl font-bold">Cursos</h1>
+            @if ($canManage)
+                <a
+                    href="{{ route('courses.create') }}"
+                    class="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-sm bg-primary px-4 font-sans font-medium text-white transition hover:bg-secondary focus-visible:outline-none focus-visible:shadow-focus"
+                >
+                    Nuevo curso
+                </a>
+            @endif
+        </div>
 
         @if (session('status'))
             <p class="font-sans text-sm text-success">{{ session('status') }}</p>
