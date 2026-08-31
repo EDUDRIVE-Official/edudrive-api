@@ -23,6 +23,7 @@
                     <nav class="flex items-center gap-4">
                         <a href="{{ route('organizations.index') }}" class="font-sans text-sm text-text hover:text-primary">Organizaciones</a>
                         <a href="{{ route('courses.index') }}" class="font-sans text-sm text-text hover:text-primary">Cursos</a>
+                        <a href="{{ route('users.index') }}" class="font-sans text-sm text-text hover:text-primary">Usuarios</a>
                     </nav>
                 @endauth
             </div>
