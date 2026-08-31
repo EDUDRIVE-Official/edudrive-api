@@ -24,6 +24,7 @@
                         <a href="{{ route('organizations.index') }}" class="font-sans text-sm text-text hover:text-primary">Organizaciones</a>
                         <a href="{{ route('courses.index') }}" class="font-sans text-sm text-text hover:text-primary">Cursos</a>
                         <a href="{{ route('users.index') }}" class="font-sans text-sm text-text hover:text-primary">Usuarios</a>
+                        <a href="{{ route('roles.assign') }}" class="font-sans text-sm text-text hover:text-primary">Asignar rol</a>
                     </nav>
                 @endauth
             </div>
