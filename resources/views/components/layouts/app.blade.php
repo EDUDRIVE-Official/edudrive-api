@@ -17,7 +17,15 @@
 <body class="min-h-screen bg-background font-sans text-text">
     <header class="border-b border-border bg-surface">
         <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-            <span class="font-heading text-lg font-bold text-text">EDUDRIVE</span>
+            <div class="flex items-center gap-6">
+                <span class="font-heading text-lg font-bold text-text">EDUDRIVE</span>
+                @auth
+                    <nav class="flex items-center gap-4">
+                        <a href="{{ route('organizations.index') }}" class="font-sans text-sm text-text hover:text-primary">Organizaciones</a>
+                        <a href="{{ route('courses.index') }}" class="font-sans text-sm text-text hover:text-primary">Cursos</a>
+                    </nav>
+                @endauth
+            </div>
             <div class="flex items-center gap-4">
                 @auth
                     <span class="font-sans text-sm text-text-secondary">
