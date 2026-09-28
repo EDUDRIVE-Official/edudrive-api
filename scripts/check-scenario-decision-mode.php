@@ -38,6 +38,7 @@ foreach (['true', 'false', 0, 1, null, [], new stdClass] as $value) {
         ScenarioContentBlock::fromPayload($id, 1, [...$payload, 'stop_at_decision_point' => $value]);
     } catch (InvalidContentBlock) {
         $checks++;
+
         continue;
     }
     throw new RuntimeException('Invalid flag accepted.');

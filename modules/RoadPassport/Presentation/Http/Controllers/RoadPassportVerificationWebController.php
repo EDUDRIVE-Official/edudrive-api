@@ -40,12 +40,12 @@ final class RoadPassportVerificationWebController
                 $passport = [
                     'status' => $roadPassport->status()->value,
                     'level' => $roadPassport->level(),
-                    'issued_at' => Carbon::instance($roadPassport->issuedAt())->locale('es')->translatedFormat('j \\d\\e F \\d\\e Y'),
+                    'issued_at' => Carbon::instance($roadPassport->issuedAt())->settings(['locale' => 'es'])->translatedFormat('j \\d\\e F \\d\\e Y'),
                     'trust_score' => (new RoadPassportTrustCalculator)->calculate($roadPassport, $verifiedAt->toDateTimeImmutable()),
                     'latest_evidence_at' => $latestEvidenceAt === null
                         ? 'Sin evidencias registradas'
-                        : Carbon::instance($latestEvidenceAt)->timezone((string) config('app.timezone'))->locale('es')->translatedFormat('j \\d\\e F \\d\\e Y, g:i a'),
-                    'verified_at' => $verifiedAt->locale('es')->translatedFormat('j \\d\\e F \\d\\e Y, g:i:s a'),
+                        : Carbon::instance($latestEvidenceAt)->timezone((string) config('app.timezone'))->settings(['locale' => 'es'])->translatedFormat('j \\d\\e F \\d\\e Y, g:i a'),
+                    'verified_at' => $verifiedAt->settings(['locale' => 'es'])->translatedFormat('j \\d\\e F \\d\\e Y, g:i:s a'),
                     'digital_count' => count(array_filter($evidence, static fn ($item): bool => in_array($item->type, [EvidenceType::LessonCompleted, EvidenceType::CourseCompleted, EvidenceType::ExamPassed], true))),
                     'observed_practice_count' => count(array_filter($evidence, static fn ($item): bool => $item->type === EvidenceType::GuidedPracticeObserved)),
                     'reflection_count' => count(array_filter($evidence, static fn ($item): bool => $item->type === EvidenceType::StudentReflection)),

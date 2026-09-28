@@ -40,3 +40,6 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /.worktrees
+
+# Configuración privada de herramientas del equipo
+/.claude/

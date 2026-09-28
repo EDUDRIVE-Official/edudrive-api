@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-use Modules\Academic\Application\Commands\PublishCourseCommand;
-use Modules\Academic\Application\UseCases\PublishCourseHandler;
+use Illuminate\Support\Str;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\UnitContentRepository;
 use Modules\Authorization\Domain\Enums\Role;
@@ -26,7 +25,7 @@ it('permite a un estudiante inscribirse y comenzar un curso publicado', function
     $student = actingAsRole(Role::Student);
     $student->forceFill(['date_of_birth' => now()->subYears(8)->toDateString()])->save();
     $passport = RoadPassport::create(
-        RoadPassportId::fromString((string) \Illuminate\Support\Str::uuid()),
+        RoadPassportId::fromString((string) Str::uuid()),
         (string) $student->getAuthIdentifier(),
     );
     app(RoadPassportRepository::class)->save($passport);

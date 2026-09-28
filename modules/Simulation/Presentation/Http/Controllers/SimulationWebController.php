@@ -56,7 +56,7 @@ final class SimulationWebController
         $users = UserModel::query()->whereIn('id', $userIds)->get(['id', 'name', 'email'])->keyBy('id');
         $withUser = static function (array $report) use ($users): array {
             $user = $users->get($report['user_id']);
-            $report['user_name'] = $user?->name ?? 'Usuario no disponible';
+            $report['user_name'] = $user->name ?? 'Usuario no disponible';
             $report['user_email'] = $user?->email;
 
             return $report;

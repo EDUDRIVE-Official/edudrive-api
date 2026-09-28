@@ -68,7 +68,7 @@ final class StudentProfileWebController extends Controller
                 'id' => (string) $item->id,
                 'organization_id' => (string) $item->organization_id,
                 'organization_name' => OrganizationModel::query()->whereKey($item->organization_id)->value('name') ?? 'Organización',
-                'requested_at' => $item->requested_at?->format('d/m/Y'),
+                'requested_at' => $item->requested_at->format('d/m/Y'),
             ])->all();
         $pendingOrganizationIds = collect($data['organization_requests'])->pluck('organization_id');
         $data['available_organizations'] = OrganizationModel::query()->whereNotIn('id', $memberOrganizationIds)

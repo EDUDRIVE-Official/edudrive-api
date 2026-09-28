@@ -15,8 +15,8 @@ use Modules\Academic\Domain\ValueObjects\EnrollmentId;
 use Modules\Authorization\Domain\Enums\Role;
 use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Repositories\UserRepository;
-use Modules\Learning\Domain\Repositories\LearningEventRepository;
 use Modules\Identity\Domain\ValueObjects\Email;
+use Modules\Learning\Domain\Repositories\LearningEventRepository;
 use Tests\TestCase;
 
 uses(RefreshDatabase::class);

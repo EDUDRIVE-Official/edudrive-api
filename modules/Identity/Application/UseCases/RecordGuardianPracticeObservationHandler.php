@@ -77,8 +77,8 @@ final readonly class RecordGuardianPracticeObservationHandler
                 'observer_role' => 'guardian',
                 'guardian_relationship_id' => $relationship->id(),
                 'safe_environment_confirmed' => true,
-                'competency_id' => $design?->competencyId,
-                'indicator_codes' => $design === null ? [] : $design->indicatorCodes,
+                'competency_id' => $design->competencyId,
+                'indicator_codes' => $design->indicatorCodes,
             ],
         ));
 

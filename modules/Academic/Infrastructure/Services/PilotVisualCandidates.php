@@ -13,7 +13,7 @@ final readonly class PilotVisualCandidates
 {
     public function __construct(private PilotVisualReviews $reviews) {}
 
-    /** @return list<array<string, string>> */
+    /** @return array<int, array<array-key, mixed>> */
     public function draftLessons(): array
     {
         return DB::table('academic_lessons as lesson')

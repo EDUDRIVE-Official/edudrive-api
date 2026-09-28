@@ -32,7 +32,7 @@ final class PilotVisualReviewers
         return $designation;
     }
 
-    /** @return list<array<string, mixed>> */
+    /** @return array<int, array<array-key, mixed>> */
     public function all(): array
     {
         return DB::table('academic_pilot_visual_reviewers as reviewer')
@@ -43,7 +43,7 @@ final class PilotVisualReviewers
             ->all();
     }
 
-    /** @return list<array<string, mixed>> */
+    /** @return array<int, array<array-key, mixed>> */
     public function history(): array
     {
         return DB::table('academic_pilot_visual_reviewer_events as event')
@@ -53,7 +53,7 @@ final class PilotVisualReviewers
             ->map(fn ($row): array => (array) $row)->all();
     }
 
-    /** @return list<array<string, mixed>> */
+    /** @return array<int, array<array-key, mixed>> */
     public function coordination(): array
     {
         $reviews = DB::table('academic_pilot_visual_reviews')
@@ -85,7 +85,7 @@ final class PilotVisualReviewers
             ->all();
     }
 
-    /** @return list<array{id: string, name: string, email: string}> */
+    /** @return array<int, array<array-key, mixed>> */
     public function eligibleUsers(): array
     {
         $teacherIds = DB::table('authorization_role_assignments')

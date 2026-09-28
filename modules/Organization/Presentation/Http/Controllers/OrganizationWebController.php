@@ -69,7 +69,7 @@ final class OrganizationWebController
                     $administrator = $usersById->get($administratorId);
 
                     return [
-                        'name' => $administrator?->name ?? 'Cuenta no disponible',
+                        'name' => $administrator->name ?? 'Cuenta no disponible',
                         'email' => $administrator?->email,
                     ];
                 })->values()->all();
@@ -89,7 +89,7 @@ final class OrganizationWebController
             'id' => (string) $item->id,
             'student_name' => UserModel::query()->whereKey($item->user_id)->value('name') ?? 'Estudiante',
             'organization_name' => $organizationNames->get((string) $item->organization_id, 'Organización'),
-            'requested_at' => $item->requested_at?->format('d/m/Y H:i'),
+            'requested_at' => $item->requested_at->format('d/m/Y H:i'),
         ])->all() : [];
 
         return view('organizations.index', [

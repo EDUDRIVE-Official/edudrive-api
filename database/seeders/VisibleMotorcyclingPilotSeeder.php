@@ -35,11 +35,14 @@ use Ramsey\Uuid\Uuid;
 final class VisibleMotorcyclingPilotSeeder extends Seeder
 {
     private const string COURSE_CODE = 'EDU-EXP-004';
+
     private const string COMPETENCY_CODE = 'MOTO-VISIBLE-PREVENTIVA';
 
     public function run(): void
     {
-        if (! app()->environment(['local', 'testing']) || DB::table('academic_courses')->where('code', self::COURSE_CODE)->exists()) return;
+        if (! app()->environment(['local', 'testing']) || DB::table('academic_courses')->where('code', self::COURSE_CODE)->exists()) {
+            return;
+        }
 
         $competencyId = $this->competencyId();
         $course = app(CreateCourseHandler::class)->handle(new CreateCourseCommand(
@@ -80,7 +83,9 @@ final class VisibleMotorcyclingPilotSeeder extends Seeder
     private function competencyId(): string
     {
         $existing = DB::table('academic_competencies')->where('code', self::COMPETENCY_CODE)->value('id');
-        if ($existing !== null) return (string) $existing;
+        if ($existing !== null) {
+            return (string) $existing;
+        }
         $competency = app(CreateCompetencyHandler::class)->handle(new CreateCompetencyCommand(
             self::COMPETENCY_CODE, 'Se moviliza en motocicleta de manera visible y preventiva',
             'Prepara equipo y vehículo, anticipa conflictos y adapta el recorrido conservando margen.', 'vulnerable_road_users', 'foundation',
@@ -91,7 +96,10 @@ final class VisibleMotorcyclingPilotSeeder extends Seeder
             ['MOTO.VISIBLE', 'Elige posición y comunicación que favorecen su detección.'],
             ['MOTO.ANTICIPA', 'Reconoce trayectorias y puntos ciegos antes del conflicto.'],
             ['MOTO.ADAPTA', 'Ajusta o cancela el recorrido cuando disminuye el margen.'],
-        ] as [$code, $description]) app(AddCompetencyIndicatorHandler::class)->handle(new AddCompetencyIndicatorCommand($competency->id, 'MOTO.PREVENCION', $code, $description));
+        ] as [$code, $description]) {
+            app(AddCompetencyIndicatorHandler::class)->handle(new AddCompetencyIndicatorCommand($competency->id, 'MOTO.PREVENCION', $code, $description));
+        }
+
         return $competency->id;
     }
 
@@ -119,6 +127,7 @@ final class VisibleMotorcyclingPilotSeeder extends Seeder
     {
         $indicator = $spec['indicator'];
         $stage = 'pending_review';
+
         return new LessonInput($this->id($spec['code']), $spec['code'], $spec['title'], $spec['objective'], $position === 1 ? 17 : 18, $position, [
             $this->text(1, 'Idea esencial', $spec['text']), $this->decision(2, $spec['first']), $this->decision(3, $spec['second']), $this->text(4, 'Práctica protegida', $spec['practice']),
         ], LessonLearningDesign::fromArray([
@@ -134,6 +143,7 @@ final class VisibleMotorcyclingPilotSeeder extends Seeder
     private function decision(int $position, array $data): ContentBlockInput
     {
         [$title, $context, $safe, $unsafe] = $data;
+
         return new ContentBlockInput((string) Str::uuid(), 'scenario', $position, ['title' => $title, 'context' => $context, 'prompt' => '¿Cuál respuesta conserva mayor margen?', 'accessible_text' => $context.' Compará protección, información y espacio antes de decidir.', 'choices' => [
             ['id' => 'exponer', 'label' => $unsafe, 'feedback' => 'Esta opción reduce información, control o espacio para responder.', 'correct' => false],
             ['id' => 'margen', 'label' => $safe, 'feedback' => 'Correcto. La decisión conserva margen y evita depender de que todo salga perfecto.', 'correct' => true],

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Modules\Academic\Presentation\Http\Controllers\CourseWebController;
+use Modules\Academic\Presentation\Http\Controllers\DescubroCrossingController;
+use Modules\Academic\Presentation\Http\Controllers\EditorialPreviewController;
 use Modules\Academic\Presentation\Http\Controllers\PilotInstrumentController;
 use Modules\Academic\Presentation\Http\Controllers\PilotJourneyController;
 
@@ -20,7 +22,7 @@ Route::middleware(['web', 'auth', 'pilot.reviewer'])->prefix('pilot-instruments'
 });
 
 Route::middleware(['web', 'auth', 'permission:courses.manage'])->prefix('pilot-instruments')->name('pilot-instruments.')->group(function (): void {
-    Route::get('/editorial-preview', \Modules\Academic\Presentation\Http\Controllers\EditorialPreviewController::class)->name('editorial-preview');
+    Route::get('/editorial-preview', EditorialPreviewController::class)->name('editorial-preview');
     Route::get('/', [PilotInstrumentController::class, 'index'])->name('index');
     Route::get('/unit', [PilotInstrumentController::class, 'unit'])->name('unit');
     Route::get('/visual-reviewers', [PilotInstrumentController::class, 'visualReviewers'])->middleware('permission:roles.manage')->name('visual-reviewers');
@@ -46,8 +48,8 @@ Route::middleware(['web', 'auth', 'permission:courses.manage'])->prefix('pilot-i
 });
 
 Route::middleware(['web', 'auth'])->group(function (): void {
-    Route::get('/descubro/cruzar-acompanado', [\Modules\Academic\Presentation\Http\Controllers\DescubroCrossingController::class, 'show'])->name('descubro.crossing.show');
-    Route::post('/descubro/cruzar-acompanado', [\Modules\Academic\Presentation\Http\Controllers\DescubroCrossingController::class, 'update'])->middleware('throttle:60,1')->block()->name('descubro.crossing.update');
+    Route::get('/descubro/cruzar-acompanado', [DescubroCrossingController::class, 'show'])->name('descubro.crossing.show');
+    Route::post('/descubro/cruzar-acompanado', [DescubroCrossingController::class, 'update'])->middleware('throttle:60,1')->block()->name('descubro.crossing.update');
     Route::middleware('permission:courses.view')->group(function (): void {
         Route::get('/courses', [CourseWebController::class, 'index'])
             ->name('courses.index');

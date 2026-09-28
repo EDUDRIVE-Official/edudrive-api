@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Modules\Notification\Application\Services;
 
+use Symfony\Component\Mailer\Bridge\Postmark\Transport\PostmarkTransportFactory;
+
 final class MailDeliveryReadiness
 {
     /**
@@ -26,7 +28,7 @@ final class MailDeliveryReadiness
             [
                 'key' => 'transport',
                 'label' => 'Transporte Postmark instalado',
-                'passed' => class_exists(\Symfony\Component\Mailer\Bridge\Postmark\Transport\PostmarkTransportFactory::class),
+                'passed' => class_exists(PostmarkTransportFactory::class),
                 'guidance' => 'Instalar symfony/postmark-mailer en el proyecto.',
             ],
             [

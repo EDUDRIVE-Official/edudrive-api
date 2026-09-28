@@ -16,7 +16,9 @@ final class EditorialPreviewController
             'lesson' => ['sometimes', 'integer', 'between:1,5'],
             'page' => ['sometimes', 'integer', 'between:1,5'],
         ]);
-        $draft = json_decode(file_get_contents(resource_path('curriculum/editorial/camino-pasajero-v1.json')), true, 512, JSON_THROW_ON_ERROR);
+        $json = file_get_contents(resource_path('curriculum/editorial/camino-pasajero-v1.json'));
+        abort_if($json === false, 500, 'No se pudo leer el material de revisión.');
+        $draft = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         $number = (int) ($data['lesson'] ?? 1);
         $supports = require resource_path('curriculum/editorial/page-support.php');
 

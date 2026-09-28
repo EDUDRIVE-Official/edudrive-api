@@ -216,7 +216,9 @@ final class RoadPassportWebController
 
         $userId = (string) $request->user()?->getAuthIdentifier();
         $passport = $passports->findByUserId($userId);
-        if ($passport === null) abort(404);
+        if ($passport === null) {
+            abort(404);
+        }
 
         $lessonEvidence = null;
         foreach ($passport->evidence() as $item) {
@@ -225,7 +227,9 @@ final class RoadPassportWebController
                 break;
             }
         }
-        if ($lessonEvidence === null) abort(404);
+        if ($lessonEvidence === null) {
+            abort(404);
+        }
 
         $evidence->record(new EvidenceEntry(
             userId: $userId,
@@ -289,7 +293,7 @@ final class RoadPassportWebController
     {
         return Carbon::parse($date)
             ->timezone((string) config('app.timezone', 'America/Costa_Rica'))
-            ->locale('es')
+            ->settings(['locale' => 'es'])
             ->translatedFormat('j \\d\\e F \\d\\e Y, g:i a');
     }
 }

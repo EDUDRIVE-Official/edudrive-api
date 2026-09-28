@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Modules\Notification\Infrastructure\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
 use Modules\Notification\Application\Commands\CreateCommunicationTemplateCommand;
 use Modules\Notification\Application\Commands\GiveNotificationConsentCommand;
@@ -43,10 +43,10 @@ use Modules\Notification\Application\UseCases\UpdateNotificationPreferenceHandle
 use Modules\Notification\Domain\Repositories\CommunicationTemplateRepository;
 use Modules\Notification\Domain\Repositories\NotificationPreferenceRepository;
 use Modules\Notification\Domain\Repositories\NotificationRepository;
+use Modules\Notification\Infrastructure\Persistence\Eloquent\Models\NotificationModel;
 use Modules\Notification\Infrastructure\Persistence\Eloquent\Repositories\EloquentCommunicationTemplateRepository;
 use Modules\Notification\Infrastructure\Persistence\Eloquent\Repositories\EloquentNotificationPreferenceRepository;
 use Modules\Notification\Infrastructure\Persistence\Eloquent\Repositories\EloquentNotificationRepository;
-use Modules\Notification\Infrastructure\Persistence\Eloquent\Models\NotificationModel;
 use Modules\Notification\Infrastructure\Services\DefaultCourseCompletionNotifier;
 use Modules\Notification\Infrastructure\Services\DefaultGuardianPracticeNotifier;
 use Modules\Notification\Infrastructure\Services\DefaultGuardianPracticeReadyNotificationResolver;

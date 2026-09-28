@@ -7,6 +7,12 @@ namespace Modules\Certification\Infrastructure\Persistence\Eloquent\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property string $user_id
+ * @property string $course_id
+ * @property string $validation_code
+ * @property string $status
+ */
 final class CertificateModel extends Model
 {
     protected $table = 'certificates';

@@ -27,13 +27,13 @@ use Modules\Academic\Application\Responses\EnrollmentProgressResponse;
 use Modules\Academic\Application\Responses\EnrollmentResponse;
 use Modules\Academic\Application\Responses\UnitContentResponse;
 use Modules\Academic\Application\Services\LearnerStageResolver;
-use Modules\Academic\Infrastructure\Services\CourseAudienceCatalog;
 use Modules\Academic\Domain\Enums\CourseModality;
 use Modules\Academic\Domain\Enums\CourseStatus;
 use Modules\Academic\Domain\Enums\EnrollmentStatus;
 use Modules\Academic\Domain\Repositories\EnrollmentRepository;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\EnrollmentId;
+use Modules\Academic\Infrastructure\Services\CourseAudienceCatalog;
 use Modules\Academic\Presentation\Http\Requests\CreateCourseRequest;
 use Modules\Authorization\Application\Services\PermissionChecker;
 use Modules\Authorization\Domain\Enums\Permission;
@@ -306,10 +306,16 @@ final class CourseWebController
         $entryDiagnosticRecorded = false;
         $transferCheckRecorded = false;
         foreach ($passportEvidence as $evidence) {
-            if ($evidence->courseId !== $course['id']) continue;
+            if ($evidence->courseId !== $course['id']) {
+                continue;
+            }
             $kind = $evidence->details['evidence_kind'] ?? null;
-            if ($kind === 'course_entry_diagnostic') $entryDiagnosticRecorded = true;
-            if ($kind === 'course_transfer_check') $transferCheckRecorded = true;
+            if ($kind === 'course_entry_diagnostic') {
+                $entryDiagnosticRecorded = true;
+            }
+            if ($kind === 'course_transfer_check') {
+                $transferCheckRecorded = true;
+            }
         }
 
         return view('courses.learn', [
@@ -406,11 +412,15 @@ final class CourseWebController
         RoadPassportEvidenceRecorder $evidence,
     ): RedirectResponse {
         $enrollment = $enrollments->findById(EnrollmentId::fromString($enrollmentId));
-        if ($enrollment === null || $enrollment->userId() !== (string) auth()->id()) abort(404);
+        if ($enrollment === null || $enrollment->userId() !== (string) auth()->id()) {
+            abort(404);
+        }
 
         $course = $queryBus->ask(new GetCourseCurriculumQuery($enrollment->courseId()->value()));
         assert($course instanceof CourseCurriculumResponse);
-        if ($course->code !== 'EDU-EXP-001' || $enrollment->status() !== EnrollmentStatus::Completed) abort(404);
+        if ($course->code !== 'EDU-EXP-001' || $enrollment->status() !== EnrollmentStatus::Completed) {
+            abort(404);
+        }
 
         $data = $request->validate([
             'answers' => ['required', 'array:visibility,priority,inclusion,selfcare'],
@@ -459,11 +469,15 @@ final class CourseWebController
         RoadPassportEvidenceRecorder $evidence,
     ): RedirectResponse {
         $enrollment = $enrollments->findById(EnrollmentId::fromString($enrollmentId));
-        if ($enrollment === null || $enrollment->userId() !== (string) auth()->id()) abort(404);
+        if ($enrollment === null || $enrollment->userId() !== (string) auth()->id()) {
+            abort(404);
+        }
 
         $course = $queryBus->ask(new GetCourseCurriculumQuery($enrollment->courseId()->value()));
         assert($course instanceof CourseCurriculumResponse);
-        if ($course->code !== 'EDU-EXP-001' || ! in_array($enrollment->status(), [EnrollmentStatus::Active, EnrollmentStatus::Completed], true)) abort(404);
+        if ($course->code !== 'EDU-EXP-001' || ! in_array($enrollment->status(), [EnrollmentStatus::Active, EnrollmentStatus::Completed], true)) {
+            abort(404);
+        }
 
         $data = $request->validate([
             'answers' => ['required', 'array:place,change,pressure'],

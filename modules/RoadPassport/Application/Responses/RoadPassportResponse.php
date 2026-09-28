@@ -71,6 +71,7 @@ final readonly class RoadPassportResponse
      *     status: string,
      *     level: int,
      *     issued_at: string,
+     *     verification_version: int,
      *     history: list<array{type: string, from: string, to: string, occurred_at: string, reason: ?string}>,
      *     evidence: list<array{type: string, subject_id: string, course_id: string, occurred_at: string, details: array<string, mixed>}>,
      *     trust_score: int,

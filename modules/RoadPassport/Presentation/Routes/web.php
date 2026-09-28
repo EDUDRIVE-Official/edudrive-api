@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Modules\RoadPassport\Presentation\Http\Controllers\RoadPassportAdminWebController;
-use Modules\RoadPassport\Presentation\Http\Controllers\RoadPassportWebController;
 use Modules\RoadPassport\Presentation\Http\Controllers\RoadPassportVerificationWebController;
+use Modules\RoadPassport\Presentation\Http\Controllers\RoadPassportWebController;
 
 Route::middleware('web')->group(function (): void {
     Route::get('/verificar-pasaporte-vial', RoadPassportVerificationWebController::class)

@@ -25,37 +25,37 @@ it('rejects an out of range lesson', function (): void {
 it('presents every lesson one page at a time', function (): void {
     $this->actingAs(actingAsRole(Role::SuperAdmin), 'web');
     foreach (range(1, 5) as $number) {
-    foreach (range(1, 5) as $page) {
-        $response = $this->get('/pilot-instruments/editorial-preview?lesson='.$number.'&page='.$page)
-            ->assertOk()->assertSee('Página '.$page.' de 5')
-            ->assertSee('Lección '.$number.' de 5')
-            ->assertSee('Guía para el acompañante')->assertDontSee('Completar lección');
-        if ($page === 2) {
-            $response->assertSee('✓ Respuesta correcta')->assertSee('⚠ Respuesta incorrecta')
-                ->assertSee('✓ ¡Acertaste! Respuesta correcta')->assertSee('⚠ Esta respuesta no es correcta. Revisemos el riesgo.')
-                ->assertSee('aria-atomic="true"', false)->assertSee('passenger-response');
-            $response->assertSee('editorial-'.$number.'-2')->assertDontSee('editorial-'.$number.'-3');
-        } elseif ($page === 3) {
-            $response->assertSee('✓ Respuesta correcta')->assertSee('⚠ Respuesta incorrecta')
-                ->assertSee('✓ ¡Acertaste! Respuesta correcta')->assertSee('⚠ Esta respuesta no es correcta. Revisemos el riesgo.')
-                ->assertSee('aria-atomic="true"', false)->assertSee('passenger-response');
-            $response->assertSee('editorial-'.$number.'-3')->assertDontSee('editorial-'.$number.'-2');
-        } else {
-            $response->assertDontSee('editorial-'.$number.'-2')->assertDontSee('editorial-'.$number.'-3');
+        foreach (range(1, 5) as $page) {
+            $response = $this->get('/pilot-instruments/editorial-preview?lesson='.$number.'&page='.$page)
+                ->assertOk()->assertSee('Página '.$page.' de 5')
+                ->assertSee('Lección '.$number.' de 5')
+                ->assertSee('Guía para el acompañante')->assertDontSee('Completar lección');
+            if ($page === 2) {
+                $response->assertSee('✓ Respuesta correcta')->assertSee('⚠ Respuesta incorrecta')
+                    ->assertSee('✓ ¡Acertaste! Respuesta correcta')->assertSee('⚠ Esta respuesta no es correcta. Revisemos el riesgo.')
+                    ->assertSee('aria-atomic="true"', false)->assertSee('passenger-response');
+                $response->assertSee('editorial-'.$number.'-2')->assertDontSee('editorial-'.$number.'-3');
+            } elseif ($page === 3) {
+                $response->assertSee('✓ Respuesta correcta')->assertSee('⚠ Respuesta incorrecta')
+                    ->assertSee('✓ ¡Acertaste! Respuesta correcta')->assertSee('⚠ Esta respuesta no es correcta. Revisemos el riesgo.')
+                    ->assertSee('aria-atomic="true"', false)->assertSee('passenger-response');
+                $response->assertSee('editorial-'.$number.'-3')->assertDontSee('editorial-'.$number.'-2');
+            } else {
+                $response->assertDontSee('editorial-'.$number.'-2')->assertDontSee('editorial-'.$number.'-3');
+            }
+            if ($page < 5) {
+                $response->assertSee(route('pilot-instruments.editorial-preview', ['lesson' => $number, 'page' => $page + 1]).'#lesson-page');
+            }
+            if ($page > 1) {
+                $response->assertSee(route('pilot-instruments.editorial-preview', ['lesson' => $number, 'page' => $page - 1]).'#lesson-page');
+            }
+            if ($number >= 4 && in_array($page, [2, 3], true)) {
+                $response->assertSee('passengerPreview3d')->assertSee('Abrí la práctica 3D')->assertDontSee('representación básica');
+            }
+            if ($page === 5 && $number < 5) {
+                $response->assertSee(route('pilot-instruments.editorial-preview', ['lesson' => $number + 1, 'page' => 1]).'#lesson-page');
+            }
         }
-        if ($page < 5) {
-            $response->assertSee(route('pilot-instruments.editorial-preview', ['lesson' => $number, 'page' => $page + 1]).'#lesson-page');
-        }
-        if ($page > 1) {
-            $response->assertSee(route('pilot-instruments.editorial-preview', ['lesson' => $number, 'page' => $page - 1]).'#lesson-page');
-        }
-        if ($number >= 4 && in_array($page, [2, 3], true)) {
-            $response->assertSee('passengerPreview3d')->assertSee('Abrí la práctica 3D')->assertDontSee('representación básica');
-        }
-        if ($page === 5 && $number < 5) {
-            $response->assertSee(route('pilot-instruments.editorial-preview', ['lesson' => $number + 1, 'page' => 1]).'#lesson-page');
-        }
-    }
     }
 });
 

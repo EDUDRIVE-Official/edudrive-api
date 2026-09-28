@@ -8,6 +8,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 final class ResetStudentLearningRequest extends FormRequest
 {
+    /** @return array<string, list<string>> */
     public function rules(): array
     {
         return [

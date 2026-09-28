@@ -37,6 +37,7 @@ final class CourseAudienceCatalog
             foreach ($lessons as $lesson) {
                 if ($lesson->lesson_id === null) {
                     $incomplete = true;
+
                     continue;
                 }
                 $count++;
@@ -44,6 +45,7 @@ final class CourseAudienceCatalog
                 $stage = is_array($design) ? ($design['stage'] ?? null) : null;
                 if (! is_string($stage) || ! isset(self::LABELS[$stage])) {
                     $incomplete = true;
+
                     continue;
                 }
                 $classified++;

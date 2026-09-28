@@ -3,7 +3,11 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Modules\Academic\Application\Exceptions\CoursePedagogicalQualityRequired;
+use Modules\Academic\Application\Services\CoursePublicationQualityGate;
 use Modules\Academic\Domain\Repositories\CourseRepository;
+use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Infrastructure\Services\CourseAudienceCatalog;
 use Modules\Authorization\Domain\Enums\Role;
 
@@ -41,10 +45,10 @@ it('does not recommend pending or unclassified courses', function (): void {
 it('blocks future publication of an experience with its audience pending', function (): void {
     $id = audienceCourse('EDU-EXP-AUD-PENDING', 'pending_review', false);
     try {
-        app(\Modules\Academic\Application\Services\CoursePublicationQualityGate::class)
-            ->assertReady(\Modules\Academic\Domain\ValueObjects\CourseId::fromString($id));
+        app(CoursePublicationQualityGate::class)
+            ->assertReady(CourseId::fromString($id));
         test()->fail('A pending audience was accepted.');
-    } catch (\Modules\Academic\Application\Exceptions\CoursePedagogicalQualityRequired $exception) {
+    } catch (CoursePedagogicalQualityRequired $exception) {
         expect($exception->getMessage())->toContain('público pendiente de revisión');
     }
 });
@@ -66,7 +70,7 @@ it('does not infer a single audience from mixed or partially classified lessons'
     $id = audienceCourse('AUD-MIXED', 'discover');
     $first = DB::table('academic_lessons')->first();
     $second = (array) $first;
-    $second['id'] = (string) \Illuminate\Support\Str::uuid();
+    $second['id'] = (string) Str::uuid();
     $second['code'] = 'LEC-02';
     $second['position'] = 2;
     $second['learning_design'] = json_encode(['stage' => 'perfect']);

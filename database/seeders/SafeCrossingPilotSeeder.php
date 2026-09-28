@@ -336,7 +336,7 @@ final class SafeCrossingPilotSeeder extends Seeder
     {
         return [
             $this->selfCareLesson('ATENCION-COMPITE', 'Reto 1: Una atención, muchas demandas', 1, 15, 'visual_exploration', 'Reconocer tareas que compiten con la observación vial.', $competencyId, ['AUTOCUIDADO.DISTRACTOR'], [
-                $this->text(1, 'Mirar no siempre significa ver', "La atención es limitada. Leer un mensaje, cambiar música o conversar intensamente consume capacidad para detectar movimiento. Esto afecta a peatones, ciclistas, pasajeros y conductores. **La distracción comienza antes de apartar completamente la mirada.**"),
+                $this->text(1, 'Mirar no siempre significa ver', 'La atención es limitada. Leer un mensaje, cambiar música o conversar intensamente consume capacidad para detectar movimiento. Esto afecta a peatones, ciclistas, pasajeros y conductores. **La distracción comienza antes de apartar completamente la mirada.**'),
                 $this->scenario(2, 'Mensaje al acercarte al cruce', 'El teléfono vibra cuando estás a pocos pasos de la esquina.', '¿Cuándo conviene revisarlo?', [
                     ['id' => 'caminando', 'label' => 'Mientras caminás más despacio', 'feedback' => 'Caminar despacio no devuelve la atención que ocupa el mensaje.', 'correct' => false],
                     ['id' => 'protegido', 'label' => 'Después de detenerte en un lugar protegido y lejos del borde', 'feedback' => 'Correcto. Separás la comunicación de la decisión vial.', 'correct' => true],
@@ -347,10 +347,10 @@ final class SafeCrossingPilotSeeder extends Seeder
                     ['id' => 'detenerse', 'label' => 'Detenerse lejos del borde, revisar la ruta, guardar el teléfono y reevaluar', 'feedback' => 'Correcto. Primero resuelve la orientación en un espacio protegido y luego construye una decisión vial nueva.', 'correct' => true],
                     ['id' => 'copiar', 'label' => 'Seguir a otra persona que vaya en la misma dirección', 'feedback' => 'Otra persona puede tener otro destino o decidir con información diferente.', 'correct' => false],
                 ]),
-                $this->text(4, 'Estación de atención', "Definí un lugar protegido donde sí podés usar una pantalla. Antes de retomar el recorrido: guardá el dispositivo, levantá la mirada, ubicá actores y volvé a construir tu plan."),
+                $this->text(4, 'Estación de atención', 'Definí un lugar protegido donde sí podés usar una pantalla. Antes de retomar el recorrido: guardá el dispositivo, levantá la mirada, ubicá actores y volvé a construir tu plan.'),
             ]),
             $this->selfCareLesson('ATENCION-AUDITIVA', 'Reto 2: Escuchar también orienta', 2, 15, 'dilemma', 'Gestionar audífonos, ruido y conversaciones en zonas de decisión.', $competencyId, ['AUTOCUIDADO.DISTRACTOR', 'AUTOCUIDADO.PAUSA'], [
-                $this->text(1, 'El sonido aporta pistas', "Motores, bicicletas, alertas y voces pueden advertir movimientos fuera de tu campo visual. El oído no reemplaza la mirada, pero completa la información. Cerca de una vía, bajá el volumen o retirate los audífonos y pausá conversaciones que demandan atención."),
+                $this->text(1, 'El sonido aporta pistas', 'Motores, bicicletas, alertas y voces pueden advertir movimientos fuera de tu campo visual. El oído no reemplaza la mirada, pero completa la información. Cerca de una vía, bajá el volumen o retirate los audífonos y pausá conversaciones que demandan atención.'),
                 $this->scenario(2, 'Audífonos y autobús', 'Bajás del autobús con audífonos y querés cruzar por detrás mientras respondés una llamada.', '¿Cuál es la primera acción segura?', [
                     ['id' => 'seguir', 'label' => 'Seguir hablando y mirar rápidamente', 'feedback' => 'La conversación y el autobús mantienen dos fuentes de distracción y un punto ciego.', 'correct' => false],
                     ['id' => 'pausar', 'label' => 'Pausar la llamada, guardar los audífonos y buscar un punto visible', 'feedback' => 'Correcto. Recuperás atención antes de decidir.', 'correct' => true],
@@ -361,10 +361,10 @@ final class SafeCrossingPilotSeeder extends Seeder
                     ['id' => 'margen-visual', 'label' => 'Aumentar distancia, observación visual y margen, o elegir otro punto', 'feedback' => 'Correcto. Cuando un sentido aporta menos información, no se adivina: se aumenta la protección y se cambia el plan.', 'correct' => true],
                     ['id' => 'rapido', 'label' => 'Cruzar rápido para permanecer menos tiempo en el ruido', 'feedback' => 'La rapidez reduce el tiempo para detectar movimientos precisamente cuando falta información.', 'correct' => false],
                 ]),
-                $this->text(4, 'Ritual de recuperación', "Practicá cuatro pasos: **pauso, guardo, levanto la mirada, escucho**. Solo después elegís dónde y cuándo avanzar."),
+                $this->text(4, 'Ritual de recuperación', 'Practicá cuatro pasos: **pauso, guardo, levanto la mirada, escucho**. Solo después elegís dónde y cuándo avanzar.'),
             ]),
             $this->selfCareLesson('ESTADO-SEMAFORO', 'Reto 3: Tu semáforo interior', 1, 15, 'story', 'Reconocer señales personales que requieren detenerse o pedir apoyo.', $competencyId, ['AUTOCUIDADO.ESTADO', 'AUTOCUIDADO.PAUSA'], [
-                $this->text(1, 'El estado personal cambia el riesgo', "Cansancio, enojo, ansiedad, miedo o exceso de confianza pueden estrechar la atención y acelerar decisiones. Usá un semáforo interior: **verde**, estoy presente; **amarillo**, necesito una pausa; **rojo**, necesito detenerme o pedir apoyo."),
+                $this->text(1, 'El estado personal cambia el riesgo', 'Cansancio, enojo, ansiedad, miedo o exceso de confianza pueden estrechar la atención y acelerar decisiones. Usá un semáforo interior: **verde**, estoy presente; **amarillo**, necesito una pausa; **rojo**, necesito detenerme o pedir apoyo.'),
                 $this->scenario(2, 'Saliste con enojo', 'Después de una discusión salís caminando rápido y casi no recordás el último tramo recorrido.', '¿Qué indica esa señal?', [
                     ['id' => 'normal', 'label' => 'Que podés continuar porque conocés el camino', 'feedback' => 'La familiaridad no compensa la atención reducida.', 'correct' => false],
                     ['id' => 'pausa', 'label' => 'Que necesitás detenerte en un lugar seguro y recuperar atención', 'feedback' => 'Correcto. Reconocés el estado antes de llegar a otra decisión vial.', 'correct' => true],
@@ -375,10 +375,10 @@ final class SafeCrossingPilotSeeder extends Seeder
                     ['id' => 'pausa-apoyo', 'label' => 'Alejarse del borde, respirar, observar por partes y pedir apoyo si lo necesita', 'feedback' => 'Correcto. Reconoce su estado y recupera capacidad antes de decidir.', 'correct' => true],
                     ['id' => 'ojos', 'label' => 'Cerrar los ojos unos segundos y seguir al grupo', 'feedback' => 'Seguir al grupo sin reconstruir la información entrega la decisión a otras personas.', 'correct' => false],
                 ]),
-                $this->text(4, 'Chequeo de diez segundos', "Preguntate: ¿dónde estoy?, ¿qué siento?, ¿qué estoy apurando?, ¿puedo observar bien?, ¿necesito compañía? Pedir apoyo también es una habilidad vial."),
+                $this->text(4, 'Chequeo de diez segundos', 'Preguntate: ¿dónde estoy?, ¿qué siento?, ¿qué estoy apurando?, ¿puedo observar bien?, ¿necesito compañía? Pedir apoyo también es una habilidad vial.'),
             ]),
             $this->selfCareLesson('CANSANCIO-PRISA', 'Reto 4: Cuando el cuerpo pide margen', 2, 15, 'dilemma', 'Modificar el plan ante cansancio o urgencia.', $competencyId, ['AUTOCUIDADO.ESTADO', 'AUTOCUIDADO.PAUSA'], [
-                $this->text(1, 'La prisa fabrica atajos', "Cuando llegamos tarde o estamos cansados, el cerebro acepta opciones que normalmente descartaría. Prepararse con tiempo ayuda, pero si la urgencia ya existe, la respuesta segura es reducir decisiones simultáneas y elegir una alternativa recuperable."),
+                $this->text(1, 'La prisa fabrica atajos', 'Cuando llegamos tarde o estamos cansados, el cerebro acepta opciones que normalmente descartaría. Prepararse con tiempo ayuda, pero si la urgencia ya existe, la respuesta segura es reducir decisiones simultáneas y elegir una alternativa recuperable.'),
                 $this->scenario(2, 'Llegar tarde a clase', 'Vas tarde y la ruta segura tarda cinco minutos más que un atajo sin acera.', '¿Qué decisión protege tu futuro?', [
                     ['id' => 'atajo', 'label' => 'Tomar el atajo solo esta vez', 'feedback' => 'La urgencia no mejora las condiciones del atajo.', 'correct' => false],
                     ['id' => 'segura', 'label' => 'Usar la ruta segura y avisar que llegarás tarde', 'feedback' => 'Correcto. Convertís un problema de horario en una consecuencia manejable.', 'correct' => true],
@@ -389,10 +389,10 @@ final class SafeCrossingPilotSeeder extends Seeder
                     ['id' => 'reducir', 'label' => 'Detenerse en un lugar seguro, descansar y buscar apoyo o una ruta más simple', 'feedback' => 'Correcto. Adaptar el plan protege tanto a la persona adulta como a quien acompaña.', 'correct' => true],
                     ['id' => 'nina-guia', 'label' => 'Pedir a la niña que tome todas las decisiones del recorrido', 'feedback' => 'Una niña puede participar, pero no debe recibir sola una responsabilidad que corresponde a la persona adulta.', 'correct' => false],
                 ]),
-                $this->text(4, 'Plan B antes de salir', "Prepará alternativas: a quién avisar, dónde esperar, qué ruta usar y cuándo pedir acompañamiento. Un plan B reduce la presión de improvisar."),
+                $this->text(4, 'Plan B antes de salir', 'Prepará alternativas: a quién avisar, dónde esperar, qué ruta usar y cuándo pedir acompañamiento. Un plan B reduce la presión de improvisar.'),
             ]),
             $this->selfCareLesson('PRESION-GRUPO', 'Reto 5: Mi decisión no necesita aplausos', 1, 16, 'dilemma', 'Mantener límites seguros ante presión o burla.', $competencyId, ['AUTOCUIDADO.PRESION', 'AUTOCUIDADO.PAUSA'], [
-                $this->text(1, 'Pertenecer sin imitar el riesgo', "La presión puede ser directa —“¡animate!”— o silenciosa, cuando seguimos al grupo por no quedarnos atrás. Una frase breve evita discutir: **“Yo espero; nos vemos al otro lado”**. No hace falta convencer a todo el grupo para cuidarte."),
+                $this->text(1, 'Pertenecer sin imitar el riesgo', 'La presión puede ser directa —“¡animate!”— o silenciosa, cuando seguimos al grupo por no quedarnos atrás. Una frase breve evita discutir: **“Yo espero; nos vemos al otro lado”**. No hace falta convencer a todo el grupo para cuidarte.'),
                 $this->scenario(2, 'El grupo cruza corriendo', 'Tus amistades cruzan fuera del paso y te llaman desde el otro lado.', '¿Qué respuesta sostiene una decisión segura?', [
                     ['id' => 'seguir', 'label' => 'Seguirlas para no quedarte solo', 'feedback' => 'El número de personas no transforma una acción riesgosa en segura.', 'correct' => false],
                     ['id' => 'limite', 'label' => 'Decir que usarás el cruce seguro y encontrarlas después', 'feedback' => 'Correcto. Comunicás un límite claro sin entrar en conflicto.', 'correct' => true],
@@ -403,10 +403,10 @@ final class SafeCrossingPilotSeeder extends Seeder
                     ['id' => 'alertar', 'label' => 'Detenerse y decir claramente: “esperá, viene una motocicleta”', 'feedback' => 'Correcto. Comunicar un peligro no es desobedecer: es participar en una decisión compartida y segura.', 'correct' => true],
                     ['id' => 'soltarse', 'label' => 'Soltarse y correr hacia atrás sin avisar', 'feedback' => 'Un movimiento repentino puede crear otro riesgo. Es mejor detener y comunicar con claridad.', 'correct' => false],
                 ]),
-                $this->text(4, 'Ensayo de frases', "Practicá respuestas sencillas: “yo espero”, “guardemos el teléfono”, “por aquí hay más visibilidad” y “prefiero llegar tarde que cruzar sin margen”."),
+                $this->text(4, 'Ensayo de frases', 'Practicá respuestas sencillas: “yo espero”, “guardemos el teléfono”, “por aquí hay más visibilidad” y “prefiero llegar tarde que cruzar sin margen”.'),
             ]),
             $this->selfCareLesson('AUTOCUIDADO-MISION', 'Misión integradora: recuperá el control', 2, 15, 'competency_challenge', 'Integrar atención, estado personal, pausa y respuesta a la presión.', $competencyId, ['AUTOCUIDADO.DISTRACTOR', 'AUTOCUIDADO.ESTADO', 'AUTOCUIDADO.PAUSA', 'AUTOCUIDADO.PRESION'], [
-                $this->text(1, 'Secuencia de autocuidado', "**Reconocé → detente en un lugar protegido → retirá el distractor → regulá tu estado → reconstruí el plan.** Si todavía no estás listo, pedí apoyo o posponé la acción."),
+                $this->text(1, 'Secuencia de autocuidado', '**Reconocé → detente en un lugar protegido → retirá el distractor → regulá tu estado → reconstruí el plan.** Si todavía no estás listo, pedí apoyo o posponé la acción.'),
                 $this->scenario(2, 'Mensaje, lluvia y prisa', 'Llueve, vas tarde y recibís un mensaje urgente justo antes del cruce.', '¿Qué hacés primero?', [
                     ['id' => 'leer', 'label' => 'Leer mientras esperás la señal', 'feedback' => 'Aunque estés quieto, necesitás atención para observar los cambios del cruce.', 'correct' => false],
                     ['id' => 'separar', 'label' => 'Alejarte del borde, resolver el mensaje y luego reevaluar', 'feedback' => 'Correcto. Separás tareas y reconstruís la decisión con atención.', 'correct' => true],
@@ -496,7 +496,7 @@ final class SafeCrossingPilotSeeder extends Seeder
                     ['id' => 'cambio', 'label' => 'Hay una condición temporal; se debe seguir la ruta protegida y observar indicaciones', 'feedback' => 'Correcto. Interpretás la función de la señal y confirmás cómo continuar sin invadir la calzada.', 'correct' => true],
                     ['id' => 'entre-conos', 'label' => 'Pasar entre los conos si queda espacio', 'feedback' => 'Los conos delimitan una zona que puede contener trabajos, maquinaria u otros peligros no visibles.', 'correct' => false],
                 ]),
-                $this->text(4, 'Laboratorio de funciones', "Buscá señales en imágenes seguras y agrupálas por pregunta: ¿me advierte?, ¿me indica una obligación?, ¿me orienta? Explicá la función con tus palabras antes de buscar el nombre oficial."),
+                $this->text(4, 'Laboratorio de funciones', 'Buscá señales en imágenes seguras y agrupálas por pregunta: ¿me advierte?, ¿me indica una obligación?, ¿me orienta? Explicá la función con tus palabras antes de buscar el nombre oficial.'),
             ]),
             $this->coexistenceLesson('MARCAS-SEMAFOROS', 'Reto 2: Capas de información', 2, 16, 'dilemma', 'Combinar semáforos, marcas viales y entorno sin atender una sola pista.', $competencyId, ['CONVIVENCIA.SENAL', 'CONVIVENCIA.RESUELVE'], [
                 $this->text(1, 'Una señal nunca está sola', "El semáforo indica turnos, las marcas delimitan espacios y las señales verticales agregan reglas o advertencias. También importa la realidad: una obstrucción, una persona que no te vio o un vehículo de emergencia pueden exigir esperar.\n\n**Permiso no significa ausencia automática de peligro.**"),
@@ -510,10 +510,10 @@ final class SafeCrossingPilotSeeder extends Seeder
                     ['id' => 'esperar-peatonal', 'label' => 'Esperar la señal peatonal y comprobar también los giros', 'feedback' => 'Correcto. Se combinan semáforo, trayectorias y situación real antes de decidir.', 'correct' => true],
                     ['id' => 'grupo', 'label' => 'Cruzar si otra persona empieza primero', 'feedback' => 'La decisión de otra persona no aclara qué señales ni movimientos está observando.', 'correct' => false],
                 ]),
-                $this->text(4, 'Lectura en capas', "En una imagen vial, señalá por separado: semáforo, marcas, señal vertical, actores y peligro actual. Luego construí una sola decisión usando las cinco capas."),
+                $this->text(4, 'Lectura en capas', 'En una imagen vial, señalá por separado: semáforo, marcas, señal vertical, actores y peligro actual. Luego construí una sola decisión usando las cinco capas.'),
             ]),
             $this->coexistenceLesson('PRIORIDAD-COMPRUEBA', 'Reto 3: Tener prioridad y seguir cuidándote', 1, 15, 'story', 'Distinguir el derecho de paso de la comprobación de seguridad.', $competencyId, ['CONVIVENCIA.PRIORIDAD'], [
-                $this->text(1, 'La prioridad organiza, no crea un escudo', "Las reglas de prioridad ayudan a decidir quién pasa primero. Sin embargo, una persona puede distraerse, interpretar mal o no verte. Ejercer una prioridad con seguridad significa **hacerte visible, observar y confirmar**."),
+                $this->text(1, 'La prioridad organiza, no crea un escudo', 'Las reglas de prioridad ayudan a decidir quién pasa primero. Sin embargo, una persona puede distraerse, interpretar mal o no verte. Ejercer una prioridad con seguridad significa **hacerte visible, observar y confirmar**.'),
                 $this->scenario(2, 'Paso peatonal', 'Estás junto al paso peatonal. Un automóvil se aproxima y todavía no reduce claramente la velocidad.', '¿Qué decisión integra prioridad y autoprotección?', [
                     ['id' => 'entrar', 'label' => 'Entrar para obligarlo a detenerse', 'feedback' => 'Tener prioridad no vuelve segura una trayectoria que aún no está controlada.', 'correct' => false],
                     ['id' => 'confirmar', 'label' => 'Esperar y confirmar que se detenga antes de cruzar', 'feedback' => 'Correcto. Conservás tu prioridad sin depender de una reacción incierta.', 'correct' => true],
@@ -524,10 +524,10 @@ final class SafeCrossingPilotSeeder extends Seeder
                     ['id' => 'comprobar', 'label' => 'Detenerse antes de la ciclovía, comprobar y cruzar sin quedarse en ella', 'feedback' => 'Correcto. Luna reconoce el espacio de circulación y actúa de forma visible y predecible.', 'correct' => true],
                     ['id' => 'detener-bici', 'label' => 'Pararse dentro de la ciclovía para pedir que se detenga', 'feedback' => 'Ocupar la trayectoria reduce el margen de ambas personas y vuelve confuso el encuentro.', 'correct' => false],
                 ]),
-                $this->text(4, 'Dos frases verdaderas', "Completá: “La regla indica que…”, y luego: “La situación real me exige comprobar que…”. Esta separación evita confundir una norma con una garantía física."),
+                $this->text(4, 'Dos frases verdaderas', 'Completá: “La regla indica que…”, y luego: “La situación real me exige comprobar que…”. Esta separación evita confundir una norma con una garantía física.'),
             ]),
             $this->coexistenceLesson('CORTESIA-SEGURA', 'Reto 4: Cuando la cortesía confunde', 2, 16, 'dilemma', 'Evaluar gestos informales sin asumir que controlan toda la vía.', $competencyId, ['CONVIVENCIA.PRIORIDAD', 'CONVIVENCIA.COMUNICA'], [
-                $this->text(1, 'Un gesto no controla el entorno', "Una persona puede ceder el paso con la mano, pero no controla otros carriles, bicicletas, motocicletas ni vehículos que giran. Agradecer la cortesía está bien; actuar sin comprobar, no. Tus propios movimientos deben ser claros y previsibles."),
+                $this->text(1, 'Un gesto no controla el entorno', 'Una persona puede ceder el paso con la mano, pero no controla otros carriles, bicicletas, motocicletas ni vehículos que giran. Agradecer la cortesía está bien; actuar sin comprobar, no. Tus propios movimientos deben ser claros y previsibles.'),
                 $this->scenario(2, 'Te hacen una señal', 'Una persona conductora se detiene y te invita a cruzar, pero el carril contiguo permanece oculto.', '¿Qué hacés?', [
                     ['id' => 'cruzar', 'label' => 'Cruzar de inmediato para no ser descortés', 'feedback' => 'La presión social no debe sustituir la comprobación del carril oculto.', 'correct' => false],
                     ['id' => 'comprobar', 'label' => 'Agradecer y comprobar todos los movimientos antes de avanzar', 'feedback' => 'Correcto. Comunicás respeto sin entregar tu seguridad a un gesto.', 'correct' => true],
@@ -538,7 +538,7 @@ final class SafeCrossingPilotSeeder extends Seeder
                     ['id' => 'revisar', 'label' => 'Agradecer, permanecer protegida y comprobar todo el espacio antes de cruzar', 'feedback' => 'Correcto. La cortesía se reconoce, pero la decisión sigue basada en una comprobación completa.', 'correct' => true],
                     ['id' => 'espalda', 'label' => 'Mirar solo a quien cedió el paso', 'feedback' => 'Fijarse en una sola persona puede ocultar movimientos que esa persona no controla.', 'correct' => false],
                 ]),
-                $this->text(4, 'Comunicación predecible', "Practicá tres conductas: detenerte en un lugar visible, orientar el cuerpo hacia tu recorrido y evitar cambios repentinos. No necesitás contacto visual prolongado: necesitás evidencia de que el movimiento está controlado."),
+                $this->text(4, 'Comunicación predecible', 'Practicá tres conductas: detenerte en un lugar visible, orientar el cuerpo hacia tu recorrido y evitar cambios repentinos. No necesitás contacto visual prolongado: necesitás evidencia de que el movimiento está controlado.'),
             ]),
             $this->coexistenceLesson('ESPACIO-COMPARTIDO', 'Reto 5: La vía también es de otras personas', 1, 16, 'community_observation', 'Reconocer necesidades distintas y evitar conductas que excluyen.', $competencyId, ['CONVIVENCIA.COMUNICA'], [
                 $this->text(1, 'Convivir es dejar espacio', "Una acera bloqueada, una rampa ocupada o una bicicleta estacionada en un paso puede obligar a alguien a exponerse. Niñas, niños, personas mayores y quienes usan apoyos de movilidad pueden requerir más tiempo o espacio.\n\nLa convivencia vial se mide también por los obstáculos que decidimos **no crear**."),
@@ -552,10 +552,10 @@ final class SafeCrossingPilotSeeder extends Seeder
                     ['id' => 'ofrecer', 'label' => 'Presentarse, ofrecer ayuda y seguir las indicaciones de la persona', 'feedback' => 'Correcto. La colaboración comienza preguntando y permite que la persona decida qué apoyo necesita.', 'correct' => true],
                     ['id' => 'decidir', 'label' => 'Elegir por ella cuándo y por dónde cruzar', 'feedback' => 'Apoyar no significa sustituir sus decisiones. La información y el consentimiento guían la ayuda.', 'correct' => false],
                 ]),
-                $this->text(4, 'Auditoría amable', "Observá un espacio público sin registrar personas ni direcciones. Identificá una conducta que facilita el paso y una que lo dificulta. Proponé una mejora que no dependa de culpar a alguien."),
+                $this->text(4, 'Auditoría amable', 'Observá un espacio público sin registrar personas ni direcciones. Identificá una conducta que facilita el paso y una que lo dificulta. Proponé una mejora que no dependa de culpar a alguien.'),
             ]),
             $this->coexistenceLesson('CONVIVENCIA-MISION', 'Misión integradora: acuerdos que protegen', 2, 15, 'competency_challenge', 'Integrar señales, prioridades, comunicación e inclusión.', $competencyId, ['CONVIVENCIA.SENAL', 'CONVIVENCIA.PRIORIDAD', 'CONVIVENCIA.COMUNICA', 'CONVIVENCIA.RESUELVE'], [
-                $this->text(1, 'Tu criterio de convivencia', "Interpretá la información, reconocé el turno, comprobá la situación real, comunicá movimientos previsibles y dejá espacio para otras personas. **La meta no es ganar el paso: es que todas las personas lleguen seguras.**"),
+                $this->text(1, 'Tu criterio de convivencia', 'Interpretá la información, reconocé el turno, comprobá la situación real, comunicá movimientos previsibles y dejá espacio para otras personas. **La meta no es ganar el paso: es que todas las personas lleguen seguras.**'),
                 $this->scenario(2, 'Cruce con información contradictoria', 'La señal favorece tu paso, alguien te hace un gesto para avanzar y una motocicleta aparece por un espacio oculto.', '¿Qué decisión integra las señales y la realidad?', [
                     ['id' => 'permiso', 'label' => 'Avanzar por tener señal y gesto favorables', 'feedback' => 'Dos permisos no eliminan un peligro real que ya identificaste.', 'correct' => false],
                     ['id' => 'esperar', 'label' => 'Mantenerte protegido hasta que el movimiento esté controlado', 'feedback' => 'Correcto. Priorizás la situación real y conservás una decisión predecible.', 'correct' => true],
@@ -571,7 +571,7 @@ final class SafeCrossingPilotSeeder extends Seeder
                     ['id' => 'despejar', 'label' => 'Despejar una ruta continua, visible y accesible', 'feedback' => 'Correcto. La organización colectiva protege a personas con necesidades distintas.', 'correct' => true],
                     ['id' => 'esperar', 'label' => 'Mantener el bloqueo hasta terminar la actividad', 'feedback' => 'Una actividad no debe anular el tránsito seguro de otras personas.', 'correct' => false],
                 ]),
-                $this->text(5, 'Compromiso transferible', "Explicá una regla vial con tus palabras y agregá: qué riesgo ayuda a reducir, a quién protege y qué harías si la situación real cambia. Ese razonamiento vale más que repetir el nombre de una señal."),
+                $this->text(5, 'Compromiso transferible', 'Explicá una regla vial con tus palabras y agregá: qué riesgo ayuda a reducir, a quién protege y qué harías si la situación real cambia. Ese razonamiento vale más que repetir el nombre de una señal.'),
             ]),
         ];
     }
@@ -652,7 +652,7 @@ final class SafeCrossingPilotSeeder extends Seeder
                 $this->text(4, 'Barrido de seis preguntas', "Antes de moverte preguntá: ¿qué veo?, ¿qué no puedo ver?, ¿qué escucho?, ¿quién podría aparecer?, ¿qué puede cambiar?, ¿dónde está mi espacio protegido?\n\nPracticá desde un lugar seguro; no fotografiés placas, rostros ni direcciones."),
             ]),
             $this->riskLesson('RIESGO-OCULTO', 'Reto 2: Lo que no se ve', 2, 15, 'dilemma', 'Reconocer puntos ciegos y obstáculos que esconden movimiento.', $competencyId, ['RIESGO.DETECTA', 'RIESGO.ANTICIPA'], [
-                $this->text(1, 'La ausencia de evidencia no es evidencia de ausencia', "Vehículos estacionados, autobuses, vegetación, curvas y pendientes pueden ocultar personas o vehículos. Si no podés ver el espacio del que vendría el peligro, **reducí la exposición y buscá otro punto de observación**."),
+                $this->text(1, 'La ausencia de evidencia no es evidencia de ausencia', 'Vehículos estacionados, autobuses, vegetación, curvas y pendientes pueden ocultar personas o vehículos. Si no podés ver el espacio del que vendría el peligro, **reducí la exposición y buscá otro punto de observación**.'),
                 $this->scenario(2, 'Camino rural con curva', 'En un camino rural sin acera, una curva y la vegetación impiden ver vehículos que se acercan.', '¿Qué opción crea mejor información?', [
                     ['id' => 'asomarse', 'label' => 'Asomarse desde la calzada', 'feedback' => 'Obtener información no debe obligarte a entrar en la trayectoria del peligro.', 'correct' => false],
                     ['id' => 'protegido', 'label' => 'Permanecer fuera de la calzada y buscar un punto más visible', 'feedback' => 'Correcto. Mejorás la visión manteniendo un espacio protegido.', 'correct' => true],
@@ -663,10 +663,10 @@ final class SafeCrossingPilotSeeder extends Seeder
                     ['id' => 'otro-cruce', 'label' => 'Retroceder al espacio protegido y elegir un lugar con campo visual abierto', 'feedback' => 'Correcto. Si un punto obliga a exponerse para observar, se busca otro lugar.', 'correct' => true],
                     ['id' => 'oido', 'label' => 'Cruzar si el sonido parece lejano', 'feedback' => 'El sonido puede reflejarse o quedar oculto; no compensa la falta de visión.', 'correct' => false],
                 ]),
-                $this->text(4, 'Práctica con una maqueta', "Colocá objetos que representen una calle, una curva y un autobús. Mové una figura detrás de cada obstáculo y comprobá cuándo desaparece de la vista. Explicá cómo cambiarías tu posición sin acercarte al peligro."),
+                $this->text(4, 'Práctica con una maqueta', 'Colocá objetos que representen una calle, una curva y un autobús. Mové una figura detrás de cada obstáculo y comprobá cuándo desaparece de la vista. Explicá cómo cambiarías tu posición sin acercarte al peligro.'),
             ]),
             $this->riskLesson('RIESGO-PREDICE', 'Reto 3: ¿Qué podría pasar después?', 1, 15, 'story', 'Anticipar movimientos probables de distintos actores viales.', $competencyId, ['RIESGO.ANTICIPA'], [
-                $this->text(1, 'Anticipar no es adivinar', "Anticipar significa reconocer posibilidades: un autobús puede arrancar, una puerta puede abrirse, un vehículo puede girar y una persona puede cambiar de dirección. Usá señales, ruedas, luces, postura y espacio disponible, pero conservá margen por si tu predicción falla."),
+                $this->text(1, 'Anticipar no es adivinar', 'Anticipar significa reconocer posibilidades: un autobús puede arrancar, una puerta puede abrirse, un vehículo puede girar y una persona puede cambiar de dirección. Usá señales, ruedas, luces, postura y espacio disponible, pero conservá margen por si tu predicción falla.'),
                 $this->scenario(2, 'Fila frente a la escuela', 'Un vehículo está detenido y una persona menor se mueve en el asiento trasero junto a la puerta que da hacia la calle.', '¿Qué posibilidad debe entrar en tu plan?', [
                     ['id' => 'puerta', 'label' => 'La puerta podría abrirse', 'feedback' => 'Correcto. Reconocés una señal previa y dejás espacio para reaccionar.', 'correct' => true],
                     ['id' => 'ninguna', 'label' => 'Ninguna, porque el vehículo está detenido', 'feedback' => 'Un vehículo detenido también puede generar movimientos inesperados.', 'correct' => false],
@@ -677,10 +677,10 @@ final class SafeCrossingPilotSeeder extends Seeder
                     ['id' => 'giro', 'label' => 'Podría girar; Luna debe conservar margen y confirmar su intención', 'feedback' => 'Correcto. Las ruedas son una pista, aunque todavía se debe comprobar antes de actuar.', 'correct' => true],
                     ['id' => 'seguro', 'label' => 'Las ruedas confirman que el automóvil le dará paso', 'feedback' => 'La dirección de las ruedas sugiere una trayectoria, no confirma que la persona conductora haya visto a Luna.', 'correct' => false],
                 ]),
-                $this->text(4, 'Pausa de tres segundos', "En una escena segura, nombrá tres cosas que podrían ocurrir en los próximos tres segundos. Después separalas en: probable, posible y poco probable. Todas pueden requerir una salida segura."),
+                $this->text(4, 'Pausa de tres segundos', 'En una escena segura, nombrá tres cosas que podrían ocurrir en los próximos tres segundos. Después separalas en: probable, posible y poco probable. Todas pueden requerir una salida segura.'),
             ]),
             $this->riskLesson('RIESGO-CLIMA', 'Reto 4: Cuando cambia el entorno', 2, 15, 'web_simulation', 'Replantear la decisión ante lluvia, oscuridad, ruido o tránsito intenso.', $competencyId, ['RIESGO.ANTICIPA', 'RIESGO.REPLANIFICA'], [
-                $this->text(1, 'La misma ruta puede tener otro riesgo', "Un aguacero, la salida de clases, una avería o la noche pueden transformar un lugar conocido. Con lluvia hay menos visibilidad y adherencia; con ruido se ocultan señales auditivas. La respuesta no es hacer lo mismo más rápido: es **volver a evaluar**."),
+                $this->text(1, 'La misma ruta puede tener otro riesgo', 'Un aguacero, la salida de clases, una avería o la noche pueden transformar un lugar conocido. Con lluvia hay menos visibilidad y adherencia; con ruido se ocultan señales auditivas. La respuesta no es hacer lo mismo más rápido: es **volver a evaluar**.'),
                 $this->scenario(2, 'Aguacero al salir', 'Comienza un aguacero fuerte. Hay agua acumulada, poca visibilidad y personas corriendo hacia el autobús.', '¿Qué decisión demuestra adaptación?', [
                     ['id' => 'rutina', 'label' => 'Seguir igual porque conocés la ruta', 'feedback' => 'Conocer el sitio no neutraliza las condiciones nuevas.', 'correct' => false],
                     ['id' => 'reevaluar', 'label' => 'Esperar protegido y reevaluar ruta, visibilidad y acompañamiento', 'feedback' => 'Correcto. Cambiás el plan cuando cambia el entorno.', 'correct' => true],
@@ -691,10 +691,10 @@ final class SafeCrossingPilotSeeder extends Seeder
                     ['id' => 'alternativa', 'label' => 'Esperar protegido y buscar una ruta iluminada o acompañamiento seguro', 'feedback' => 'Correcto. El fallo de infraestructura convierte una ruta conocida en una situación que debe reevaluarse.', 'correct' => true],
                     ['id' => 'luz-telefono', 'label' => 'Usar la luz del teléfono y cruzar con rapidez', 'feedback' => 'Una luz pequeña no controla los movimientos de la intersección y el teléfono puede dividir la atención.', 'correct' => false],
                 ]),
-                $this->text(4, 'Semáforo personal', "Clasificá la situación: **verde**, puedo continuar con atención; **amarillo**, necesito más información o margen; **rojo**, debo detenerme y cambiar el plan. Justificá el color usando pistas concretas."),
+                $this->text(4, 'Semáforo personal', 'Clasificá la situación: **verde**, puedo continuar con atención; **amarillo**, necesito más información o margen; **rojo**, debo detenerme y cambiar el plan. Justificá el color usando pistas concretas.'),
             ]),
             $this->riskLesson('RIESGO-MARGEN', 'Reto 5: Tiempo, espacio y salida', 1, 16, 'dilemma', 'Elegir alternativas que toleren errores y cambios inesperados.', $competencyId, ['RIESGO.MARGEN'], [
-                $this->text(1, 'Una decisión segura no depende de que todo salga perfecto', "El **margen de seguridad** es el tiempo y espacio disponibles para reaccionar. Si una opción exige correr, pasar rozando o confiar en que otra persona no se equivocará, el margen es pequeño."),
+                $this->text(1, 'Una decisión segura no depende de que todo salga perfecto', 'El **margen de seguridad** es el tiempo y espacio disponibles para reaccionar. Si una opción exige correr, pasar rozando o confiar en que otra persona no se equivocará, el margen es pequeño.'),
                 $this->scenario(2, 'Bus que ya llegó', 'El autobús está en la parada al otro lado. Para alcanzarlo tendrías que cruzar corriendo entre vehículos.', '¿Cuál opción protege mejor la vida?', [
                     ['id' => 'alcanzar', 'label' => 'Correr porque perder el bus sería un problema', 'feedback' => 'Una consecuencia incómoda no justifica eliminar el margen de seguridad.', 'correct' => false],
                     ['id' => 'siguiente', 'label' => 'Usar el cruce seguro aunque se vaya el autobús', 'feedback' => 'Correcto. Priorizás una decisión recuperable y con margen.', 'correct' => true],
@@ -705,10 +705,10 @@ final class SafeCrossingPilotSeeder extends Seeder
                     ['id' => 'detener-plan', 'label' => 'Debe abandonar ese plan y volver a un espacio protegido', 'feedback' => 'Correcto. Cuando el espacio de reacción disminuye, se elige una alternativa recuperable.', 'correct' => true],
                     ['id' => 'confiar', 'label' => 'Puede seguir porque quien conduce seguramente la verá', 'feedback' => 'Una decisión segura no depende de que otra persona detecte y corrija el peligro a tiempo.', 'correct' => false],
                 ]),
-                $this->text(4, 'Comparador de opciones', "Para dos rutas o decisiones, compará: visibilidad, espacio protegido, cantidad de movimientos, tiempo para reaccionar y alternativa de salida. Elegí la que siga siendo segura aunque alguien cometa un error."),
+                $this->text(4, 'Comparador de opciones', 'Para dos rutas o decisiones, compará: visibilidad, espacio protegido, cantidad de movimientos, tiempo para reaccionar y alternativa de salida. Elegí la que siga siendo segura aunque alguien cometa un error.'),
             ]),
             $this->riskLesson('RIESGO-MISION', 'Misión integradora: cambia el plan', 2, 14, 'competency_challenge', 'Integrar detección, anticipación, margen y replanteamiento.', $competencyId, ['RIESGO.DETECTA', 'RIESGO.ANTICIPA', 'RIESGO.MARGEN', 'RIESGO.REPLANIFICA'], [
-                $this->text(1, 'El método del detective vial', "**Detectá → anticipá → compará márgenes → decidí → volvé a observar.** Una buena decisión puede cambiar si aparece información nueva."),
+                $this->text(1, 'El método del detective vial', '**Detectá → anticipá → compará márgenes → decidí → volvé a observar.** Una buena decisión puede cambiar si aparece información nueva.'),
                 $this->scenario(2, 'Parada con visibilidad bloqueada', 'Un autobús tapa el cruce, llueve y una motocicleta podría adelantarlo.', '¿Qué integra mejor el método?', [
                     ['id' => 'delante', 'label' => 'Cruzar delante porque el autobús está detenido', 'feedback' => 'El autobús bloquea la información y la motocicleta prevista reduce el margen.', 'correct' => false],
                     ['id' => 'esperar', 'label' => 'Esperar protegido hasta recuperar visibilidad y reevaluar', 'feedback' => 'Correcto. Detectás, anticipás y no actuás sin margen.', 'correct' => true],
@@ -724,7 +724,7 @@ final class SafeCrossingPilotSeeder extends Seeder
                     ['id' => 'detener', 'label' => 'Permanecer protegido y reevaluar cuando pase', 'feedback' => 'Correcto. La información nueva obliga a detener el plan inicial.', 'correct' => true],
                     ['id' => 'senal', 'label' => 'Avanzar porque la señal da permiso', 'feedback' => 'Una señal no elimina un peligro excepcional presente.', 'correct' => false],
                 ]),
-                $this->text(5, 'Transferencia a tu vida', "Elegí un recorrido cotidiano sin registrar datos privados. Explicá: dos peligros, un movimiento posible, el margen que necesitás y la señal que te haría cambiar de plan. Luego realizá una práctica acompañada adecuada para tu edad."),
+                $this->text(5, 'Transferencia a tu vida', 'Elegí un recorrido cotidiano sin registrar datos privados. Explicá: dos peligros, un movimiento posible, el margen que necesitás y la señal que te haría cambiar de plan. Luego realizá una práctica acompañada adecuada para tu edad.'),
             ]),
         ];
     }

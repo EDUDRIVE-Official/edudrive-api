@@ -67,10 +67,13 @@ final class StudentLearningResetService
     /** @return list<string> */
     private function ids(string $table, string $column, string $value): array
     {
-        return Schema::hasTable($table) ? DB::table($table)->where($column, $value)->pluck('id')->all() : [];
+        return Schema::hasTable($table) ? array_values(DB::table($table)->where($column, $value)->pluck('id')->map(static fn ($id): string => (string) $id)->all()) : [];
     }
 
-    /** @param array<string, list<array<string, mixed>>> $snapshot @param list<string> $values */
+    /**
+     * @param  array<string, list<array<array-key, mixed>>>  $snapshot
+     * @param  list<string>  $values
+     */
     private function captureWhere(array &$snapshot, string $table, string $column, array $values): void
     {
         if (! Schema::hasTable($table) || $values === []) {
@@ -79,6 +82,6 @@ final class StudentLearningResetService
             return;
         }
 
-        $snapshot[$table] = DB::table($table)->whereIn($column, $values)->get()->map(static fn (object $row): array => (array) $row)->all();
+        $snapshot[$table] = array_values(DB::table($table)->whereIn($column, $values)->get()->map(static fn (object $row): array => (array) $row)->all());
     }
 }

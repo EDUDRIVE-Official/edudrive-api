@@ -35,6 +35,7 @@ use Ramsey\Uuid\Uuid;
 final class ResponsiblePassengerPilotSeeder extends Seeder
 {
     private const string COURSE_CODE = 'EDU-EXP-003';
+
     private const string COMPETENCY_CODE = 'PASAJERO-RESPONSABLE';
 
     public function run(): void
@@ -90,7 +91,9 @@ final class ResponsiblePassengerPilotSeeder extends Seeder
     private function competencyId(): string
     {
         $existing = DB::table('academic_competencies')->where('code', self::COMPETENCY_CODE)->value('id');
-        if ($existing !== null) return (string) $existing;
+        if ($existing !== null) {
+            return (string) $existing;
+        }
 
         $competency = app(CreateCompetencyHandler::class)->handle(new CreateCompetencyCommand(
             self::COMPETENCY_CODE,
@@ -109,6 +112,7 @@ final class ResponsiblePassengerPilotSeeder extends Seeder
         ] as [$code, $description]) {
             app(AddCompetencyIndicatorHandler::class)->handle(new AddCompetencyIndicatorCommand($competency->id, 'PASAJERO.RUTINA', $code, $description));
         }
+
         return $competency->id;
     }
 
@@ -166,6 +170,7 @@ final class ResponsiblePassengerPilotSeeder extends Seeder
     private function decision(int $position, array $data): ContentBlockInput
     {
         [$title, $context, $safe, $unsafe] = $data;
+
         return new ContentBlockInput((string) Str::uuid(), 'scenario', $position, [
             'title' => $title, 'context' => $context, 'prompt' => '¿Cuál decisión conserva mayor protección?',
             'accessible_text' => $context.' Elegí la alternativa que conserve protección, información y margen.',

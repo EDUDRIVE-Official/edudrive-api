@@ -7,9 +7,28 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Modules\Academic\Application\Commands\{AddCompetencyIndicatorCommand, AddSubcompetencyCommand, ApproveCourseCommand, CreateCompetencyCommand, CreateCourseCommand, PublishCourseCommand, ReplaceCourseCurriculumCommand, ReplaceUnitContentCommand, SubmitCourseForReviewCommand};
-use Modules\Academic\Application\DTO\{ContentBlockInput, CourseModuleInput, CourseUnitInput, LessonInput};
-use Modules\Academic\Application\UseCases\{AddCompetencyIndicatorHandler, AddSubcompetencyHandler, ApproveCourseHandler, CreateCompetencyHandler, CreateCourseHandler, PublishCourseHandler, ReplaceCourseCurriculumHandler, ReplaceUnitContentHandler, SubmitCourseForReviewHandler};
+use Modules\Academic\Application\Commands\AddCompetencyIndicatorCommand;
+use Modules\Academic\Application\Commands\AddSubcompetencyCommand;
+use Modules\Academic\Application\Commands\ApproveCourseCommand;
+use Modules\Academic\Application\Commands\CreateCompetencyCommand;
+use Modules\Academic\Application\Commands\CreateCourseCommand;
+use Modules\Academic\Application\Commands\PublishCourseCommand;
+use Modules\Academic\Application\Commands\ReplaceCourseCurriculumCommand;
+use Modules\Academic\Application\Commands\ReplaceUnitContentCommand;
+use Modules\Academic\Application\Commands\SubmitCourseForReviewCommand;
+use Modules\Academic\Application\DTO\ContentBlockInput;
+use Modules\Academic\Application\DTO\CourseModuleInput;
+use Modules\Academic\Application\DTO\CourseUnitInput;
+use Modules\Academic\Application\DTO\LessonInput;
+use Modules\Academic\Application\UseCases\AddCompetencyIndicatorHandler;
+use Modules\Academic\Application\UseCases\AddSubcompetencyHandler;
+use Modules\Academic\Application\UseCases\ApproveCourseHandler;
+use Modules\Academic\Application\UseCases\CreateCompetencyHandler;
+use Modules\Academic\Application\UseCases\CreateCourseHandler;
+use Modules\Academic\Application\UseCases\PublishCourseHandler;
+use Modules\Academic\Application\UseCases\ReplaceCourseCurriculumHandler;
+use Modules\Academic\Application\UseCases\ReplaceUnitContentHandler;
+use Modules\Academic\Application\UseCases\SubmitCourseForReviewHandler;
 use Modules\Academic\Domain\ValueObjects\LessonLearningDesign;
 use Ramsey\Uuid\Uuid;
 
@@ -19,7 +38,9 @@ final class SustainableMobilityPilotSeeder extends Seeder
 
     public function run(): void
     {
-        if (! app()->environment(['local', 'testing']) || DB::table('academic_courses')->where('code', self::COURSE_CODE)->exists()) return;
+        if (! app()->environment(['local', 'testing']) || DB::table('academic_courses')->where('code', self::COURSE_CODE)->exists()) {
+            return;
+        }
         $competencyId = $this->competencyId();
         $course = app(CreateCourseHandler::class)->handle(new CreateCourseCommand(
             code: self::COURSE_CODE, title: 'Misión Movilidad Sostenible',
@@ -36,7 +57,9 @@ final class SustainableMobilityPilotSeeder extends Seeder
                 new CourseUnitInput($unitIds[2], 'MOVILIDAD-CUIDA', '3. El viaje deja una huella', 'Reducí energía, ruido y espacio ocupado.', 'Mejorar impactos sin trasladar riesgos.', 36, 3, [$unitIds[1]]),
             ]),
         ]));
-        foreach ($this->specs() as $index => $pair) app(ReplaceUnitContentHandler::class)->handle(new ReplaceUnitContentCommand($course->id, $unitIds[$index], [$this->lesson($pair[0], 1, $competencyId), $this->lesson($pair[1], 2, $competencyId)]));
+        foreach ($this->specs() as $index => $pair) {
+            app(ReplaceUnitContentHandler::class)->handle(new ReplaceUnitContentCommand($course->id, $unitIds[$index], [$this->lesson($pair[0], 1, $competencyId), $this->lesson($pair[1], 2, $competencyId)]));
+        }
         app(SubmitCourseForReviewHandler::class)->handle(new SubmitCourseForReviewCommand($course->id));
         app(ApproveCourseHandler::class)->handle(new ApproveCourseCommand($course->id));
         app(PublishCourseHandler::class)->handle(new PublishCourseCommand($course->id));
@@ -45,10 +68,15 @@ final class SustainableMobilityPilotSeeder extends Seeder
     private function competencyId(): string
     {
         $existing = DB::table('academic_competencies')->where('code', 'MOVILIDAD-SOSTENIBLE')->value('id');
-        if ($existing !== null) return (string) $existing;
+        if ($existing !== null) {
+            return (string) $existing;
+        }
         $competency = app(CreateCompetencyHandler::class)->handle(new CreateCompetencyCommand('MOVILIDAD-SOSTENIBLE', 'Elige movilidad segura, inclusiva y sostenible', 'Compara medios y reduce impactos sin trasladar riesgos.', 'eco_driving', 'foundation'));
         app(AddSubcompetencyHandler::class)->handle(new AddSubcompetencyCommand($competency->id, 'MOVILIDAD.DECIDE', 'Compara, conecta y mejora decisiones de movilidad'));
-        foreach ([['MOVILIDAD.ELIGE', 'Compara medios según necesidad y accesibilidad.'], ['MOVILIDAD.CONECTA', 'Planifica conexiones con margen y alternativa.'], ['MOVILIDAD.CUIDA', 'Reduce impactos sobre personas y comunidad.']] as [$code, $description]) app(AddCompetencyIndicatorHandler::class)->handle(new AddCompetencyIndicatorCommand($competency->id, 'MOVILIDAD.DECIDE', $code, $description));
+        foreach ([['MOVILIDAD.ELIGE', 'Compara medios según necesidad y accesibilidad.'], ['MOVILIDAD.CONECTA', 'Planifica conexiones con margen y alternativa.'], ['MOVILIDAD.CUIDA', 'Reduce impactos sobre personas y comunidad.']] as [$code, $description]) {
+            app(AddCompetencyIndicatorHandler::class)->handle(new AddCompetencyIndicatorCommand($competency->id, 'MOVILIDAD.DECIDE', $code, $description));
+        }
+
         return $competency->id;
     }
 
@@ -70,17 +98,33 @@ final class SustainableMobilityPilotSeeder extends Seeder
         ];
     }
 
-    private function spec(string $code, string $title, string $indicator, string $experience, string $objective, string $text, array $first, array $second, string $practice): array { return compact('code', 'title', 'indicator', 'experience', 'objective', 'text', 'first', 'second', 'practice'); }
+    private function spec(string $code, string $title, string $indicator, string $experience, string $objective, string $text, array $first, array $second, string $practice): array
+    {
+        return compact('code', 'title', 'indicator', 'experience', 'objective', 'text', 'first', 'second', 'practice');
+    }
+
     private function lesson(array $spec, int $position, string $competencyId): LessonInput
     {
-        $indicator = $spec['indicator']; $stage = 'pending_review';
+        $indicator = $spec['indicator'];
+        $stage = 'pending_review';
+
         return new LessonInput($this->id($spec['code']), $spec['code'], $spec['title'], $spec['objective'], 18, $position, [$this->text(1, 'Idea esencial', $spec['text']), $this->decision(2, $spec['first']), $this->decision(3, $spec['second']), $this->text(4, 'Práctica segura', $spec['practice'])], LessonLearningDesign::fromArray(['stage' => $stage, 'jurisdictions' => ['GLOBAL', 'CR'], 'experience_type' => $spec['experience'], 'behavior_objective' => $spec['objective'], 'competency_id' => $competencyId, 'subcompetency_code' => 'MOVILIDAD.DECIDE', 'indicator_codes' => [$indicator], 'evidence_rules' => [['indicator_code' => $indicator, 'event_type' => 'lesson_completed', 'minimum_observations' => 1, 'weight' => 1]], 'requires_guardian' => true, 'normative_sources' => [['url' => 'https://www.csv.go.cr/seguridad-vial-virtual1', 'reviewed_at' => '2026-09-13']], 'version' => 1]));
     }
+
     private function decision(int $position, array $data): ContentBlockInput
     {
         [$title, $context, $safe, $unsafe] = $data;
+
         return new ContentBlockInput((string) Str::uuid(), 'scenario', $position, ['title' => $title, 'context' => $context, 'prompt' => '¿Qué opción equilibra seguridad y sostenibilidad?', 'accessible_text' => $context.' Compará seguridad, inclusión, impacto y alternativa.', 'choices' => [['id' => 'traslada', 'label' => $unsafe, 'feedback' => 'Esta opción traslada riesgo o impacto a otra persona.', 'correct' => false], ['id' => 'equilibra', 'label' => $safe, 'feedback' => 'Correcto. Protege a las personas y reduce un impacto evitable.', 'correct' => true], ['id' => 'mayoria', 'label' => 'Hacer lo que elija la mayoría sin comparar', 'feedback' => 'La popularidad no garantiza seguridad ni accesibilidad.', 'correct' => false]]]);
     }
-    private function text(int $position, string $title, string $markdown): ContentBlockInput { return new ContentBlockInput((string) Str::uuid(), 'text', $position, compact('title', 'markdown')); }
-    private function id(string $suffix): string { return Uuid::uuid5(Uuid::NAMESPACE_DNS, 'edudrive.'.self::COURSE_CODE.'.'.$suffix)->toString(); }
+
+    private function text(int $position, string $title, string $markdown): ContentBlockInput
+    {
+        return new ContentBlockInput((string) Str::uuid(), 'text', $position, compact('title', 'markdown'));
+    }
+
+    private function id(string $suffix): string
+    {
+        return Uuid::uuid5(Uuid::NAMESPACE_DNS, 'edudrive.'.self::COURSE_CODE.'.'.$suffix)->toString();
+    }
 }

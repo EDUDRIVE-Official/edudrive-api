@@ -105,7 +105,7 @@ final class AdminWebController
             ->keyBy('id');
         $logData = array_map(static function (array $log) use ($users): array {
             $actor = $users->get($log['user_id']);
-            $log['actor_name'] = $actor?->name ?? ($log['user_id'] ? 'Usuario no disponible' : 'Sistema EDUDRIVE');
+            $log['actor_name'] = $actor->name ?? ($log['user_id'] ? 'Usuario no disponible' : 'Sistema EDUDRIVE');
             $log['actor_email'] = $actor?->email;
 
             return $log;

@@ -12,6 +12,7 @@ use Modules\Academic\Application\DTO\CourseUnitInput;
 use Modules\Academic\Application\Exceptions\CourseNotFound;
 use Modules\Academic\Application\Queries\GetCourseCurriculumQuery;
 use Modules\Academic\Application\Responses\CourseCurriculumResponse;
+use Modules\Academic\Application\Services\CoursePublicationQualityGate;
 use Modules\Academic\Application\Services\CourseSnapshotBuilder;
 use Modules\Academic\Application\UseCases\ApproveCourseHandler;
 use Modules\Academic\Application\UseCases\ArchiveCourseHandler;
@@ -333,14 +334,14 @@ it('publica y archiva cursos mediante mutaciones atomicas', function (): void {
     (new SubmitCourseForReviewHandler($publishableCourses))->handle(
         new SubmitCourseForReviewCommand($publishable->id()->value()),
     );
-    (new ApproveCourseHandler($publishableCourses, new \Modules\Academic\Application\Services\CoursePublicationQualityGate($publishableCourses, new Eng027NullUnitContentRepository)))->handle(
+    (new ApproveCourseHandler($publishableCourses, new CoursePublicationQualityGate($publishableCourses, new Eng027NullUnitContentRepository)))->handle(
         new ApproveCourseCommand($publishable->id()->value()),
     );
 
     $versions = new Eng027CourseVersionRepository;
     $snapshotBuilder = new CourseSnapshotBuilder(new Eng027NullUnitContentRepository);
 
-    $qualityGate = new \Modules\Academic\Application\Services\CoursePublicationQualityGate($publishableCourses, new Eng027NullUnitContentRepository);
+    $qualityGate = new CoursePublicationQualityGate($publishableCourses, new Eng027NullUnitContentRepository);
     expect(fn () => (new PublishCourseHandler($publishableCourses, $versions, $snapshotBuilder, $qualityGate))->handle(
         new PublishCourseCommand($publishable->id()->value()),
     ))->toThrow(CourseUnitContentRequired::class);

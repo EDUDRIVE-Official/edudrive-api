@@ -1,0 +1,876 @@
+{
+  "documento": "EDF — Diseño del Piloto Curricular EDUDRIVE",
+  "id": "EDF-PC-01",
+  "version": "1.0.0",
+  "fecha": "2026-09-25",
+  "estado": "Diseño de piloto; no ejecutado",
+  "matriz_origen": {
+    "version": "1.0.0",
+    "archivo": "EDF_Matriz_Curricular_EDUDRIVE_3-80_v1.0.0.json",
+    "sha256": "4755e0d861504f84ead67acde12e62c69cf67ec77c33e63c7fe10be690b0b51e"
+  },
+  "muestra_propuesta": {
+    "total": 60,
+    "por_experiencia": 12,
+    "representativa": false
+  },
+  "reglas_comunes": {
+    "protocolos": "Heredados de EDF-MC-3-80 v1.0.0",
+    "dominio": "S1–S3 >=2 en cada observación elegible; S reservadas >=3 en transferencia; sin EC; sin pistas; protocolo completo.",
+    "retencion": "14–30 días después de la demostración real; no antes",
+    "modo": "Circuito protegido E1; decisiones representadas E2–E4; no operación motorizada.",
+    "registro": "Registro de piloto, con alcance y revisión humana; ejemplos ficticios, nunca credenciales emitidas."
+  },
+  "experiencias": [
+    {
+      "id": "PIL-01",
+      "name": "Cruzo acompañado y reconozco un peligro",
+      "stage": "DESCUBRO",
+      "age": "3–6",
+      "code": "EDU-PED-001.E1",
+      "protocol": "P1",
+      "vehicle": "No aplica",
+      "goal": "Distinguir los espacios, detenerse y comprobar el entorno antes de cruzar con el adulto en dos circuitos protegidos.",
+      "related": "EDU-RSK-001.E1 y EDU-DEC-001.E1: registrar comentarios sobre peligro y ayuda, sin acreditar esas competencias.",
+      "materials": "Cinta removible, figuras grandes de peatón/vehículo, pelota inmóvil fuera del recorrido, dos fotos o dibujos de calles ficticias y tarjeta de esperar. Espacio interior sin vehículos reales.",
+      "setup": "Marcar acera, calzada y un punto de espera. Un adulto acompaña y otro evalúa. Desplazar solo figuras; no hacer rodar la pelota para provocar una carrera. Revisar movilidad, comunicación y apoyo de acceso.",
+      "teaching": [
+        [
+          "3 min",
+          "Presentar el propósito: “Vamos a mostrar cómo caminar y cruzar juntos”. Acordar gesto de pausa.",
+          "Elige cómo responder y prueba el recorrido sin evaluación."
+        ],
+        [
+          "5 min",
+          "Mostrar acera y calzada; modelar detenerse, comprobar aproximaciones y mantener compañía.",
+          "Señala espacios y ensaya con una figura."
+        ],
+        [
+          "7 min",
+          "Juego Tito busca el camino: tres turnos con cambio de objetos. Preguntar después de elegir: “¿Qué comprobaste?”.",
+          "Mueve la figura, espera o pide ayuda; recibe retroalimentación."
+        ],
+        [
+          "5 min",
+          "Práctica corporal con acompañante. La frase “ahora podemos cruzar juntos” se da solo después de la comprobación del niño.",
+          "Hace pausa, observa y cruza con acompañamiento."
+        ],
+        [
+          "3 min",
+          "Cerrar con una escena dibujada distinta, todavía formativa.",
+          "Explica o señala dónde espera y quién acompaña."
+        ]
+      ],
+      "instruction": "“Mostrame dónde caminarías y qué harías para cruzar conmigo. Podés señalar, hablar o usar las figuras”. El acompañante no dice dónde mirar ni cuándo detenerse. La autorización final para cruzar es parte del acompañamiento esperado, no una pista de respuesta.",
+      "scenario": "SIM-PED-001-E1 / PIL-01. Cruce residencial de maqueta. Hay un adulto disponible, un vehículo representado en movimiento y una pelota inmóvil fuera de la acera. El objetivo es llegar juntos al otro lado, sin recuperar la pelota.",
+      "states": [
+        [
+          "N0",
+          "Inicio sobre acera. Pedir identificar ambos espacios.",
+          "S1: señala acera y calzada antes de mover figura."
+        ],
+        [
+          "N1",
+          "Se aproxima al borde; el vehículo sigue representado en movimiento.",
+          "S2: se detiene, comprueba aproximaciones y espera."
+        ],
+        [
+          "N2",
+          "La vía representada queda libre; adulto disponible.",
+          "S3: conserva compañía y cruza solo tras comprobación y autorización."
+        ],
+        [
+          "N3",
+          "Fin en acera opuesta. Pregunta neutral: “¿Qué hiciste para cuidarte?”.",
+          "Justificación gestual/oral; nunca corrige una acción crítica ya ocurrida."
+        ]
+      ],
+      "branches": [
+        [
+          "Esperar con el adulto, comprobar y cruzar juntos cuando es seguro",
+          "Segura; llega a N3 tras N2.",
+          "Registrar pausa, comprobación y compañía."
+        ],
+        [
+          "Pedir ayuda y quedarse a resguardo",
+          "Segura como protección. Si nunca demuestra el cruce, S3 queda no observado; completar otra oportunidad.",
+          "No confundir decisión protectora con evidencia de toda la competencia."
+        ],
+        [
+          "Seguir la pelota o entrar solo a la calzada representada",
+          "Error crítico. Congelar representación antes de cualquier exposición real.",
+          "Marcar S afectada=0, EC y remediación."
+        ],
+        [
+          "Esperar solo después de “detenete” del adulto",
+          "Respuesta con pista; no acredita S2 en ese intento.",
+          "Marcar P y S2=1; conservar el intento."
+        ]
+      ],
+      "rubric": [
+        [
+          "S1 Distinguir acera y calzada",
+          "0 confunde espacios y ubica al peatón en la calzada; 1 distingue solo tras una pista.",
+          "2 señala ambos y ubica el recorrido peatonal sin pista.",
+          "3 lo hace con disposición nueva y explica su elección por voz o gesto."
+        ],
+        [
+          "S2 Detenerse y observar",
+          "0 entra sin comprobar; 1 se detiene o comprueba solo al indicárselo.",
+          "2 hace pausa y comprueba las aproximaciones representadas antes de decidir.",
+          "3 ajusta el punto de espera ante una entrada de garaje nueva y explica por qué."
+        ],
+        [
+          "S3 Cruzar con adulto",
+          "0 inicia solo o sigue la pelota; 1 precisa recordatorio para mantener compañía.",
+          "2 cruza acompañado tras verificar y recibir la autorización prevista.",
+          "3 mantiene esa secuencia en el segundo circuito aunque cambie el distractor."
+        ]
+      ],
+      "variants": [
+        [
+          "D0 diagnóstico",
+          "Foto de parque y calle; identificar espacios y elegir acompañamiento.",
+          "No usar para acreditación ni enseñar la respuesta en esta toma."
+        ],
+        [
+          "F práctica D1",
+          "Circuito con cruce abierto; el adulto modela y luego retira pistas.",
+          "Formativa C1."
+        ],
+        [
+          "A evaluación D3",
+          "Calle residencial con pelota y figura de vehículo.",
+          "S1–S3; escenario base."
+        ],
+        [
+          "B transferencia D7",
+          "Entrada de garaje y objeto llamativo al otro lado; segunda disposición de aula.",
+          "Nueva variación: S2. Debe alcanzar 3; S1/S3 al menos 2."
+        ],
+        [
+          "R retención D24",
+          "Camino hacia parque con nueva entrada vehicular dibujada.",
+          "S1–S3 al menos 2, sin pistas ni EC."
+        ]
+      ],
+      "access": "En 3–4 años usar figuras y una instrucción por vez; en 5–6 admitir explicación breve. No exigir lectura ni nombrar derecha/izquierda. El acompañamiento y un apoyo físico de acceso acordado se registran; no se consideran pistas si no deciden por el niño.",
+      "remediation": "Volver a distinguir espacios y practicar la pausa con modelado. Si S3 faltó por decisión de permanecer a resguardo, ofrecer después un circuito seguro donde sí pueda mostrar cruce acompañado. Reiniciar A/B con variantes nuevas cuando haya brecha o error crítico.",
+      "passport": "Puedo distinguir acera y calzada, detenerme para comprobar y cruzar con una persona adulta. Demostrado en dos circuitos protegidos, con acompañamiento. Este registro no autoriza cruzar sin adulto.",
+      "scope": "Circuito protegido; acompañamiento adulto; no autonomía en vía pública.",
+      "scores": [
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          2,
+          3,
+          2
+        ]
+      ],
+      "days": [
+        3,
+        7
+      ],
+      "fail": "Si cruza la calzada representada para recuperar la pelota: intento con EC; estado en desarrollo, con práctica de pausa pendiente. No publicar demostrado.",
+      "refs": "M01; T01 de la matriz; R01 de este piloto",
+      "subcompetencias": [
+        "S1 Distinguir acera y calzada",
+        "S2 Detenerse y observar",
+        "S3 Cruzar con adulto"
+      ],
+      "error_critico_matriz": "invadir la calzada o perseguir la pelota",
+      "version_matriz": "1.0.0"
+    },
+    {
+      "id": "PIL-02",
+      "name": "Planifico una ruta segura y resuelvo un imprevisto",
+      "stage": "COMPRENDO",
+      "age": "7–12",
+      "code": "EDU-DEC-001.E2",
+      "protocol": "P2",
+      "vehicle": "No aplica",
+      "goal": "Comparar tres factores de una ruta, rechazar un atajo riesgoso y comunicar un plan alternativo cuando cambia el recorrido.",
+      "related": "EDU-PED-001.E2, EDU-PAS-001.E2 y EDU-SOS-001.E2: aportan contexto; el mapa no acredita cruce real, viaje en bus ni movilidad autónoma.",
+      "materials": "Mapa ficticio M2 impreso, tres fichas de ruta, fichas de lluvia/cierre, tarjetas de diálogo y teléfono de juguete o formulario de mensaje sin envío.",
+      "setup": "Mapa M2: Ruta A, 10 min, acera continua y cruce de visibilidad completa con acompañamiento previsto; Ruta B, 5 min, atajo entre vehículos que impiden ver; Ruta C, 14 min, acera continua y otro cruce visible. El punto de apoyo adulto está en el origen. Los tiempos son ficticios.",
+      "teaching": [
+        [
+          "5 min",
+          "Presentar mapa y vocabulario con “¿Qué información necesitás para elegir?”.",
+          "Comprueba que entiende las tres rutas."
+        ],
+        [
+          "8 min",
+          "Modelar comparación de seguridad, accesibilidad y tiempo con otro mapa.",
+          "Identifica por qué la ruta corta puede ser inadecuada."
+        ],
+        [
+          "10 min",
+          "Juego La ruta razonada: cada elección debe incluir tres factores. Sin puntos por rapidez.",
+          "Elige ruta y explica razones; practica sin presión."
+        ],
+        [
+          "8 min",
+          "Introducir diálogo amistoso y un cierre de ruta. Modelar rechazo respetuoso y comunicación.",
+          "Ensaya “por ahí no; usemos…” y avisa a apoyo ficticio."
+        ],
+        [
+          "4 min",
+          "Reflexión sobre una alternativa disponible si no puede continuar.",
+          "Distingue cambiar de plan de improvisar un riesgo."
+        ]
+      ],
+      "instruction": "“Elegí una ruta y explicá qué comparaste. Durante el recorrido puede cambiar algo: mostrá cómo decidís y a quién avisás”. Leer en voz alta datos del mapa es apoyo de acceso; señalar la ruta segura es pista.",
+      "scenario": "SIM-DEC-001-E2 / PIL-02. Ruta A acordada hacia la escuela. Un amigo propone B para llegar antes; antes de salir, se informa que una obra bloquea A antes del cruce. C está disponible; también se puede esperar en el origen protegido con apoyo adulto.",
+      "states": [
+        [
+          "N0",
+          "Mapa con tres rutas y datos visibles.",
+          "S1: compara seguridad, accesibilidad y tiempo."
+        ],
+        [
+          "N1",
+          "Amigo: “Por B llegamos más rápido”.",
+          "S2: rechaza el atajo por falta de visibilidad, sin atacar al amigo."
+        ],
+        [
+          "N2",
+          "A queda cerrada; C sigue accesible y el apoyo está disponible.",
+          "S3: elige C o espera con apoyo y comunica el cambio."
+        ],
+        [
+          "N3",
+          "Solicitar explicación del plan final.",
+          "Registrar destino, alternativa y mensaje; no enviar un mensaje real."
+        ]
+      ],
+      "branches": [
+        [
+          "Elegir A al inicio y luego C, con aviso",
+          "Segura y completa si justifica tres factores y rechaza B.",
+          "Permite observar S1–S3."
+        ],
+        [
+          "Permanecer en origen protegido y pedir apoyo al cerrarse A",
+          "Segura y válida si comunica lugar y motivo.",
+          "Permite S3 sin obligar a continuar."
+        ],
+        [
+          "Seguir al amigo por B sin visibilidad",
+          "Error crítico; cerrar la rama sin representar daño.",
+          "S2=0 y EC; no compensa con buen mapa."
+        ],
+        [
+          "Elegir C solo porque lo señala el docente",
+          "Pista de respuesta.",
+          "S3=1; no declarar evidencia independiente."
+        ]
+      ],
+      "rubric": [
+        [
+          "S1 Comparar alternativas de ruta",
+          "0 ignora peligro explícito y elige B; 1 compara solo un factor o necesita preguntas dirigidas.",
+          "2 compara seguridad, accesibilidad y tiempo y elige opción viable.",
+          "3 reajusta la comparación cuando cambia un factor no ensayado."
+        ],
+        [
+          "S2 Rechazar presión de pares",
+          "0 sigue al grupo al atajo inseguro; 1 rechaza solo después de una pista.",
+          "2 rechaza con frase o gesto claro y mantiene alternativa segura.",
+          "3 mantiene el rechazo ante otra formulación y explica el riesgo concreto."
+        ],
+        [
+          "S3 Activar un plan de respaldo",
+          "0 continúa por tramo bloqueado/inseguro; 1 elige alternativa o avisa solo con ayuda dirigida.",
+          "2 cambia a ruta viable o espera con apoyo y comunica ubicación, motivo y plan.",
+          "3 activa una alternativa nueva cuando falla la primera y conserva comunicación."
+        ]
+      ],
+      "variants": [
+        [
+          "D0 diagnóstico",
+          "Mapa diferente con una ruta corta oculta y otra protegida.",
+          "Registrar razonamiento inicial sin dar nota global."
+        ],
+        [
+          "F práctica D1",
+          "Mapa de parque con alternativas equivalentes a las del guion.",
+          "Con retroalimentación; C1."
+        ],
+        [
+          "A evaluación D3",
+          "Mapa M2 escuela, presión por tiempo y obra.",
+          "S1–S3."
+        ],
+        [
+          "B transferencia D7",
+          "Mapa M2-B biblioteca: lluvia cierra la primera alternativa; refugio y apoyo permanecen disponibles.",
+          "Nueva variación S3: explicar espera y aviso; requiere 3 en S3."
+        ],
+        [
+          "R retención D24",
+          "Mapa de centro deportivo, cierre distinto y presión breve.",
+          "S1–S3 al menos 2; no reutilizar M2-B."
+        ]
+      ],
+      "access": "7–9: mapa con pictogramas y lectura neutral; 10–12: mayor detalle, sin cambiar los tres factores exigidos. Admitir respuesta oral o selección acompañada de explicación. Usar mapas ficticios, no domicilios ni trayectos identificables.",
+      "remediation": "Si compara solo tiempo, trabajar parejas de rutas manteniendo ese dato igual. Si cede a presión, ensayar una frase y alternativa. Si falla el respaldo, practicar lugar, motivo y plan. Reevaluar con otro mapa y nuevo par A/B.",
+      "passport": "Puedo comparar seguridad, accesibilidad y tiempo, rechazar un atajo riesgoso y comunicar una alternativa. Demostrado mediante mapas y decisiones simuladas. Mi permiso de desplazamiento depende del acuerdo con mis cuidadores y del entorno.",
+      "scope": "Planificación y decisiones simuladas; no acredita desplazamiento autónomo real.",
+      "scores": [
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          2,
+          2,
+          3
+        ]
+      ],
+      "days": [
+        3,
+        7
+      ],
+      "fail": "Si conoce la ruta segura pero sigue al amigo por B: EC y en desarrollo. Si responde con pistas: C1 y práctica pendiente, aunque termine en C.",
+      "refs": "M01; T08–T10 de la matriz; R02 de este piloto",
+      "subcompetencias": [
+        "S1 Comparar alternativas de ruta",
+        "S2 Rechazar presión de pares",
+        "S3 Activar un plan de respaldo"
+      ],
+      "error_critico_matriz": "seguir al grupo a una zona sin cruce seguro",
+      "version_matriz": "1.0.0"
+    },
+    {
+      "id": "PIL-03",
+      "name": "Tomo una decisión segura bajo presión",
+      "stage": "DECIDO",
+      "age": "13–16",
+      "code": "EDU-DEC-001.E3",
+      "protocol": "P3",
+      "vehicle": "No aplica",
+      "goal": "Reconocer presión, sostener una salida segura y revisar consecuencias y plan pese a una segunda insistencia del grupo.",
+      "related": "EDU-PAS-001.E3, EDU-RSK-001.E3 y EDU-PRE-001.E3: anotar razonamiento complementario; no emitir logros de estas familias.",
+      "materials": "Tarjetas de rol, dos mapas ficticios, guion de presión leve, formulario de decisión y opción de lectura privada o interacción con docente.",
+      "setup": "Tres amigos ficticios llegan tarde. Un atajo cruza entre vehículos y oculta el tránsito; existe cruce visible más lejano y punto protegido para esperar. Ningún compañero real improvisa insultos o presión. Se informa antes que el guion incluye dos insistencias leves.",
+      "teaching": [
+        [
+          "5 min",
+          "Presentar propósito y derecho a pausa o respuesta privada.",
+          "Elige modalidad y reconoce que rechazar también es decidir."
+        ],
+        [
+          "10 min",
+          "Analizar “todos lo hacen”, “vamos tarde” y “no pasa nada”; separar presión y datos del entorno.",
+          "Nombra presión y riesgo para sí y terceros."
+        ],
+        [
+          "10 min",
+          "Juego Decido aunque me presionen, modo práctica: primera decisión y segunda oportunidad.",
+          "Ensaya límite, alternativa y comunicación."
+        ],
+        [
+          "10 min",
+          "Practicar dos formulaciones de rechazo; no premiar la elocuencia.",
+          "Sostiene una decisión sin agresión y replanifica la llegada."
+        ],
+        [
+          "5 min",
+          "Debrief: “¿Qué cambió tu decisión y qué no debería cambiarla?”.",
+          "Explica consecuencias y próxima acción."
+        ]
+      ],
+      "instruction": "“El grupo quiere llegar rápido. Decidí qué harías y explicá tu plan. Oirás dos frases de insistencia; podés responder en privado, con texto o en voz alta”. El evaluador no felicita una opción antes del final.",
+      "scenario": "SIM-DEC-001-E3 / PIL-03. El grupo propone cruzar entre vehículos estacionados. Primera frase: “Vamos tarde”. Segunda, tras el rechazo: “Todos cruzamos aquí”. La alternativa protegida tarda más; es posible avisar del retraso o pedir apoyo.",
+      "states": [
+        [
+          "N0",
+          "Mostrar escena y primera frase de prisa.",
+          "S1: distingue presión social del estado de la vía."
+        ],
+        [
+          "N1",
+          "Pedir elección: atajo, cruce visible o espera con apoyo.",
+          "S2: elige una salida que mantiene protección."
+        ],
+        [
+          "N2",
+          "Aplicar segunda frase idéntica para todos.",
+          "S2: sostiene el límite; S1: reconoce nueva insistencia."
+        ],
+        [
+          "N3",
+          "El grupo se separa; pedir plan de llegada y aviso.",
+          "S3: considera consecuencias y concreta alternativa."
+        ]
+      ],
+      "branches": [
+        [
+          "Usar el cruce visible y avisar del retraso",
+          "Segura si verifica el entorno al llegar al cruce.",
+          "Registra límite, ruta y comunicación."
+        ],
+        [
+          "Esperar en punto protegido y pedir apoyo",
+          "Segura si el plan es realizable con recursos dados.",
+          "No penalizar por no continuar solo."
+        ],
+        [
+          "Aceptar el atajo tras la segunda insistencia",
+          "Error crítico aunque la primera elección fue segura.",
+          "Conservar ambas decisiones; S2=0 y EC."
+        ],
+        [
+          "Pedir pausa por malestar",
+          "Detener sesión; evidencia incompleta, sin inferir incompetencia.",
+          "Registrar interrupción y ofrecer otra modalidad/día."
+        ]
+      ],
+      "rubric": [
+        [
+          "S1 Reconocer presión social",
+          "0 trata la insistencia como prueba de seguridad; 1 identifica presión solo con pregunta dirigida.",
+          "2 identifica prisa o aprobación del grupo y distingue el riesgo del contexto.",
+          "3 reconoce presión reformulada o más indirecta en situación nueva."
+        ],
+        [
+          "S2 Elegir una salida segura",
+          "0 acepta el atajo peligroso; 1 sostiene una alternativa solo con recordatorio.",
+          "2 elige cruce protegido o apoyo y mantiene la elección ante segunda insistencia.",
+          "3 transfiere el límite a un contexto diferente sin depender de la misma frase."
+        ],
+        [
+          "S3 Revisar consecuencias y plan",
+          "0 ignora el riesgo al grupo o propone alternativa inviable; 1 enumera consecuencias sin plan completo.",
+          "2 considera efectos propios/terceros y concreta alternativa y aviso.",
+          "3 ajusta un plan nuevo ante cambio de destino o recursos y explica la razón."
+        ]
+      ],
+      "variants": [
+        [
+          "D0 diagnóstico",
+          "Caso privado de prisa hacia una actividad, sin segunda insistencia.",
+          "No acredita el protocolo P3."
+        ],
+        [
+          "F práctica D1",
+          "Cruce cerca de parque con retroalimentación.",
+          "Se puede repetir y modelar frases."
+        ],
+        [
+          "A evaluación D3",
+          "Salida de colegio con atajo oculto y dos insistencias.",
+          "S1–S3, sin pistas."
+        ],
+        [
+          "B evaluación D7",
+          "Salida de centro deportivo; la persona que presiona cambia de amigo a compañero de equipo.",
+          "Segunda observación, mismo nivel de exigencia."
+        ],
+        [
+          "C transferencia D10",
+          "Parada de bus: grupo propone pasar por detrás del bus sin visibilidad; cruce visible más lejos.",
+          "Nueva variación S2 y S3: ambas requieren 3."
+        ],
+        [
+          "R retención D24",
+          "Salida de evento con demora y alternativa de apoyo distinta.",
+          "S1–S3 al menos 2; sin frases memorizadas obligatorias."
+        ]
+      ],
+      "access": "13–14: explicitar recursos disponibles; 15–16: variar prioridad social manteniendo los mismos observables. No pedir relatos de experiencias traumáticas. El participante puede leer y responder sin dramatizar delante de sus pares.",
+      "remediation": "Separar reconocimiento de presión, elección y revisión. Practicar solo la brecha y luego completar un nuevo conjunto A/B/C con variantes inéditas. No etiquetar timidez, fluidez verbal o desacuerdo con el actor como falta de criterio vial.",
+      "passport": "Puedo reconocer presión social, mantener una alternativa segura y revisar mi plan de llegada. Demostrado en tres situaciones representadas, incluida una nueva. Este logro no acredita conducción ni elimina la necesidad de apoyo cuando el entorno lo exige.",
+      "scope": "Decisiones bajo presión en situaciones representadas; sin inferencia automática sobre conducta en vía real.",
+      "scores": [
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          2,
+          3,
+          3
+        ]
+      ],
+      "days": [
+        3,
+        7,
+        10
+      ],
+      "fail": "Si mantiene la respuesta solo cuando el docente interviene: S2=1, C1. Si cambia al atajo inseguro por aprobación: EC y en desarrollo; la primera elección no compensa.",
+      "refs": "M01; T13 y T17 de la matriz; R03 de este piloto",
+      "subcompetencias": [
+        "S1 Reconocer presión social",
+        "S2 Elegir una salida segura",
+        "S3 Revisar consecuencias y plan"
+      ],
+      "error_critico_matriz": "aceptar un riesgo crítico para evitar desaprobación",
+      "version_matriz": "1.0.0"
+    },
+    {
+      "id": "PIL-04",
+      "name": "Anticipo un conflicto y cedo el paso en automóvil",
+      "stage": "CONDUZCO",
+      "age": "17+",
+      "code": "EDU-RSK-001.E4",
+      "protocol": "P4",
+      "vehicle": "Automóvil",
+      "goal": "Explorar señales tempranas, anticipar una trayectoria oculta y elegir una acción preventiva antes de alcanzar la zona de conflicto.",
+      "related": "EDU-PED-001.E4, EDU-SEN-001.E4 y EDU-CON-004.E4: observación complementaria. No acreditar control de automóvil ni maniobras con este piloto.",
+      "materials": "Secuencia de cinco láminas o prototipo de video con pausas; vista de auto, cruce, vehículo estacionado y peatón parcialmente oculto; tarjetas reducir/esperar/comprobar/continuar y hoja de eventos.",
+      "setup": "Escena ficticia en aproximación a un cruce. El peatón tiene paso protegido según el guion validado; el automóvil aún puede esperar antes del cruce. No hay tarea de velocidad real, volante o frenado físico. Mostrar todas las señales necesarias, sin pistas visuales añadidas solo en evaluación.",
+      "teaching": [
+        [
+          "5 min",
+          "Familiarizar controles de selección con una escena neutra.",
+          "Demuestra que entiende pausa, selección y confirmación."
+        ],
+        [
+          "10 min",
+          "Modelar exploración de acera, oclusión y otra aproximación con una escena distinta.",
+          "Distingue lo observado de lo supuesto."
+        ],
+        [
+          "10 min",
+          "Juego Antes del conflicto: predecir dos trayectorias posibles antes de revelar.",
+          "Relaciona indicio y posible movimiento."
+        ],
+        [
+          "10 min",
+          "Comparar reducir anticipadamente, esperar y seguir por suposición.",
+          "Elige y explica margen; recibe feedback en práctica."
+        ],
+        [
+          "5 min",
+          "Reflexión sobre incertidumbre: “¿Qué no podés comprobar todavía?”.",
+          "Acepta esperar y recomprobar."
+        ]
+      ],
+      "instruction": "“Observá la aproximación. Elegí qué harías antes de continuar y explicá qué podría ocurrir. Podés pedir repetir una lámina por acceso; no vas a recibir la solución durante la evaluación”. Se evalúa decisión representada, no velocidad de clic.",
+      "scenario": "SIM-RSK-001-E4 / PIL-04-AUTO. Lámina L0: cruce y vehículo estacionado que oculta parte de la acera. L1: indicio visible de peatón tras la oclusión y motocicleta en otra aproximación. L2: punto de decisión antes del cruce. L3: peatón cruza. L4: tránsito del cruce despejado y nueva comprobación.",
+      "states": [
+        [
+          "N0 L0",
+          "Escena completa antes de actuar.",
+          "S1: menciona o señala cruce, oclusión y otra aproximación relevante."
+        ],
+        [
+          "N1 L1",
+          "Indicio temprano de posible peatón.",
+          "S2: predice posible entrada y distingue incertidumbre."
+        ],
+        [
+          "N2 L2",
+          "Elegir antes de confirmar avance hacia el cruce.",
+          "S3: reduce/espera antes de la zona y conserva protección."
+        ],
+        [
+          "N3 L3–L4",
+          "Peatón presente y luego salida del cruce.",
+          "S3: mantiene espera y recomprueba antes de continuar."
+        ]
+      ],
+      "branches": [
+        [
+          "Reducir anticipadamente y esperar antes del cruce; recomprobar",
+          "Segura y completa cuando se vincula al indicio temprano.",
+          "Registrar acción antes de confirmar entrada."
+        ],
+        [
+          "Detener la progresión representada y pedir más información",
+          "Segura; S3 observable si conserva posición previa al cruce.",
+          "Debe haber exploración y predicción para S1/S2, no clic automático."
+        ],
+        [
+          "Seguir hacia el cruce tras identificar peatón posible o presente",
+          "Error crítico. Mostrar pausa y necesidad de revisión, sin escena de impacto.",
+          "S3=0 y EC; un desenlace sin colisión no cambia la valoración."
+        ],
+        [
+          "Elegir espera sin explorar ni justificar",
+          "Protección conservada, pero evidencia incompleta de S1/S2.",
+          "No convertir prudencia genérica en dominio de percepción."
+        ]
+      ],
+      "rubric": [
+        [
+          "S1 Explorar el entorno",
+          "0 omite los indicios relevantes y afirma que no hay riesgo; 1 los descubre solo tras pista.",
+          "2 identifica cruce, oclusión y aproximación relevante sin pistas.",
+          "3 adapta exploración cuando cambia el lado o tipo de oclusión."
+        ],
+        [
+          "S2 Anticipar trayectorias ocultas",
+          "0 niega el conflicto pese al indicio; 1 lo predice solo después del desenlace o pista.",
+          "2 anticipa posible entrada del peatón antes de L3 y expresa incertidumbre.",
+          "3 anticipa en nueva configuración y distingue dos desenlaces plausibles."
+        ],
+        [
+          "S3 Mantener margen de seguridad",
+          "0 confirma avance hacia peligro detectado; 1 espera solo después de advertencia.",
+          "2 reduce/espera antes del cruce y recomprueba antes de avanzar.",
+          "3 ajusta anticipadamente ante conflicto combinado nuevo sin recurrir a maniobra extrema."
+        ]
+      ],
+      "variants": [
+        [
+          "D0 diagnóstico",
+          "Cruce distinto con oclusión y selección comentada.",
+          "Registrar modalidad y familiaridad con simulación."
+        ],
+        [
+          "F práctica D1",
+          "Cruce abierto con indicios claros y feedback.",
+          "No reutilizar la misma secuencia en A/B/C."
+        ],
+        [
+          "A evaluación D3",
+          "Cruce residencial con peatón parcialmente oculto y moto aproximándose.",
+          "S1–S3 en automóvil."
+        ],
+        [
+          "B evaluación D7",
+          "Acceso a centro educativo: vehículo grande oculta aproximación lateral.",
+          "Segundo contexto; mismas oportunidades observables."
+        ],
+        [
+          "C transferencia D10",
+          "Salida comercial: oclusión al otro lado y peatón que se detiene y luego continúa.",
+          "Variación de S2/S3: ambas requieren 3."
+        ],
+        [
+          "R retención D24",
+          "Cruce distinto junto a parada, sin secuencia visual repetida.",
+          "S1–S3 al menos 2; exclusivamente decisiones simuladas."
+        ]
+      ],
+      "access": "Permitir descripción accesible y zoom sin revelar qué elemento constituye el riesgo. La repetición neutral de la lámina no es pista; señalar al peatón oculto sí. La experiencia previa y la edad orientan apoyos, no la nota. Si la descripción revela la solución, invalidar esa forma y rediseñar.",
+      "remediation": "Si falla exploración, practicar búsqueda de indicios sin avance. Si falla anticipación, contrastar observado/posible. Si falla margen, ensayar esperar antes del conflicto. No inferir que mejorar el clic mejora frenado real. Completar nuevo A/B/C antes de acreditar.",
+      "passport": "Puedo explorar indicios, anticipar una trayectoria oculta y elegir reducir o esperar antes del conflicto desde el rol de automóvil. Demostrado en decisiones simuladas. No acredita frenado, control del vehículo ni conducción práctica.",
+      "scope": "Automóvil; percepción y decisiones simuladas; sin control motorizado ni práctica vial.",
+      "scores": [
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          2,
+          3,
+          3
+        ]
+      ],
+      "days": [
+        3,
+        7,
+        10
+      ],
+      "fail": "Si identifica al peatón pero confirma avanzar: EC y en desarrollo. Si solo hizo una sesión: protocolo incompleto aunque S1–S3 sean 3; no publicar demostrado.",
+      "refs": "M01; CR01 de la matriz y R04 del piloto solo para separación de rutas",
+      "subcompetencias": [
+        "S1 Explorar el entorno",
+        "S2 Anticipar trayectorias ocultas",
+        "S3 Mantener margen de seguridad"
+      ],
+      "error_critico_matriz": "mantener trayectoria hacia un peligro detectado",
+      "version_matriz": "1.0.0"
+    },
+    {
+      "id": "PIL-05",
+      "name": "Detecto un riesgo y ajusto mi decisión en motocicleta",
+      "stage": "CONDUZCO",
+      "age": "17+",
+      "code": "EDU-RSK-001.E4",
+      "protocol": "P4",
+      "vehicle": "Motocicleta",
+      "goal": "Anticipar riesgos de una zona oculta desde la perspectiva de moto y elegir espera o reducción previa sin asumir que un espacio disponible es seguro.",
+      "related": "EDU-PRE-001.E4 y EDU-CON-003.E4: contexto de preparación; este piloto no acredita equilibrio, posición corporal, curvas ni frenado de moto.",
+      "materials": "Láminas o prototipo con perspectiva de moto, bus detenido, cruce oculto y zona de espera previa; tarjetas de acción, registro de indicios y formulario de decisión.",
+      "setup": "Escena ficticia: moto se aproxima a un bus detenido que oculta un cruce. Existe posición previa protegida para esperar. La representación declara que no hay visibilidad suficiente para pasar. No se manipula motocicleta real ni se ensayan maniobras.",
+      "teaching": [
+        [
+          "5 min",
+          "Familiarizar selección y pausa en escena neutra de moto.",
+          "Distingue el rol representado del control real."
+        ],
+        [
+          "10 min",
+          "Mostrar cómo un bus puede ocultar trayectorias.",
+          "Separa espacio físico aparente de visibilidad suficiente."
+        ],
+        [
+          "10 min",
+          "Juego Antes del conflicto, versión moto: ordenar indicio, predicción y decisión.",
+          "Explica dos posibles conflictos sin actuar por impulso."
+        ],
+        [
+          "10 min",
+          "Comparar esperar con intentar pasar sin comprobar.",
+          "Elige conservar margen y revisa al cambiar la escena."
+        ],
+        [
+          "5 min",
+          "Debrief: “¿Qué necesitarías comprobar antes de continuar?”.",
+          "Define una comprobación concreta."
+        ]
+      ],
+      "instruction": "“Estás representando a una persona en moto. Mostrá qué observás, qué podría aparecer y qué elegís hacer antes de continuar”. No pedir técnica física de frenado ni puntuar aceleración, equilibrio o movimientos corporales.",
+      "scenario": "SIM-RSK-001-E4 / PIL-05-MOTO. L0: bus detenido junto a cruce; visibilidad parcial. L1: indicio de persona al frente del bus y un vehículo en otra aproximación. L2: opción de seguir, esperar o pedir vista adicional desde posición protegida. L3: peatón entra en la zona oculta. L4: vista despejada, nueva comprobación.",
+      "states": [
+        [
+          "N0 L0",
+          "Aproximación sin compromiso de pasar al bus.",
+          "S1: identifica bus, oclusión y otra aproximación."
+        ],
+        [
+          "N1 L1",
+          "Indicio previo a entrada de peatón.",
+          "S2: predice una trayectoria que aún no puede confirmar."
+        ],
+        [
+          "N2 L2",
+          "Decisión antes de entrar al tramo oculto.",
+          "S3: conserva posición protegida, reduce/espera."
+        ],
+        [
+          "N3 L3–L4",
+          "Se revela peatón; después vuelve visibilidad.",
+          "Mantiene margen y recomprueba antes de continuar."
+        ]
+      ],
+      "branches": [
+        [
+          "Reducir o esperar antes de la zona oculta y recomprobar",
+          "Segura y completa si la decisión se vincula al riesgo anticipado.",
+          "Registrar indicio, predicción y momento lógico de la acción."
+        ],
+        [
+          "Solicitar vista adicional permaneciendo en posición protegida",
+          "Segura y válida para explorar incertidumbre.",
+          "No permitir que el control mueva la moto hacia el riesgo para “ver mejor”."
+        ],
+        [
+          "Intentar pasar porque “la moto cabe” pese a riesgo detectado",
+          "Error crítico; congelar antes de la zona de conflicto.",
+          "S3=0 y EC; no puntuar como éxito si no hay choque."
+        ],
+        [
+          "Esperar por imitación de una pista del facilitador",
+          "Respuesta formativa.",
+          "P=Sí, S afectada=1; no acredita P4."
+        ]
+      ],
+      "rubric": [
+        [
+          "S1 Explorar el entorno",
+          "0 considera solo espacio para pasar y omite oclusión; 1 identifica elementos tras pista.",
+          "2 identifica oclusión, cruce y aproximación relevante sin pistas.",
+          "3 cambia la exploración al variar bus por otra obstrucción y sentido de aproximación."
+        ],
+        [
+          "S2 Anticipar trayectorias ocultas",
+          "0 concluye seguridad solo porque hay espacio; 1 predice después de revelarse el conflicto o con pista.",
+          "2 anticipa peatón u otra trayectoria plausible antes de L3 y reconoce incertidumbre.",
+          "3 anticipa dos desenlaces plausibles en contexto nuevo sin afirmar certeza no observada."
+        ],
+        [
+          "S3 Mantener margen de seguridad",
+          "0 entra a tramo oculto hacia peligro detectado; 1 espera solo al advertírselo.",
+          "2 reduce/espera antes de comprometerse y recomprueba cuando cambia visibilidad.",
+          "3 conserva margen ante nuevo obstáculo o presión de seguir y ajusta la decisión."
+        ]
+      ],
+      "variants": [
+        [
+          "D0 diagnóstico",
+          "Cruce oculto por vehículo estacionado en perspectiva moto.",
+          "No transferir el resultado desde automóvil."
+        ],
+        [
+          "F práctica D1",
+          "Oclusión parcial con explicación y feedback.",
+          "Formativa C1."
+        ],
+        [
+          "A evaluación D3",
+          "Bus detenido junto a cruce con peatón posible.",
+          "S1–S3, vehículo=moto."
+        ],
+        [
+          "B evaluación D7",
+          "Vehículo de reparto oculta acceso; otra aproximación sigue visible.",
+          "Segundo contexto, misma exigencia."
+        ],
+        [
+          "C transferencia D10",
+          "Obra oculta una trayectoria lateral y un acompañante ficticio apura.",
+          "Variación S2/S3: ambas requieren 3; no puntuar presión como competencia DEC completa."
+        ],
+        [
+          "R retención D24",
+          "Parada interurbana ficticia con nueva disposición de oclusión.",
+          "S1–S3 al menos 2; decisiones simuladas."
+        ]
+      ],
+      "access": "Ofrecer mapa/relato accesible que preserve la incertidumbre relevante. No exigir experiencia previa de moto para el estudio de decisiones. Marcar modalidad representada: una pantalla no observa equilibrio ni habilidad de frenado.",
+      "remediation": "Trabajar diferencia entre “cabe” y “puedo comprobar”. Volver a identificar indicio y trayectoria antes de decidir. Si falta margen, practicar la opción de esperar. Reevaluar con conjunto nuevo de tres variantes y sin reutilizar la respuesta entrenada.",
+      "passport": "Puedo detectar una zona oculta, anticipar una trayectoria y elegir esperar o reducir antes del conflicto desde el rol de motocicleta. Demostrado en decisiones simuladas. No acredita equilibrio, frenado ni conducción práctica de moto.",
+      "scope": "Motocicleta; percepción y decisiones simuladas; no transferible automáticamente desde automóvil.",
+      "scores": [
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          2,
+          3,
+          3
+        ]
+      ],
+      "days": [
+        3,
+        7,
+        10
+      ],
+      "fail": "Si entra al tramo oculto porque la moto cabe: EC y en desarrollo. Un logro de automóvil permanece en su propio alcance y no completa este registro.",
+      "refs": "M01; CR01 de la matriz y R04 del piloto solo para separación de rutas",
+      "subcompetencias": [
+        "S1 Explorar el entorno",
+        "S2 Anticipar trayectorias ocultas",
+        "S3 Mantener margen de seguridad"
+      ],
+      "error_critico_matriz": "mantener trayectoria hacia un peligro detectado",
+      "version_matriz": "1.0.0"
+    }
+  ],
+  "instrumentos": [
+    "F01 Observación por intento",
+    "F02 Adjudicación y CTM",
+    "F03 Seguimiento individual",
+    "F04 Informe y cambios"
+  ],
+  "nota": "Anexo de especificación curricular. No es código de aplicación, contrato de API ni resultados de participantes."
+}

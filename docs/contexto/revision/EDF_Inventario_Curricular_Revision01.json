@@ -1,0 +1,532 @@
+{
+  "fecha": "2026-09-25",
+  "alcance": "Archivos locales revisados; no acredita cobertura fuera de este corpus",
+  "comprobaciones": {
+    "filas": 50,
+    "codigos_unicos": 50,
+    "subcompetencias": 150,
+    "por_etapa": {
+      "DESCUBRO": 11,
+      "COMPRENDO": 11,
+      "DECIDO": 11,
+      "CONDUZCO": 17
+    },
+    "campos_solicitados": 15,
+    "campos_vacios": [],
+    "comparaciones_THINK": 18,
+    "experiencias": 5,
+    "codigos_con_experiencia_desarrollada": 4,
+    "coincidencia_subcompetencias_y_EC": true
+  },
+  "inventario": [
+    {
+      "codigo": "EDU-PED-001.E1",
+      "etapa": "DESCUBRO",
+      "dominio": "Peatón",
+      "ficha_matriz": "Presente",
+      "experiencias": [
+        "PIL-01"
+      ],
+      "rubrica_operativa": "Desarrollada en piloto; pendiente de revisión",
+      "kit_materiales": "PIL-01, borrador por corregir",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-CIC-001.E1",
+      "etapa": "DESCUBRO",
+      "dominio": "Ciclista",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-PAS-001.E1",
+      "etapa": "DESCUBRO",
+      "dominio": "Pasajero y transporte",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-SEN-001.E1",
+      "etapa": "DESCUBRO",
+      "dominio": "Señalización",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-RSK-001.E1",
+      "etapa": "DESCUBRO",
+      "dominio": "Percepción del riesgo",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-DEC-001.E1",
+      "etapa": "DESCUBRO",
+      "dominio": "Toma de decisiones",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-PRE-001.E1",
+      "etapa": "DESCUBRO",
+      "dominio": "Prevención",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-CON-001.E1",
+      "etapa": "DESCUBRO",
+      "dominio": "Conducción",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-COV-001.E1",
+      "etapa": "DESCUBRO",
+      "dominio": "Convivencia vial",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-EME-001.E1",
+      "etapa": "DESCUBRO",
+      "dominio": "Emergencias",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-SOS-001.E1",
+      "etapa": "DESCUBRO",
+      "dominio": "Movilidad sostenible",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-PED-001.E2",
+      "etapa": "COMPRENDO",
+      "dominio": "Peatón",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-CIC-001.E2",
+      "etapa": "COMPRENDO",
+      "dominio": "Ciclista",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-PAS-001.E2",
+      "etapa": "COMPRENDO",
+      "dominio": "Pasajero y transporte",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-SEN-001.E2",
+      "etapa": "COMPRENDO",
+      "dominio": "Señalización",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-RSK-001.E2",
+      "etapa": "COMPRENDO",
+      "dominio": "Percepción del riesgo",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-DEC-001.E2",
+      "etapa": "COMPRENDO",
+      "dominio": "Toma de decisiones",
+      "ficha_matriz": "Presente",
+      "experiencias": [
+        "PIL-02"
+      ],
+      "rubrica_operativa": "Desarrollada en piloto; pendiente de revisión",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-PRE-001.E2",
+      "etapa": "COMPRENDO",
+      "dominio": "Prevención",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-CON-001.E2",
+      "etapa": "COMPRENDO",
+      "dominio": "Conducción",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-COV-001.E2",
+      "etapa": "COMPRENDO",
+      "dominio": "Convivencia vial",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-EME-001.E2",
+      "etapa": "COMPRENDO",
+      "dominio": "Emergencias",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-SOS-001.E2",
+      "etapa": "COMPRENDO",
+      "dominio": "Movilidad sostenible",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-PED-001.E3",
+      "etapa": "DECIDO",
+      "dominio": "Peatón",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-CIC-001.E3",
+      "etapa": "DECIDO",
+      "dominio": "Ciclista",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-PAS-001.E3",
+      "etapa": "DECIDO",
+      "dominio": "Pasajero y transporte",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-SEN-001.E3",
+      "etapa": "DECIDO",
+      "dominio": "Señalización",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-RSK-001.E3",
+      "etapa": "DECIDO",
+      "dominio": "Percepción del riesgo",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-DEC-001.E3",
+      "etapa": "DECIDO",
+      "dominio": "Toma de decisiones",
+      "ficha_matriz": "Presente",
+      "experiencias": [
+        "PIL-03"
+      ],
+      "rubrica_operativa": "Desarrollada en piloto; pendiente de revisión",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-PRE-001.E3",
+      "etapa": "DECIDO",
+      "dominio": "Prevención",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-CON-001.E3",
+      "etapa": "DECIDO",
+      "dominio": "Conducción",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-COV-001.E3",
+      "etapa": "DECIDO",
+      "dominio": "Convivencia vial",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-EME-001.E3",
+      "etapa": "DECIDO",
+      "dominio": "Emergencias",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-SOS-001.E3",
+      "etapa": "DECIDO",
+      "dominio": "Movilidad sostenible",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-PED-001.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Peatón",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-CIC-001.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Ciclista",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-PAS-001.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Pasajero y transporte",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-SEN-001.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Señalización",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-RSK-001.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Percepción del riesgo",
+      "ficha_matriz": "Presente",
+      "experiencias": [
+        "PIL-04",
+        "PIL-05"
+      ],
+      "rubrica_operativa": "Desarrollada en piloto; pendiente de revisión",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-DEC-001.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Toma de decisiones",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-PRE-001.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Prevención",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-CON-001.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Conducción",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-COV-001.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Convivencia vial",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-EME-001.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Emergencias",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-SOS-001.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Movilidad sostenible",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-CON-002.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Conducción",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-CON-003.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Conducción",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-CON-004.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Conducción",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-CON-005.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Conducción",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-CON-006.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Conducción",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    },
+    {
+      "codigo": "EDU-PRE-002.E4",
+      "etapa": "CONDUZCO",
+      "dominio": "Prevención",
+      "ficha_matriz": "Presente",
+      "experiencias": [],
+      "rubrica_operativa": "No localizada en el corpus revisado",
+      "kit_materiales": "No localizado en el corpus revisado",
+      "validacion_en_campo": "No realizada"
+    }
+  ]
+}

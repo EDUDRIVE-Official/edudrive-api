@@ -159,7 +159,9 @@ final class VisibleCyclingPilotSeeder extends Seeder
     private function routeCompetencyId(): string
     {
         $existing = DB::table('academic_competencies')->where('code', self::ROUTE_COMPETENCY_CODE)->first(['id']);
-        if ($existing !== null) return (string) $existing->id;
+        if ($existing !== null) {
+            return (string) $existing->id;
+        }
 
         $competency = app(CreateCompetencyHandler::class)->handle(new CreateCompetencyCommand(
             self::ROUTE_COMPETENCY_CODE,
@@ -203,7 +205,9 @@ final class VisibleCyclingPilotSeeder extends Seeder
         }
         DB::table('academic_module_prerequisites')->updateOrInsert(['module_id' => $module->id, 'prerequisite_module_id' => $prerequisiteModuleId]);
         foreach ($module->units as $index => $unit) {
-            if ($index > 0) DB::table('academic_unit_prerequisites')->updateOrInsert(['unit_id' => $unit->id, 'prerequisite_unit_id' => $module->units[$index - 1]->id]);
+            if ($index > 0) {
+                DB::table('academic_unit_prerequisites')->updateOrInsert(['unit_id' => $unit->id, 'prerequisite_unit_id' => $module->units[$index - 1]->id]);
+            }
         }
     }
 
@@ -221,7 +225,7 @@ final class VisibleCyclingPilotSeeder extends Seeder
     {
         return [
             $this->routeLesson('BICI-RUTA-COMPARA', 'Reto 1: La más corta no siempre es la mejor', 1, 19, 'visual_exploration', 'Comparar rutas usando criterios de seguridad.', $competencyId, ['CICLISTA.RUTA.ELIGE'], [
-                $this->text(1, 'Cuatro preguntas antes de salir', "Compará **velocidad del tránsito, espacio disponible, estado de la superficie y cantidad de conflictos**. Una ruta algo más larga puede ofrecer mejor visibilidad y menos decisiones simultáneas. Para personas menores, la planificación se realiza con una persona adulta."),
+                $this->text(1, 'Cuatro preguntas antes de salir', 'Compará **velocidad del tránsito, espacio disponible, estado de la superficie y cantidad de conflictos**. Una ruta algo más larga puede ofrecer mejor visibilidad y menos decisiones simultáneas. Para personas menores, la planificación se realiza con una persona adulta.'),
                 $this->scenario(2, 'Dos caminos al parque', 'La ruta corta tiene tránsito rápido y entradas de comercios. La alternativa es más larga, pero tiene menor velocidad y mejor visibilidad.', '¿Qué criterio debe pesar más?', [
                     ['id' => 'corta', 'label' => 'La distancia más corta', 'feedback' => 'La distancia no refleja por sí sola la exposición ni la complejidad.', 'correct' => false],
                     ['id' => 'margen', 'label' => 'La ruta con menos conflictos y mayor margen', 'feedback' => 'Correcto. Comparás la calidad del recorrido, no solo sus metros.', 'correct' => true],
@@ -232,10 +236,10 @@ final class VisibleCyclingPilotSeeder extends Seeder
                     ['id' => 'horario', 'label' => 'Comparar también horario, tránsito y visibilidad antes de elegir', 'feedback' => 'Correcto. Una ruta se evalúa según las condiciones previstas para ese momento.', 'correct' => true],
                     ['id' => 'acera', 'label' => 'Subir a la acera si hay demasiados vehículos', 'feedback' => 'Trasladar el conflicto al espacio peatonal no sustituye una ruta planificada.', 'correct' => false],
                 ]),
-                $this->text(4, 'Mapa sin datos privados', "Dibujá dos rutas imaginarias. Marcá zonas protegidas, intersecciones, pendientes y superficies variables. No incluyás tu dirección, horarios ni lugares que permitan identificarte."),
+                $this->text(4, 'Mapa sin datos privados', 'Dibujá dos rutas imaginarias. Marcá zonas protegidas, intersecciones, pendientes y superficies variables. No incluyás tu dirección, horarios ni lugares que permitan identificarte.'),
             ]),
             $this->routeLesson('BICI-RUTA-PENDIENTE', 'Reto 2: Subidas, bajadas y control', 2, 19, 'dilemma', 'Elegir una ruta compatible con habilidad y control de velocidad.', $competencyId, ['CICLISTA.RUTA.ELIGE', 'CICLISTA.RUTA.REPLANIFICA'], [
-                $this->text(1, 'La pendiente cambia la exigencia', "En una bajada aumenta la velocidad y la distancia para detenerse; en una subida puede disminuir la estabilidad. Evaluá frenos, superficie, visibilidad y tu experiencia. Bajarte y caminar por un espacio apropiado también puede ser una decisión competente."),
+                $this->text(1, 'La pendiente cambia la exigencia', 'En una bajada aumenta la velocidad y la distancia para detenerse; en una subida puede disminuir la estabilidad. Evaluá frenos, superficie, visibilidad y tu experiencia. Bajarte y caminar por un espacio apropiado también puede ser una decisión competente.'),
                 $this->scenario(2, 'Bajada mojada', 'La ruta habitual tiene una bajada pronunciada y acaba de llover.', '¿Qué opción conserva más control?', [
                     ['id' => 'impulso', 'label' => 'Tomar impulso para terminar rápido', 'feedback' => 'Más velocidad reduce el margen sobre una superficie variable.', 'correct' => false],
                     ['id' => 'alternativa', 'label' => 'Elegir otra ruta o avanzar fuera de la bicicleta donde sea seguro', 'feedback' => 'Correcto. Adaptás el medio y la ruta a las condiciones.', 'correct' => true],
@@ -246,10 +250,10 @@ final class VisibleCyclingPilotSeeder extends Seeder
                     ['id' => 'detener', 'label' => 'Detenerse en un punto seguro y continuar caminando o ajustar la carga', 'feedback' => 'Correcto. Cambia la forma de avanzar antes de perder estabilidad.', 'correct' => true],
                     ['id' => 'soltar', 'label' => 'Soltar una mano para sostener la mochila', 'feedback' => 'Usar una mano para la carga reduce todavía más el control de la bicicleta.', 'correct' => false],
                 ]),
-                $this->text(4, 'Escala personal', "Clasificá pendientes imaginarias en: puedo controlarla, necesito acompañamiento o elijo otra ruta. La categoría puede cambiar con lluvia, carga o cansancio."),
+                $this->text(4, 'Escala personal', 'Clasificá pendientes imaginarias en: puedo controlarla, necesito acompañamiento o elijo otra ruta. La categoría puede cambiar con lluvia, carga o cansancio.'),
             ]),
             $this->routeLesson('BICI-INTERSECCION', 'Reto 3: Llegá preparado a la intersección', 1, 21, 'web_simulation', 'Reducir y recopilar información antes de cruzar trayectorias.', $competencyId, ['CICLISTA.RUTA.INTERSECCION'], [
-                $this->text(1, 'Decidir antes del punto de conflicto', "Las intersecciones reúnen giros, cruces y diferencias de velocidad. Llegá con tiempo para observar señales, ruedas delanteras, peatones y posibles giros. La decisión segura se prepara **antes**, no cuando ya estás dentro."),
+                $this->text(1, 'Decidir antes del punto de conflicto', 'Las intersecciones reúnen giros, cruces y diferencias de velocidad. Llegá con tiempo para observar señales, ruedas delanteras, peatones y posibles giros. La decisión segura se prepara **antes**, no cuando ya estás dentro.'),
                 $this->scenario(2, 'Vehículo que podría girar', 'Un automóvil a tu lado reduce velocidad al acercarse a la esquina, pero no ves con claridad a la persona conductora.', '¿Qué anticipás?', [
                     ['id' => 'recto', 'label' => 'Que seguirá recto porque no señaló', 'feedback' => 'La ausencia de señal no garantiza la trayectoria.', 'correct' => false],
                     ['id' => 'giro', 'label' => 'Que podría girar y cruzar tu trayectoria', 'feedback' => 'Correcto. Reducís y evitás permanecer a su lado.', 'correct' => true],
@@ -260,10 +264,10 @@ final class VisibleCyclingPilotSeeder extends Seeder
                     ['id' => 'antes', 'label' => 'Antes de llegar: reducir, buscar visión y preparar una detención', 'feedback' => 'Correcto. La incertidumbre se atiende antes de cruzar trayectorias.', 'correct' => true],
                     ['id' => 'timbre', 'label' => 'Tocar el timbre y mantener la velocidad', 'feedback' => 'Advertir no garantiza que otra persona escuche o pueda detenerse.', 'correct' => false],
                 ]),
-                $this->text(4, 'Lectura de ruedas', "Con fotografías o una maqueta, observá orientación de ruedas, posición y velocidad. Proponé más de un movimiento posible y una respuesta que siga siendo segura si tu predicción falla."),
+                $this->text(4, 'Lectura de ruedas', 'Con fotografías o una maqueta, observá orientación de ruedas, posición y velocidad. Proponé más de un movimiento posible y una respuesta que siga siendo segura si tu predicción falla.'),
             ]),
             $this->routeLesson('BICI-PARADAS', 'Reto 4: Paradas, puertas y personas', 2, 21, 'dilemma', 'Anticipar movimientos alrededor de autobuses y vehículos estacionados.', $competencyId, ['CICLISTA.RUTA.INTERSECCION', 'CICLISTA.RUTA.POSICION'], [
-                $this->text(1, 'Una zona con muchas sorpresas', "Cerca de paradas pueden aparecer personas por delante o detrás del autobús; junto a vehículos estacionados pueden abrirse puertas. Reducí, aumentá distancia y no atravieses un espacio cuya salida no podés ver."),
+                $this->text(1, 'Una zona con muchas sorpresas', 'Cerca de paradas pueden aparecer personas por delante o detrás del autobús; junto a vehículos estacionados pueden abrirse puertas. Reducí, aumentá distancia y no atravieses un espacio cuya salida no podés ver.'),
                 $this->scenario(2, 'Autobús detenido', 'Un autobús recibe pasajeros y el espacio restante es estrecho.', '¿Qué opción deja una salida segura?', [
                     ['id' => 'hueco', 'label' => 'Pasar por el hueco antes de que arranque', 'feedback' => 'El espacio puede cerrarse y hay movimientos ocultos.', 'correct' => false],
                     ['id' => 'esperar', 'label' => 'Reducir y esperar detrás con distancia', 'feedback' => 'Correcto. Evitás el punto ciego y recuperás información.', 'correct' => true],
@@ -274,10 +278,10 @@ final class VisibleCyclingPilotSeeder extends Seeder
                     ['id' => 'puerta', 'label' => 'La puerta puede abrirse; debe reducir y conservar distancia lateral', 'feedback' => 'Correcto. Luna usa la señal previa para evitar quedar dentro de la zona de apertura.', 'correct' => true],
                     ['id' => 'acelerar', 'label' => 'Acelerar antes de que la persona abra', 'feedback' => 'Competir contra una puerta posible reduce el tiempo y el margen de respuesta.', 'correct' => false],
                 ]),
-                $this->text(4, 'Zona de incertidumbre', "En una maqueta, marcá alrededor de un autobús: puertas, frente, parte trasera y costados. Elegí una posición desde la que puedas esperar sin quedar atrapado."),
+                $this->text(4, 'Zona de incertidumbre', 'En una maqueta, marcá alrededor de un autobús: puertas, frente, parte trasera y costados. Elegí una posición desde la que puedas esperar sin quedar atrapado.'),
             ]),
             $this->routeLesson('BICI-RUTA-CAMBIA', 'Reto 5: Obras, lluvia y plan B', 1, 21, 'dilemma', 'Replantear el recorrido ante cambios inesperados.', $competencyId, ['CICLISTA.RUTA.POSICION', 'CICLISTA.RUTA.REPLANIFICA'], [
-                $this->text(1, 'Cambiar de plan es una habilidad', "Una obra, inundación, falla mecánica o pérdida de luz puede volver inadecuada la ruta prevista. Detenete en un lugar protegido, evaluá alternativas y pedí apoyo. No resolvás la sorpresa entrando impulsivamente a un flujo desconocido."),
+                $this->text(1, 'Cambiar de plan es una habilidad', 'Una obra, inundación, falla mecánica o pérdida de luz puede volver inadecuada la ruta prevista. Detenete en un lugar protegido, evaluá alternativas y pedí apoyo. No resolvás la sorpresa entrando impulsivamente a un flujo desconocido.'),
                 $this->scenario(2, 'Paso bloqueado', 'Una obra elimina el espacio disponible y obliga a mezclarse con tránsito rápido.', '¿Qué decisión demuestra adaptación?', [
                     ['id' => 'rapido', 'label' => 'Atravesar rápido el tramo', 'feedback' => 'La velocidad no crea espacio ni visibilidad.', 'correct' => false],
                     ['id' => 'replanificar', 'label' => 'Detenerte protegido y elegir otra ruta o apoyo', 'feedback' => 'Correcto. Rehacés el plan antes de exponerte.', 'correct' => true],
@@ -288,10 +292,10 @@ final class VisibleCyclingPilotSeeder extends Seeder
                     ['id' => 'salir', 'label' => 'Salir del flujo en un lugar seguro y buscar apoyo o transporte alternativo', 'feedback' => 'Correcto. La pérdida de visibilidad cambia las condiciones y justifica terminar el recorrido montado.', 'correct' => true],
                     ['id' => 'rapido', 'label' => 'Aumentar la velocidad para llegar antes de que oscurezca más', 'feedback' => 'Con menos visibilidad se necesita más tiempo para reaccionar, no menos.', 'correct' => false],
                 ]),
-                $this->text(4, 'Tarjeta de contingencia', "Definí qué harías si falla la bicicleta, cambia el clima o se bloquea la ruta. Incluí un lugar seguro para esperar y una persona de apoyo, sin guardar datos personales en la plataforma."),
+                $this->text(4, 'Tarjeta de contingencia', 'Definí qué harías si falla la bicicleta, cambia el clima o se bloquea la ruta. Incluí un lugar seguro para esperar y una persona de apoyo, sin guardar datos personales en la plataforma.'),
             ]),
             $this->routeLesson('BICI-RUTA-MISION', 'Misión integradora: una ruta que puede cambiar', 2, 22, 'competency_challenge', 'Integrar planificación, intersecciones, posición y replanteamiento.', $competencyId, ['CICLISTA.RUTA.ELIGE', 'CICLISTA.RUTA.INTERSECCION', 'CICLISTA.RUTA.POSICION', 'CICLISTA.RUTA.REPLANIFICA'], [
-                $this->text(1, 'Planificá sin quedar atrapado en el plan', "Elegí la ruta con criterios claros, prepará cada intersección, evitá puntos ciegos y mantené una alternativa. Una ruta segura es la que podés modificar sin improvisar una maniobra peligrosa."),
+                $this->text(1, 'Planificá sin quedar atrapado en el plan', 'Elegí la ruta con criterios claros, prepará cada intersección, evitá puntos ciegos y mantené una alternativa. Una ruta segura es la que podés modificar sin improvisar una maniobra peligrosa.'),
                 $this->scenario(2, 'Recorrido escolar cambiante', 'La ruta tiene una obra, lluvia ligera y una fila de vehículos cerca de la entrada.', '¿Cuál es el primer paso?', [
                     ['id' => 'continuar', 'label' => 'Continuar hasta encontrar el problema de cerca', 'feedback' => 'Acercarte puede dejarte sin espacio para decidir.', 'correct' => false],
                     ['id' => 'protegido', 'label' => 'Detenerte protegido y reconstruir la ruta completa', 'feedback' => 'Correcto. Evaluás los cambios antes de entrar en ellos.', 'correct' => true],
@@ -332,7 +336,6 @@ final class VisibleCyclingPilotSeeder extends Seeder
     {
         return Uuid::uuid5(Uuid::NAMESPACE_DNS, 'edudrive.'.self::COURSE_CODE.'.'.$suffix)->toString();
     }
-
 
     /** @return list<LessonInput> */
     private function lessons(string $competencyId, array $preservedIds = []): array
@@ -399,10 +402,10 @@ final class VisibleCyclingPilotSeeder extends Seeder
                     ['id' => 'reemplazar', 'label' => 'Retirarlo de uso y seguir la indicación del fabricante para reemplazarlo', 'feedback' => 'Correcto. Después de un impacto importante no se confía únicamente en la apariencia.', 'correct' => true],
                     ['id' => 'pegar', 'label' => 'Cubrir la marca con cinta', 'feedback' => 'La cinta no restaura la capacidad del casco para absorber otro impacto.', 'correct' => false],
                 ]),
-                $this->text(4, 'Comprobación acompañada', "Frente a un espejo y fuera de la vía, revisá nivel, movimiento, correas y hebilla. Para niñas y niños, una persona adulta confirma el ajuste final."),
+                $this->text(4, 'Comprobación acompañada', 'Frente a un espejo y fuera de la vía, revisá nivel, movimiento, correas y hebilla. Para niñas y niños, una persona adulta confirma el ajuste final.'),
             ]),
             $this->lesson('RETO-COMUNICA', 'Reto 2: Movimientos que se entienden', 2, 13, 'guided_practice', 'Comunicar cambios de dirección de forma anticipada y controlada.', $competencyId, ['CICLISTA.VISIBLE', 'CICLISTA.ATIENDE'], [
-                $this->text(1, 'Ser predecible también te hace visible', "Una luz ayuda a detectar tu presencia; una posición estable y una señal anticipada ayudan a comprender qué harás. Antes de cambiar de dirección: observá, reducí si hace falta, señalá solo cuando mantengás control y volvé ambas manos al manubrio."),
+                $this->text(1, 'Ser predecible también te hace visible', 'Una luz ayuda a detectar tu presencia; una posición estable y una señal anticipada ayudan a comprender qué harás. Antes de cambiar de dirección: observá, reducí si hace falta, señalá solo cuando mantengás control y volvé ambas manos al manubrio.'),
                 $this->scenario(2, 'Giro mientras frenás', 'Necesitás girar, pero la superficie está mojada y todavía debés reducir velocidad.', '¿Qué secuencia conserva más control?', [
                     ['id' => 'todo', 'label' => 'Señalar y frenar fuerte al mismo tiempo', 'feedback' => 'Combinar una mano libre con frenado fuerte sobre superficie mojada reduce estabilidad.', 'correct' => false],
                     ['id' => 'preparar', 'label' => 'Reducir antes, comprobar y señalar cuando la bicicleta esté estable', 'feedback' => 'Correcto. Preparás la maniobra antes de comunicarla.', 'correct' => true],
@@ -413,10 +416,10 @@ final class VisibleCyclingPilotSeeder extends Seeder
                     ['id' => 'protegido', 'label' => 'Practicar fuera del tránsito y no hacer una maniobra que aún no controla', 'feedback' => 'Correcto. La comunicación nunca debe exigir perder estabilidad; primero se desarrolla la habilidad.', 'correct' => true],
                     ['id' => 'sin-mirar', 'label' => 'Girar sin señalar ni comprobar', 'feedback' => 'Eliminar la comunicación y la observación vuelve inesperado el movimiento.', 'correct' => false],
                 ]),
-                $this->text(4, 'Ensayo sin circulación', "En un espacio cerrado al tránsito, practicá mirar, reducir, señalar y recuperar el manubrio. Si perdés la trayectoria al soltar una mano, seguí practicando fuera de la vía."),
+                $this->text(4, 'Ensayo sin circulación', 'En un espacio cerrado al tránsito, practicá mirar, reducir, señalar y recuperar el manubrio. Si perdés la trayectoria al soltar una mano, seguí practicando fuera de la vía.'),
             ]),
             $this->lesson('RETO-SUPERFICIE', 'Reto 2: El suelo también cambia', 2, 15, 'web_simulation', 'Adaptar velocidad y trayectoria a superficies con menor adherencia.', $competencyId, ['CICLISTA.ATIENDE', 'CICLISTA.ANTICIPA'], [
-                $this->text(1, 'Adherencia y equilibrio', "Agua, arena, grava, hojas, tapas metálicas y huecos cambian el contacto de las llantas con el suelo. Mirá hacia adelante, reducí antes de la zona difícil y evitá giros o frenadas bruscas sobre ella."),
+                $this->text(1, 'Adherencia y equilibrio', 'Agua, arena, grava, hojas, tapas metálicas y huecos cambian el contacto de las llantas con el suelo. Mirá hacia adelante, reducí antes de la zona difícil y evitá giros o frenadas bruscas sobre ella.'),
                 $this->scenario(2, 'Grava en la curva', 'Al acercarte a una curva observás grava suelta ocupando parte de tu trayectoria.', '¿Qué respuesta deja más opciones?', [
                     ['id' => 'frenar', 'label' => 'Entrar rápido y frenar dentro de la grava', 'feedback' => 'Frenar o girar bruscamente sobre grava puede reducir la adherencia.', 'correct' => false],
                     ['id' => 'antes', 'label' => 'Reducir antes, mantener distancia y elegir una trayectoria estable', 'feedback' => 'Correcto. Actuás antes de entrar a la superficie difícil.', 'correct' => true],
@@ -427,7 +430,7 @@ final class VisibleCyclingPilotSeeder extends Seeder
                     ['id' => 'antes', 'label' => 'Reducir antes y elegir una trayectoria estable sin maniobras bruscas sobre ella', 'feedback' => 'Correcto. La velocidad y dirección se preparan antes de alcanzar la superficie variable.', 'correct' => true],
                     ['id' => 'acelerar', 'label' => 'Acelerar para cruzarla en menos tiempo', 'feedback' => 'Más velocidad deja menos margen si la llanta pierde adherencia.', 'correct' => false],
                 ]),
-                $this->text(4, 'Mapa de superficies', "En un patio o imagen, clasificá superficies como normales, variables o no transitables. Explicá dónde reducirías antes y dónde cambiarías completamente la ruta."),
+                $this->text(4, 'Mapa de superficies', 'En un patio o imagen, clasificá superficies como normales, variables o no transitables. Explicá dónde reducirías antes y dónde cambiarías completamente la ruta.'),
             ]),
         ];
     }
@@ -437,7 +440,7 @@ final class VisibleCyclingPilotSeeder extends Seeder
     {
         return [
             $this->lesson('RETO-AJUSTE-CARGA', 'Reto 3: Bicicleta, cuerpo y carga', 3, 13, 'dilemma', 'Comprobar que ajuste y carga permitan controlar la bicicleta.', $competencyId, ['CICLISTA.REVISA', 'CICLISTA.ATIENDE'], [
-                $this->text(1, 'Control antes de capacidad', "El asiento, el manubrio y el alcance de los frenos deben permitir una postura controlada. Una mochila suelta, una bolsa en el manubrio o un objeto en la mano pueden alterar equilibrio, dirección o frenado."),
+                $this->text(1, 'Control antes de capacidad', 'El asiento, el manubrio y el alcance de los frenos deben permitir una postura controlada. Una mochila suelta, una bolsa en el manubrio o un objeto en la mano pueden alterar equilibrio, dirección o frenado.'),
                 $this->scenario(2, 'Bolsa en el manubrio', 'Una bolsa pesada cuelga de un lado del manubrio y roza la rueda al girar.', '¿Qué hacés antes de salir?', [
                     ['id' => 'equilibrar', 'label' => 'Compensar con el cuerpo', 'feedback' => 'El movimiento de la bolsa puede cambiar de forma imprevisible.', 'correct' => false],
                     ['id' => 'asegurar', 'label' => 'Retirarla o asegurar la carga en un sistema apropiado', 'feedback' => 'Correcto. Las manos y la dirección quedan disponibles.', 'correct' => true],
@@ -448,10 +451,10 @@ final class VisibleCyclingPilotSeeder extends Seeder
                     ['id' => 'ajustar', 'label' => 'No salir hasta usar una bicicleta correctamente ajustada a su cuerpo', 'feedback' => 'Correcto. La talla y el ajuste deben permitir controlar dirección, equilibrio y frenado.', 'correct' => true],
                     ['id' => 'punta', 'label' => 'Apoyarse solo con la punta del pie cuando se detenga', 'feedback' => 'Improvisar una postura no garantiza estabilidad en una detención inesperada.', 'correct' => false],
                 ]),
-                $this->text(4, 'Prueba estacionaria', "Con la bicicleta quieta, comprobá que alcanzás ambos frenos, girás el manubrio sin obstáculos y la carga no puede entrar en ruedas o cadena."),
+                $this->text(4, 'Prueba estacionaria', 'Con la bicicleta quieta, comprobá que alcanzás ambos frenos, girás el manubrio sin obstáculos y la carga no puede entrar en ruedas o cadena.'),
             ]),
             $this->lesson('RETO-PUNTOS-CIEGOS', 'Reto 3: Hacete visible sin confiarte', 3, 13, 'dilemma', 'Reconocer puntos ciegos y evitar permanecer en ellos.', $competencyId, ['CICLISTA.VISIBLE', 'CICLISTA.ANTICIPA'], [
-                $this->text(1, 'Vehículos grandes, información incompleta', "Autobuses y camiones tienen zonas desde las que una persona conductora puede no detectar una bicicleta. Si no podés ver claramente a quien conduce o sus espejos, no asumás que ya te vio. Conservá distancia y evitá permanecer junto al vehículo, especialmente cerca de giros."),
+                $this->text(1, 'Vehículos grandes, información incompleta', 'Autobuses y camiones tienen zonas desde las que una persona conductora puede no detectar una bicicleta. Si no podés ver claramente a quien conduce o sus espejos, no asumás que ya te vio. Conservá distancia y evitá permanecer junto al vehículo, especialmente cerca de giros.'),
                 $this->scenario(2, 'Autobús antes de la esquina', 'Pedaleás junto a un autobús que podría girar y tu bicicleta queda cerca de su costado.', '¿Cuál es la opción preventiva?', [
                     ['id' => 'pasar', 'label' => 'Acelerar para pasar antes de la esquina', 'feedback' => 'Competir reduce tiempo y puede mantenerte en una zona difícil de ver.', 'correct' => false],
                     ['id' => 'distancia', 'label' => 'Reducir y quedar detrás con distancia antes del giro', 'feedback' => 'Correcto. Salís del conflicto y recuperás información.', 'correct' => true],
@@ -462,10 +465,10 @@ final class VisibleCyclingPilotSeeder extends Seeder
                     ['id' => 'distancia', 'label' => 'Detenerse lejos de la maniobra y esperar en un punto visible', 'feedback' => 'Correcto. Luna evita la zona de movimiento y no depende de haber sido detectada.', 'correct' => true],
                     ['id' => 'timbre', 'label' => 'Tocar el timbre y continuar', 'feedback' => 'Una señal sonora no garantiza que se escuche ni que el vehículo pueda detenerse a tiempo.', 'correct' => false],
                 ]),
-                $this->text(4, 'Maqueta de visibilidad', "Usá cajas como vehículos y una figura como bicicleta. Explorá qué posiciones desaparecen desde el asiento imaginario y elegí lugares que conserven distancia y salida."),
+                $this->text(4, 'Maqueta de visibilidad', 'Usá cajas como vehículos y una figura como bicicleta. Explorá qué posiciones desaparecen desde el asiento imaginario y elegí lugares que conserven distancia y salida.'),
             ]),
             $this->lesson('MISION-BICI-INTEGRADORA', 'Misión integradora: prepará, comunicá y decidí', 3, 15, 'competency_challenge', 'Integrar revisión, visibilidad, atención y anticipación en un recorrido.', $competencyId, ['CICLISTA.REVISA', 'CICLISTA.VISIBLE', 'CICLISTA.ATIENDE', 'CICLISTA.ANTICIPA'], [
-                $this->text(1, 'Tu secuencia completa', "**Revisá persona y bicicleta → evaluá luz y ruta → retirás distractores → comunicá con anticipación → conservá margen → cambiá el plan si cambian las condiciones.**"),
+                $this->text(1, 'Tu secuencia completa', '**Revisá persona y bicicleta → evaluá luz y ruta → retirás distractores → comunicá con anticipación → conservá margen → cambiá el plan si cambian las condiciones.**'),
                 $this->scenario(2, 'Salida con cambio de clima', 'La revisión está completa, pero comienza a oscurecer y la luz delantera no funciona.', '¿Qué integra mejor la rutina?', [
                     ['id' => 'seguir', 'label' => 'Salir porque la bicicleta funciona bien', 'feedback' => 'La revisión mecánica no compensa la pérdida de visibilidad.', 'correct' => false],
                     ['id' => 'cambiar', 'label' => 'Reparar la luz o elegir otra forma segura de viajar', 'feedback' => 'Correcto. Actualizás el plan con la condición nueva.', 'correct' => true],
@@ -481,7 +484,7 @@ final class VisibleCyclingPilotSeeder extends Seeder
                     ['id' => 'proponer', 'label' => 'Proponer guardar audífonos y revisar bicicletas antes de salir', 'feedback' => 'Correcto. Convertís el cuidado individual en una práctica colectiva.', 'correct' => true],
                     ['id' => 'atras', 'label' => 'Usarlo y viajar de último', 'feedback' => 'La posición en el grupo no recupera la atención auditiva.', 'correct' => false],
                 ]),
-                $this->text(5, 'Práctica y Pasaporte Vial', "En un espacio protegido, explicá tu revisión, una condición que te haría cambiar de plan y cómo comunicarías un movimiento. Realizá la práctica con acompañamiento apropiado para tu edad; la observación y reflexión complementan la evidencia digital."),
+                $this->text(5, 'Práctica y Pasaporte Vial', 'En un espacio protegido, explicá tu revisión, una condición que te haría cambiar de plan y cómo comunicarías un movimiento. Realizá la práctica con acompañamiento apropiado para tu edad; la observación y reflexión complementan la evidencia digital.'),
             ]),
         ];
     }

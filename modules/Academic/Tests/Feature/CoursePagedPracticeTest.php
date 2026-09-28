@@ -12,7 +12,9 @@ it('connects all ten model practices to original course answer fields', function
             expect($html)->toContain('name="scenario_answers['.$id.']"')
                 ->toContain('✓ Respuesta correcta')->toContain('⚠ Respuesta incorrecta');
             expect(substr_count($html, 'name="scenario_answers['.$id.']"'))->toBe(1);
-            if ($number >= 3) expect($html)->toContain('passengerPreview3d');
+            if ($number >= 3) {
+                expect($html)->toContain('passengerPreview3d');
+            }
             $preview = view('courses.blocks.scenario', ['block' => $block, 'answerField' => false, 'uniformEditorialFeedback' => true])->render();
             expect($preview)->not->toContain('name="scenario_answers['.$id.']"');
         }

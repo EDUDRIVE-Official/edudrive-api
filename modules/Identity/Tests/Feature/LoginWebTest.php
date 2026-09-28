@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use DateTimeImmutable;
 use Illuminate\Support\Str;
 use Modules\Authorization\Domain\Entities\RoleAssignment;
 use Modules\Authorization\Domain\Enums\Role;

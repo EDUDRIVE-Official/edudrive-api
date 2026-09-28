@@ -7,20 +7,42 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Modules\Academic\Application\Commands\{AddCompetencyIndicatorCommand, AddSubcompetencyCommand, ApproveCourseCommand, CreateCompetencyCommand, CreateCourseCommand, PublishCourseCommand, ReplaceCourseCurriculumCommand, ReplaceUnitContentCommand, SubmitCourseForReviewCommand};
-use Modules\Academic\Application\DTO\{ContentBlockInput, CourseModuleInput, CourseUnitInput, LessonInput};
-use Modules\Academic\Application\UseCases\{AddCompetencyIndicatorHandler, AddSubcompetencyHandler, ApproveCourseHandler, CreateCompetencyHandler, CreateCourseHandler, PublishCourseHandler, ReplaceCourseCurriculumHandler, ReplaceUnitContentHandler, SubmitCourseForReviewHandler};
+use Modules\Academic\Application\Commands\AddCompetencyIndicatorCommand;
+use Modules\Academic\Application\Commands\AddSubcompetencyCommand;
+use Modules\Academic\Application\Commands\ApproveCourseCommand;
+use Modules\Academic\Application\Commands\CreateCompetencyCommand;
+use Modules\Academic\Application\Commands\CreateCourseCommand;
+use Modules\Academic\Application\Commands\PublishCourseCommand;
+use Modules\Academic\Application\Commands\ReplaceCourseCurriculumCommand;
+use Modules\Academic\Application\Commands\ReplaceUnitContentCommand;
+use Modules\Academic\Application\Commands\SubmitCourseForReviewCommand;
+use Modules\Academic\Application\DTO\ContentBlockInput;
+use Modules\Academic\Application\DTO\CourseModuleInput;
+use Modules\Academic\Application\DTO\CourseUnitInput;
+use Modules\Academic\Application\DTO\LessonInput;
+use Modules\Academic\Application\UseCases\AddCompetencyIndicatorHandler;
+use Modules\Academic\Application\UseCases\AddSubcompetencyHandler;
+use Modules\Academic\Application\UseCases\ApproveCourseHandler;
+use Modules\Academic\Application\UseCases\CreateCompetencyHandler;
+use Modules\Academic\Application\UseCases\CreateCourseHandler;
+use Modules\Academic\Application\UseCases\PublishCourseHandler;
+use Modules\Academic\Application\UseCases\ReplaceCourseCurriculumHandler;
+use Modules\Academic\Application\UseCases\ReplaceUnitContentHandler;
+use Modules\Academic\Application\UseCases\SubmitCourseForReviewHandler;
 use Modules\Academic\Domain\ValueObjects\LessonLearningDesign;
 use Ramsey\Uuid\Uuid;
 
 final class PreventiveDrivingPilotSeeder extends Seeder
 {
     private const string COURSE_CODE = 'EDU-EXP-005';
+
     private const string COMPETENCY_CODE = 'CONDUCCION-PREVENTIVA';
 
     public function run(): void
     {
-        if (! app()->environment(['local', 'testing']) || DB::table('academic_courses')->where('code', self::COURSE_CODE)->exists()) return;
+        if (! app()->environment(['local', 'testing']) || DB::table('academic_courses')->where('code', self::COURSE_CODE)->exists()) {
+            return;
+        }
 
         $competencyId = $this->competencyId();
         $course = app(CreateCourseHandler::class)->handle(new CreateCourseCommand(
@@ -61,7 +83,9 @@ final class PreventiveDrivingPilotSeeder extends Seeder
     private function competencyId(): string
     {
         $existing = DB::table('academic_competencies')->where('code', self::COMPETENCY_CODE)->value('id');
-        if ($existing !== null) return (string) $existing;
+        if ($existing !== null) {
+            return (string) $existing;
+        }
         $competency = app(CreateCompetencyHandler::class)->handle(new CreateCompetencyCommand(self::COMPETENCY_CODE, 'Conduce o analiza la conducción con criterio preventivo', 'Prepara, anticipa y adapta decisiones para proteger a todas las personas.', 'risk_management', 'foundation'));
         app(AddSubcompetencyHandler::class)->handle(new AddSubcompetencyCommand($competency->id, 'CONDUCE.PREVIENE', 'Conserva margen y adapta el viaje ante riesgos previsibles'));
         foreach ([
@@ -69,7 +93,10 @@ final class PreventiveDrivingPilotSeeder extends Seeder
             ['CONDUCE.MARGEN', 'Adapta velocidad y distancia para conservar tiempo de respuesta.'],
             ['CONDUCE.COMPARTE', 'Anticipa y protege a usuarios vulnerables.'],
             ['CONDUCE.ADAPTA', 'Detiene o cambia el viaje ante capacidad o condiciones reducidas.'],
-        ] as [$code, $description]) app(AddCompetencyIndicatorHandler::class)->handle(new AddCompetencyIndicatorCommand($competency->id, 'CONDUCE.PREVIENE', $code, $description));
+        ] as [$code, $description]) {
+            app(AddCompetencyIndicatorHandler::class)->handle(new AddCompetencyIndicatorCommand($competency->id, 'CONDUCE.PREVIENE', $code, $description));
+        }
+
         return $competency->id;
     }
 
@@ -97,6 +124,7 @@ final class PreventiveDrivingPilotSeeder extends Seeder
     {
         $indicator = $spec['indicator'];
         $stage = 'pending_review';
+
         return new LessonInput($this->id($spec['code']), $spec['code'], $spec['title'], $spec['objective'], $position === 1 ? 17 : 18, $position, [$this->text(1, 'Idea esencial', $spec['text']), $this->decision(2, $spec['first']), $this->decision(3, $spec['second']), $this->text(4, 'Práctica sin conducción', $spec['practice'])], LessonLearningDesign::fromArray([
             'stage' => $stage, 'jurisdictions' => ['GLOBAL', 'CR'], 'experience_type' => $spec['experience'], 'behavior_objective' => $spec['objective'], 'competency_id' => $competencyId, 'subcompetency_code' => 'CONDUCE.PREVIENE', 'indicator_codes' => [$indicator],
             'evidence_rules' => [['indicator_code' => $indicator, 'event_type' => 'lesson_completed', 'minimum_observations' => 1, 'weight' => 1]], 'requires_guardian' => true,
@@ -107,6 +135,7 @@ final class PreventiveDrivingPilotSeeder extends Seeder
     private function decision(int $position, array $data): ContentBlockInput
     {
         [$title, $context, $safe, $unsafe] = $data;
+
         return new ContentBlockInput((string) Str::uuid(), 'scenario', $position, ['title' => $title, 'context' => $context, 'prompt' => '¿Qué decisión protege mejor la vida?', 'accessible_text' => $context.' Compará información, tiempo, espacio y posibilidad de detener el plan.', 'choices' => [
             ['id' => 'reaccion', 'label' => $unsafe, 'feedback' => 'Esta respuesta depende de que la situación no empeore y reduce el margen disponible.', 'correct' => false],
             ['id' => 'prevencion', 'label' => $safe, 'feedback' => 'Correcto. La decisión actúa antes del conflicto y conserva una salida.', 'correct' => true],

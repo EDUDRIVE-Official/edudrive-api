@@ -227,7 +227,7 @@ final class PilotInstrumentController
         return view('courses.pilot-institutional-review-package', [
             'readiness' => $readiness->status(),
             'sceneVersion' => PilotVisualReviews::VERSION,
-            'preparedOn' => now()->locale('es')->translatedFormat('j \d\e F \d\e Y'),
+            'preparedOn' => now()->settings(['locale' => 'es'])->translatedFormat('j \d\e F \d\e Y'),
         ]);
     }
 
@@ -241,7 +241,7 @@ final class PilotInstrumentController
             'normativeSources' => $alignment->sources(),
             'normativeVerifiedOn' => PilotNormativeAlignment::VERIFIED_ON,
             'sceneVersion' => PilotVisualReviews::VERSION,
-            'preparedOn' => now()->locale('es')->translatedFormat('j \d\e F \d\e Y'),
+            'preparedOn' => now()->settings(['locale' => 'es'])->translatedFormat('j \d\e F \d\e Y'),
         ]);
     }
 
@@ -258,8 +258,7 @@ final class PilotInstrumentController
     public function reviewCoordination(
         PilotVisualReviewers $reviewers,
         MailDeliveryReadiness $mailDeliveryReadiness,
-    ): View
-    {
+    ): View {
         $this->guard();
 
         return view('courses.pilot-review-coordination', [

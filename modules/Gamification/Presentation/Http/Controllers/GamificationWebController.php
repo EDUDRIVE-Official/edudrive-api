@@ -37,8 +37,7 @@ final class GamificationWebController
         QueryBus $queryBus,
         CompetencyRepository $competencies,
         RoadPassportRepository $passports,
-    ): View
-    {
+    ): View {
         $userId = (string) $request->user()?->getAuthIdentifier();
 
         $experience = $queryBus->ask(new GetMyExperienceSummaryQuery(userId: $userId));
@@ -137,7 +136,7 @@ final class GamificationWebController
                     return array_merge($earned->toArray(), [
                         'name' => $achievement instanceof AchievementResponse ? $achievement->name : 'Logro',
                         'description' => $achievement instanceof AchievementResponse ? $achievement->description : '',
-                        'earned_at_label' => Carbon::parse($earned->earnedAt)->timezone((string) config('app.timezone'))->locale('es')->translatedFormat('j \\d\\e F \\d\\e Y'),
+                        'earned_at_label' => Carbon::parse($earned->earnedAt)->timezone((string) config('app.timezone'))->settings(['locale' => 'es'])->translatedFormat('j \\d\\e F \\d\\e Y'),
                     ]);
                 },
                 $earnedAchievements,
@@ -191,8 +190,8 @@ final class GamificationWebController
                     return array_merge($challenge->toArray(), [
                         'already_joined' => $alreadyJoined,
                         'can_join' => ! $alreadyJoined && Carbon::now()->betweenIncluded($startsAt, $endsAt),
-                        'starts_at_label' => $startsAt->timezone((string) config('app.timezone'))->locale('es')->translatedFormat('j \\d\\e F'),
-                        'ends_at_label' => $endsAt->timezone((string) config('app.timezone'))->locale('es')->translatedFormat('j \\d\\e F \\d\\e Y'),
+                        'starts_at_label' => $startsAt->timezone((string) config('app.timezone'))->settings(['locale' => 'es'])->translatedFormat('j \\d\\e F'),
+                        'ends_at_label' => $endsAt->timezone((string) config('app.timezone'))->settings(['locale' => 'es'])->translatedFormat('j \\d\\e F \\d\\e Y'),
                     ]);
                 },
                 array_filter($challenges, static fn (ChallengeResponse $challenge): bool => $challenge->status === 'active'),

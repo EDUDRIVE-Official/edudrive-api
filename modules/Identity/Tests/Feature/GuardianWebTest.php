@@ -5,10 +5,11 @@ declare(strict_types=1);
 use Illuminate\Support\Str;
 use Modules\Academic\Application\Commands\PublishCourseCommand;
 use Modules\Academic\Application\UseCases\PublishCourseHandler;
+use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Aggregates\UnitContent;
+use Modules\Academic\Domain\Entities\Lesson;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\UnitContentRepository;
-use Modules\Academic\Domain\Entities\Lesson;
 use Modules\Academic\Domain\ValueObjects\LessonLearningDesign;
 use Modules\Authorization\Domain\Entities\RoleAssignment;
 use Modules\Authorization\Domain\Enums\Role;
@@ -40,10 +41,9 @@ function guardianWebUser(string $name, bool $minor = false): User
 }
 
 function configureGuardianRequirementForCourseLesson(
-    \Modules\Academic\Domain\Aggregates\Course $course,
+    Course $course,
     bool $required,
-): void
-{
+): void {
     $unit = $course->modules()[0]->units()[0];
     $repository = app(UnitContentRepository::class);
     $content = $repository->findForCourseUnit($course->id(), $unit->id());

@@ -13,7 +13,7 @@ Este es el punto de entrada para entender y continuar el sistema. Resume el esta
 - La matriz 3–80 vigente de trabajo es **2.0.0-borrador.1**: 60 fichas, 180 subcompetencias y 18 comparaciones THINK!. Sigue en revisión; faltan anclas específicas en 48 fichas.
 - No se ha realizado el piloto curricular ni una aplicación con participantes en este trabajo. Fecha, sede y equipo de campo siguen sin definir.
 - Hay código previo de Learning, Decision Engine y cálculo de confianza del Pasaporte. **No debe confundirse con la implementación completa del modelo curricular nuevo.** DESCUBRO mantiene su progreso separado de esas acreditaciones.
-- El repositorio local contiene trabajo pendiente de consolidación. En la revisión del 28 de septiembre, `git status --porcelain` devolvió 419 líneas; no es un conteo de funciones ni de cambios de esta conversación.
+- El trabajo acumulado se registró localmente en la rama `codex/consolidacion-20260928`; la subida está pendiente por falta de permiso de escritura de la cuenta Git. La suite general todavía requiere resolver hallazgos antes de integrar en `main`. Ver [informe de consolidación](docs/engineering/CONSOLIDACION-2026-09-28.md).
 
 ## 2. Dónde vive cada cosa
 
@@ -29,7 +29,7 @@ Este es el punto de entrada para entender y continuar el sistema. Resume el esta
 | Servidor documentado | VPS Contabo, directorio `/opt/edudrive`, proyecto Compose `edudrive-prod` |
 | Entregas recientes del servidor | `/opt/edudrive/releases/` |
 
-Los enlaces absolutos al espacio documental son locales a este equipo; no viajan automáticamente al clonar Git. Conservar ese directorio o trasladar sus entregables y actualizar los enlaces al preparar un traspaso a otro equipo. No incluir credenciales ni archivos `.env` en este contexto.
+Los documentos curriculares y registros recientes de esta consolidación se incluyen en `docs/contexto/` para que sus fuentes principales viajen con Git. Los artefactos binarios auxiliares y respaldos operativos permanecen en sus ubicaciones originales. No incluir credenciales ni archivos `.env` en este contexto.
 
 ## 3. Arquitectura y tecnologías
 
@@ -98,7 +98,7 @@ La progresión se organiza por competencia y subcompetencia, contexto, ayudas, e
 
 Fuentes de código: [DecisionEngineCalculator](modules/Simulation/Domain/Services/DecisionEngineCalculator.php), [RoadPassportTrustCalculator](modules/RoadPassport/Domain/Services/RoadPassportTrustCalculator.php), [rutas de Learning](modules/Learning/Presentation/Routes/api.php).
 
-Fuente curricular de trabajo: [matriz integrada 2.0.0-borrador.1](C:/Users/AbelCamposPaniagua/.codex/.chatgpt-projects/g-p-68c4befaf0548191b9821b0276aaa74d/output/edudrive/edicion-2.0.0-borrador.1/EDF_Matriz_Curricular_EDUDRIVE_3-80_v2.0.0-borrador.1.md). Su JSON paralelo contiene la misma edición. La versión 1.0.0 es antecedente histórico. Los materiales P912 y pasajeros del repositorio pertenecen a otros incrementos y no deben equipararse automáticamente a esta edición.
+Fuente curricular de trabajo: [matriz integrada 2.0.0-borrador.1](docs/contexto/edicion-2.0.0-borrador.1/EDF_Matriz_Curricular_EDUDRIVE_3-80_v2.0.0-borrador.1.md). Su JSON paralelo contiene la misma edición. La versión 1.0.0 es antecedente histórico. Los materiales P912 y pasajeros del repositorio pertenecen a otros incrementos y no deben equipararse automáticamente a esta edición.
 
 ## 5. DESCUBRO: comportamiento publicado
 
@@ -128,17 +128,18 @@ Archivos clave: [controlador](modules/Academic/Presentation/Http/Controllers/Des
 | 27 septiembre | `descubro-review-20260927r1` | Publicación restringida, migración específica y respaldo. Pruebas de entrega: 10/149 aserciones; recorrido en línea revisado posteriormente. |
 | 27 septiembre | `descubro-review-20260927r2` | Pasaporte pendiente de emisión y eliminación del rótulo duplicado. Cuatro pruebas/69 aserciones y revisión visual. |
 | 28 septiembre | `descubro-review-20260928r1` | Guía acompañada ampliada. Cuatro pruebas/81 aserciones, compilación de vistas, salud y navegación en línea comprobadas. |
-| 28 septiembre | Este CONTEXTO | Consolidación documental; no cambia código de aplicación ni producción. |
+| 28 septiembre | Este CONTEXTO | Consolidación documental y enlaces a fuentes versionadas. |
+| 28 septiembre | Consolidación GitHub | Rama local con trabajo acumulado y correcciones de calidad; pendiente permiso de escritura y revisión de la suite general. Sin despliegue. |
 
 Los resultados pertenecen a cada entrega y no se suman como si fueran una suite nueva. No se ejecutó una auditoría funcional completa del sistema al redactar este documento.
 
 Fuentes recientes:
 
-- [Estado y antecedentes](C:/Users/AbelCamposPaniagua/.codex/.chatgpt-projects/g-p-68c4befaf0548191b9821b0276aaa74d/output/edudrive/ESTADO_ACTUAL.md).
-- [Publicación administrativa y respaldo](C:/Users/AbelCamposPaniagua/.codex/.chatgpt-projects/g-p-68c4befaf0548191b9821b0276aaa74d/output/edudrive/DESCUBRO_PUBLICACION_ADMIN_20260927.md).
-- [Comprobación del recorrido publicado](C:/Users/AbelCamposPaniagua/.codex/.chatgpt-projects/g-p-68c4befaf0548191b9821b0276aaa74d/output/edudrive/QA_DESCUBRO_EN_LINEA_20260927.md).
-- [Ajustes del Pasaporte](C:/Users/AbelCamposPaniagua/.codex/.chatgpt-projects/g-p-68c4befaf0548191b9821b0276aaa74d/output/edudrive/DESCUBRO_AJUSTE_TEXTOS_20260927.md).
-- [Guía acompañada publicada](C:/Users/AbelCamposPaniagua/.codex/.chatgpt-projects/g-p-68c4befaf0548191b9821b0276aaa74d/output/edudrive/DESCUBRO_GUIA_ACOMPANADA_20260928.md).
+- [Estado y antecedentes](docs/contexto/ESTADO_ACTUAL.md).
+- [Publicación administrativa y respaldo](docs/contexto/DESCUBRO_PUBLICACION_ADMIN_20260927.md).
+- [Comprobación del recorrido publicado](docs/contexto/QA_DESCUBRO_EN_LINEA_20260927.md).
+- [Ajustes del Pasaporte](docs/contexto/DESCUBRO_AJUSTE_TEXTOS_20260927.md).
+- [Guía acompañada publicada](docs/contexto/DESCUBRO_GUIA_ACOMPANADA_20260928.md).
 - [Campus](docs/product/INTERFAZ-CAMPUS-2026-09-24.md), [cursos por páginas](docs/product/CURSOS-POR-PAGINAS-2026-09-24.md), [transición pedagógica](docs/product/TRANSICION-PEDAGOGICA-v0.2.md).
 
 ## 7. Producción, respaldo y reversión
@@ -164,15 +165,15 @@ No ejecutar indiscriminadamente el despliegue genérico ni todas las migraciones
 
 ## 8. Estado de Git y documentación heredada
 
-En la lectura del 28 de septiembre: rama `aligned-active-main`; HEAD `a6803b7`, `feat(deploy): add single-VPS production deployment (Docker Compose + scripted runbook)`. El árbol contiene numerosos cambios anteriores y nuevos. **HEAD no representa por sí solo el contenido de las imágenes publicadas.**
+Base remota comprobada el 28 de septiembre: `main` en `a6803b7`, `feat(deploy): add single-VPS production deployment (Docker Compose + scripted runbook)`. El trabajo local acumulado se registró después en `codex/consolidacion-20260928`, con primer commit `f40041d`. GitHub rechazó la simulación de subida con HTTP 403 para `AbelCampos2025`; no hay rama remota ni PR de esta consolidación todavía. **La rama de consolidación contiene también trabajo que no se verificó como publicado; no representa una reproducción exacta de las imágenes activas.**
 
-Preservar el trabajo existente, revisar archivos concretos y comprobar el índice antes de un commit. No usar `git add .`, `git add -A`, reset masivo ni regenerar todos los contenidos para consolidar esta entrega. Este documento no crea commits ni resuelve la deuda de versionado.
+Preservar el trabajo existente, revisar archivos concretos y comprobar el índice antes de un commit. No usar `git add .`, `git add -A`, reset masivo ni regenerar todos los contenidos para consolidar esta entrega. La preparación local resuelve el registro del trabajo; siguen pendientes el acceso de escritura, la publicación de la rama y la revisión de los fallos de la suite general.
 
 [SESION.md](docs/engineering/SESION.md) contiene un estado histórico del 16 de agosto. [ENG-LOG](docs/engineering/ENG-LOG.md) conserva cierres anteriores y [roadmap](docs/roadmap/ENG-000-roadmap-tecnico-backend.md) combina planificación e incrementos posteriores. No tomar sus «pendiente» o «completado» aislados como prueba del estado actual; contrastar fecha, código, pruebas y entrega. Las instrucciones históricas sobre herramientas o próximos pasos no sustituyen el alcance acordado actualmente.
 
 ## 9. Pendientes y orden de continuidad propuesto
 
-1. **Consolidación técnica:** reconciliar cambios locales con las imágenes publicadas y preparar una revisión reproducible en Git; registrar pruebas y actualizar el proceso de despliegue para incluir el override activo. Es deuda abierta, no trabajo terminado por este documento.
+1. **Consolidación técnica:** reconciliar cambios locales con las imágenes publicadas y preparar una revisión reproducible en Git; registrar pruebas y actualizar el proceso de despliegue para incluir el override activo. El registro local y las fuentes documentales ya se prepararon; la publicación en GitHub y la integración validada siguen pendientes.
 2. **Cierre curricular:** completar anclas en las 48 fichas restantes y alineación de subcompetencias, actividad, evidencia y evaluación. Cerrar verificación normativa, manuales, recursos y escenarios. La matriz sigue siendo borrador.
 3. **Derivados:** reeditar instrumentos del piloto, retención e identificadores para que correspondan a la misma edición. PIL-01 y P912 son materiales distintos; no mezclar sus resultados ni criterios.
 4. **Modelo y software:** revisar la distancia entre Learning OS/CTM/Decision Engine propuestos y el código existente; diseñar contratos y pruebas por competencia antes de conectar nuevas acreditaciones.

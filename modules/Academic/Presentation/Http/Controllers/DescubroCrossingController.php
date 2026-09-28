@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Modules\Academic\Presentation\Http\Controllers;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -52,7 +53,9 @@ final class DescubroCrossingController
     /** @return array<string, mixed> */
     public static function progress(Request $request): array
     {
-        $userId = (string) $request->user()->getAuthIdentifier();
+        $user = $request->user();
+        abort_unless($user instanceof Authenticatable, 401);
+        $userId = (string) $user->getAuthIdentifier();
         $key = self::key($userId);
         $state = app(DescubroPracticeProgress::class)->resume($userId, $request->session()->get($key));
         // Forget the legacy copy only after a durable read/import succeeds.
@@ -147,7 +150,9 @@ final class DescubroCrossingController
             'revision' => ['required', 'integer', 'min:0'],
             'choice' => ['required_if:action,answer', 'nullable', 'integer', 'min:0', 'max:2'],
         ]);
-        $userId = (string) $request->user()->getAuthIdentifier();
+        $user = $request->user();
+        abort_unless($user instanceof Authenticatable, 401);
+        $userId = (string) $user->getAuthIdentifier();
         $run = self::progress($request);
         abort_unless((int) $data['revision'] === $run['revision'], 409, 'El recorrido cambió. Recargá antes de continuar.');
 

@@ -13,9 +13,9 @@ use Modules\Authorization\Domain\Enums\Role;
 use Modules\Foundation\Application\Bus\CommandBus;
 use Modules\Identity\Application\Services\PasswordHasher;
 use Modules\Identity\Domain\Entities\PasswordResetToken;
+use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Repositories\PasswordResetTokenRepository;
 use Modules\Identity\Domain\Repositories\UserRepository;
-use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\ValueObjects\Email;
 
 final class BootstrapSuperAdminCommand extends ConsoleCommand
