@@ -17,6 +17,8 @@ final readonly class UserResponse
         public ?string $emailVerifiedAt,
         public string $createdAt,
         public string $updatedAt,
+        public ?string $dateOfBirth,
+        public bool $isMinor,
     ) {}
 
     public static function fromUser(User $user): self
@@ -29,6 +31,8 @@ final readonly class UserResponse
             emailVerifiedAt: $user->emailVerifiedAt()?->format(DateTimeInterface::ATOM),
             createdAt: $user->createdAt()->format(DateTimeInterface::ATOM),
             updatedAt: $user->updatedAt()->format(DateTimeInterface::ATOM),
+            dateOfBirth: $user->dateOfBirth()?->format('Y-m-d'),
+            isMinor: $user->isMinor(),
         );
     }
 
@@ -43,6 +47,8 @@ final readonly class UserResponse
             'email_verified_at' => $this->emailVerifiedAt,
             'created_at' => $this->createdAt,
             'updated_at' => $this->updatedAt,
+            'date_of_birth' => $this->dateOfBirth,
+            'is_minor' => $this->isMinor,
         ];
     }
 }

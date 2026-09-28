@@ -117,4 +117,23 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Delivery readiness
+    |--------------------------------------------------------------------------
+    |
+    | "local" captures messages for development and must never be presented as
+    | delivery to a real inbox. Production deployments must explicitly select
+    | "external" after configuring and validating their mail provider.
+    |
+    */
+
+    'delivery' => [
+        'mode' => env(
+            'MAIL_DELIVERY_MODE',
+            env('APP_ENV', 'production') === 'production' ? 'external' : 'local',
+        ),
+        'local_inbox_url' => env('MAIL_LOCAL_INBOX_URL', 'http://localhost:8025'),
+    ],
+
 ];

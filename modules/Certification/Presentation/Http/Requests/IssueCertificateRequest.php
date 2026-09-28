@@ -17,8 +17,8 @@ final class IssueCertificateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'string', 'uuid'],
-            'course_id' => ['required', 'string', 'uuid'],
+            'user_id' => ['required', 'string', 'uuid', 'exists:users,id'],
+            'course_id' => ['required', 'string', 'uuid', 'exists:academic_courses,id'],
             'expires_at' => ['nullable', 'date'],
         ];
     }

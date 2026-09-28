@@ -26,6 +26,7 @@ final class RoadPassport
         private DateTimeImmutable $issuedAt,
         private array $history,
         private array $evidence = [],
+        private int $verificationVersion = 1,
     ) {}
 
     public static function create(RoadPassportId $id, string $userId, ?DateTimeImmutable $issuedAt = null): self
@@ -38,6 +39,7 @@ final class RoadPassport
             $issuedAt ?? new DateTimeImmutable('now'),
             [],
             [],
+            1,
         );
     }
 
@@ -53,8 +55,9 @@ final class RoadPassport
         DateTimeImmutable $issuedAt,
         array $history,
         array $evidence = [],
+        int $verificationVersion = 1,
     ): self {
-        return new self($id, $userId, $status, $level, $issuedAt, $history, $evidence);
+        return new self($id, $userId, $status, $level, $issuedAt, $history, $evidence, $verificationVersion);
     }
 
     public function suspend(?string $reason, DateTimeImmutable $at): void
@@ -144,6 +147,16 @@ final class RoadPassport
     public function evidence(): array
     {
         return $this->evidence;
+    }
+
+    public function verificationVersion(): int
+    {
+        return $this->verificationVersion;
+    }
+
+    public function rotateVerificationLink(): void
+    {
+        $this->verificationVersion++;
     }
 
     private function transitionTo(RoadPassportStatus $to, ?string $reason, DateTimeImmutable $at): void

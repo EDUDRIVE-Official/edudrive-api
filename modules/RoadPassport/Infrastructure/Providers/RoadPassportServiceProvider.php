@@ -12,10 +12,13 @@ use Modules\RoadPassport\Application\Commands\ReactivateRoadPassportCommand;
 use Modules\RoadPassport\Application\Commands\RevokeRoadPassportCommand;
 use Modules\RoadPassport\Application\Commands\SuspendRoadPassportCommand;
 use Modules\RoadPassport\Application\Queries\GetMyRoadPassportQuery;
+use Modules\RoadPassport\Application\Queries\GetRoadPassportByUserIdQuery;
 use Modules\RoadPassport\Application\Queries\GetRoadPassportQuery;
 use Modules\RoadPassport\Application\Services\RoadPassportEvidenceRecorder;
+use Modules\RoadPassport\Application\Services\RoadPassportVerificationCode;
 use Modules\RoadPassport\Application\UseCases\ChangeRoadPassportLevelHandler;
 use Modules\RoadPassport\Application\UseCases\GetMyRoadPassportHandler;
+use Modules\RoadPassport\Application\UseCases\GetRoadPassportByUserIdHandler;
 use Modules\RoadPassport\Application\UseCases\GetRoadPassportHandler;
 use Modules\RoadPassport\Application\UseCases\IssueRoadPassportHandler;
 use Modules\RoadPassport\Application\UseCases\ReactivateRoadPassportHandler;
@@ -31,6 +34,9 @@ final class RoadPassportServiceProvider extends ServiceProvider
     {
         $this->app->bind(RoadPassportRepository::class, EloquentRoadPassportRepository::class);
         $this->app->bind(RoadPassportEvidenceRecorder::class, DefaultRoadPassportEvidenceRecorder::class);
+        $this->app->singleton(RoadPassportVerificationCode::class, static fn (): RoadPassportVerificationCode => new RoadPassportVerificationCode(
+            secret: (string) config('app.key'),
+        ));
     }
 
     public function boot(MessageHandlerRegistry $registry): void
@@ -42,9 +48,14 @@ final class RoadPassportServiceProvider extends ServiceProvider
         $registry->register(ChangeRoadPassportLevelCommand::class, ChangeRoadPassportLevelHandler::class);
         $registry->register(GetRoadPassportQuery::class, GetRoadPassportHandler::class);
         $registry->register(GetMyRoadPassportQuery::class, GetMyRoadPassportHandler::class);
+        $registry->register(GetRoadPassportByUserIdQuery::class, GetRoadPassportByUserIdHandler::class);
 
         $this->loadRoutesFrom(
             dirname(__DIR__, 2).'/Presentation/Routes/api.php',
+        );
+
+        $this->loadRoutesFrom(
+            dirname(__DIR__, 2).'/Presentation/Routes/web.php',
         );
 
         $this->loadMigrationsFrom(

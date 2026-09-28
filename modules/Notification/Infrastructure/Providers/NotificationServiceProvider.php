@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Modules\Notification\Infrastructure\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\View;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
 use Modules\Notification\Application\Commands\CreateCommunicationTemplateCommand;
 use Modules\Notification\Application\Commands\GiveNotificationConsentCommand;
@@ -19,7 +21,12 @@ use Modules\Notification\Application\Queries\GetMyNotificationPreferenceQuery;
 use Modules\Notification\Application\Queries\GetMyNotificationsQuery;
 use Modules\Notification\Application\Queries\ListCommunicationTemplatesQuery;
 use Modules\Notification\Application\Queries\PreviewCommunicationTemplateQuery;
+use Modules\Notification\Application\Services\CourseCompletionNotifier;
 use Modules\Notification\Application\Services\EmailNotificationSender;
+use Modules\Notification\Application\Services\GuardianPracticeNotifier;
+use Modules\Notification\Application\Services\GuardianPracticeReadyNotificationResolver;
+use Modules\Notification\Application\Services\GuardianPracticeReadyNotifier;
+use Modules\Notification\Application\Services\StudentReflectionNotifier;
 use Modules\Notification\Application\UseCases\CreateCommunicationTemplateHandler;
 use Modules\Notification\Application\UseCases\GetCommunicationTemplateHandler;
 use Modules\Notification\Application\UseCases\GetMyNotificationPreferenceHandler;
@@ -39,6 +46,12 @@ use Modules\Notification\Domain\Repositories\NotificationRepository;
 use Modules\Notification\Infrastructure\Persistence\Eloquent\Repositories\EloquentCommunicationTemplateRepository;
 use Modules\Notification\Infrastructure\Persistence\Eloquent\Repositories\EloquentNotificationPreferenceRepository;
 use Modules\Notification\Infrastructure\Persistence\Eloquent\Repositories\EloquentNotificationRepository;
+use Modules\Notification\Infrastructure\Persistence\Eloquent\Models\NotificationModel;
+use Modules\Notification\Infrastructure\Services\DefaultCourseCompletionNotifier;
+use Modules\Notification\Infrastructure\Services\DefaultGuardianPracticeNotifier;
+use Modules\Notification\Infrastructure\Services\DefaultGuardianPracticeReadyNotificationResolver;
+use Modules\Notification\Infrastructure\Services\DefaultGuardianPracticeReadyNotifier;
+use Modules\Notification\Infrastructure\Services\DefaultStudentReflectionNotifier;
 use Modules\Notification\Infrastructure\Services\QueuedEmailNotificationSender;
 
 final class NotificationServiceProvider extends ServiceProvider
@@ -49,10 +62,23 @@ final class NotificationServiceProvider extends ServiceProvider
         $this->app->bind(NotificationPreferenceRepository::class, EloquentNotificationPreferenceRepository::class);
         $this->app->bind(CommunicationTemplateRepository::class, EloquentCommunicationTemplateRepository::class);
         $this->app->bind(EmailNotificationSender::class, QueuedEmailNotificationSender::class);
+        $this->app->bind(CourseCompletionNotifier::class, DefaultCourseCompletionNotifier::class);
+        $this->app->bind(GuardianPracticeNotifier::class, DefaultGuardianPracticeNotifier::class);
+        $this->app->bind(GuardianPracticeReadyNotificationResolver::class, DefaultGuardianPracticeReadyNotificationResolver::class);
+        $this->app->bind(GuardianPracticeReadyNotifier::class, DefaultGuardianPracticeReadyNotifier::class);
+        $this->app->bind(StudentReflectionNotifier::class, DefaultStudentReflectionNotifier::class);
     }
 
     public function boot(MessageHandlerRegistry $registry): void
     {
+        View::composer('components.layouts.app', static function ($view): void {
+            $userId = Auth::id();
+            $view->with('unreadNotificationCount', $userId === null ? 0 : NotificationModel::query()
+                ->where('user_id', (string) $userId)
+                ->where('status', 'unread')
+                ->count());
+        });
+
         $registry->register(SendNotificationCommand::class, SendNotificationHandler::class);
         $registry->register(MarkNotificationAsReadCommand::class, MarkNotificationAsReadHandler::class);
         $registry->register(GetMyNotificationsQuery::class, GetMyNotificationsHandler::class);
@@ -71,6 +97,10 @@ final class NotificationServiceProvider extends ServiceProvider
 
         $this->loadRoutesFrom(
             dirname(__DIR__, 2).'/Presentation/Routes/api.php',
+        );
+
+        $this->loadRoutesFrom(
+            dirname(__DIR__, 2).'/Presentation/Routes/web.php',
         );
 
         $this->loadMigrationsFrom(

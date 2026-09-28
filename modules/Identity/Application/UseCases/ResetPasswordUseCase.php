@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Identity\Application\UseCases;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use Modules\Audit\Application\DTO\AuditEntry;
 use Modules\Audit\Application\Services\AuditLogger;
 use Modules\Identity\Application\Commands\ResetPasswordCommand;
@@ -30,7 +31,7 @@ final readonly class ResetPasswordUseCase
         $email = Email::fromString($command->email);
         $user = $this->users->findByEmail($email);
         $token = $this->tokens->findByEmail($email);
-        $now = new DateTimeImmutable;
+        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 
         if (
             $user === null

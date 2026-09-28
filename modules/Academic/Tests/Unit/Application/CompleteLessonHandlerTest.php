@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use Modules\Academic\Application\Commands\CompleteLessonCommand;
 use Modules\Academic\Application\Exceptions\EnrollmentNotFound;
 use Modules\Academic\Application\Exceptions\LessonNotFound;
+use Modules\Academic\Application\Exceptions\ScenarioPracticeIncomplete;
 use Modules\Academic\Application\Exceptions\UnitLocked;
 use Modules\Academic\Application\Responses\EnrollmentProgressResponse;
 use Modules\Academic\Application\Services\EnrollmentProgressCalculator;
@@ -38,12 +39,18 @@ use Modules\Academic\Domain\ValueObjects\CourseUnitId;
 use Modules\Academic\Domain\ValueObjects\CurriculumCode;
 use Modules\Academic\Domain\ValueObjects\EnrollmentId;
 use Modules\Academic\Domain\ValueObjects\LessonId;
+use Modules\Certification\Application\Services\CertificateIssuer;
+use Modules\Gamification\Application\Services\CourseCompletionRewarder;
 use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Repositories\UserRepository;
 use Modules\Identity\Domain\ValueObjects\Email;
 use Modules\Learning\Application\DTO\LearningEventEntry;
 use Modules\Learning\Application\Services\LearningEventRecorder;
 use Modules\Learning\Domain\ValueObjects\LearningVerb;
+use Modules\Notification\Application\Services\CourseCompletionNotifier;
+use Modules\RoadPassport\Application\DTO\EvidenceEntry as PassportEvidenceEntry;
+use Modules\RoadPassport\Application\Services\RoadPassportEvidenceRecorder;
+use Modules\RoadPassport\Domain\Enums\EvidenceType;
 
 uses(RefreshDatabase::class);
 
@@ -58,8 +65,57 @@ final class SpyLearningEventRecorder implements LearningEventRecorder
     }
 }
 
-function completeLessonHandler(?SpyLearningEventRecorder $recorder = null): CompleteLessonHandler
+final class SpyPassportEvidenceRecorder implements RoadPassportEvidenceRecorder
 {
+    /** @var list<PassportEvidenceEntry> */
+    public array $recorded = [];
+
+    public function record(PassportEvidenceEntry $entry): void
+    {
+        $this->recorded[] = $entry;
+    }
+}
+
+final class SpyCertificateIssuer implements CertificateIssuer
+{
+    /** @var list<array{user_id: string, course_id: string}> */
+    public array $issued = [];
+
+    public function issue(string $userId, string $courseId): void
+    {
+        $this->issued[] = ['user_id' => $userId, 'course_id' => $courseId];
+    }
+}
+
+final class SpyCourseCompletionRewarder implements CourseCompletionRewarder
+{
+    /** @var list<array{user_id: string, course_id: string, competency_id: ?string}> */
+    public array $rewards = [];
+
+    public function reward(string $userId, string $courseId, ?string $competencyId): void
+    {
+        $this->rewards[] = ['user_id' => $userId, 'course_id' => $courseId, 'competency_id' => $competencyId];
+    }
+}
+
+final class SpyCourseCompletionNotifier implements CourseCompletionNotifier
+{
+    /** @var list<array{user_id: string, course_id: string, course_title: string}> */
+    public array $notifications = [];
+
+    public function notify(string $userId, string $courseId, string $courseTitle): void
+    {
+        $this->notifications[] = ['user_id' => $userId, 'course_id' => $courseId, 'course_title' => $courseTitle];
+    }
+}
+
+function completeLessonHandler(
+    ?SpyLearningEventRecorder $recorder = null,
+    ?RoadPassportEvidenceRecorder $passportEvidence = null,
+    ?CertificateIssuer $certificateIssuer = null,
+    ?CourseCompletionRewarder $completionRewarder = null,
+    ?CourseCompletionNotifier $completionNotifier = null,
+): CompleteLessonHandler {
     return new CompleteLessonHandler(
         app(EnrollmentRepository::class),
         app(EnrollmentProgressRepository::class),
@@ -73,6 +129,10 @@ function completeLessonHandler(?SpyLearningEventRecorder $recorder = null): Comp
             app(ExamAttemptRepository::class),
         ),
         $recorder ?? new SpyLearningEventRecorder,
+        $passportEvidence,
+        $certificateIssuer,
+        $completionRewarder,
+        $completionNotifier,
     );
 }
 
@@ -122,6 +182,48 @@ it('completa una leccion del curso de la inscripcion', function (): void {
         ->and($response->timeSpentMinutes)->toBe(7);
 });
 
+it('exige resolver correctamente los escenarios antes de completar la leccion', function (): void {
+    $enrollment = activeEnrollmentForLessonCompletion();
+    $course = app(CourseRepository::class)->findById($enrollment->courseId());
+    assert($course instanceof Course);
+    $unitId = $course->modules()[0]->units()[0]->id();
+    $content = app(UnitContentRepository::class)->findForCourseUnit($course->id(), $unitId);
+    assert($content instanceof UnitContent);
+    $original = $content->lessons()[0];
+    $scenarioId = (string) Str::uuid();
+
+    app(UnitContentRepository::class)->replaceAtomically($course->id(), $unitId, UnitContent::create($unitId, [
+        Lesson::create($original->id(), $original->code(), $original->title(), $original->summary(), $original->durationMinutes(), 1, [
+            ContentBlockFactory::create(ContentBlockId::fromString($scenarioId), 'scenario', 1, [
+                'title' => 'Cruce seguro',
+                'context' => 'Debes escoger dónde cruzar.',
+                'prompt' => '¿Cuál opción eliges?',
+                'accessible_text' => 'Escenario disponible en texto.',
+                'choices' => [
+                    ['id' => 'paso', 'label' => 'Paso peatonal', 'feedback' => 'Correcto.', 'correct' => true],
+                    ['id' => 'autos', 'label' => 'Entre autos', 'feedback' => 'No es visible.', 'correct' => false],
+                ],
+            ]),
+        ]),
+    ]));
+
+    expect(fn () => completeLessonHandler()->handle(new CompleteLessonCommand(
+        enrollmentId: $enrollment->id()->value(),
+        lessonId: $original->id()->value(),
+        userId: $enrollment->userId(),
+        scenarioAnswers: [$scenarioId => 'autos'],
+    )))->toThrow(ScenarioPracticeIncomplete::class);
+
+    $response = completeLessonHandler()->handle(new CompleteLessonCommand(
+        enrollmentId: $enrollment->id()->value(),
+        lessonId: $original->id()->value(),
+        userId: $enrollment->userId(),
+        scenarioAnswers: [$scenarioId => 'paso'],
+    ));
+
+    expect($response->completedLessonsCount)->toBe(1);
+});
+
 it('rechaza completar una leccion de un enrollment inexistente o ajeno', function (): void {
     $enrollment = activeEnrollmentForLessonCompletion();
     $course = app(CourseRepository::class)->findById($enrollment->courseId());
@@ -155,6 +257,25 @@ it('rechaza completar una leccion si el enrollment no esta activo', function ():
         userId: $enrollment->userId(),
         timeSpentMinutes: null,
     )))->toThrow(InvalidEnrollment::class);
+});
+
+it('permite continuar lecciones agregadas a una matricula ya completada', function (): void {
+    $enrollment = activeEnrollmentForLessonCompletion();
+    $enrollment->complete();
+    app(EnrollmentRepository::class)->save($enrollment);
+    $course = app(CourseRepository::class)->findById($enrollment->courseId());
+    $lessonId = (new CourseLessonCatalog(app(UnitContentRepository::class)))->lessonIdsFor($course)[0];
+
+    $response = completeLessonHandler()->handle(new CompleteLessonCommand(
+        enrollmentId: $enrollment->id()->value(),
+        lessonId: $lessonId,
+        userId: $enrollment->userId(),
+        timeSpentMinutes: 5,
+    ));
+
+    expect($response->completedLessonsCount)->toBe(1)
+        ->and(app(EnrollmentRepository::class)->findById($enrollment->id())?->status())
+        ->toBe(EnrollmentStatus::Completed);
 });
 
 it('rechaza una leccion que no pertenece al curso de la inscripcion', function (): void {
@@ -270,6 +391,8 @@ it('registra un evento de aprendizaje al completar una leccion', function (): vo
         lessonId: $lessonId,
         userId: $enrollment->userId(),
         timeSpentMinutes: 9,
+        reflection: 'Primero me detengo y compruebo antes de avanzar.',
+        selfAssessment: 'puedo_aplicarlo',
     ));
 
     expect($recorder->recorded)->toHaveCount(1)
@@ -278,5 +401,101 @@ it('registra un evento de aprendizaje al completar una leccion', function (): vo
         ->and($recorder->recorded[0]->courseId)->toBe($enrollment->courseId()->value())
         ->and($recorder->recorded[0]->verb)->toBe(LearningVerb::LessonCompleted)
         ->and($recorder->recorded[0]->subjectId)->toBe($lessonId)
-        ->and($recorder->recorded[0]->evidence)->toBe(['time_spent_minutes' => 9]);
+        ->and($recorder->recorded[0]->evidence)->toBe([
+            'lesson_code' => 'LEC-01',
+            'lesson_title' => 'Leccion de prueba',
+            'time_spent_minutes' => 9,
+            'scenario_results' => [],
+            'evidence_scope' => 'formative_completion',
+            'demonstrates_mastery' => false,
+            'indicator_codes' => [],
+            'learning_design_version' => null,
+            'jurisdictions' => [],
+            'reflection' => 'Primero me detengo y compruebo antes de avanzar.',
+            'self_assessment' => 'puedo_aplicarlo',
+        ]);
+});
+
+it('registra la leccion como evidencia del pasaporte vial', function (): void {
+    $enrollment = activeEnrollmentForLessonCompletion();
+    $course = app(CourseRepository::class)->findById($enrollment->courseId());
+    $lessonId = (new CourseLessonCatalog(app(UnitContentRepository::class)))->lessonIdsFor($course)[0];
+    $passportEvidence = new SpyPassportEvidenceRecorder;
+
+    completeLessonHandler(passportEvidence: $passportEvidence)->handle(new CompleteLessonCommand(
+        enrollmentId: $enrollment->id()->value(),
+        lessonId: $lessonId,
+        userId: $enrollment->userId(),
+        timeSpentMinutes: 9,
+    ));
+
+    expect($passportEvidence->recorded)->toHaveCount(2)
+        ->and($passportEvidence->recorded[0]->type)->toBe(EvidenceType::LessonCompleted)
+        ->and($passportEvidence->recorded[0]->subjectId)->toBe($lessonId)
+        ->and($passportEvidence->recorded[0]->courseId)->toBe($enrollment->courseId()->value())
+        ->and($passportEvidence->recorded[0]->details['lesson_title'])->toBeString()
+        ->and($passportEvidence->recorded[0]->details['evidence_scope'])->toBe('formative_completion')
+        ->and($passportEvidence->recorded[0]->details['demonstrates_mastery'])->toBeFalse()
+        ->and($passportEvidence->recorded[0]->details['indicator_codes'])->toBe([])
+        ->and($passportEvidence->recorded[0]->details['learning_design_version'])->toBeNull()
+        ->and($passportEvidence->recorded[0]->details['jurisdictions'])->toBe([])
+        ->and($passportEvidence->recorded[1]->type)->toBe(EvidenceType::CourseCompleted)
+        ->and($passportEvidence->recorded[1]->subjectId)->toBe($enrollment->id()->value())
+        ->and($passportEvidence->recorded[1]->details['completed_lessons'])->toBe(1);
+});
+
+it('emite un certificado al completar la ultima leccion', function (): void {
+    $enrollment = activeEnrollmentForLessonCompletion();
+    $course = app(CourseRepository::class)->findById($enrollment->courseId());
+    $lessonId = (new CourseLessonCatalog(app(UnitContentRepository::class)))->lessonIdsFor($course)[0];
+    $issuer = new SpyCertificateIssuer;
+
+    completeLessonHandler(certificateIssuer: $issuer)->handle(new CompleteLessonCommand(
+        enrollmentId: $enrollment->id()->value(),
+        lessonId: $lessonId,
+        userId: $enrollment->userId(),
+    ));
+
+    expect($issuer->issued)->toBe([[
+        'user_id' => $enrollment->userId(),
+        'course_id' => $enrollment->courseId()->value(),
+    ]]);
+});
+
+it('otorga la recompensa al completar la ultima leccion', function (): void {
+    $enrollment = activeEnrollmentForLessonCompletion();
+    $course = app(CourseRepository::class)->findById($enrollment->courseId());
+    $lessonId = (new CourseLessonCatalog(app(UnitContentRepository::class)))->lessonIdsFor($course)[0];
+    $rewarder = new SpyCourseCompletionRewarder;
+
+    completeLessonHandler(completionRewarder: $rewarder)->handle(new CompleteLessonCommand(
+        enrollmentId: $enrollment->id()->value(),
+        lessonId: $lessonId,
+        userId: $enrollment->userId(),
+    ));
+
+    expect($rewarder->rewards)->toBe([[
+        'user_id' => $enrollment->userId(),
+        'course_id' => $enrollment->courseId()->value(),
+        'competency_id' => null,
+    ]]);
+});
+
+it('notifica al estudiante al completar la ultima leccion', function (): void {
+    $enrollment = activeEnrollmentForLessonCompletion();
+    $course = app(CourseRepository::class)->findById($enrollment->courseId());
+    $lessonId = (new CourseLessonCatalog(app(UnitContentRepository::class)))->lessonIdsFor($course)[0];
+    $notifier = new SpyCourseCompletionNotifier;
+
+    completeLessonHandler(completionNotifier: $notifier)->handle(new CompleteLessonCommand(
+        enrollmentId: $enrollment->id()->value(),
+        lessonId: $lessonId,
+        userId: $enrollment->userId(),
+    ));
+
+    expect($notifier->notifications)->toBe([[
+        'user_id' => $enrollment->userId(),
+        'course_id' => $enrollment->courseId()->value(),
+        'course_title' => $course->title()->value(),
+    ]]);
 });

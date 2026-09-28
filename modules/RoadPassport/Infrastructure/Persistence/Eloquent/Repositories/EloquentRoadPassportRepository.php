@@ -31,6 +31,7 @@ final readonly class EloquentRoadPassportRepository implements RoadPassportRepos
                     'status' => $passport->status()->value,
                     'level' => $passport->level(),
                     'issued_at' => $passport->issuedAt(),
+                    'verification_version' => $passport->verificationVersion(),
                 ],
             );
 
@@ -117,6 +118,7 @@ final readonly class EloquentRoadPassportRepository implements RoadPassportRepos
                 },
                 $evidenceModels,
             ),
+            verificationVersion: (int) $model->getAttribute('verification_version'),
         );
     }
 }

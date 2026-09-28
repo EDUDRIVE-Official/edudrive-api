@@ -42,7 +42,7 @@ final class ReplaceUnitContentRequest extends FormRequest
         $lessons = $this->input('lessons');
         $rules = [
             'lessons' => ['present', 'array', 'list', 'max:'.self::MAX_LESSONS],
-            'lessons.*' => ['array:id,code,title,summary,duration_minutes,position,blocks'],
+            'lessons.*' => ['array:id,code,title,summary,duration_minutes,position,blocks,learning_design'],
             'lessons.*.id' => ['bail', 'required', 'uuid', $this->distinctIgnoringCase($this->valuesForKey($lessons, 'id'))],
             'lessons.*.code' => ['bail', 'required', 'string', 'max:60', 'regex:/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$/', $this->distinctIgnoringCase($this->valuesForKey($lessons, 'code'))],
             'lessons.*.title' => ['required', 'string', 'max:180'],
@@ -52,9 +52,29 @@ final class ReplaceUnitContentRequest extends FormRequest
             'lessons.*.blocks' => ['present', 'array', 'list', 'max:'.self::MAX_BLOCKS_PER_LESSON],
             'lessons.*.blocks.*' => ['array:id,type,position,payload'],
             'lessons.*.blocks.*.id' => ['bail', 'required', 'uuid', $this->distinctIgnoringCase($this->allBlockValues($lessons, 'id'))],
-            'lessons.*.blocks.*.type' => ['required', 'string', 'in:text,image,video,audio,interactive,download'],
+            'lessons.*.blocks.*.type' => ['required', 'string', 'in:text,image,video,audio,interactive,scenario,download'],
             'lessons.*.blocks.*.position' => ['required', 'integer', 'min:1', 'max:1000000'],
             'lessons.*.blocks.*.payload' => ['present', 'array'],
+            'lessons.*.learning_design' => ['nullable', 'array:stage,jurisdictions,experience_type,behavior_objective,competency_id,subcompetency_code,indicator_codes,evidence_rules,requires_guardian,normative_sources,version'],
+            'lessons.*.learning_design.stage' => ['required_with:lessons.*.learning_design', 'string', 'in:explore,discover,understand,prepare,drive,perfect,refresh,teach'],
+            'lessons.*.learning_design.jurisdictions' => ['required_with:lessons.*.learning_design', 'array', 'min:1'],
+            'lessons.*.learning_design.jurisdictions.*' => ['string', 'max:10'],
+            'lessons.*.learning_design.experience_type' => ['required_with:lessons.*.learning_design', 'string', 'in:story,visual_exploration,classification,ordering,dilemma,community_observation,guided_practice,web_simulation,simudrive_lab,competency_challenge,reflection'],
+            'lessons.*.learning_design.behavior_objective' => ['required_with:lessons.*.learning_design', 'string', 'max:1000'],
+            'lessons.*.learning_design.competency_id' => ['required_with:lessons.*.learning_design', 'uuid', 'exists:academic_competencies,id'],
+            'lessons.*.learning_design.subcompetency_code' => ['required_with:lessons.*.learning_design', 'string', 'max:70'],
+            'lessons.*.learning_design.indicator_codes' => ['required_with:lessons.*.learning_design', 'array', 'min:1'],
+            'lessons.*.learning_design.indicator_codes.*' => ['string', 'max:80'],
+            'lessons.*.learning_design.evidence_rules' => ['required_with:lessons.*.learning_design', 'array', 'min:1'],
+            'lessons.*.learning_design.evidence_rules.*.indicator_code' => ['required', 'string', 'max:80'],
+            'lessons.*.learning_design.evidence_rules.*.event_type' => ['required', 'string', 'max:100'],
+            'lessons.*.learning_design.evidence_rules.*.minimum_observations' => ['required', 'integer', 'min:1'],
+            'lessons.*.learning_design.evidence_rules.*.weight' => ['required', 'integer', 'min:1', 'max:100'],
+            'lessons.*.learning_design.requires_guardian' => ['required_with:lessons.*.learning_design', 'boolean'],
+            'lessons.*.learning_design.normative_sources' => ['present_with:lessons.*.learning_design', 'array'],
+            'lessons.*.learning_design.normative_sources.*.url' => ['required', 'url:https', 'max:2048'],
+            'lessons.*.learning_design.normative_sources.*.reviewed_at' => ['required', 'date_format:Y-m-d'],
+            'lessons.*.learning_design.version' => ['required_with:lessons.*.learning_design', 'integer', 'min:1'],
         ];
 
         if (! is_array($lessons)) {
@@ -138,6 +158,7 @@ final class ReplaceUnitContentRequest extends FormRequest
             'video' => ['url', 'captions_url', 'transcript', 'title', 'description'],
             'audio' => ['url', 'transcript', 'title', 'description'],
             'interactive' => ['url', 'accessible_text', 'accessible_url', 'title', 'description'],
+            'scenario' => ['title', 'context', 'prompt', 'accessible_text', 'choices'],
             'download' => ['url', 'display_name', 'mime_type', 'description', 'filename', 'size_bytes'],
             default => [],
         };
@@ -158,6 +179,7 @@ final class ReplaceUnitContentRequest extends FormRequest
             'video' => ['url' => $url, 'captions_url' => $url, 'transcript' => $longRequired, 'title' => $title, 'description' => $longOptional],
             'audio' => ['url' => $url, 'transcript' => $longRequired, 'title' => $title, 'description' => $longOptional],
             'interactive' => ['url' => $url, 'accessible_text' => $longOptional, 'accessible_url' => $optionalUrl, 'title' => $title, 'description' => $longOptional],
+            'scenario' => ['title' => ['required', 'string', 'max:180'], 'context' => $longRequired, 'prompt' => $longRequired, 'accessible_text' => $longRequired, 'choices' => ['required', 'array', 'min:2', 'max:8']],
             'download' => ['url' => $url, 'display_name' => ['required', 'string', 'max:180'], 'mime_type' => ['required', 'string', 'max:255'], 'description' => $longOptional, 'filename' => ['nullable', 'string', 'max:255'], 'size_bytes' => ['nullable', 'integer', 'min:1']],
             default => [],
         };

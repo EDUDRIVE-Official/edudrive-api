@@ -127,6 +127,12 @@ final class User
         $this->lastLoginAt = $occurredAt;
     }
 
+    public function changeDateOfBirth(?DateTimeImmutable $dateOfBirth, DateTimeImmutable $occurredAt): void
+    {
+        $this->dateOfBirth = $dateOfBirth;
+        $this->updatedAt = $occurredAt;
+    }
+
     public function id(): string
     {
         return $this->id;

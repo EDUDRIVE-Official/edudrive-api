@@ -17,6 +17,7 @@ final class UpdateStudentProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'date_of_birth' => ['nullable', 'date', 'before_or_equal:today'],
             'education_level' => ['nullable', 'string', 'max:255'],
             'accessibility_needs' => ['nullable', 'string', 'max:2000'],
             'learning_preferences' => ['nullable', 'string', 'max:2000'],

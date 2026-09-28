@@ -61,6 +61,7 @@ final readonly class UnitContentResponse
                         ],
                         $lesson->blocks(),
                     ),
+                    'learning_design' => $lesson->learningDesign()?->toArray(),
                 ],
                 $content->lessons(),
             ),

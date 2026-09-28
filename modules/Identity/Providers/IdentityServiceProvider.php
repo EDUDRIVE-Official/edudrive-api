@@ -9,6 +9,7 @@ use Modules\Identity\Application\Services\AccessTokenIssuer;
 use Modules\Identity\Application\Services\AccessTokenRevoker;
 use Modules\Identity\Application\Services\PasswordHasher;
 use Modules\Identity\Application\Services\SessionRepository;
+use Modules\Identity\Application\Services\UserAdministrationScope;
 use Modules\Identity\Application\Services\UuidGenerator;
 use Modules\Identity\Domain\Repositories\EmailVerificationTokenRepository;
 use Modules\Identity\Domain\Repositories\GuardianRelationshipRepository;
@@ -23,10 +24,12 @@ use Modules\Identity\Infrastructure\Persistence\Repositories\EloquentStudentProf
 use Modules\Identity\Infrastructure\Persistence\Repositories\EloquentTeacherProfileRepository;
 use Modules\Identity\Infrastructure\Persistence\Repositories\EloquentUserRepository;
 use Modules\Identity\Infrastructure\Security\LaravelPasswordHasher;
+use Modules\Identity\Infrastructure\Security\OrganizationScopedUserAdministrationScope;
 use Modules\Identity\Infrastructure\Security\SanctumAccessTokenIssuer;
 use Modules\Identity\Infrastructure\Security\SanctumAccessTokenRevoker;
 use Modules\Identity\Infrastructure\Security\SanctumSessionRepository;
 use Modules\Identity\Infrastructure\Support\LaravelUuidGenerator;
+use Modules\Identity\Presentation\Console\BootstrapSuperAdminCommand;
 use Modules\Identity\Presentation\Console\PurgeInactiveAccountsCommand;
 
 final class IdentityServiceProvider extends ServiceProvider
@@ -87,6 +90,8 @@ final class IdentityServiceProvider extends ServiceProvider
             GuardianRelationshipRepository::class,
             EloquentGuardianRelationshipRepository::class,
         );
+
+        $this->app->bind(UserAdministrationScope::class, OrganizationScopedUserAdministrationScope::class);
     }
 
     public function boot(): void
@@ -104,6 +109,7 @@ final class IdentityServiceProvider extends ServiceProvider
         );
 
         $this->commands([
+            BootstrapSuperAdminCommand::class,
             PurgeInactiveAccountsCommand::class,
         ]);
     }

@@ -71,14 +71,28 @@ docker compose -f "$COMPOSE_FILE" exec -T app php artisan optimize
 
 echo "==> Verificando salud de la aplicacion"
 ATTEMPTS=0
-until curl --silent --fail http://localhost/up > /dev/null; do
+until docker compose -f "$COMPOSE_FILE" exec -T nginx wget --spider -q http://localhost/up; do
     ATTEMPTS=$((ATTEMPTS + 1))
     if [ "$ATTEMPTS" -ge 10 ]; then
-        echo "La aplicacion no respondio saludable en http://localhost/up tras el despliegue." >&2
+        echo "La aplicacion no respondio saludable dentro de la red privada tras el despliegue." >&2
         echo "Revisar logs: docker compose -f ${COMPOSE_FILE} logs app nginx" >&2
         exit 1
     fi
     sleep 3
 done
 
-echo "==> Despliegue completo: ${IMAGE_TAG} corriendo y saludable."
+echo "==> Verificando HTTPS publico"
+PUBLIC_URL="$(grep '^APP_URL=' .env | tail -n 1 | cut -d= -f2-)"
+PUBLIC_ATTEMPTS=0
+until [ -n "$PUBLIC_URL" ] && curl --silent --fail --show-error "${PUBLIC_URL%/}/up" > /dev/null; do
+    PUBLIC_ATTEMPTS=$((PUBLIC_ATTEMPTS + 1))
+    if [ "$PUBLIC_ATTEMPTS" -ge 20 ]; then
+        echo "La aplicacion responde internamente, pero fallo la comprobacion HTTPS publica." >&2
+        echo "Verifica el registro DNS de APP_DOMAIN y el enrutamiento de Traefik/Dokploy." >&2
+        exit 1
+    fi
+
+    sleep 3
+done
+
+echo "==> Despliegue completo: ${IMAGE_TAG} corriendo y saludable en ${PUBLIC_URL}."

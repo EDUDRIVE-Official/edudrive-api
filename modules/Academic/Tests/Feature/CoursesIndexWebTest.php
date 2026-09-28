@@ -82,6 +82,36 @@ it('muestra el botón "Nuevo curso" a un superadministrador', function (): void 
     $response->assertSee('href="'.route('courses.create').'"', false);
 });
 
+it('permite al superadministrador revisar cualquier curso con todas las lecciones desbloqueadas', function (): void {
+    /** @var TestCase $this */
+    $user = actingAsSuperAdminUser();
+    $this->actingAs($user, 'web');
+    $course = createDraftCourseForPublishing('EDU-PREVIEW');
+
+    $this->get(route('courses.index'))
+        ->assertOk()
+        ->assertSee('href="'.route('courses.preview', $course->id()->value()).'"', false)
+        ->assertSeeText('Revisar curso completo');
+
+    $this->get(route('courses.preview', $course->id()->value()))
+        ->assertOk()
+        ->assertSeeText('Vista integral de superadministración')
+        ->assertSeeText('Sin bloqueos ni requisitos previos')
+        ->assertSeeText('Lección desbloqueada')
+        ->assertSeeText('Contenido accesible de prueba.')
+        ->assertDontSeeText('Verificar y completar lección');
+});
+
+it('mantiene la vista completa de cursos fuera del alcance de estudiantes', function (): void {
+    /** @var TestCase $this */
+    $course = createDraftCourseForPublishing('EDU-PRIVATE-PREVIEW');
+    $student = actingAsRole(Role::Student);
+    $this->actingAs($student, 'web');
+
+    $this->get(route('courses.preview', $course->id()->value()))
+        ->assertForbidden();
+});
+
 it('muestra el boton segun el estado de revision de cada curso', function (): void {
     /** @var TestCase $this */
     $user = actingAsSuperAdminUser();

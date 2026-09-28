@@ -71,10 +71,19 @@ services:
       dockerfile: docker/php/Dockerfile
       target: nginx
     restart: unless-stopped
-    ports:
-      - "80:80"
+    expose:
+      - "80"
     networks:
       - edudrive-network
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.edudrive.rule=Host(`${APP_DOMAIN}`)
+      - traefik.http.routers.edudrive.entrypoints=websecure
+      - traefik.http.routers.edudrive.tls=true
+      - traefik.http.routers.edudrive.tls.certresolver=letsencrypt
+      - traefik.http.services.edudrive.loadbalancer.server.port=80
     depends_on:
       - app
     healthcheck:
@@ -83,7 +92,7 @@ services:
         - wget
         - --spider
         - -q
-        - http://localhost/up
+        - http://127.0.0.1/up
       interval: 10s
       timeout: 5s
       retries: 5
@@ -128,7 +137,7 @@ services:
       retries: 10
 
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -142,6 +151,8 @@ services:
 networks:
   edudrive-network:
     driver: bridge
+  dokploy-network:
+    external: true
 
 volumes:
   edudrive-postgres-data:

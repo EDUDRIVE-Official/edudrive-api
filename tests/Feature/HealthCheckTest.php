@@ -6,7 +6,7 @@ use Tests\TestCase;
 
 it('confirma que la aplicación está disponible', function (): void {
     /** @var TestCase $this */
-    $response = $this->get('/');
+    $response = $this->get('/up');
 
     $response->assertOk();
 });

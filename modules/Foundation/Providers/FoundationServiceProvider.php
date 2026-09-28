@@ -43,13 +43,19 @@ final class FoundationServiceProvider extends ServiceProvider
         if ($this->app->environment('production')) {
             $connection = (string) config('database.default');
 
-            (new RequiredSecretsValidator)->ensureAllPresent([
+            $requiredSecrets = [
                 'APP_KEY' => config('app.key'),
                 'DB_PASSWORD' => config("database.connections.{$connection}.password"),
                 'AWS_ACCESS_KEY_ID' => config('filesystems.disks.s3.key'),
                 'AWS_SECRET_ACCESS_KEY' => config('filesystems.disks.s3.secret'),
                 'AWS_BUCKET' => config('filesystems.disks.s3.bucket'),
-            ]);
+            ];
+
+            if (config('mail.default') === 'postmark') {
+                $requiredSecrets['POSTMARK_API_KEY'] = config('services.postmark.key');
+            }
+
+            (new RequiredSecretsValidator)->ensureAllPresent($requiredSecrets);
         }
 
         RateLimiter::for('login', static fn (Request $request): Limit => Limit::perMinute(5)

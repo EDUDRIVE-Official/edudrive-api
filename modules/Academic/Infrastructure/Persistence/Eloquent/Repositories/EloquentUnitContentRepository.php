@@ -21,6 +21,7 @@ use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\CourseUnitId;
 use Modules\Academic\Domain\ValueObjects\CurriculumCode;
 use Modules\Academic\Domain\ValueObjects\LessonId;
+use Modules\Academic\Domain\ValueObjects\LessonLearningDesign;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\ContentBlockModel;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\CourseModel;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\LessonModel;
@@ -161,6 +162,7 @@ final readonly class EloquentUnitContentRepository implements UnitContentReposit
                 'summary' => $lesson->summary(),
                 'duration_minutes' => $lesson->durationMinutes(),
                 'position' => $lesson->position(),
+                'learning_design' => $lesson->learningDesign() === null ? null : json_encode($lesson->learningDesign()->toArray(), JSON_THROW_ON_ERROR),
                 'created_at' => $timestamp,
                 'updated_at' => $timestamp,
             ];
@@ -194,7 +196,7 @@ final readonly class EloquentUnitContentRepository implements UnitContentReposit
             'academic_lessons',
             $temporaryLessonRows,
             $ownedLessonIds,
-            ['unit_id', 'code', 'title', 'summary', 'duration_minutes', 'position', 'updated_at'],
+            ['unit_id', 'code', 'title', 'summary', 'duration_minutes', 'position', 'learning_design', 'updated_at'],
         );
         $this->persistPartitionedRows(
             'academic_lesson_blocks',
@@ -217,7 +219,7 @@ final readonly class EloquentUnitContentRepository implements UnitContentReposit
         $obsoleteLessons->delete();
 
         $this->upsertRows('academic_lessons', $finalLessonRows, [
-            'unit_id', 'code', 'title', 'summary', 'duration_minutes', 'position', 'updated_at',
+            'unit_id', 'code', 'title', 'summary', 'duration_minutes', 'position', 'learning_design', 'updated_at',
         ]);
         $this->upsertRows('academic_lesson_blocks', $finalBlockRows, [
             'lesson_id', 'type', 'position', 'payload', 'updated_at',
@@ -288,6 +290,7 @@ final readonly class EloquentUnitContentRepository implements UnitContentReposit
                 $lesson->getAttribute('duration_minutes') === null ? null : (int) $lesson->getAttribute('duration_minutes'),
                 (int) $lesson->getAttribute('position'),
                 array_values($blocks),
+                $lesson->getAttribute('learning_design') === null ? null : LessonLearningDesign::fromArray((array) $lesson->getAttribute('learning_design')),
             );
         })->all();
 

@@ -11,6 +11,14 @@ use Modules\Notification\Domain\Enums\NotificationFrequency;
 
 final class UpdateNotificationPreferenceRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'allowed_channels' => $this->input('allowed_channels', []),
+            'muted_categories' => $this->input('muted_categories', []),
+        ]);
+    }
+
     public function authorize(): bool
     {
         return true;

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Símbolo de EDUDRIVE</title>
+  <desc id="desc">Una E azul y una D turquesa forman una ruta circular alrededor de una señal ámbar de avance.</desc>
+  <path fill="#0B3A6E" d="M57 8H43C19 8 5 29 5 64s14 56 38 56h14V97H44c-13 0-21-14-21-33s8-33 21-33h13V8Z"/>
+  <path fill="#0B3A6E" d="M22 42h35v13H22zm-5 22h40v13H17zm5 22h35v13H22z"/>
+  <path fill="#008A78" d="M71 8h14c24 0 38 21 38 56s-14 56-38 56H71V97h13c13 0 21-14 21-33s-8-33-21-33H71V8Z"/>
+  <path fill="#F5B700" d="M54 44.5a5 5 0 0 1 7.6-4.2l27 19.5a5 5 0 0 1 0 8.4l-27 19.5A5 5 0 0 1 54 83.5v-39Z"/>
+</svg>

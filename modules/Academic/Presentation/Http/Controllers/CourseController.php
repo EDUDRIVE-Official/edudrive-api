@@ -37,6 +37,7 @@ use Modules\Academic\Application\Responses\CourseVersionResponse;
 use Modules\Academic\Application\Responses\CreateCourseResponse;
 use Modules\Academic\Application\Responses\PublishCourseResponse;
 use Modules\Academic\Application\Responses\UnitContentResponse;
+use Modules\Academic\Domain\ValueObjects\LessonLearningDesign;
 use Modules\Academic\Presentation\Http\Requests\BulkImportCoursesRequest;
 use Modules\Academic\Presentation\Http\Requests\CreateCourseRequest;
 use Modules\Academic\Presentation\Http\Requests\ReplaceCourseCurriculumRequest;
@@ -376,6 +377,9 @@ final class CourseController
                 isset($lesson['duration_minutes']) ? (int) $lesson['duration_minutes'] : null,
                 (int) $lesson['position'],
                 $blocks,
+                isset($lesson['learning_design']) && is_array($lesson['learning_design'])
+                    ? LessonLearningDesign::fromArray($lesson['learning_design'])
+                    : null,
             );
         }
 

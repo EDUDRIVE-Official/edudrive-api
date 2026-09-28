@@ -26,6 +26,7 @@ final readonly class RoadPassportResponse
         public array $history,
         public array $evidence,
         public int $trustScore,
+        public int $verificationVersion,
     ) {}
 
     public static function fromRoadPassport(RoadPassport $passport, ?DateTimeImmutable $now = null): self
@@ -59,6 +60,7 @@ final readonly class RoadPassportResponse
                 $passport->evidence(),
             ),
             trustScore: (new RoadPassportTrustCalculator)->calculate($passport, $now),
+            verificationVersion: $passport->verificationVersion(),
         );
     }
 
@@ -85,6 +87,7 @@ final readonly class RoadPassportResponse
             'history' => $this->history,
             'evidence' => $this->evidence,
             'trust_score' => $this->trustScore,
+            'verification_version' => $this->verificationVersion,
         ];
     }
 }

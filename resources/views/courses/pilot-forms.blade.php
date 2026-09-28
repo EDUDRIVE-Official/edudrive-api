@@ -1,0 +1,71 @@
+<x-layouts.app title="EDUDRIVE — Instrumentos del piloto">
+    @php
+        $completedControls = collect(['workspace', 'reviewers', 'reviews', 'candidates'])->filter(fn ($key) => $readiness[$key]['complete'])->count();
+        $blankLine = 'border-b border-dashed border-slate-500 bg-transparent px-1 py-1 outline-none focus:border-primary';
+        $scenes = ['La van que bloquea la vista', 'El carro que gira', 'Ruta interrumpida', 'Cambió el lugar de descenso'];
+    @endphp
+
+    <main id="pilot-main" class="mx-auto max-w-6xl space-y-8">
+        <header class="space-y-3">
+            <p class="text-sm font-semibold text-primary">Plantillas sin almacenamiento · Versión {{ $sceneVersion }}</p>
+            <h1 class="text-3xl font-bold">Instrumentos operativos del piloto</h1>
+            <p class="max-w-4xl text-text-secondary">Estas hojas ayudan a ejecutar y documentar un ensayo autorizado. Los datos escritos permanecen únicamente en esta página mientras está abierta y pueden imprimirse; EduDrive no los envía ni los guarda.</p>
+            <div class="flex flex-wrap gap-3 print:hidden"><button type="button" @click="window.print()" class="min-h-11 rounded bg-primary px-4 font-semibold text-white">Imprimir todas las hojas</button><button type="button" @click="window.location.reload()" class="min-h-11 rounded border border-border px-4 font-semibold">Limpiar lo escrito</button><a class="inline-flex min-h-11 items-center rounded border border-border px-4 font-semibold" href="{{ route('pilot-instruments.pilot-protocol') }}">Volver al protocolo</a><a class="inline-flex min-h-11 items-center rounded border border-border px-4 font-semibold" href="{{ route('pilot-instruments.pilot-dossier') }}">Ver expediente institucional</a></div>
+        </header>
+
+        <aside class="rounded-xl border border-red-400 bg-red-50 p-5 text-red-950">
+            <h2 class="text-xl font-bold">No escribás datos personales de estudiantes</h2>
+            <p class="mt-2">Usá únicamente códigos internos previamente definidos. No incluyás nombres, identificación, dirección, centro educativo, diagnóstico, información familiar, fotografías, audio ni conversaciones ajenas a la actividad.</p>
+        </aside>
+
+        <nav class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 print:hidden" aria-label="Instrumentos disponibles">
+            @foreach([['preflight', '1. Control previo'], ['observation', '2. Observación'], ['incident', '3. Incidente'], ['decision', '4. Decisión']] as [$key, $label])
+                <a href="#{{ $key }}" class="inline-flex min-h-11 items-center justify-center rounded border border-border bg-surface px-4 font-semibold">{{ $label }}</a>
+            @endforeach
+        </nav>
+
+        <section id="preflight" class="scroll-mt-4 space-y-5 rounded-2xl border border-border bg-surface p-6 print:break-after-page">
+            <div class="flex flex-wrap items-start justify-between gap-3"><div><p class="text-sm font-semibold uppercase tracking-wide text-primary">Instrumento 1</p><h2 class="text-2xl font-bold">Lista de control previa</h2></div><span class="rounded-full px-3 py-1 text-sm font-semibold {{ $readiness['technical_preparation_complete'] ? 'bg-blue-100 text-blue-900' : 'bg-red-100 text-red-900' }}">Sistema: {{ $completedControls }} de 4 controles</span></div>
+            <div class="grid gap-4 md:grid-cols-3"><label class="space-y-1"><span class="font-semibold">Código de ejecución</span><input aria-label="Código de ejecución" class="w-full {{ $blankLine }}"></label><label class="space-y-1"><span class="font-semibold">Fecha prevista</span><input aria-label="Fecha prevista" type="date" class="w-full {{ $blankLine }}"></label><label class="space-y-1"><span class="font-semibold">Referencia institucional</span><input aria-label="Referencia institucional" class="w-full {{ $blankLine }}"></label></div>
+            @if(!$readiness['technical_preparation_complete'])<p class="rounded border border-red-500 bg-red-50 p-3 font-semibold text-red-950">Bloqueo automático: la preparación interna está incompleta. Esta hoja no puede autorizar participantes.</p>@endif
+            <div class="grid gap-3 md:grid-cols-2">
+                @foreach([
+                    'Los cuatro controles internos de EduDrive están completos.',
+                    'La autoridad competente aprobó alcance, población y responsables.',
+                    'Consentimiento, asentimiento y retiro voluntario fueron aprobados.',
+                    'El plan de datos define acceso, conservación, eliminación e incidentes.',
+                    'Dispositivos y apoyos de accesibilidad fueron probados.',
+                    'El equipo realizó el ensayo de mesa con datos ficticios.',
+                    'La persona responsable de protección estará disponible.',
+                    'El lugar no expone a participantes al tránsito real.',
+                ] as $item)<label class="flex gap-3 rounded border border-border p-3"><input type="checkbox" class="mt-1 h-5 w-5"><span>{{ $item }}</span></label>@endforeach
+            </div>
+            <div class="grid gap-4 md:grid-cols-2"><label class="space-y-1"><span class="font-semibold">Pendientes que impiden iniciar</span><textarea aria-label="Pendientes que impiden iniciar" rows="4" class="w-full rounded border border-border bg-background p-3"></textarea></label><div class="space-y-2"><p class="font-semibold">Resultado manual</p><label class="block"><input type="radio" name="preflight-result"> No iniciar</label><label class="block"><input type="radio" name="preflight-result"> Corregir y volver a comprobar</label><label class="block"><input type="radio" name="preflight-result"> Elevar a la autoridad para decisión</label><p class="text-sm text-text-secondary">Esta selección no autoriza el piloto dentro de EduDrive.</p></div></div>
+        </section>
+
+        <section id="observation" class="scroll-mt-4 space-y-5 rounded-2xl border border-border bg-surface p-6 print:break-after-page">
+            <div><p class="text-sm font-semibold uppercase tracking-wide text-primary">Instrumento 2</p><h2 class="text-2xl font-bold">Hoja de observación de sesión</h2><p class="mt-1 text-text-secondary">Registrá hechos observables. No diagnostiqués, etiquetés ni supongás intenciones.</p></div>
+            <div class="grid gap-4 md:grid-cols-4"><label class="space-y-1"><span class="font-semibold">Código de sesión</span><input aria-label="Código de sesión" class="w-full {{ $blankLine }}"></label><label class="space-y-1"><span class="font-semibold">Grupo etario</span><select aria-label="Grupo etario" class="w-full rounded border border-border bg-background p-2"><option value="">Seleccionar</option><option>9–10</option><option>11–12</option></select></label><label class="space-y-1"><span class="font-semibold">Dispositivo</span><input aria-label="Dispositivo" class="w-full {{ $blankLine }}"></label><label class="space-y-1"><span class="font-semibold">Apoyo de acceso</span><input aria-label="Apoyo de acceso" class="w-full {{ $blankLine }}"></label></div>
+            <div class="overflow-x-auto rounded border border-border"><table class="w-full min-w-[900px] border-collapse text-left"><thead><tr class="bg-background"><th class="p-3">Escena</th><th class="p-3">Comprendió la situación</th><th class="p-3">Decisión inicial</th><th class="p-3">Pidió ayuda</th><th class="p-3">Barrera observada</th></tr></thead><tbody>@foreach($scenes as $scene)<tr class="border-t border-border"><th class="p-3">{{ $scene }}</th><td class="p-3"><label><input type="checkbox"> Sí</label> <label><input type="checkbox"> No claro</label></td><td class="p-3"><input aria-label="Decisión inicial en {{ $scene }}" class="w-full {{ $blankLine }}"></td><td class="p-3"><label><input type="checkbox"> Sí</label> <label><input type="checkbox"> No</label></td><td class="p-3"><input aria-label="Barrera observada en {{ $scene }}" class="w-full {{ $blankLine }}"></td></tr>@endforeach</tbody></table></div>
+            <div class="grid gap-4 md:grid-cols-2"><label class="space-y-1"><span class="font-semibold">Hechos relevantes observados</span><textarea aria-label="Hechos relevantes observados" rows="5" class="w-full rounded border border-border bg-background p-3" placeholder="Ejemplo: volvió a mirar la escena antes de elegir."></textarea></label><label class="space-y-1"><span class="font-semibold">Devolución voluntaria del participante</span><textarea aria-label="Devolución voluntaria del participante" rows="5" class="w-full rounded border border-border bg-background p-3" placeholder="Registrar solo comentarios sobre la actividad."></textarea></label></div>
+        </section>
+
+        <section id="incident" class="scroll-mt-4 space-y-5 rounded-2xl border border-red-300 bg-surface p-6 print:break-after-page">
+            <div><p class="text-sm font-semibold uppercase tracking-wide text-red-700">Instrumento 3</p><h2 class="text-2xl font-bold">Registro mínimo de incidente</h2><p class="mt-1 text-text-secondary">Atendé primero a la persona. Esta hoja documenta la respuesta; no debe contener detalles clínicos ni información de identidad.</p></div>
+            <div class="grid gap-4 md:grid-cols-3"><label class="space-y-1"><span class="font-semibold">Código del incidente</span><input aria-label="Código del incidente" class="w-full {{ $blankLine }}"></label><label class="space-y-1"><span class="font-semibold">Código de sesión</span><input aria-label="Código de sesión del incidente" class="w-full {{ $blankLine }}"></label><label class="space-y-1"><span class="font-semibold">Momento</span><input aria-label="Momento del incidente" type="datetime-local" class="w-full {{ $blankLine }}"></label></div>
+            <fieldset class="space-y-2"><legend class="font-semibold">Categoría observable</legend><div class="flex flex-wrap gap-4">@foreach(['Bienestar', 'Accesibilidad', 'Contenido vial', 'Falla técnica', 'Privacidad', 'Condición no autorizada'] as $category)<label><input type="checkbox"> {{ $category }}</label>@endforeach</div></fieldset>
+            <div class="grid gap-4 md:grid-cols-2"><label class="space-y-1"><span class="font-semibold">Qué ocurrió, de forma objetiva</span><textarea aria-label="Descripción objetiva del incidente" rows="4" class="w-full rounded border border-border bg-background p-3"></textarea></label><label class="space-y-1"><span class="font-semibold">Acción inmediata tomada</span><textarea aria-label="Acción inmediata tomada" rows="4" class="w-full rounded border border-border bg-background p-3"></textarea></label><label class="space-y-1"><span class="font-semibold">Referencia de escalamiento</span><input aria-label="Referencia de escalamiento" class="w-full {{ $blankLine }}"></label><div class="space-y-2"><p class="font-semibold">Estado</p><label class="block"><input type="radio" name="incident-state"> Sesión suspendida</label><label class="block"><input type="radio" name="incident-state"> Piloto completo suspendido</label><label class="block"><input type="radio" name="incident-state"> Atendido según protocolo; requiere seguimiento</label></div></div>
+        </section>
+
+        <section id="decision" class="scroll-mt-4 space-y-5 rounded-2xl border border-border bg-surface p-6">
+            <div><p class="text-sm font-semibold uppercase tracking-wide text-primary">Instrumento 4</p><h2 class="text-2xl font-bold">Acta de análisis y decisión</h2><p class="mt-1 text-text-secondary">La decisión corresponde a la autoridad identificada. Esta hoja no modifica cursos, publicaciones ni permisos del sistema.</p></div>
+            <div class="grid gap-4 md:grid-cols-3"><label class="space-y-1"><span class="font-semibold">Código de ciclo</span><input aria-label="Código de ciclo" class="w-full {{ $blankLine }}"></label><label class="space-y-1"><span class="font-semibold">Sesiones analizadas</span><input aria-label="Cantidad de sesiones analizadas" inputmode="numeric" class="w-full {{ $blankLine }}"></label><label class="space-y-1"><span class="font-semibold">Fecha de análisis</span><input aria-label="Fecha de análisis" type="date" class="w-full {{ $blankLine }}"></label></div>
+            <div class="grid gap-3 md:grid-cols-2">@foreach(['Hallazgos de seguridad vial resueltos', 'Hallazgos pedagógicos resueltos', 'Barreras de accesibilidad resueltas', 'Incidentes cerrados por la instancia responsable', 'Plan de datos cumplido', 'Limitaciones y población aplicable documentadas'] as $item)<label class="flex gap-3 rounded border border-border p-3"><input type="checkbox" class="mt-1 h-5 w-5"><span>{{ $item }}</span></label>@endforeach</div>
+            <div class="grid gap-4 md:grid-cols-2"><label class="space-y-1"><span class="font-semibold">Síntesis de evidencia</span><textarea aria-label="Síntesis de evidencia" rows="5" class="w-full rounded border border-border bg-background p-3"></textarea></label><label class="space-y-1"><span class="font-semibold">Límites y pendientes</span><textarea aria-label="Límites y pendientes" rows="5" class="w-full rounded border border-border bg-background p-3"></textarea></label></div>
+            <fieldset class="space-y-2 rounded border border-border p-4"><legend class="font-bold">Decisión institucional propuesta</legend><label class="block"><input type="radio" name="pilot-decision"> Detener</label><label class="block"><input type="radio" name="pilot-decision"> Corregir y repetir la misma fase</label><label class="block"><input type="radio" name="pilot-decision"> Continuar con límites documentados</label><label class="block"><input type="radio" name="pilot-decision"> Elevar para decisión sobre una fase posterior</label></fieldset>
+            <div class="grid gap-5 md:grid-cols-2"><p class="border-b border-slate-500 pt-10">Referencia de la autoridad responsable</p><p class="border-b border-slate-500 pt-10">Fecha y constancia externa</p></div>
+        </section>
+
+        <aside class="rounded-lg border border-amber-400 bg-amber-50 p-4 text-amber-950 print:mt-5"><strong>Control documental:</strong> al imprimir, asigná códigos de expediente conforme al procedimiento institucional. No fotografiés ni subás estas hojas a EduDrive sin una aprobación específica de privacidad y seguridad.</aside>
+    </main>
+</x-layouts.app>

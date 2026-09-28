@@ -1,0 +1,17 @@
+# Override para el primer despliegue desde un checkout local en el VPS.
+# Construye la misma imagen que luego consumen app, queue-worker y scheduler.
+# Los despliegues posteriores pueden volver al flujo reproducible por SHA de
+# imagen documentado en scripts/deploy.sh.
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      target: app
+    image: edudrive-api:${IMAGE_TAG:-bootstrap}
+
+  queue-worker:
+    image: edudrive-api:${IMAGE_TAG:-bootstrap}
+
+  scheduler:
+    image: edudrive-api:${IMAGE_TAG:-bootstrap}

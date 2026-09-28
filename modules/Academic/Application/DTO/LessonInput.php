@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Modules\Academic\Application\DTO;
 
+use Modules\Academic\Domain\ValueObjects\LessonLearningDesign;
+
 final readonly class LessonInput
 {
     /** @param list<ContentBlockInput> $blocks */
@@ -15,5 +17,6 @@ final readonly class LessonInput
         public ?int $durationMinutes,
         public int $position,
         public array $blocks,
+        public ?LessonLearningDesign $learningDesign = null,
     ) {}
 }

@@ -29,6 +29,12 @@ final class EnrollmentProgressController
         CommandBus $commandBus,
     ): JsonResponse {
         $user = self::authenticatedUser($request);
+        $scenarioAnswers = [];
+        foreach ((array) $request->validated('scenario_answers', []) as $blockId => $choiceId) {
+            if (is_string($blockId) && is_string($choiceId)) {
+                $scenarioAnswers[$blockId] = $choiceId;
+            }
+        }
         $result = $commandBus->dispatch(new CompleteLessonCommand(
             enrollmentId: $enrollmentId,
             lessonId: $lessonId,
@@ -36,6 +42,13 @@ final class EnrollmentProgressController
             timeSpentMinutes: $request->validated('time_spent_minutes') === null
                 ? null
                 : (int) $request->validated('time_spent_minutes'),
+            scenarioAnswers: $scenarioAnswers,
+            reflection: $request->validated('reflection') === null
+                ? null
+                : trim((string) $request->validated('reflection')),
+            selfAssessment: $request->validated('self_assessment') === null
+                ? null
+                : (string) $request->validated('self_assessment'),
         ));
         assert($result instanceof EnrollmentProgressResponse);
 

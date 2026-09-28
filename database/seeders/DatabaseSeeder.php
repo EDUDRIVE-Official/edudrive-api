@@ -28,15 +28,30 @@ class DatabaseSeeder extends Seeder
         $repository = app(UserRepository::class);
         $email = Email::fromString('test@example.com');
 
-        if ($repository->existsByEmail($email)) {
-            return;
+        if (! $repository->existsByEmail($email)) {
+            $repository->save(User::register(
+                id: (string) Str::uuid(),
+                name: 'Test User',
+                email: $email,
+                passwordHash: app(PasswordHasher::class)->hash('password'),
+            ));
         }
 
-        $repository->save(User::register(
-            id: (string) Str::uuid(),
-            name: 'Test User',
-            email: $email,
-            passwordHash: app(PasswordHasher::class)->hash('password'),
-        ));
+        $this->call([
+            SafeCrossingPilotSeeder::class,
+            VisibleCyclingPilotSeeder::class,
+            ResponsiblePassengerPilotSeeder::class,
+            VisibleMotorcyclingPilotSeeder::class,
+            PreventiveDrivingPilotSeeder::class,
+            SustainableMobilityPilotSeeder::class,
+            SafeSchoolEnvironmentPilotSeeder::class,
+            SafeIncidentResponsePilotSeeder::class,
+            RoadSafetyFamilyPilotSeeder::class,
+            NextRoadEducationCoursesSeeder::class,
+            AdditionalRoadEducationCoursesSeeder::class,
+            ThirdRoadEducationCoursesSeeder::class,
+            FourthRoadEducationCoursesSeeder::class,
+            FifthRoadEducationCoursesSeeder::class,
+        ]);
     }
 }

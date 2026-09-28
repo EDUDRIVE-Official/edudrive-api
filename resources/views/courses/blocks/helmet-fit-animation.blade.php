@@ -1,0 +1,9 @@
+<section class="overflow-hidden rounded-lg border border-border bg-surface" x-data="{step:0, checks:['Nivelado sobre la frente','Correas en V junto a las orejas','Hebilla firme bajo el mentón','No se desplaza al mover la cabeza']}">
+    <header class="border-b border-border px-4 py-3"><p class="text-xs font-bold uppercase tracking-wide text-primary">Taller de ajuste</p><h4 class="mt-1 font-heading text-lg font-bold">Cuatro comprobaciones del casco</h4></header>
+    <div class="grid gap-0 sm:grid-cols-2">
+        <div class="grid min-h-56 place-items-center bg-sky-100 p-5 text-center text-slate-900" role="img" :aria-label="checks[step]">
+            <div class="relative"><span class="text-8xl" aria-hidden="true">🙂</span><span class="absolute -left-2 -top-8 text-7xl transition-transform duration-300 motion-reduce:transition-none" :class="step===0?'rotate-0':'scale-95'" aria-hidden="true">⛑️</span><span class="mt-5 block rounded-full bg-white/80 px-3 py-1 text-sm font-bold" x-text="`${step + 1} de ${checks.length}`"></span></div>
+        </div>
+        <div class="p-4"><p class="text-xs font-bold uppercase tracking-wide text-primary">Comprobá</p><p class="mt-2 min-h-14 font-bold leading-6 text-text" x-text="checks[step]"></p><div class="mt-3 h-2 overflow-hidden rounded-full bg-border"><div class="h-full bg-success transition-all" :style="`width:${((step + 1) / checks.length) * 100}%`"></div></div><div class="mt-4 flex gap-2"><button type="button" class="min-h-11 flex-1 rounded-md border border-border px-3 text-sm font-bold disabled:opacity-40" @click="step--" :disabled="step===0">← Anterior</button><button type="button" class="min-h-11 flex-1 rounded-md bg-primary px-3 text-sm font-bold text-white" @click="step=(step+1)%checks.length">Siguiente →</button></div><p class="mt-3 text-xs leading-5 text-text-secondary">Realizá el ajuste fuera de la vía. Una persona adulta confirma el ajuste de niñas y niños.</p></div>
+    </div>
+</section>

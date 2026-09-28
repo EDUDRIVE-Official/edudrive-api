@@ -44,6 +44,10 @@ final class IntegrationServiceProvider extends ServiceProvider
             dirname(__DIR__, 2).'/Presentation/Routes/api.php',
         );
 
+        $this->loadRoutesFrom(
+            dirname(__DIR__, 2).'/Presentation/Routes/web.php',
+        );
+
         $this->loadMigrationsFrom(
             dirname(__DIR__).'/Persistence/Migrations',
         );

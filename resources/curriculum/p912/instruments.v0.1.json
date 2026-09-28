@@ -1,0 +1,352 @@
+{
+  "id": "P912-PEATON-PASAJERO",
+  "version": "0.1.0",
+  "status": "draft_requires_human_review",
+  "audience": {
+    "stage": "discover",
+    "age_min": 9,
+    "age_max": 12,
+    "role": [
+      "pedestrian",
+      "passenger"
+    ],
+    "independent_travel_authorized": false
+  },
+  "purpose": "Instrumentos de diseño para piloto acompañado; no certifican dominio ni habilitan circulación autónoma.",
+  "jurisdiction": "CR",
+  "indicator_ids": [
+    "P912.ESPACIO",
+    "P912.VISIBILIDAD",
+    "P912.PAUSA",
+    "P912.COMPRUEBA",
+    "P912.PASAJERO",
+    "P912.AYUDA"
+  ],
+  "forms": {
+    "diagnostic": {
+      "feedback": "after_form",
+      "allow_content_hints": false,
+      "assessment_claim": "baseline_only"
+    },
+    "practice": {
+      "feedback": "after_response",
+      "allow_content_hints": true,
+      "assessment_claim": "formative_only"
+    },
+    "independent": {
+      "feedback": "after_form",
+      "allow_content_hints": false,
+      "assessment_claim": "understanding_in_this_context"
+    },
+    "retention": {
+      "feedback": "after_form",
+      "allow_content_hints": false,
+      "assessment_claim": "retention_in_sampled_indicators"
+    }
+  },
+  "human_review": {
+    "pedagogical": null,
+    "road_safety": null,
+    "accessibility": null
+  },
+  "items": [
+    {
+      "id": "D01",
+      "form": "diagnostic",
+      "pair": "space_visibility",
+      "title": "La furgoneta junto al cruce",
+      "scene": "Estás en la acera con una persona adulta. Una furgoneta estacionada cerca de la esquina tapa parte de la calle. Más atrás hay espacio libre para esperar.",
+      "task": "¿Dónde esperarías y qué no podés saber todavía?",
+      "response_modes": [
+        "oral_transcribed",
+        "written",
+        "pointing_explained"
+      ],
+      "criteria": [
+        {
+          "indicator": "P912.ESPACIO",
+          "expected": "Elige permanecer en un espacio de la acera separado del borde, sin entrar en la calle para ver."
+        },
+        {
+          "indicator": "P912.VISIBILIDAD",
+          "expected": "Explica que la furgoneta oculta parte del tránsito y no permite confirmar que no viene nadie."
+        }
+      ]
+    },
+    {
+      "id": "D02",
+      "form": "diagnostic",
+      "pair": "pause_check",
+      "title": "Una señal y un giro",
+      "scene": "Esperás en la acera con una persona adulta. La señal peatonal permite cruzar, pero un automóvil empieza a girar hacia el paso. Todavía no has entrado en la calle.",
+      "task": "¿Qué harías antes de avanzar y qué necesitás comprobar?",
+      "response_modes": [
+        "oral_transcribed",
+        "written",
+        "pointing_explained"
+      ],
+      "criteria": [
+        {
+          "indicator": "P912.PAUSA",
+          "expected": "Mantiene la espera protegida mientras existe un conflicto sin resolver."
+        },
+        {
+          "indicator": "P912.COMPRUEBA",
+          "expected": "Identifica el giro hacia el paso y la necesidad de comprobar que la trayectoria esté libre, sin asumir que la señal basta."
+        }
+      ]
+    },
+    {
+      "id": "D03",
+      "form": "diagnostic",
+      "pair": "passenger_visibility",
+      "title": "Al bajar del autobús",
+      "scene": "El autobús está detenido. Bajás hacia la acera con una persona adulta. Querés ir al otro lado, pero desde ahí el autobús tapa parte de la calle.",
+      "task": "Mostrá dónde te quedarías y explicá qué falta comprobar.",
+      "response_modes": [
+        "oral_transcribed",
+        "written",
+        "pointing_explained"
+      ],
+      "criteria": [
+        {
+          "indicator": "P912.PASAJERO",
+          "expected": "Permanece en la acera tras descender y no inicia un cruce delante o detrás del autobús."
+        },
+        {
+          "indicator": "P912.VISIBILIDAD",
+          "expected": "Reconoce que estar detenido no elimina lo que el autobús oculta."
+        }
+      ]
+    },
+    {
+      "id": "D04",
+      "form": "diagnostic",
+      "pair": "space_help",
+      "title": "El paso que no conocés",
+      "scene": "Caminás con una persona adulta. Una valla cierra la acera y no se ve una alternativa peatonal protegida. No conocés ese lugar.",
+      "task": "¿Qué plan propondrías y a quién pedirías ayuda?",
+      "response_modes": [
+        "oral_transcribed",
+        "written",
+        "pointing_explained"
+      ],
+      "criteria": [
+        {
+          "indicator": "P912.ESPACIO",
+          "expected": "Propone detenerse o retroceder dentro del espacio protegido sin bajar a la calzada."
+        },
+        {
+          "indicator": "P912.AYUDA",
+          "expected": "Comunica la dificultad al adulto y busca con él una alternativa protegida, sin inventar que una ruta desconocida es segura."
+        }
+      ]
+    },
+    {
+      "id": "P01",
+      "form": "practice",
+      "pair": null,
+      "title": "El mapa y la camioneta",
+      "scene": "En una maqueta, una camioneta tapa la vista cerca de la esquina. El mapa sugiere avanzar. Hay una zona protegida detrás del personaje.",
+      "task": "Elegí dónde detener al personaje y explicá qué necesita comprobar.",
+      "response_modes": [
+        "oral_transcribed",
+        "written",
+        "pointing_explained"
+      ],
+      "criteria": [
+        {
+          "indicator": "P912.ESPACIO",
+          "expected": "Selecciona el espacio protegido."
+        },
+        {
+          "indicator": "P912.VISIBILIDAD",
+          "expected": "Identifica la obstrucción."
+        },
+        {
+          "indicator": "P912.PAUSA",
+          "expected": "No deja que la indicación del mapa sustituya la comprobación."
+        }
+      ],
+      "hints": [
+        "¿Qué parte de la calle queda oculta?",
+        "Buscá un lugar donde el personaje pueda esperar sin entrar en la calle."
+      ],
+      "feedback": "La indicación del mapa orienta el recorrido, pero no muestra todo lo que ocurre. Podés esperar en un espacio protegido y pedir acompañamiento para buscar mejor visibilidad."
+    },
+    {
+      "id": "P02",
+      "form": "practice",
+      "pair": null,
+      "title": "Cambió el lugar de descenso",
+      "scene": "En una maqueta, el transporte está detenido y la puerta queda junto a un espacio sin acera protegida. Estás con una persona adulta y todavía no bajaste.",
+      "task": "Explicá qué comunicarías antes de bajar.",
+      "response_modes": [
+        "oral_transcribed",
+        "written",
+        "pointing_explained"
+      ],
+      "criteria": [
+        {
+          "indicator": "P912.PASAJERO",
+          "expected": "No inicia un descenso hacia un espacio expuesto."
+        },
+        {
+          "indicator": "P912.AYUDA",
+          "expected": "Pide al adulto y a la persona conductora una solución protegida, sin ordenar una maniobra improvisada."
+        }
+      ],
+      "hints": [
+        "¿Dónde quedarías al poner los pies fuera del vehículo?",
+        "¿Quién puede ayudarte a resolver el lugar de descenso?"
+      ],
+      "feedback": "Antes de bajar, comunicá que falta un lugar protegido. La persona conductora tiene responsabilidad en un descenso seguro; no corresponde exponerte para compensar ese problema."
+    },
+    {
+      "id": "C01",
+      "form": "independent",
+      "pair": "space_visibility",
+      "title": "El vehículo de reparto",
+      "scene": "Esperás en la acera con una persona adulta. Un vehículo de reparto estacionado tapa la vista hacia una parte de la calle. A unos pasos, dentro de la acera, hay espacio libre.",
+      "task": "¿Dónde esperarías y qué información falta?",
+      "response_modes": [
+        "oral_transcribed",
+        "written",
+        "pointing_explained"
+      ],
+      "criteria": [
+        {
+          "indicator": "P912.ESPACIO",
+          "expected": "Selecciona un espacio separado del borde sin salir a la calle para ver."
+        },
+        {
+          "indicator": "P912.VISIBILIDAD",
+          "expected": "Identifica el sector de tránsito oculto; no deduce ausencia de vehículos por no verlos."
+        }
+      ]
+    },
+    {
+      "id": "C02",
+      "form": "independent",
+      "pair": "pause_check",
+      "title": "El giro desde otra calle",
+      "scene": "Estás en la acera con una persona adulta. La señal peatonal permite avanzar. Un vehículo de otra calle comienza un giro que pasa por el lugar de cruce. Aún no entraste en la calle.",
+      "task": "¿Cuál sería tu siguiente acción y por qué?",
+      "response_modes": [
+        "oral_transcribed",
+        "written",
+        "pointing_explained"
+      ],
+      "criteria": [
+        {
+          "indicator": "P912.PAUSA",
+          "expected": "Espera en el espacio protegido ante el conflicto."
+        },
+        {
+          "indicator": "P912.COMPRUEBA",
+          "expected": "Considera la trayectoria del vehículo que gira y comprueba que el paso esté libre antes de decidir."
+        }
+      ]
+    },
+    {
+      "id": "C03",
+      "form": "independent",
+      "pair": "passenger_visibility",
+      "title": "El transporte escolar",
+      "scene": "Bajás de un transporte escolar detenido hacia la acera, junto a una persona adulta. El vehículo oculta parte de la vía y el destino queda enfrente.",
+      "task": "¿Qué harías antes de ir hacia ese destino?",
+      "response_modes": [
+        "oral_transcribed",
+        "written",
+        "pointing_explained"
+      ],
+      "criteria": [
+        {
+          "indicator": "P912.PASAJERO",
+          "expected": "Mantiene la protección de la acera y no cruza pegado al vehículo."
+        },
+        {
+          "indicator": "P912.VISIBILIDAD",
+          "expected": "Explica que debe recuperar información del tránsito oculto, aunque el transporte esté detenido."
+        }
+      ]
+    },
+    {
+      "id": "C04",
+      "form": "independent",
+      "pair": "space_help",
+      "title": "Una acera cerrada",
+      "scene": "Vas con una persona adulta por un lugar nuevo. Un cierre ocupa la acera y la única salida inmediata parece llevar a la calle. No sabés si existe un desvío protegido.",
+      "task": "Explicá cómo cambiarías el plan.",
+      "response_modes": [
+        "oral_transcribed",
+        "written",
+        "pointing_explained"
+      ],
+      "criteria": [
+        {
+          "indicator": "P912.ESPACIO",
+          "expected": "Permanece o regresa a un espacio protegido sin usar la calzada como alternativa automática."
+        },
+        {
+          "indicator": "P912.AYUDA",
+          "expected": "Solicita apoyo al adulto para confirmar otra ruta; reconoce que la información disponible no alcanza."
+        }
+      ]
+    },
+    {
+      "id": "R01",
+      "form": "retention",
+      "pair": null,
+      "title": "La vista detrás del camión",
+      "scene": "En una fotografía ficticia, estás en la acera con una persona adulta. Un camión estacionado tapa la vista de la calle. No podés confirmar si se aproxima otro vehículo.",
+      "task": "¿Qué decidirías y qué necesitás saber antes de avanzar?",
+      "response_modes": [
+        "oral_transcribed",
+        "written",
+        "pointing_explained"
+      ],
+      "criteria": [
+        {
+          "indicator": "P912.VISIBILIDAD",
+          "expected": "Reconoce el tránsito potencialmente oculto."
+        },
+        {
+          "indicator": "P912.PAUSA",
+          "expected": "Pospone el avance desde un espacio protegido."
+        },
+        {
+          "indicator": "P912.COMPRUEBA",
+          "expected": "Explica la necesidad de comprobar las trayectorias relevantes, no solo escuchar."
+        }
+      ]
+    },
+    {
+      "id": "R02",
+      "form": "retention",
+      "pair": null,
+      "title": "La parada provisional",
+      "scene": "El autobús sigue detenido. Estás con una persona adulta, aún adentro. La puerta da hacia un espacio ocupado por materiales y no se distingue una zona protegida para bajar.",
+      "task": "¿Qué harías y cómo pedirías apoyo?",
+      "response_modes": [
+        "oral_transcribed",
+        "written",
+        "pointing_explained"
+      ],
+      "criteria": [
+        {
+          "indicator": "P912.PASAJERO",
+          "expected": "No desciende hacia un espacio expuesto u obstruido."
+        },
+        {
+          "indicator": "P912.ESPACIO",
+          "expected": "Reconoce la ausencia de un lugar protegido de descenso."
+        },
+        {
+          "indicator": "P912.AYUDA",
+          "expected": "Comunica la dificultad al adulto/persona conductora para resolverla sin improvisar."
+        }
+      ]
+    }
+  ]
+}

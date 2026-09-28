@@ -68,6 +68,7 @@ it('actualiza el perfil del estudiante y redirige con un mensaje de exito', func
     $this->actingAs(UserModel::query()->findOrFail($user->id()), 'web');
 
     $response = $this->put('/mi-perfil', [
+        'date_of_birth' => '2012-05-10',
         'education_level' => 'Universitaria',
         'accessibility_needs' => 'Ninguna',
         'learning_preferences' => 'Lectura',
@@ -78,7 +79,8 @@ it('actualiza el perfil del estudiante y redirige con un mensaje de exito', func
 
     $profile = app(StudentProfileRepository::class)->findByUserId($user->id());
     expect($profile?->educationLevel())->toBe('Universitaria')
-        ->and($profile?->learningPreferences())->toBe('Lectura');
+        ->and($profile?->learningPreferences())->toBe('Lectura')
+        ->and(app(UserRepository::class)->findById($user->id())?->dateOfBirth()?->format('Y-m-d'))->toBe('2012-05-10');
 });
 
 it('vuelve al perfil con errores cuando un campo excede la longitud permitida', function (): void {
@@ -92,4 +94,13 @@ it('vuelve al perfil con errores cuando un campo excede la longitud permitida', 
 
     $response->assertRedirect();
     $response->assertSessionHasErrors(['education_level']);
+});
+
+it('rechaza una fecha de nacimiento futura al actualizar el perfil', function (): void {
+    /** @var TestCase $this */
+    $user = persistedStudentProfileWebTestUser();
+    $this->actingAs(UserModel::query()->findOrFail($user->id()), 'web');
+
+    $this->put('/mi-perfil', ['date_of_birth' => now()->addDay()->toDateString()])
+        ->assertSessionHasErrors(['date_of_birth']);
 });

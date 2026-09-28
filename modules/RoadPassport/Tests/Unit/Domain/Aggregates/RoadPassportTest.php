@@ -188,6 +188,16 @@ it('ignora evidencia duplicada por tipo y sujeto', function (): void {
     expect($passport->evidence())->toHaveCount(1);
 });
 
+it('incrementa la versión al renovar el enlace público', function (): void {
+    $passport = newRoadPassport();
+
+    expect($passport->verificationVersion())->toBe(1);
+
+    $passport->rotateVerificationLink();
+
+    expect($passport->verificationVersion())->toBe(2);
+});
+
 it('registra evidencia sin importar el estado del pasaporte', function (): void {
     $passport = newRoadPassport();
     $passport->suspend(null, new DateTimeImmutable('now'));

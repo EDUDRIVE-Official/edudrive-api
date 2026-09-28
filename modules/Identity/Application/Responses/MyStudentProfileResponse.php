@@ -8,7 +8,7 @@ final readonly class MyStudentProfileResponse
 {
     /**
      * @param  array{status: string, level: int, issued_at: string}|null  $roadPassport
-     * @param  list<array{course_id: string, status: string, enrolled_at: string}>  $enrollments
+     * @param  list<array{enrollment_id: string, course_id: string, status: string, enrolled_at: string}>  $enrollments
      */
     public function __construct(
         public string $userId,
@@ -32,7 +32,7 @@ final readonly class MyStudentProfileResponse
      *     accessibility_needs: string|null,
      *     learning_preferences: string|null,
      *     road_passport: array{status: string, level: int, issued_at: string}|null,
-     *     enrollments: list<array{course_id: string, status: string, enrolled_at: string}>
+     *     enrollments: list<array{enrollment_id: string, course_id: string, status: string, enrolled_at: string}>
      * }
      */
     public function toArray(): array

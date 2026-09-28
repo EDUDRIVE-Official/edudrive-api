@@ -10,6 +10,7 @@ use Modules\Academic\Application\Commands\PublishCourseCommand;
 use Modules\Academic\Application\Exceptions\CourseNotFound;
 use Modules\Academic\Application\Responses\PublishCourseResponse;
 use Modules\Academic\Application\Services\CourseSnapshotBuilder;
+use Modules\Academic\Application\Services\CoursePublicationQualityGate;
 use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Entities\CourseVersion;
 use Modules\Academic\Domain\Repositories\CourseRepository;
@@ -23,12 +24,14 @@ final readonly class PublishCourseHandler
         private CourseRepository $courses,
         private CourseVersionRepository $versions,
         private CourseSnapshotBuilder $snapshotBuilder,
+        private CoursePublicationQualityGate $qualityGate,
     ) {}
 
     public function handle(
         PublishCourseCommand $command,
     ): PublishCourseResponse {
         $courseId = CourseId::fromString($command->courseId);
+        $this->qualityGate->assertReady($courseId);
 
         $course = $this->courses->updateAtomicallyWithContentCoverage(
             $courseId,

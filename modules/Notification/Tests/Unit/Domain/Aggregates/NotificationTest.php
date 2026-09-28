@@ -29,6 +29,18 @@ it('se envia como no leida', function (): void {
         ->and($notification->readAt())->toBeNull();
 });
 
+it('solo permite destinos internos seguros', function (): void {
+    expect(fn () => Notification::send(
+        id: NotificationId::fromString((string) Str::uuid()),
+        userId: (string) Str::uuid(),
+        channel: NotificationChannel::Web,
+        category: 'practica_lista',
+        subject: 'Práctica lista',
+        body: 'Abrí la actividad pendiente.',
+        actionUrl: 'https://sitio-externo.example/engaño',
+    ))->toThrow(InvalidArgumentException::class);
+});
+
 it('se marca como leida y registra la fecha', function (): void {
     $notification = newNotification();
 

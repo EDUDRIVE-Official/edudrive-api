@@ -27,6 +27,6 @@ final class LessonModel extends Model
 
     protected function casts(): array
     {
-        return ['duration_minutes' => 'integer', 'position' => 'integer'];
+        return ['duration_minutes' => 'integer', 'position' => 'integer', 'learning_design' => 'array'];
     }
 }

@@ -167,3 +167,61 @@ it('rechaza restablecer sin confirmacion de contrasena', function (): void {
         'password' => 'clave-nueva-456',
     ])->assertJsonValidationErrors('password');
 });
+
+it('ofrece recuperacion web con un enlace de un solo uso sin revelar si la cuenta existe', function (): void {
+    /** @var TestCase $this */
+    Queue::fake();
+    config()->set('mail.delivery.mode', 'local');
+    $user = registerPasswordResetTestUser();
+
+    $this->get('/recuperar-acceso')
+        ->assertOk()
+        ->assertSee('Definí tu contraseña')
+        ->assertSee('expira en 60 minutos')
+        ->assertSee('Entorno de pruebas')
+        ->assertDontSee('http://localhost:8025');
+
+    $this->post('/recuperar-acceso', [
+        'email' => $user->email()->value(),
+    ])
+        ->assertRedirect()
+        ->assertSessionHas('status', 'Solicitud generada en modo de pruebas. Si la cuenta existe, el enlace quedó en el buzón local; no fue enviado a una dirección externa.');
+
+    $token = capturePasswordResetToken($user->email()->value());
+
+    $this->get(route('password.reset', [
+        'token' => $token,
+        'email' => $user->email()->value(),
+    ]))
+        ->assertOk()
+        ->assertSee('Creá tu contraseña')
+        ->assertSee($user->email()->value());
+
+    $this->post('/restablecer-contrasena', [
+        'email' => $user->email()->value(),
+        'token' => $token,
+        'password' => 'clave-nueva-segura-456',
+        'password_confirmation' => 'clave-nueva-segura-456',
+    ])
+        ->assertRedirect(route('login'))
+        ->assertSessionHas('passwordResetStatus');
+
+    $this->post('/restablecer-contrasena', [
+        'email' => $user->email()->value(),
+        'token' => $token,
+        'password' => 'otra-clave-segura-789',
+        'password_confirmation' => 'otra-clave-segura-789',
+    ])
+        ->assertRedirect()
+        ->assertSessionHasErrors('token');
+});
+
+it('exige una contrasena robusta en la recuperacion web', function (): void {
+    /** @var TestCase $this */
+    $this->post('/restablecer-contrasena', [
+        'email' => 'persona@edudrive.cr',
+        'token' => 'token-de-prueba',
+        'password' => 'corta123',
+        'password_confirmation' => 'corta123',
+    ])->assertSessionHasErrors('password');
+});

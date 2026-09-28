@@ -43,6 +43,7 @@ final readonly class SendNotificationHandler
             category: $command->category,
             subject: $command->subject,
             body: $command->body,
+            actionUrl: $command->actionUrl,
         );
 
         $this->notifications->save($notification);

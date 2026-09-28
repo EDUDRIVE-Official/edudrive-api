@@ -1,5 +1,119 @@
 # ENG-LOG
 
+## PED-026 — Expediente institucional trazable
+
+El expediente `/pilot-instruments/pilot-dossier` presenta propósito, población, objetivos, arquitectura pedagógica, componentes construidos, evidencia técnica, límites, estado real, riesgos, ruta de escalamiento y anexos. Solicita inicialmente enlaces y revisión institucional, no aprobación nacional ni despliegue. Los indicadores se calculan desde los mismos controles del tablero y la declaración final impide interpretar diseño o pruebas técnicas como eficacia educativa.
+
+## PED-025 — Instrumentos operativos sin datos persistidos
+
+La pantalla `/pilot-instruments/pilot-forms` convierte el protocolo en cuatro plantillas imprimibles: control previo, observación, incidente y decisión. Refleja el estado técnico real y bloquea expresamente la convocatoria cuando está incompleto. Los campos funcionan solo en la página abierta, carecen de envío y no se guardan. Se excluyen nombres, identificación, centro, diagnósticos, imágenes y audio; se usan códigos internos y se advierte que cualquier expediente debe regirse por el procedimiento institucional externo.
+
+## PED-024 — Protocolo previo a participantes
+
+El borrador `/pilot-instruments/pilot-protocol` conecta el estado real de los cuatro controles internos con un proceso progresivo de revisión documental, ensayo adulto, comprobación accesible, aplicación controlada y decisión institucional. Mientras la preparación sea incompleta muestra “No autorizar participantes”. Aun completa, solo permite solicitar revisión externa. Define puertas de entrada, roles, evidencia mínima, minimización de datos, criterios de suspensión y resultados permitidos; no afirma cumplimiento legal ni autoriza trabajo con menores.
+
+## PED-023 — Paquete uniforme para especialistas
+
+La guía `/pilot-instruments/visual-review-guide` fija un procedimiento común sin crear revisores ni dictámenes ficticios. Diferencia responsabilidades de Docencia, Seguridad vial y Accesibilidad; exige explorar las cuatro escenas y todas sus decisiones; explica los cuatro criterios compartidos, la redacción de hallazgos accionables y el significado limitado de cada estado. El cierre interno requiere doce dictámenes trazables y mantiene separadas las validaciones externas, la autorización con menores y cualquier aprobación regulatoria.
+
+## PED-022 — Tablero de preparación del piloto
+
+El panel `/pilot-instruments/visual-readiness` reúne cuatro controles verificables: existencia del curso P912 aislado con cuatro lecciones, cobertura de las tres especialidades mediante designaciones activas, cobertura completa de las cuatro escenas y vinculación de cada escena al borrador correcto. “Preparación técnica completa” solo habilita solicitar validaciones externas; nunca publica, aprueba ni autoriza trabajo con estudiantes. El tablero mantiene visibles como pendientes la comprobación de credenciales, accesibilidad real, ensayo docente, protección de participantes, piloto controlado y decisión institucional.
+
+## PED-021 — Historial de designación enlazado a dictámenes
+
+Cada alta, cambio o inactivación de una persona revisora genera ahora un evento inmutable con la fotografía completa de su designación. El estado actual conserva la referencia exacta al último evento y cada revisión nueva guarda el evento de designación con el que fue emitida. Cambiar posteriormente especialidad, organización o respaldo no reescribe el contexto histórico de dictámenes anteriores.
+
+## PED-020 — Designación trazable de revisores
+
+Enviar revisiones visuales exige ahora una designación activa previa, administrada bajo `roles.manage`. La designación fija una única especialidad por cuenta y registra organización, base declarada, referencia, fecha y responsable que la otorgó; puede inactivarse. El formulario de revisión ya no permite escoger libremente la especialidad. La designación es un control interno de acceso y trazabilidad, no una certificación automática de credenciales.
+
+## PED-019 — Espacio borrador P912 aislado
+
+El flujo de candidaturas puede crear de forma idempotente el curso borrador `P912-PILOT-01`, con un módulo, una unidad y cuatro lecciones editoriales alineadas a las escenas. Cada lección contiene únicamente un aviso de estado; ninguna escena se integra automáticamente. Si el código ya existe no se duplica, y si dejó de estar en borrador la operación se rechaza. Los cursos publicados existentes no se reabren ni modifican.
+
+## PED-018 — Candidatura reversible de escena para lección
+
+Las escenas con cobertura completa pueden asociarse como candidatas a una lección que pertenezca a un curso en borrador. La asociación registra escena y versión, curso, lección, responsable y momento; no inserta bloques, no modifica el curso y no publica contenido. Escenas incompletas y lecciones de cursos no borrador son rechazadas. El panel `/pilot-instruments/visual-candidates` hace explícito este límite.
+
+## PED-017 — Hallazgos accionables en la cobertura visual
+
+Un registro con estado “requiere cambios” exige ahora una descripción concreta. El panel de cobertura muestra esos bloqueos por escena con especialidad, fecha, hallazgo y acceso directo a la práctica que debe revisarse. No muestra una aprobación ni crea responsables ficticios; mantiene los registros internos separados del progreso y la evidencia académica.
+
+## PED-016 — Cobertura de tres especialidades
+
+Las revisiones seleccionan una especialidad controlada: docencia, seguridad vial o accesibilidad. El panel `/pilot-instruments/visual-review-summary` agrega la versión vigente sin exponer notas individuales: registros recibidos, especialidades listas, faltantes y presencia de cambios pendientes. “Cobertura completa” exige las tres especialidades listas y ningún registro vigente con cambios; explícitamente no equivale a aprobación final.
+
+## PED-015 — Registro trazable de revisión interna
+
+La hoja de revisión ahora guarda por cuenta y versión un registro por escena con especialidad, fecha, cuatro criterios, hallazgos y estado. Solo admite `changes_required` y `ready_for_specialist_review`; el segundo exige todos los criterios confirmados. No existe estado “aprobado”. Los registros están aislados por revisor y no escriben progreso, matrícula, Pasaporte ni certificación.
+
+## PED-014 — Hoja humana de revisión de escenas
+
+Se incorpora `/pilot-instruments/visual-review`, restringida como los demás prototipos. Presenta por escena criterios de fidelidad vial, correspondencia de la decisión, consecuencia responsable y acceso equivalente, además de hallazgos y estado “requiere cambios” o “lista para revisión especializada”. La hoja no guarda datos ni concede aprobación; puede imprimirse y exige identificar responsable, especialidad, fecha y resolución de hallazgos para cualquier revisión formal.
+
+## PED-013 — Cierre no calificativo del recorrido
+
+La portada ofrece un único enlace para retomar la primera práctica pendiente. Al completar las cuatro marcas temporales presenta un cierre con las cuatro ideas trabajadas y aclara que terminar el ensayo no demuestra dominio ni genera calificación. Las escenas completadas siguen disponibles como revisión y las marcas pueden reiniciarse.
+
+## PED-012 — Avance temporal del recorrido visual
+
+El recorrido visual muestra progreso de 0 a 4 y estado pendiente/completada. La marca se crea al terminar el desenlace de una escena y se conserva únicamente en `sessionStorage`; no contiene respuestas, no llega al servidor, no genera evidencia académica y puede reiniciarse desde la propia pantalla. Las escenas siguen disponibles en cualquier orden para revisión interna.
+
+## PED-011 — Recorrido visual de cuatro decisiones
+
+Se consolidan las prácticas internas en `/pilot-instruments/visual-sequence` con progresión: observar una obstrucción, comprobar un giro, cambiar el plan ante una acera cerrada y comunicar un descenso inseguro. Cada desenlace enlaza con la siguiente escena. El recorrido no califica, no persiste respuestas y no altera cursos publicados. Se conserva el acceso restringido a gestión y entorno local/testing; pendiente validación pedagógica, vial, accesible y con usuarios.
+
+## PED-010 — Ruta interrumpida
+
+Cuarta práctica visual aislada en `/pilot-instruments/barrier`: una obra ocupa todo el ancho de la acera y no se presenta una alternativa protegida conocida. La decisión segura retrocede dentro de la acera y comunica la necesidad de cambiar el plan; la alternativa expuesta se congela antes del carril, sin choque. La devolución no afirma que una ruta desconocida sea segura. Incluye alternativa textual, narración opcional y controles de movimiento, sin guardar respuestas ni modificar cursos publicados. Pendiente revisión vial, docente, accesible y con usuarios.
+
+## PED-009 — Cambió el lugar de descenso
+
+Tercera práctica visual aislada en `/pilot-instruments/descent`, centrada en la competencia de pasajero: reconocer que la puerta quedó frente a un espacio sin acera, permanecer dentro y comunicar el problema a la persona adulta. La alternativa expuesta se congela al comenzar el descenso, sin choque ni caída. No se ordena ni anima una maniobra improvisada del vehículo. Incluye descripción equivalente, narración opcional y controles de movimiento; no guarda respuestas ni modifica cursos publicados. Pendiente revisión vial, docente, de accesibilidad y con usuarios antes de integrarla.
+
+## PED-008 — La van que bloquea la vista
+
+Práctica aislada en `/pilot-instruments/van`: dos decisiones animadas, desplazamiento acompañado por la acera o acercamiento a la calzada con congelación del riesgo. No se concede permiso de cruce por mejorar la visibilidad. Alternativa textual, voz opcional, pausa, repetición y movimiento reducido. Sin guardar respuestas ni modificar cursos publicados. Pruebas HTTP de ambas escenas aprobadas (12 aserciones); recorridos geométricos de van y giro aprobados; compilación correcta con advertencia existente por tamaño de Three.js. Pendiente validación pedagógica y prueba con usuarios antes de incorporarla al curso.
+
+## PED-007 — Una escena visual antes de extender el rediseño
+
+Prototipo protegido `/pilot-instruments/visual`, 3D de práctica con dos decisiones, devolución posterior, narración opcional, alternativa textual y controles de movimiento. Sin persistencia ni reemplazo de cursos/ensayos. Captura inicial y ambos desenlaces verificados en navegador; pausa/repetición/desenlace estático comprobados. Prueba HTTP dirigida aprobada (6 aserciones). Trayectoria compartida con prueba geométrica: corregido margen de frenado respecto de línea de detención, prueba aprobada. Alcance y pendientes en `docs/product/p912/PROTOTIPO-VISUAL-v0.1.md`.
+
+## PED-006 — Recorrido de estudiante como ensayo interno
+
+Agregada ruta protegida `/pilot-instruments/journey` con nueve situaciones: tres diagnósticas, tres prácticas U01 y tres de comprobación. Una tarea por página, sin envío de criterios o preguntas futuras, pistas solo en práctica, primera respuesta conservada y cierre reflexivo sin clasificación automática. Persistencia exclusiva en sesión y sin cambios a evidencias académicas. Incluye token/revisión, bloqueo de sesión y rechazo de saltos/ayudas indebidas. Pantalla inicial inspeccionada en navegador; prueba HTTP recorre las nueve situaciones y cierre. Corregido error Blade detectado durante pruebas. Resultado final: 18 pruebas, 105 aserciones aprobadas; compilación y comprobador editorial aprobados. No se habilitó acceso estudiantil real. Límites en `docs/product/p912/RECORRIDO-ESTUDIANTE-v0.1.md`.
+
+## PED-005 — Accesibilidad acotada y revisión interna de U01
+
+Reflujo comprobado en navegador a 320 y 1280 CSS px, sin desbordamiento horizontal. Añadido salto al contenido exclusivamente en rutas del ensayo y comprobado por teclado (foco en pilot-main); ayudas U01-A/B/C diferenciadas. Aclarado que esperar ocurre antes de ingresar a la calzada, no a mitad del cruce. Compilación aprobada, comprobadores editoriales aprobados y 15 pruebas/49 aserciones aprobadas en SQLite temporal. Revisión interna pedagógica/vial con fuentes MEP/NHTSA/W3C en `docs/product/p912/REVISION-U01-v0.1.md`. Zoom real 200% no verificado porque el atajo no cambió la escala del navegador integrado; lector de pantalla real y dictamen externo pendientes. No se rellenaron aprobaciones humanas ni se habilitó uso con menores.
+
+## PED-004 — Revisión autenticada y habilitación local del ensayo
+
+Tras ingreso del responsable como administrador, verificada guía P912-U01 en pantalla, enlace de sección y ayuda por teclado con foco visible. Detectada tabla faltante al iniciar ensayo; aplicada exclusivamente migración `2026_09_16_000001_create_pilot_instrument_runs.php` en entorno local. Completados tres ensayos ficticios cerrados (diagnóstico, práctica e independiente), conservados para inspección. Diagnóstico acepta incorrecta/vacía/pendientes; práctica conserva primera respuesta, pista y reintento formativo; independiente no ofrece pistas y admite cierre sin respuestas. Sin seeders ni cambios de cursos/progreso/certificación. No constituye ensayo docente, auditoría completa de accesibilidad ni validación educativa. Referencias y pendientes en `docs/product/p912/UNIDAD-MODELO-U01.md`.
+
+## PED-004 — Unidad modelo de cruce, 2026-09-16
+
+Preparada P912-U01 con cinco objetivos, tres prácticas y cinco fases. Fuente JSON y guía docente protegida en `/pilot-instruments/unit`, sin escrituras de datos ni cambios al banco/cursos publicados. Matriz comprobada contra criterios reales del banco; se explicita que R01 no acredita retención de todos los objetivos. Ver `docs/product/p912/UNIDAD-MODELO-U01.md`. Comprobador de unidad aprobado con tres casos negativos; comprobador del banco aprobado. Pint aprobado y 15 pruebas del ensayo aprobadas (46 aserciones), incluyendo renderizado y acceso de la guía. Revisión visual autenticada pendiente: navegador redirige al ingreso y se solicitó inicio de sesión al responsable. No declarar ensayo docente ni validación educativa completados.
+
+## PED-003 — Validación técnica dirigida
+
+Verificación final: PHPStan sin errores en servicio y controlador; Pint aprobado. Tras corregir el acceso potencial a usuario nulo y la búsqueda del ítem, se repitieron las 13 pruebas del ensayo: 39 aserciones aprobadas. No es una ejecución de la suite completa del repositorio.
+
+Localizado PHP 8.4 en Docker Desktop instalado bajo el perfil del usuario. Se ejecutaron contra SQLite en memoria las pruebas del ensayo, LessonLearningDesign y CompleteLessonHandler: **34 pruebas, 95 aserciones, aprobadas**. Ampliado el ensayo a 13 pruebas con confirmación obligatoria de datos ficticios, recorrido HTTP de respuesta vacía/cierre y escape de contenido. Añadidos tipos de retorno y control de error de lectura del banco; formato Pint aplicado. Corregida la instrucción para invocar Pest con ruta de módulo explícita. No se aplicó migración a la base real ni se ejecutaron seeders. Revisión visual/docente y validación educativa siguen pendientes.
+
+## PED-003 — 2026-09-16 — Ensayo aislado P912
+
+Agregado flujo `/pilot-instruments` restringido a local/testing, permiso de gestión y propietario. Snapshot de consignas sin criterios, eventos de respuestas/ayudas, cierre con pendientes, control de revisión y aislamiento del progreso/certificación. Migración preparada, no aplicada. Incluye pruebas de acceso, producción, ayudas, respuestas vacías, reintentos y cierre. Banco editorial y compilación Vite pasan (advertencia de tamaño de paquete); PHP/Pest y revisión visual pendientes por falta de runtime PHP. Solo datos ficticios. Procedimiento y límites en `docs/product/p912/ENSAYO-INTERNO-v0.1.md`.
+
+## PED-002 — Instrumentos P912
+
+Preparados 12 ítems abiertos: 4 de diagnóstico, 2 de práctica, 4 de comprobación y 2 de retención. Banco interno con criterios separado del cuaderno. Guía incluye T01/T02 para transferencia protegida, calibración y distinción entre apoyo de acceso y ayuda de contenido. Script de comprobación revisa IDs, cobertura, parejas, reglas de devolución y separación de criterios. No se crean registros ni se modifican cursos publicados. Estado: pendiente de revisión pedagógica/vial y de integración del flujo de evaluación independiente.
+
+## PED-001 — 2026-09-16 — Inicio de consolidación pedagógica
+
+El responsable prioriza primaria de 9–12 años. Se prepara plan de piloto de peatones/pasajeros y rúbrica; las definiciones iniciales dejan de inferir etapa según formato. Se admite `pending_review` sin sustituir registros históricos. Futuras evidencias de finalización declaran alcance formativo y no dominio. Se aclara la interpretación del puntaje del Pasaporte. No se ejecutan seeders ni se modifican progresos o certificados. Pruebas de regresión PHP añadidas/actualizadas, pendientes de ejecutar en un entorno con PHP. Estado: En validación.
+
 ---
 
 # 2026-07-27 — Hito ENG-008

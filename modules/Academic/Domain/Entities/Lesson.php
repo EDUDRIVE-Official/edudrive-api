@@ -10,6 +10,7 @@ use Modules\Academic\Domain\Exceptions\InvalidContentBlock;
 use Modules\Academic\Domain\Exceptions\InvalidLessonPosition;
 use Modules\Academic\Domain\ValueObjects\CurriculumCode;
 use Modules\Academic\Domain\ValueObjects\LessonId;
+use Modules\Academic\Domain\ValueObjects\LessonLearningDesign;
 
 final readonly class Lesson
 {
@@ -28,6 +29,7 @@ final readonly class Lesson
         private ?int $durationMinutes,
         private int $position,
         private array $blocks,
+        private ?LessonLearningDesign $learningDesign = null,
     ) {}
 
     /**
@@ -41,6 +43,7 @@ final readonly class Lesson
         ?int $durationMinutes,
         int $position,
         array $blocks,
+        ?LessonLearningDesign $learningDesign = null,
     ): self {
         $title = trim($title);
         $summary = self::normalizeOptionalText($summary);
@@ -71,7 +74,7 @@ final readonly class Lesson
             }
         }
 
-        return new self($id, $code, $title, $summary, $durationMinutes, $position, $blocks);
+        return new self($id, $code, $title, $summary, $durationMinutes, $position, $blocks, $learningDesign);
     }
 
     public function id(): LessonId
@@ -108,6 +111,11 @@ final readonly class Lesson
     public function blocks(): array
     {
         return $this->blocks;
+    }
+
+    public function learningDesign(): ?LessonLearningDesign
+    {
+        return $this->learningDesign;
     }
 
     private static function normalizeOptionalText(?string $value): ?string

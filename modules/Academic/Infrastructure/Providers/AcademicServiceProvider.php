@@ -173,6 +173,7 @@ use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentGr
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentProgramRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentQuestionRepository;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Repositories\EloquentUnitContentRepository;
+use Modules\Academic\Presentation\Console\InvitePilotReviewerCommand;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
 
 final class AcademicServiceProvider extends ServiceProvider
@@ -235,6 +236,8 @@ final class AcademicServiceProvider extends ServiceProvider
     public function boot(
         MessageHandlerRegistry $registry,
     ): void {
+        $this->commands([InvitePilotReviewerCommand::class]);
+
         $registry->register(CreateCompetencyCommand::class, CreateCompetencyHandler::class);
         $registry->register(AddSubcompetencyCommand::class, AddSubcompetencyHandler::class);
         $registry->register(AddCompetencyIndicatorCommand::class, AddCompetencyIndicatorHandler::class);
