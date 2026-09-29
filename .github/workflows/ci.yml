@@ -13,6 +13,8 @@ jobs:
   quality:
     name: Pint + Larastan
     runs-on: ubuntu-latest
+    env:
+      APP_ENV: testing
     steps:
       - uses: actions/checkout@v4
 
@@ -40,6 +42,8 @@ jobs:
   test:
     name: Pest
     runs-on: ubuntu-latest
+    env:
+      APP_ENV: testing
     steps:
       - uses: actions/checkout@v4
 
