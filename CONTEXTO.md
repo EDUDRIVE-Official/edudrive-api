@@ -15,7 +15,7 @@ Este es el punto de entrada para entender y continuar el sistema. Resume el esta
 - La matriz 3–80 vigente de trabajo es **2.0.0-borrador.1**: 60 fichas, 180 subcompetencias y 18 comparaciones THINK!. Sigue en revisión; faltan anclas específicas en 48 fichas.
 - No se ha realizado el piloto curricular ni una aplicación con participantes en este trabajo. Fecha, sede y equipo de campo siguen sin definir.
 - Hay código previo de Learning, Decision Engine y cálculo de confianza del Pasaporte. **No debe confundirse con la implementación completa del modelo curricular nuevo.** DESCUBRO mantiene su progreso separado de esas acreditaciones.
-- GitHub contiene la rama `codex/consolidacion-20260928` y el [PR #1](https://github.com/EDUDRIVE-Official/edudrive-api/pull/1). Las correcciones y la integración editorial del 29 siguen pendientes de commit y subida; el despliegue se realizó desde el árbol de trabajo. La actualización documental no registra esos cambios de código. `main` permanece en `a6803b7` (verificado el 30).
+- **Git sincronizado el 30 de septiembre:** código pendiente registrado en `944100f`; Pest y Pint + Larastan aprobados en GitHub (ejecución `36732163263`). [PR #1](https://github.com/EDUDRIVE-Official/edudrive-api/pull/1) integrado en `main`, commit `6d4741522fda8adab82aa88160662e8bfc65e8b2`. Sin nuevo despliegue.
 
 ## 2. Dónde vive cada cosa
 
@@ -174,17 +174,17 @@ No ejecutar indiscriminadamente el despliegue genérico ni todas las migraciones
 
 ## 8. Estado de Git y documentación heredada
 
-El 30 de septiembre se comprobaron `main` en `a6803b7` y la rama remota de consolidación en `3d69d2a`, antes del commit documental de esta actualización. El PR #1 fue creado en borrador. La autenticación con **EDUDRIVE-Official** permitió la subida; el antiguo bloqueo de `AbelCampos2025` está resuelto para este flujo.
+El código pendiente del 29 quedó registrado en `944100f`. GitHub aprobó Pest y Pint + Larastan sobre ese commit; CI compila ahora los recursos Vite antes de Pest. El PR #1 quedó integrado en `main` mediante `6d4741522fda8adab82aa88160662e8bfc65e8b2` el 30 de septiembre, usando la cuenta EDUDRIVE-Official.
 
-Las correcciones de código y pruebas del 29 y la integración editorial siguen en el árbol local, pendientes de registrar y subir. Esta actualización versiona documentación y registros de entrega, no ese código ni una integración en `main`. Los resultados de CI de la rama anterior no validan los cambios locales posteriores.
+La copia de trabajo se sincronizó con ese merge sobre `codex/consolidacion-20260928`. La antigua rama local llamada `main` tiene historia divergente y se conservó intacta; no confundirla con `origin/main`. Las referencias de entrega mantienen sus fechas originales. El código publicado procede del árbol y paquetes del 29; este merge registra sus fuentes y no afirma que la imagen activa se haya reconstruido desde el merge.
 
-Preservar los cambios existentes y revisar explícitamente el contenido del próximo commit. No mezclar documentación con código sin verificar su alcance. No repetir las pruebas ya documentadas salvo cambios nuevos o una diferencia de entorno que lo justifique.
+El workflow de main construye/publica una imagen después de sus controles; no despliega automáticamente al servidor. La versión operativa registrada sigue siendo `editorial-approved-20260929r1`. No hay cambios de aplicación pendientes de commit en este cierre.
 
 [SESION.md](docs/engineering/SESION.md) contiene un estado histórico del 16 de agosto. [ENG-LOG](docs/engineering/ENG-LOG.md) conserva cierres anteriores y [roadmap](docs/roadmap/ENG-000-roadmap-tecnico-backend.md) combina planificación e incrementos posteriores. No tomar sus «pendiente» o «completado» aislados como prueba del estado actual; contrastar fecha, código, pruebas y entrega. Las instrucciones históricas sobre herramientas o próximos pasos no sustituyen el alcance acordado actualmente.
 
 ## 9. Pendientes y orden de continuidad propuesto
 
-1. **Consolidación técnica:** registrar y subir las correcciones e integración editorial pendientes, reconciliándolas con los paquetes publicados; ajustar CI para construir los recursos Vite y verificar el commit resultante. Conservar la evidencia de pruebas ya aprobadas. Integración en `main` pendiente.
+1. **Consolidación técnica cerrada:** código registrado, CI del PR aprobado e integración en main completada. En el próximo despliegue, registrar la imagen por commit e incluir el override activo; verificar previamente las imágenes de recuperación.
 2. **Cierre curricular:** completar anclas en las 48 fichas restantes y alineación de subcompetencias, actividad, evidencia y evaluación. Cerrar verificación normativa, manuales, recursos y escenarios. La matriz sigue siendo borrador.
 3. **Derivados:** reeditar instrumentos del piloto, retención e identificadores para que correspondan a la misma edición. PIL-01 y P912 son materiales distintos; no mezclar sus resultados ni criterios.
 4. **Modelo y software:** revisar la distancia entre Learning OS/CTM/Decision Engine propuestos y el código existente; diseñar contratos y pruebas por competencia antes de conectar nuevas acreditaciones.

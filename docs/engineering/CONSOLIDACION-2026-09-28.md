@@ -1,6 +1,6 @@
 # Consolidación del trabajo acumulado — 28 de septiembre de 2026
 
-> Estado reconciliado al 30 de septiembre: ver [CONTEXTO.md](../../CONTEXTO.md). Las notas cronológicas inferiores conservan estados históricos. La rama y el PR #1 ya existen; las publicaciones del 29 y las pruebas aprobadas posteriores sustituyen los bloqueos anteriores. El código del 29 sigue pendiente de commit/subida; esta actualización registra documentación.
+> Estado reconciliado al 30 de septiembre: ver [CONTEXTO.md](../../CONTEXTO.md). Las notas cronológicas inferiores conservan estados históricos. La rama y el PR #1 ya existen; las publicaciones del 29 y las pruebas aprobadas posteriores sustituyen los bloqueos anteriores. Cierre del 30: código registrado en 944100f, CI aprobado y PR #1 integrado en main (6d47415). Sin nuevo despliegue.
 
 
 ## Alcance

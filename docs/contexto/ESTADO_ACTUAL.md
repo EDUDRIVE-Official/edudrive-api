@@ -1,6 +1,6 @@
 # EDUDRIVE - Estado documental actual
 
-> Estado reconciliado al 30 de septiembre: ver [CONTEXTO.md](../../CONTEXTO.md). Las notas cronológicas inferiores conservan estados históricos. La rama y el PR #1 ya existen; las publicaciones del 29 y las pruebas aprobadas posteriores sustituyen los bloqueos anteriores. El código del 29 sigue pendiente de commit/subida; esta actualización registra documentación.
+> Estado reconciliado al 30 de septiembre: ver [CONTEXTO.md](../../CONTEXTO.md). Las notas cronológicas inferiores conservan estados históricos. La rama y el PR #1 ya existen; las publicaciones del 29 y las pruebas aprobadas posteriores sustituyen los bloqueos anteriores. Cierre del 30: código registrado en 944100f, CI aprobado y PR #1 integrado en main (6d47415). Sin nuevo despliegue.
 
 
 **Cierre posterior del 29 de septiembre:** Camino Seguro (27 lecciones) y Pasajero Responsable (12) publicados en versión 2 con aprobación confirmada por el usuario. Integradas las cinco lecciones editoriales ampliadas; avances y versiones anteriores conservados. Activa `editorial-approved-20260929r1`. [Registro y límites](../engineering/PUBLICACION-CURSOS-2026-09-29.md). Las notas anteriores de publicación pendiente son históricas.
