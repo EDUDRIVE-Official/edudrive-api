@@ -15,7 +15,7 @@ it('resuelve las etapas de la trayectoria edudrive segun la edad', function (str
         ->and($result['instruction'])->not->toBeEmpty()
         ->and($result['reflection_prompt'])->not->toBeEmpty()
         ->and($result['practice_mode'])->not->toBeEmpty();
- })->with([
+})->with([
     ['2023-09-09', 'E1', 'DESCUBRO'],
     ['2020-09-09', 'E1', 'DESCUBRO'],
     ['2019-09-09', 'E2', 'COMPRENDO'],

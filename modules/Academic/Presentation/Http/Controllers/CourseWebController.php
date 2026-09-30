@@ -40,6 +40,7 @@ use Modules\Authorization\Domain\Enums\Permission;
 use Modules\Foundation\Application\Bus\CommandBus;
 use Modules\Foundation\Application\Bus\QueryBus;
 use Modules\Foundation\Domain\Exceptions\DomainException;
+use Modules\Identity\Domain\Repositories\StudentProfileRepository;
 use Modules\Identity\Infrastructure\Persistence\Eloquent\Models\GuardianRelationshipModel;
 use Modules\Identity\Infrastructure\Persistence\Eloquent\Models\UserModel;
 use Modules\Learning\Domain\Repositories\LearningEventRepository;
@@ -106,7 +107,7 @@ final class CourseWebController
             'courses' => $courses,
             'canManage' => $canManage,
             'learnerStage' => $learnerStage,
-            'learningPurpose' => app(\Modules\Identity\Domain\Repositories\StudentProfileRepository::class)->findByUserId($userId)?->learningPurpose(),
+            'learningPurpose' => app(StudentProfileRepository::class)->findByUserId($userId)?->learningPurpose(),
         ]);
     }
 

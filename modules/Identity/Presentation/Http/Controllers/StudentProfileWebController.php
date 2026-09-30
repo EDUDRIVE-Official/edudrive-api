@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Modules\Academic\Application\Services\LearnerStageResolver;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Authorization\Domain\Enums\Role;
 use Modules\Authorization\Infrastructure\Persistence\Eloquent\Models\RoleAssignmentModel;
@@ -42,7 +43,7 @@ final class StudentProfileWebController extends Controller
 
         $data = $profile->toArray();
         $learner = $request->user();
-        $data['curricular_route'] = app(\Modules\Academic\Application\Services\LearnerStageResolver::class)->resolve($learner instanceof UserModel ? $learner->date_of_birth?->toDateTimeImmutable() : null);
+        $data['curricular_route'] = app(LearnerStageResolver::class)->resolve($learner instanceof UserModel ? $learner->date_of_birth?->toDateTimeImmutable() : null);
         $courseNames = [];
         foreach ($this->courses->all() as $course) {
             $courseNames[$course->id()->value()] = $course->title()->value();

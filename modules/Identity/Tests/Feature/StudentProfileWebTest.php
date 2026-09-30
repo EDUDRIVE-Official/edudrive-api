@@ -105,7 +105,6 @@ it('rechaza una fecha de nacimiento futura al actualizar el perfil', function ()
         ->assertSessionHasErrors(['date_of_birth']);
 });
 
-
 it('stores a route purpose and preserves it when an older client omits it', function (): void {
     $user = persistedStudentProfileWebTestUser();
     $this->actingAs(UserModel::query()->findOrFail($user->id()), 'web');
