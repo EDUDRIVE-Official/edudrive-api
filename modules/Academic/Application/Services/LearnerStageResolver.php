@@ -15,12 +15,12 @@ final class LearnerStageResolver
     public function resolve(?DateTimeInterface $dateOfBirth, ?DateTimeImmutable $today = null): array
     {
         $today ??= new DateTimeImmutable('today');
-        if ($dateOfBirth === null || $dateOfBirth > $today || $dateOfBirth->diff($today)->y < 5) {
+        if ($dateOfBirth === null || $dateOfBirth > $today || $dateOfBirth->diff($today)->y < 3) {
             return [
                 'stage' => 'universal',
                 'identity' => 'Ciudadano Vial',
                 'age_range' => 'Etapa por confirmar',
-                'guidance' => 'Confirmá tu fecha de nacimiento en Mi perfil. Si tenés menos de 5 años, pedí orientación a una persona adulta antes de elegir actividades.',
+                'guidance' => 'Confirmá tu fecha de nacimiento en Mi perfil. Si tenés menos de 3 años, pedí orientación a una persona adulta antes de elegir actividades.',
                 'requires_guardian' => true,
                 'instruction' => 'Leé el caso, explorá la animación y justificá la decisión que reduce mejor el riesgo.',
                 'reflection_prompt' => '¿Qué cambiarías en un recorrido cotidiano después de esta lección?',
@@ -31,13 +31,10 @@ final class LearnerStageResolver
         $age = $dateOfBirth->diff($today)->y;
 
         return match (true) {
-            $age <= 8 => $this->stage('explore', 'Explorador Vial', '5–8 años', 'Observá las pistas, contá qué ves y practicá solamente junto a una persona adulta.', true, 'Mirá la escena con una persona adulta. Señalá personas, vehículos y lugares seguros antes de elegir.', 'Contale a tu acompañante qué pista te ayudó a decidir.', 'Juego de observación y ensayo en un espacio sin vehículos.'),
-            $age <= 12 => $this->stage('discover', 'Aventurero Vial', '9–12 años', 'Elegí una opción, explicá por qué es segura y comprobala con una persona adulta.', true, 'Explorá todas las opciones y explicá qué podría ocurrir después de cada una.', '¿Qué peligro descubriste que antes no habías notado?', 'Misión acompañada de observación en una ruta conocida.'),
-            $age <= 15 => $this->stage('understand', 'Aprendiz Vial', '13–15 años', 'Identificá el peligro oculto, compará consecuencias y defendé tu decisión.', true, 'Buscá el riesgo menos evidente, compará consecuencias y justificá tu decisión.', '¿Qué presión, distracción o suposición podría hacerte elegir mal?', 'Análisis acompañado de un punto real sin ingresar a la calzada.'),
-            $age <= 17 => $this->stage('prepare', 'Aspirante Responsable', '16–17 años', 'Conectá la norma con el riesgo real y prepará un plan antes de actuar.', true, 'Diferenciá la regla, el peligro real y la acción preventiva que aplicarías.', '¿Por qué tener prioridad no elimina tu responsabilidad de comprobar?', 'Planificación acompañada de una ruta con alternativas seguras.'),
-            $age <= 24 => $this->stage('drive', 'Conductor Responsable', '18–24 años', 'Anticipá errores propios y ajenos; conservá siempre una alternativa segura.', false, 'Analizá la escena como peatón y como conductor; anticipá el error posible de cada actor.', '¿Qué acción propia haría más predecible y segura la interacción?', 'Observación autónoma desde un punto protegido y revisión de hábitos.'),
-            $age <= 59 => $this->stage('perfect', 'Ciudadano Vial Experimentado', '25–59 años', 'Revisá tus hábitos y pensá cómo modelar esta conducta para otras personas.', false, 'Contrastá la conducta recomendada con tus hábitos actuales y detectá automatismos.', '¿Qué ejemplo estás transmitiendo a niñas, niños u otras personas?', 'Aplicación cotidiana y, si corresponde, acompañamiento formativo a otra persona.'),
-            default => $this->stage('refresh', 'Ciudadano Vial Activo', '60+ años', 'Evaluá las condiciones, tu comodidad y alternativas que mantengan una movilidad segura.', false, 'Tomate el tiempo necesario, evaluá visibilidad, comodidad y rutas alternativas.', '¿Qué condición personal o del entorno te indicaría que conviene esperar o cambiar de ruta?', 'Recorrido planificado, sin prisa y con una alternativa de movilidad disponible.'),
+            $age <= 6 => $this->stage('E1', 'DESCUBRO', '3–6 años', $age <= 4 ? '3–4: reconocer, imitar y comunicar con gestos o imágenes.' : '5–6: explicar una elección sencilla y ensayar una variante.', true, 'Observá con una persona adulta y señalá un lugar seguro.', 'Mostrá o contá qué harías con tu acompañante.', 'Juego en un espacio protegido; acompañamiento adulto permanente.'),
+            $age <= 12 => $this->stage('E2', 'COMPRENDO', '7–12 años', $age <= 9 ? '7–9: comparar peligros concretos y ensayar con apoyo.' : '10–12: planificar rutas y alternativas ante un imprevisto.', true, 'Compará las opciones y explicá cuál reduce el peligro.', '¿Qué alternativa elegirías si cambia el entorno?', 'Práctica protegida con apoyo. La autonomía se acuerda con cuidadores según el entorno y el desempeño.'),
+            $age <= 16 => $this->stage('E3', 'DECIDO', '13–16 años', $age <= 14 ? '13–14: anticipar consecuencias y practicar cómo expresar una decisión segura.' : '15–16: integrar presión social, evidencia y responsabilidad futura.', true, 'Anticipá consecuencias y decidí cómo responder a la presión.', '¿Qué te haría cambiar de decisión?', 'Análisis de variantes desde un lugar protegido.'),
+            default => $this->stage('E4', 'CONDUZCO', '17+ años', 'Elegí movilidad cotidiana, automóvil o motocicleta en Mi perfil. Ingresás por diagnóstico, sin completar cursos infantiles. La ruta no habilita legalmente para conducir.', $age < 18, 'Identificá lo que necesitás aprender según tu rol y experiencia.', '¿Qué evidencia te falta para aplicar esta decisión en tu contexto?', 'Diagnóstico y práctica según el rol; conducción sujeta a requisitos legales y supervisión.'),
         };
     }
 

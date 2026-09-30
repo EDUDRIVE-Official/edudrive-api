@@ -25,6 +25,12 @@
             <p class="font-sans text-sm text-success">{{ session('status') }}</p>
         @endif
 
+        <section class="rounded-xl border border-primary/30 bg-primary/5 p-5" aria-label="Mi recorrido curricular">
+            <h2 class="font-heading text-lg font-bold">Mi recorrido: {{ $profile['curricular_route']['identity'] }}</h2>
+            <p class="mt-2 text-sm">{{ $profile['curricular_route']['age_range'] }} · {{ $profile['curricular_route']['guidance'] }}</p>
+            <a href="{{ route('courses.index') }}" class="mt-3 inline-block underline">Ver mi recorrido y cursos disponibles</a>
+        </section>
+
         @include('descubro.entry')
 
         <section class="grid gap-4 sm:grid-cols-3" aria-label="Accesos principales">
@@ -166,6 +172,18 @@
                     :error="$errors->first('date_of_birth')"
                 />
                 <p class="-mt-3 text-xs leading-5 text-text-secondary">Se utiliza para adaptar la etapa educativa y las recomendaciones. No cambia los requisitos de seguridad.</p>
+
+                <div>
+                    <label for="learning_purpose" class="block text-sm font-semibold">Propósito del recorrido 17+</label>
+                    <select id="learning_purpose" name="learning_purpose" class="mt-2 min-h-11 w-full rounded border border-border bg-surface px-3 text-text">
+                        <option value="">Por definir</option>
+                        @foreach (['mobility' => 'Movilidad cotidiana (peatón, pasajero y ciclismo)', 'auto' => 'Aprender o actualizar conducción de automóvil', 'motorcycle' => 'Aprender o actualizar conducción de motocicleta'] as $purpose => $label)
+                            <option value="{{ $purpose }}" @selected(old('learning_purpose', $profile['learning_purpose'] ?? null) === $purpose)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-2 text-sm text-text-secondary">Se utiliza desde los 17 años. No exige cursar etapas infantiles ni equivale a una licencia. Podés cambiarlo sin perder avances.</p>
+                    @error('learning_purpose')<p class="text-sm text-danger-text">{{ $message }}</p>@enderror
+                </div>
 
                 <x-ui.input
                     name="education_level"

@@ -41,6 +41,8 @@ final class StudentProfileWebController extends Controller
         );
 
         $data = $profile->toArray();
+        $learner = $request->user();
+        $data['curricular_route'] = app(\Modules\Academic\Application\Services\LearnerStageResolver::class)->resolve($learner instanceof UserModel ? $learner->date_of_birth?->toDateTimeImmutable() : null);
         $courseNames = [];
         foreach ($this->courses->all() as $course) {
             $courseNames[$course->id()->value()] = $course->title()->value();
@@ -87,6 +89,8 @@ final class StudentProfileWebController extends Controller
                 educationLevel: $data['education_level'] ?? null,
                 accessibilityNeeds: $data['accessibility_needs'] ?? null,
                 learningPreferences: $data['learning_preferences'] ?? null,
+                learningPurpose: $data['learning_purpose'] ?? null,
+                updateLearningPurpose: array_key_exists('learning_purpose', $data),
             ),
         );
 

@@ -29,6 +29,10 @@ final readonly class UpdateStudentProfileHandler
             occurredAt: $now,
         );
 
+        if ($command->updateLearningPurpose) {
+            $profile->choosePurpose($command->learningPurpose);
+        }
+
         $this->profiles->save($profile);
 
         return StudentProfileResponse::fromStudentProfile($profile);

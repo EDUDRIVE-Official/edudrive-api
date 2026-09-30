@@ -40,6 +40,7 @@ final readonly class StudentProfileComposer
             educationLevel: $profile?->educationLevel(),
             accessibilityNeeds: $profile?->accessibilityNeeds(),
             learningPreferences: $profile?->learningPreferences(),
+            learningPurpose: $profile?->learningPurpose(),
             roadPassport: $roadPassport === null ? null : [
                 'status' => $roadPassport->status()->value,
                 'level' => $roadPassport->level(),

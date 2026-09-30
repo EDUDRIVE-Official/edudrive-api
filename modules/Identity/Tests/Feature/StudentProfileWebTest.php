@@ -104,3 +104,15 @@ it('rechaza una fecha de nacimiento futura al actualizar el perfil', function ()
     $this->put('/mi-perfil', ['date_of_birth' => now()->addDay()->toDateString()])
         ->assertSessionHasErrors(['date_of_birth']);
 });
+
+
+it('stores a route purpose and preserves it when an older client omits it', function (): void {
+    $user = persistedStudentProfileWebTestUser();
+    $this->actingAs(UserModel::query()->findOrFail($user->id()), 'web');
+    $this->put('/mi-perfil', ['learning_purpose' => 'motorcycle'])->assertSessionHasNoErrors();
+    $this->put('/mi-perfil', ['education_level' => 'Secundaria'])->assertSessionHasNoErrors();
+    expect(app(StudentProfileRepository::class)->findByUserId($user->id())?->learningPurpose())->toBe('motorcycle');
+    $this->get('/mi-perfil')->assertOk()->assertSee('motocicleta', false);
+    $this->put('/mi-perfil', ['learning_purpose' => 'invalid'])->assertSessionHasErrors('learning_purpose');
+    expect(app(StudentProfileRepository::class)->findByUserId($user->id())?->learningPurpose())->toBe('motorcycle');
+});

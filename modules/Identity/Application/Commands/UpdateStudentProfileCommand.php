@@ -11,5 +11,7 @@ final readonly class UpdateStudentProfileCommand
         public ?string $educationLevel,
         public ?string $accessibilityNeeds,
         public ?string $learningPreferences,
+        public ?string $learningPurpose = null,
+        public bool $updateLearningPurpose = false,
     ) {}
 }

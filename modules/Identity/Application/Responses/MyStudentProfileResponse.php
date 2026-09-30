@@ -20,6 +20,7 @@ final readonly class MyStudentProfileResponse
         public ?string $learningPreferences,
         public ?array $roadPassport,
         public array $enrollments,
+        public ?string $learningPurpose = null,
     ) {}
 
     /**
@@ -31,6 +32,7 @@ final readonly class MyStudentProfileResponse
      *     education_level: string|null,
      *     accessibility_needs: string|null,
      *     learning_preferences: string|null,
+     *     learning_purpose: string|null,
      *     road_passport: array{status: string, level: int, issued_at: string}|null,
      *     enrollments: list<array{enrollment_id: string, course_id: string, status: string, enrolled_at: string}>
      * }
@@ -45,6 +47,7 @@ final readonly class MyStudentProfileResponse
             'education_level' => $this->educationLevel,
             'accessibility_needs' => $this->accessibilityNeeds,
             'learning_preferences' => $this->learningPreferences,
+            'learning_purpose' => $this->learningPurpose,
             'road_passport' => $this->roadPassport,
             'enrollments' => $this->enrollments,
         ];

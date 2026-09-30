@@ -91,7 +91,7 @@ final class CourseWebController
 
             $course['is_experience'] = str_starts_with($course['code'], 'EDU-EXP-');
             $course['is_recommended'] = false;
-            if (! $recommendationAssigned && $course['audience']['stage'] !== null && $course['audience']['stage'] === $learnerStage['stage'] && $course['status'] === CourseStatus::Published->value && ($course['progress']['progress_percentage'] ?? 0) < 100) {
+            if (! $recommendationAssigned && $course['audience']['stage'] !== null && $this->matchesCurriculumAudience($course['audience']['stage']) && $course['status'] === CourseStatus::Published->value && ($course['progress']['progress_percentage'] ?? 0) < 100) {
                 $course['is_recommended'] = true;
                 $recommendationAssigned = true;
             }
@@ -106,6 +106,7 @@ final class CourseWebController
             'courses' => $courses,
             'canManage' => $canManage,
             'learnerStage' => $learnerStage,
+            'learningPurpose' => app(\Modules\Identity\Domain\Repositories\StudentProfileRepository::class)->findByUserId($userId)?->learningPurpose(),
         ]);
     }
 
@@ -337,6 +338,24 @@ final class CourseWebController
                 ->keyBy('unit_id')
                 ->all(),
         ]);
+    }
+
+    private function matchesCurriculumAudience(string $audience): bool
+    {
+        $user = auth()->user();
+        if (! $user instanceof UserModel || $user->date_of_birth === null || $user->date_of_birth->isFuture()) {
+            return false;
+        }
+        $age = (int) $user->date_of_birth->age;
+        // Existing course bands are content metadata, not the new curricular stages.
+        // Adult courses need explicit role mapping before automatic recommendation.
+        return match ($audience) {
+            'explore' => $age >= 5 && $age <= 6,
+            'discover' => $age >= 9 && $age <= 12,
+            'understand' => $age >= 13 && $age <= 15,
+            'prepare' => $age === 16,
+            default => false,
+        };
     }
 
     /** @return array{stage: string, identity: string, age_range: string, guidance: string, requires_guardian: bool, instruction: string, reflection_prompt: string, practice_mode: string} */
