@@ -336,7 +336,7 @@ it('archiva un programa en borrador y registra la fecha', function (): void {
 it('archiva un programa publicado conservando su fecha de publicacion', function (): void {
     $program = task5Program();
     $program->replaceCourses([CourseId::fromString('019c2700-0000-7000-8000-000000000001')]);
-    $program->publish(new DateTimeImmutable('2026-08-03 09:00:00'));
+    $program->publish(new DateTimeImmutable('2026-08-03T09:00:00+00:00'));
     $programs = new Task5InMemoryProgramRepository($program);
     $handler = new ArchiveProgramHandler($programs);
 

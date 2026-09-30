@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\AiGovernance\Infrastructure\Persistence\Eloquent\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Modules\Foundation\Infrastructure\Persistence\PreservesPostgresDateOffsets;
 
 /**
  * @property string $id
@@ -16,6 +17,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 final class AiProviderEvaluationModel extends Model
 {
+    use PreservesPostgresDateOffsets;
+
     protected $table = 'ai_governance_provider_evaluations';
 
     protected $primaryKey = 'id';

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Modules\RoadPassport\Infrastructure\Persistence\Eloquent\Repositories;
 
-use DateTimeImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Modules\Foundation\Infrastructure\Persistence\DatabaseDate;
 use Modules\RoadPassport\Domain\Aggregates\RoadPassport;
 use Modules\RoadPassport\Domain\Enums\EvidenceType;
 use Modules\RoadPassport\Domain\Enums\RoadPassportHistoryType;
@@ -30,7 +30,7 @@ final readonly class EloquentRoadPassportRepository implements RoadPassportRepos
                     'user_id' => $passport->userId(),
                     'status' => $passport->status()->value,
                     'level' => $passport->level(),
-                    'issued_at' => $passport->issuedAt(),
+                    'issued_at' => DatabaseDate::normalize($passport->issuedAt()),
                     'verification_version' => $passport->verificationVersion(),
                 ],
             );
@@ -45,7 +45,7 @@ final readonly class EloquentRoadPassportRepository implements RoadPassportRepos
                     'from_value' => $entry->fromValue,
                     'to_value' => $entry->toValue,
                     'reason' => $entry->reason,
-                    'occurred_at' => $entry->occurredAt,
+                    'occurred_at' => DatabaseDate::normalize($entry->occurredAt),
                 ]);
             }
 
@@ -59,7 +59,7 @@ final readonly class EloquentRoadPassportRepository implements RoadPassportRepos
                     'subject_id' => $evidence->subjectId,
                     'course_id' => $evidence->courseId,
                     'details' => $evidence->details,
-                    'occurred_at' => $evidence->occurredAt,
+                    'occurred_at' => DatabaseDate::normalize($evidence->occurredAt),
                 ]);
             }
         });
@@ -92,13 +92,13 @@ final readonly class EloquentRoadPassportRepository implements RoadPassportRepos
             userId: (string) $model->getAttribute('user_id'),
             status: RoadPassportStatus::from((string) $model->getAttribute('status')),
             level: (int) $model->getAttribute('level'),
-            issuedAt: new DateTimeImmutable((string) $model->getAttribute('issued_at')),
+            issuedAt: DatabaseDate::restore($model->getAttribute('issued_at')),
             history: array_map(
                 static fn (RoadPassportHistoryEntryModel $entry): PassportHistoryEntry => PassportHistoryEntry::restore(
                     RoadPassportHistoryType::from((string) $entry->getAttribute('type')),
                     (string) $entry->getAttribute('from_value'),
                     (string) $entry->getAttribute('to_value'),
-                    new DateTimeImmutable((string) $entry->getAttribute('occurred_at')),
+                    DatabaseDate::restore($entry->getAttribute('occurred_at')),
                     $entry->getAttribute('reason') === null ? null : (string) $entry->getAttribute('reason'),
                 ),
                 $historyModels,
@@ -112,7 +112,7 @@ final readonly class EloquentRoadPassportRepository implements RoadPassportRepos
                         EvidenceType::from((string) $entry->getAttribute('type')),
                         (string) $entry->getAttribute('subject_id'),
                         (string) $entry->getAttribute('course_id'),
-                        new DateTimeImmutable((string) $entry->getAttribute('occurred_at')),
+                        DatabaseDate::restore($entry->getAttribute('occurred_at')),
                         $details,
                     );
                 },

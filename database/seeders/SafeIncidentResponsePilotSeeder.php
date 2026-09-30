@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use Database\Seeders\Support\DemoCoursePublication;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -53,6 +54,10 @@ final class SafeIncidentResponsePilotSeeder extends Seeder
         foreach ($this->specs() as $i => $s) {
             app(ReplaceUnitContentHandler::class)->handle(new ReplaceUnitContentCommand($course->id, $units[$i], [$this->lesson($s, $competencyId)]));
         }
+        if (! DemoCoursePublication::isReady($course->id)) {
+            return;
+        }
+
         app(SubmitCourseForReviewHandler::class)->handle(new SubmitCourseForReviewCommand($course->id));
         app(ApproveCourseHandler::class)->handle(new ApproveCourseCommand($course->id));
         app(PublishCourseHandler::class)->handle(new PublishCourseCommand($course->id));

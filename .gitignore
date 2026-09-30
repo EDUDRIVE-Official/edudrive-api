@@ -43,3 +43,6 @@ Thumbs.db
 
 # ConfiguraciÃ³n privada de herramientas del equipo
 /.claude/
+
+# Artefactos temporales locales de revisión
+/tmp/

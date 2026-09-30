@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Identity\Infrastructure\Persistence\Eloquent;
 
 use DateTimeImmutable;
+use Modules\Foundation\Infrastructure\Persistence\DatabaseDate;
 use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Enums\UserStatus;
 use Modules\Identity\Domain\ValueObjects\Email;
@@ -39,10 +40,10 @@ final class UserMapper
             'email' => $user->email()->value(),
             'password' => $user->passwordHash(),
             'status' => $user->status()->value,
-            'email_verified_at' => $user->emailVerifiedAt(),
-            'created_at' => $user->createdAt(),
-            'updated_at' => $user->updatedAt(),
-            'last_login_at' => $user->lastLoginAt(),
+            'email_verified_at' => DatabaseDate::normalize($user->emailVerifiedAt()),
+            'created_at' => DatabaseDate::normalize($user->createdAt()),
+            'updated_at' => DatabaseDate::normalize($user->updatedAt()),
+            'last_login_at' => DatabaseDate::normalize($user->lastLoginAt()),
             'date_of_birth' => $user->dateOfBirth(),
         ];
     }

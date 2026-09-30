@@ -112,7 +112,7 @@ it('lista enrollments filtrados por source y status', function (): void {
 
 it('crea una inscripcion individual', function (): void {
     /** @var TestCase $this */
-    actingAsRole(Role::InstitutionalAdmin);
+    actingAsRole(Role::SuperAdmin);
     $course = createDraftCourseForPublishing('ENR-IND-01');
 
     $this->postJson('/api/v1/academic/enrollments', [
@@ -126,7 +126,7 @@ it('crea una inscripcion individual', function (): void {
 
 it('crea una inscripcion bulk', function (): void {
     /** @var TestCase $this */
-    actingAsRole(Role::InstitutionalAdmin);
+    actingAsRole(Role::SuperAdmin);
     $course = createDraftCourseForPublishing('ENR-BULK-01');
 
     $this->postJson('/api/v1/academic/enrollments/bulk', [
@@ -141,7 +141,7 @@ it('crea una inscripcion bulk', function (): void {
 
 it('crea una inscripcion institucional', function (): void {
     /** @var TestCase $this */
-    actingAsRole(Role::InstitutionalAdmin);
+    actingAsRole(Role::SuperAdmin);
     $course = createDraftCourseForPublishing('ENR-INS-01');
 
     $this->postJson('/api/v1/academic/enrollments/institutional', [
@@ -155,7 +155,7 @@ it('crea una inscripcion institucional', function (): void {
 
 it('devuelve la inscripcion institucional existente en vez de fallar ante un reintento', function (): void {
     /** @var TestCase $this */
-    actingAsRole(Role::InstitutionalAdmin);
+    actingAsRole(Role::SuperAdmin);
     $course = createDraftCourseForPublishing('ENR-INS-02');
     $userId = persistedEnrollmentUserId();
     $organizationId = (string) Str::uuid();
@@ -179,7 +179,7 @@ it('devuelve la inscripcion institucional existente en vez de fallar ante un rei
 
 it('valida payloads invalidos en create endpoints', function (): void {
     /** @var TestCase $this */
-    actingAsRole(Role::InstitutionalAdmin);
+    actingAsRole(Role::SuperAdmin);
 
     $this->postJson('/api/v1/academic/enrollments', [
         'course_id' => 'bad-id',
@@ -202,7 +202,7 @@ it('valida payloads invalidos en create endpoints', function (): void {
 
 it('rechaza crear un enrollment para un curso inexistente', function (): void {
     /** @var TestCase $this */
-    actingAsRole(Role::InstitutionalAdmin);
+    actingAsRole(Role::SuperAdmin);
 
     $this->postJson('/api/v1/academic/enrollments', [
         'course_id' => (string) Str::uuid(),
@@ -214,7 +214,7 @@ it('rechaza crear un enrollment para un curso inexistente', function (): void {
 
 it('devuelve el enrollment existente en vez de fallar ante un reintento (idempotencia)', function (): void {
     /** @var TestCase $this */
-    actingAsRole(Role::InstitutionalAdmin);
+    actingAsRole(Role::SuperAdmin);
     $course = createDraftCourseForPublishing('ENR-DUP-01');
     $userId = persistedEnrollmentUserId();
 
@@ -245,9 +245,33 @@ it('forbids creating enrollments to teachers', function (): void {
     ])->assertForbidden();
 });
 
-it('activa una inscripcion pendiente', function (): void {
+it('rechaza gestionar inscripciones sin enrollments.manage', function (string $action): void {
     /** @var TestCase $this */
     actingAsRole(Role::InstitutionalAdmin);
+    $enrollment = persistedEnrollmentForFeature(status: 'active');
+    $base = '/api/v1/academic/enrollments';
+    $path = match ($action) {
+        'individual' => $base,
+        'bulk', 'institutional' => $base.'/'.$action,
+        default => $base.'/'.$enrollment->id()->value().'/'.$action,
+    };
+
+    $this->postJson($path, [
+        'course_id' => $enrollment->courseId()->value(),
+        'user_id' => $enrollment->userId(),
+        'user_ids' => [$enrollment->userId()],
+        'organization_id' => (string) Str::uuid(),
+        'status' => 'active',
+    ])->assertForbidden();
+
+    expect(app(EnrollmentRepository::class)->findById($enrollment->id())?->status())
+        ->toBe(EnrollmentStatus::Active);
+    $this->assertDatabaseCount('academic_enrollments', 1);
+})->with(['individual', 'bulk', 'institutional', 'activate', 'complete', 'cancel']);
+
+it('activa una inscripcion pendiente', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::SuperAdmin);
     $enrollment = persistedEnrollmentForFeature(status: 'pending');
 
     $this->postJson("/api/v1/academic/enrollments/{$enrollment->id()->value()}/activate")
@@ -257,7 +281,7 @@ it('activa una inscripcion pendiente', function (): void {
 
 it('completa una inscripcion activa', function (): void {
     /** @var TestCase $this */
-    actingAsRole(Role::InstitutionalAdmin);
+    actingAsRole(Role::SuperAdmin);
     $enrollment = persistedEnrollmentForFeature(status: 'active');
 
     $this->postJson("/api/v1/academic/enrollments/{$enrollment->id()->value()}/complete")
@@ -267,7 +291,7 @@ it('completa una inscripcion activa', function (): void {
 
 it('cancela una inscripcion activa', function (): void {
     /** @var TestCase $this */
-    actingAsRole(Role::InstitutionalAdmin);
+    actingAsRole(Role::SuperAdmin);
     $enrollment = persistedEnrollmentForFeature(status: 'active');
 
     $this->postJson("/api/v1/academic/enrollments/{$enrollment->id()->value()}/cancel")
@@ -277,7 +301,7 @@ it('cancela una inscripcion activa', function (): void {
 
 it('rechaza completar una inscripcion cancelada', function (): void {
     /** @var TestCase $this */
-    actingAsRole(Role::InstitutionalAdmin);
+    actingAsRole(Role::SuperAdmin);
     $enrollment = persistedEnrollmentForFeature(status: 'canceled');
 
     $this->postJson("/api/v1/academic/enrollments/{$enrollment->id()->value()}/complete")
@@ -287,7 +311,7 @@ it('rechaza completar una inscripcion cancelada', function (): void {
 
 it('responde 404 al aplicar transiciones sobre un enrollment inexistente', function (): void {
     /** @var TestCase $this */
-    actingAsRole(Role::InstitutionalAdmin);
+    actingAsRole(Role::SuperAdmin);
     $enrollmentId = (string) Str::uuid();
 
     $this->postJson("/api/v1/academic/enrollments/{$enrollmentId}/activate")

@@ -20,12 +20,13 @@ final readonly class ScenarioContentBlock implements ContentBlock
         private string $accessibleText,
         private array $choices,
         private ?bool $stopAtDecisionPoint,
+        private ?string $supplement,
     ) {}
 
     /** @param array<string, mixed> $payload */
     public static function fromPayload(ContentBlockId $id, int $position, array $payload): self
     {
-        if ($position < 1 || array_diff(array_keys($payload), ['title', 'context', 'prompt', 'accessible_text', 'choices', 'stop_at_decision_point']) !== []) {
+        if ($position < 1 || array_diff(array_keys($payload), ['title', 'context', 'prompt', 'accessible_text', 'choices', 'stop_at_decision_point', 'supplement']) !== []) {
             throw InvalidContentBlock::create();
         }
 
@@ -64,6 +65,7 @@ final readonly class ScenarioContentBlock implements ContentBlock
             self::text($payload, 'accessible_text'),
             $choices,
             $payload['stop_at_decision_point'] ?? null,
+            TextContentBlock::validatedSupplement($id, $position, $payload),
         );
     }
 
@@ -88,6 +90,9 @@ final readonly class ScenarioContentBlock implements ContentBlock
         $payload = ['title' => $this->title, 'context' => $this->context, 'prompt' => $this->prompt, 'accessible_text' => $this->accessibleText, 'choices' => $this->choices];
         if ($this->stopAtDecisionPoint !== null) {
             $payload['stop_at_decision_point'] = $this->stopAtDecisionPoint;
+        }
+        if ($this->supplement !== null) {
+            $payload['supplement'] = $this->supplement;
         }
 
         return $payload;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use Database\Seeders\Support\DemoCoursePublication;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -88,6 +89,10 @@ final class VisibleCyclingPilotSeeder extends Seeder
         }
         $this->replaceRouteContent($course->id, $routeCompetencyId);
 
+        if (! DemoCoursePublication::isReady($course->id)) {
+            return;
+        }
+
         app(SubmitCourseForReviewHandler::class)->handle(new SubmitCourseForReviewCommand($course->id));
         app(ApproveCourseHandler::class)->handle(new ApproveCourseCommand($course->id));
         app(PublishCourseHandler::class)->handle(new PublishCourseCommand($course->id));
@@ -109,7 +114,12 @@ final class VisibleCyclingPilotSeeder extends Seeder
             ->whereIn('code', ['RETO-REVISION', 'RETO-VISIBLE', 'RETO-ATENCION'])->pluck('id', 'code')
             ->map(static fn ($id): string => (string) $id)->all();
 
-        app(ReopenCourseHandler::class)->handle(new ReopenCourseCommand($courseId));
+        $status = DB::table('academic_courses')->where('id', $courseId)->value('status');
+        if ($status === 'published') {
+            app(ReopenCourseHandler::class)->handle(new ReopenCourseCommand($courseId));
+        } elseif ($status !== 'draft') {
+            return;
+        }
         DB::table('academic_courses')->where('id', $courseId)->update(['duration_hours' => 5, 'updated_at' => now()]);
         DB::table('academic_course_modules')->where('id', $module->id)->update(['title' => 'Misión: Pedalea Visible', 'description' => 'Nueve retos para preparar, comunicar y decidir antes de moverse en bicicleta.', 'duration_minutes' => 136, 'updated_at' => now()]);
         foreach ([44, 41, 51] as $index => $minutes) {
@@ -124,6 +134,10 @@ final class VisibleCyclingPilotSeeder extends Seeder
             app(ReplaceUnitContentHandler::class)->handle(new ReplaceUnitContentCommand($courseId, $unitId, [$lessons[$index], $supplemental[$index], $advanced[$index]]));
         }
         $this->replaceRouteContent($courseId, $routeCompetencyId);
+        if (! DemoCoursePublication::isReady($courseId)) {
+            return;
+        }
+
         app(SubmitCourseForReviewHandler::class)->handle(new SubmitCourseForReviewCommand($courseId));
         app(ApproveCourseHandler::class)->handle(new ApproveCourseCommand($courseId));
         app(PublishCourseHandler::class)->handle(new PublishCourseCommand($courseId));

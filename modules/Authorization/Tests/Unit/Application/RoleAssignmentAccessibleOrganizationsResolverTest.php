@@ -59,7 +59,7 @@ it('devuelve las organizaciones de las asignaciones que otorgan el permiso', fun
 
     $resolver = new RoleAssignmentAccessibleOrganizationsResolver($assignments);
 
-    expect($resolver->resolveForPermission('user-1', Permission::ViewReports))->toBe(['org-1', 'org-2']);
+    expect($resolver->resolveForPermission('user-1', Permission::ManageUsers))->toBe(['org-1', 'org-2']);
 });
 
 it('ignora asignaciones cuyo rol no otorga el permiso', function (): void {
@@ -79,7 +79,7 @@ it('ignora asignaciones cuyo rol no otorga el permiso', function (): void {
 
     $resolver = new RoleAssignmentAccessibleOrganizationsResolver($assignments);
 
-    expect($resolver->resolveForPermission('user-1', Permission::ViewReports))->toBe(['org-1']);
+    expect($resolver->resolveForPermission('user-1', Permission::ManageUsers))->toBe(['org-1']);
 });
 
 it('no duplica organizaciones repetidas entre varias asignaciones', function (): void {
@@ -99,5 +99,19 @@ it('no duplica organizaciones repetidas entre varias asignaciones', function ():
 
     $resolver = new RoleAssignmentAccessibleOrganizationsResolver($assignments);
 
-    expect($resolver->resolveForPermission('user-1', Permission::ViewReports))->toBe(['org-1']);
+    expect($resolver->resolveForPermission('user-1', Permission::ManageUsers))->toBe(['org-1']);
+});
+
+it('no concede alcance de reportes a un rol institucional sin ese permiso', function (): void {
+    $assignments = new InMemoryRoleAssignmentRepositoryForAccessibleOrganizations;
+    $assignments->save(RoleAssignment::assign(
+        id: 'assignment-1',
+        userId: 'user-1',
+        role: Role::InstitutionalAdmin,
+        organizationId: 'org-1',
+    ));
+
+    $resolver = new RoleAssignmentAccessibleOrganizationsResolver($assignments);
+
+    expect($resolver->resolveForPermission('user-1', Permission::ViewReports))->toBe([]);
 });

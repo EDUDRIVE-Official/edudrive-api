@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Modules\Certification\Infrastructure\Persistence\Eloquent\Repositories;
 
-use DateTimeImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\Certification\Domain\Aggregates\Certificate;
@@ -15,6 +14,7 @@ use Modules\Certification\Domain\ValueObjects\CertificateId;
 use Modules\Certification\Domain\ValueObjects\ValidationCode;
 use Modules\Certification\Infrastructure\Persistence\Eloquent\Models\CertificateHistoryEntryModel;
 use Modules\Certification\Infrastructure\Persistence\Eloquent\Models\CertificateModel;
+use Modules\Foundation\Infrastructure\Persistence\DatabaseDate;
 
 final readonly class EloquentCertificateRepository implements CertificateRepository
 {
@@ -28,8 +28,8 @@ final readonly class EloquentCertificateRepository implements CertificateReposit
                     'course_id' => $certificate->courseId(),
                     'validation_code' => $certificate->validationCode()->value(),
                     'status' => $certificate->status()->value,
-                    'issued_at' => $certificate->issuedAt(),
-                    'expires_at' => $certificate->expiresAt(),
+                    'issued_at' => DatabaseDate::normalize($certificate->issuedAt()),
+                    'expires_at' => DatabaseDate::normalize($certificate->expiresAt()),
                 ],
             );
 
@@ -42,7 +42,7 @@ final readonly class EloquentCertificateRepository implements CertificateReposit
                     'from_status' => $entry->fromStatus->value,
                     'to_status' => $entry->toStatus->value,
                     'reason' => $entry->reason,
-                    'occurred_at' => $entry->occurredAt,
+                    'occurred_at' => DatabaseDate::normalize($entry->occurredAt),
                 ]);
             }
         });
@@ -113,13 +113,13 @@ final readonly class EloquentCertificateRepository implements CertificateReposit
             courseId: (string) $model->getAttribute('course_id'),
             validationCode: ValidationCode::fromString((string) $model->getAttribute('validation_code')),
             status: CertificateStatus::from((string) $model->getAttribute('status')),
-            issuedAt: new DateTimeImmutable((string) $model->getAttribute('issued_at')),
-            expiresAt: $expiresAt === null ? null : new DateTimeImmutable((string) $expiresAt),
+            issuedAt: DatabaseDate::restore($model->getAttribute('issued_at')),
+            expiresAt: $expiresAt === null ? null : DatabaseDate::restore($expiresAt),
             history: array_map(
                 static fn (CertificateHistoryEntryModel $entry): CertificateHistoryEntry => CertificateHistoryEntry::restore(
                     CertificateStatus::from((string) $entry->getAttribute('from_status')),
                     CertificateStatus::from((string) $entry->getAttribute('to_status')),
-                    new DateTimeImmutable((string) $entry->getAttribute('occurred_at')),
+                    DatabaseDate::restore($entry->getAttribute('occurred_at')),
                     $entry->getAttribute('reason') === null ? null : (string) $entry->getAttribute('reason'),
                 ),
                 $historyModels,

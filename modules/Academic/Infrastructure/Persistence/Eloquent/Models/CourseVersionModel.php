@@ -6,9 +6,12 @@ namespace Modules\Academic\Infrastructure\Persistence\Eloquent\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\Foundation\Infrastructure\Persistence\PreservesPostgresDateOffsets;
 
 final class CourseVersionModel extends Model
 {
+    use PreservesPostgresDateOffsets;
+
     protected $table = 'academic_course_versions';
 
     protected $primaryKey = 'id';

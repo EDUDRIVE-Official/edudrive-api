@@ -6,6 +6,7 @@ namespace Modules\Integration\Infrastructure\Persistence\Eloquent\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Modules\Foundation\Infrastructure\Persistence\PreservesPostgresDateOffsets;
 
 /**
  * @property string $id
@@ -17,6 +18,8 @@ use Illuminate\Support\Carbon;
  */
 final class ApiConsumerHistoryEntryModel extends Model
 {
+    use PreservesPostgresDateOffsets;
+
     protected $table = 'integration_api_consumer_history_entries';
 
     protected $primaryKey = 'id';

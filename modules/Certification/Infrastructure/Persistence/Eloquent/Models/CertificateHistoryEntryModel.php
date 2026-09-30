@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Modules\Certification\Infrastructure\Persistence\Eloquent\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Modules\Foundation\Infrastructure\Persistence\PreservesPostgresDateOffsets;
 
 final class CertificateHistoryEntryModel extends Model
 {
+    use PreservesPostgresDateOffsets;
+
     protected $table = 'certificate_history_entries';
 
     protected $primaryKey = 'id';

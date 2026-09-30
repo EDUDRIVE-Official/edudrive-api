@@ -25,9 +25,6 @@
                 <p class="mt-1 text-sm text-text-secondary">Encontrá tu siguiente oportunidad de aprendizaje.</p>
             </div>
             @if ($canManage)
-                @if (app()->environment(['local', 'testing']) || config('pilot.instruments_enabled', false))
-                    <a href="{{ route('pilot-instruments.editorial-preview') }}" class="rounded-lg border border-primary p-3 font-semibold underline">Probar borrador: Camino Seguro y Pasajero Responsable</a>
-                @endif
                 <a
                     href="{{ route('courses.create') }}"
                     class="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-sm bg-primary px-4 font-sans font-medium text-white transition hover:bg-secondary focus-visible:outline-none focus-visible:shadow-focus"

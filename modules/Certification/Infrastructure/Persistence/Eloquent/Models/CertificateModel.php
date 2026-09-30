@@ -6,6 +6,7 @@ namespace Modules\Certification\Infrastructure\Persistence\Eloquent\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\Foundation\Infrastructure\Persistence\PreservesPostgresDateOffsets;
 
 /**
  * @property string $user_id
@@ -15,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 final class CertificateModel extends Model
 {
+    use PreservesPostgresDateOffsets;
+
     protected $table = 'certificates';
 
     protected $primaryKey = 'id';

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Modules\Integration\Infrastructure\Persistence\Eloquent\Repositories;
 
-use DateTimeImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Modules\Foundation\Infrastructure\Persistence\DatabaseDate;
 use Modules\Integration\Domain\Aggregates\ApiConsumer;
 use Modules\Integration\Domain\Enums\ApiConsumerStatus;
 use Modules\Integration\Domain\Repositories\ApiConsumerRepository;
@@ -28,8 +28,8 @@ final readonly class EloquentApiConsumerRepository implements ApiConsumerReposit
                     'scopes' => $consumer->scopes(),
                     'status' => $consumer->status()->value,
                     'integration_key_hash' => $consumer->integrationKey()->hash(),
-                    'expires_at' => $consumer->expiresAt(),
-                    'issued_at' => $consumer->createdAt(),
+                    'expires_at' => DatabaseDate::normalize($consumer->expiresAt()),
+                    'issued_at' => DatabaseDate::normalize($consumer->createdAt()),
                 ],
             );
 
@@ -42,7 +42,7 @@ final readonly class EloquentApiConsumerRepository implements ApiConsumerReposit
                     'from_status' => $entry->fromStatus->value,
                     'to_status' => $entry->toStatus->value,
                     'reason' => $entry->reason,
-                    'occurred_at' => $entry->occurredAt,
+                    'occurred_at' => DatabaseDate::normalize($entry->occurredAt),
                 ]);
             }
         });
@@ -92,13 +92,13 @@ final readonly class EloquentApiConsumerRepository implements ApiConsumerReposit
             scopes: $scopes,
             status: ApiConsumerStatus::from((string) $model->getAttribute('status')),
             integrationKey: IntegrationKey::fromHash((string) $model->getAttribute('integration_key_hash')),
-            expiresAt: $expiresAt === null ? null : new DateTimeImmutable((string) $expiresAt),
-            createdAt: new DateTimeImmutable((string) $model->getAttribute('issued_at')),
+            expiresAt: $expiresAt === null ? null : DatabaseDate::restore($expiresAt),
+            createdAt: DatabaseDate::restore($model->getAttribute('issued_at')),
             history: array_map(
                 static fn (ApiConsumerHistoryEntryModel $entry): ApiConsumerHistoryEntry => ApiConsumerHistoryEntry::restore(
                     ApiConsumerStatus::from((string) $entry->getAttribute('from_status')),
                     ApiConsumerStatus::from((string) $entry->getAttribute('to_status')),
-                    new DateTimeImmutable((string) $entry->getAttribute('occurred_at')),
+                    DatabaseDate::restore($entry->getAttribute('occurred_at')),
                     $entry->getAttribute('reason') === null ? null : (string) $entry->getAttribute('reason'),
                 ),
                 $historyModels,

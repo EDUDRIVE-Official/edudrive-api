@@ -62,6 +62,16 @@ jobs:
           cp .env.example .env
           php artisan key:generate --ansi
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Compilar recursos de las pantallas
+        run: |
+          npm ci
+          npm run build
+
       - name: Pest
         run: composer test
 

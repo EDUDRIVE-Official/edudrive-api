@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Modules\Simulation\Infrastructure\Persistence\Eloquent\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Modules\Foundation\Infrastructure\Persistence\PreservesPostgresDateOffsets;
 
 final class SimulationSessionHistoryEntryModel extends Model
 {
+    use PreservesPostgresDateOffsets;
+
     protected $table = 'simulation_session_history_entries';
 
     protected $primaryKey = 'id';

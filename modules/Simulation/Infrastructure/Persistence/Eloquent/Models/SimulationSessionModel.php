@@ -6,9 +6,12 @@ namespace Modules\Simulation\Infrastructure\Persistence\Eloquent\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\Foundation\Infrastructure\Persistence\PreservesPostgresDateOffsets;
 
 final class SimulationSessionModel extends Model
 {
+    use PreservesPostgresDateOffsets;
+
     protected $table = 'simulation_sessions';
 
     protected $primaryKey = 'id';

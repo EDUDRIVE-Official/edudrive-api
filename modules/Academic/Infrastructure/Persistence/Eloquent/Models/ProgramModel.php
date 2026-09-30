@@ -6,9 +6,12 @@ namespace Modules\Academic\Infrastructure\Persistence\Eloquent\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\Foundation\Infrastructure\Persistence\PreservesPostgresDateOffsets;
 
 final class ProgramModel extends Model
 {
+    use PreservesPostgresDateOffsets;
+
     protected $table = 'academic_programs';
 
     protected $primaryKey = 'id';

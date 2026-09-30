@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use Database\Seeders\Support\DemoCoursePublication;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -112,6 +113,10 @@ final class SafeCrossingPilotSeeder extends Seeder
         $this->replaceSelfCareContent($course->id, $selfCareCompetencyId);
         $this->synchronizeCourseMetadata($course->id, $moduleId, $unitIds);
 
+        if (! DemoCoursePublication::isReady($course->id)) {
+            return;
+        }
+
         app(SubmitCourseForReviewHandler::class)->handle(new SubmitCourseForReviewCommand($course->id));
         app(ApproveCourseHandler::class)->handle(new ApproveCourseCommand($course->id));
         app(PublishCourseHandler::class)->handle(new PublishCourseCommand($course->id));
@@ -154,6 +159,10 @@ final class SafeCrossingPilotSeeder extends Seeder
         $this->replaceCoexistenceContent($courseId, $coexistenceCompetencyId);
         $this->replaceSelfCareContent($courseId, $selfCareCompetencyId);
         $this->synchronizeCourseMetadata($courseId, $course->modules()[0]->id()->value(), $unitIds);
+        if (! DemoCoursePublication::isReady($courseId)) {
+            return;
+        }
+
         app(SubmitCourseForReviewHandler::class)->handle(new SubmitCourseForReviewCommand($courseId));
         app(ApproveCourseHandler::class)->handle(new ApproveCourseCommand($courseId));
         app(PublishCourseHandler::class)->handle(new PublishCourseCommand($courseId));

@@ -283,6 +283,7 @@ function eng028ExpectedContentResponse(string $status = 'draft'): array
                     ],
                 ],
             ],
+            'learning_design' => null,
         ]],
     ];
 }

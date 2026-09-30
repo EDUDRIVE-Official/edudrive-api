@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use Database\Seeders\Support\DemoCoursePublication;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -75,6 +76,10 @@ final class VisibleMotorcyclingPilotSeeder extends Seeder
                 $this->lesson($specs[$index * 2 + 1], 2, $competencyId),
             ]));
         }
+        if (! DemoCoursePublication::isReady($course->id)) {
+            return;
+        }
+
         app(SubmitCourseForReviewHandler::class)->handle(new SubmitCourseForReviewCommand($course->id));
         app(ApproveCourseHandler::class)->handle(new ApproveCourseCommand($course->id));
         app(PublishCourseHandler::class)->handle(new PublishCourseCommand($course->id));

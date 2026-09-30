@@ -11,6 +11,7 @@ use Modules\Academic\Domain\Enums\CourseVersionStatus;
 use Modules\Academic\Domain\Repositories\CourseVersionRepository;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\CourseVersionModel;
+use Modules\Foundation\Infrastructure\Persistence\DatabaseDate;
 
 final readonly class EloquentCourseVersionRepository implements CourseVersionRepository
 {
@@ -22,8 +23,8 @@ final readonly class EloquentCourseVersionRepository implements CourseVersionRep
             'version_number' => $version->versionNumber(),
             'status' => $version->status()->value,
             'snapshot' => $version->snapshot(),
-            'published_at' => $version->publishedAt(),
-            'archived_at' => $version->archivedAt(),
+            'published_at' => DatabaseDate::normalize($version->publishedAt()),
+            'archived_at' => DatabaseDate::normalize($version->archivedAt()),
         ]);
     }
 

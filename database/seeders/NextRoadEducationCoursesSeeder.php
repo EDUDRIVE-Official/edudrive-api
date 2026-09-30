@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use Database\Seeders\Support\DemoCoursePublication;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -66,6 +67,10 @@ class NextRoadEducationCoursesSeeder extends Seeder
         foreach ($spec['units'] as $index => $unit) {
             app(ReplaceUnitContentHandler::class)->handle(new ReplaceUnitContentCommand($course->id, $unitIds[$index], [$this->lesson($spec, $unit, $competencyId, $index)]));
         }
+        if (! DemoCoursePublication::isReady($course->id)) {
+            return;
+        }
+
         app(SubmitCourseForReviewHandler::class)->handle(new SubmitCourseForReviewCommand($course->id));
         app(ApproveCourseHandler::class)->handle(new ApproveCourseCommand($course->id));
         app(PublishCourseHandler::class)->handle(new PublishCourseCommand($course->id));

@@ -91,6 +91,26 @@ it('guarda y recupera las fechas reales y el historial', function (): void {
         ->and($found?->history())->toHaveCount(2);
 });
 
+it('conserva los instantes y la ventana de telemetria con distintos offsets', function (string $offset): void {
+    config(['app.timezone' => 'America/Costa_Rica']);
+    $session = newPersistableSimulationSession();
+    $startedAt = new DateTimeImmutable('2026-09-01T10:05:00'.$offset);
+    $endedAt = $startedAt->modify('+45 minutes');
+    $session->start($startedAt);
+    $session->complete($endedAt);
+    $repository = app(SimulationSessionRepository::class);
+    $repository->save($session);
+    $found = $repository->findById($session->id());
+
+    expect($found?->scheduledAt()->getTimestamp())->toBe($session->scheduledAt()->getTimestamp())
+        ->and($found?->startedAt()?->getTimestamp())->toBe($startedAt->getTimestamp())
+        ->and($found?->endedAt()?->getTimestamp())->toBe($endedAt->getTimestamp())
+        ->and($found?->history()[0]->occurredAt->getTimestamp())->toBe($startedAt->getTimestamp())
+        ->and($found?->wasInProgressAt($startedAt->modify('+10 minutes')))->toBeTrue()
+        ->and($found?->wasInProgressAt($startedAt->modify('-1 second')))->toBeFalse()
+        ->and($found?->wasInProgressAt($endedAt->modify('+1 second')))->toBeFalse();
+})->with(['+00:00', '-06:00', '+02:00']);
+
 it('lista todas las sesiones de un usuario', function (): void {
     $repository = app(SimulationSessionRepository::class);
     $userId = persistedSimulationSessionUserId();

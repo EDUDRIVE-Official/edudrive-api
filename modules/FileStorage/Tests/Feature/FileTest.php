@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Modules\Admin\Domain\Aggregates\SystemSetting;
 use Modules\Admin\Domain\Repositories\SystemSettingRepository;
@@ -16,6 +17,11 @@ use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Repositories\UserRepository;
 use Modules\Identity\Domain\ValueObjects\Email;
 use Tests\TestCase;
+
+beforeEach(function (): void {
+    Storage::fake('s3')
+        ->buildTemporaryUrlsUsing(fn (string $path, DateTimeInterface $expiration): string => 'https://storage.example.invalid/'.rawurlencode($path).'?expires='.$expiration->getTimestamp());
+});
 
 uses(RefreshDatabase::class);
 
@@ -135,12 +141,20 @@ it('rechaza consultar el archivo de un tercero sin files.view', function (): voi
 
 it('permite consultar el archivo de un tercero con files.view', function (): void {
     /** @var TestCase $this */
-    actingAsRole(Role::InstitutionalAdmin);
+    actingAsRole(Role::SuperAdmin);
     $file = persistedFileFeature();
 
     $this->getJson("/api/v1/files/{$file->id()->value()}")
         ->assertOk()
         ->assertJsonPath('data.id', $file->id()->value());
+});
+
+it('oculta archivos ajenos al administrador institucional sin files.view', function (): void {
+    /** @var TestCase $this */
+    actingAsRole(Role::InstitutionalAdmin);
+    $file = persistedFileFeature();
+    $this->getJson("/api/v1/files/{$file->id()->value()}")->assertNotFound();
+    $this->getJson("/api/v1/files/{$file->id()->value()}/download-url")->assertNotFound();
 });
 
 it('genera una url temporal de descarga para el propio archivo', function (): void {

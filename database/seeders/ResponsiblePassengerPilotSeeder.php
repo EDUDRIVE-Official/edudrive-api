@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use Database\Seeders\Support\DemoCoursePublication;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -81,6 +82,10 @@ final class ResponsiblePassengerPilotSeeder extends Seeder
                 $this->lesson($lessons[$offset], 1, $competencyId),
                 $this->lesson($lessons[$offset + 1], 2, $competencyId),
             ]));
+        }
+
+        if (! DemoCoursePublication::isReady($course->id)) {
+            return;
         }
 
         app(SubmitCourseForReviewHandler::class)->handle(new SubmitCourseForReviewCommand($course->id));

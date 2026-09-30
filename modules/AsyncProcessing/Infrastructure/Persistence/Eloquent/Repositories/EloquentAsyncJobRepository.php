@@ -10,6 +10,7 @@ use Modules\AsyncProcessing\Domain\Enums\AsyncJobStatus;
 use Modules\AsyncProcessing\Domain\Repositories\AsyncJobRepository;
 use Modules\AsyncProcessing\Domain\ValueObjects\AsyncJobId;
 use Modules\AsyncProcessing\Infrastructure\Persistence\Eloquent\Models\AsyncJobModel;
+use Modules\Foundation\Infrastructure\Persistence\DatabaseDate;
 
 final readonly class EloquentAsyncJobRepository implements AsyncJobRepository
 {
@@ -23,13 +24,13 @@ final readonly class EloquentAsyncJobRepository implements AsyncJobRepository
                 'status' => $job->status()->value,
                 'result' => $job->result(),
                 'failure_reason' => $job->failureReason(),
-                'started_at' => $job->startedAt(),
-                'completed_at' => $job->completedAt(),
+                'started_at' => DatabaseDate::normalize($job->startedAt()),
+                'completed_at' => DatabaseDate::normalize($job->completedAt()),
             ],
         );
 
         if ($model->wasRecentlyCreated) {
-            $model->forceFill(['created_at' => $job->createdAt()])->save();
+            $model->forceFill(['created_at' => DatabaseDate::normalize($job->createdAt())])->save();
         }
     }
 
@@ -46,7 +47,7 @@ final readonly class EloquentAsyncJobRepository implements AsyncJobRepository
         return array_values(
             AsyncJobModel::query()
                 ->whereIn('status', [AsyncJobStatus::Completed->value, AsyncJobStatus::Failed->value])
-                ->where('completed_at', '<', $threshold)
+                ->where('completed_at', '<', DatabaseDate::queryValue($threshold))
                 ->get()
                 ->map(fn (AsyncJobModel $model): AsyncJob => $this->toDomain($model))
                 ->all(),
@@ -71,9 +72,9 @@ final readonly class EloquentAsyncJobRepository implements AsyncJobRepository
             status: AsyncJobStatus::from((string) $model->getAttribute('status')),
             result: $model->getAttribute('result'),
             failureReason: $model->getAttribute('failure_reason') === null ? null : (string) $model->getAttribute('failure_reason'),
-            createdAt: $createdAt === null ? new DateTimeImmutable('now') : new DateTimeImmutable((string) $createdAt),
-            startedAt: $startedAt === null ? null : new DateTimeImmutable((string) $startedAt),
-            completedAt: $completedAt === null ? null : new DateTimeImmutable((string) $completedAt),
+            createdAt: $createdAt === null ? new DateTimeImmutable('now') : DatabaseDate::restore($createdAt),
+            startedAt: $startedAt === null ? null : DatabaseDate::restore($startedAt),
+            completedAt: $completedAt === null ? null : DatabaseDate::restore($completedAt),
         );
     }
 }

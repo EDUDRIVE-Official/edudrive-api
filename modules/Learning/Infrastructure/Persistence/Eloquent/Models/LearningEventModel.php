@@ -7,6 +7,7 @@ namespace Modules\Learning\Infrastructure\Persistence\Eloquent\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Modules\Foundation\Infrastructure\Persistence\PreservesPostgresDateOffsets;
 
 /**
  * @property string $id
@@ -21,6 +22,7 @@ use Illuminate\Support\Carbon;
 final class LearningEventModel extends Model
 {
     use HasUuids;
+    use PreservesPostgresDateOffsets;
 
     protected $table = 'learning_events';
 

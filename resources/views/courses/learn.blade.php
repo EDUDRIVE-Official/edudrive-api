@@ -513,6 +513,7 @@
                                                     @elseif ($block['type'] === 'scenario')
                                                         <div data-read-aloud>@include('courses.blocks.scenario', ['block' => $block, 'answerField' => ! $completed && ! $adminPreview, 'uniformEditorialFeedback' => true, 'courseLessonPage' => $loop->iteration])</div>
                                                     @endif
+                                                    @include('courses.blocks.supplement', ['block' => $block])
                                                     </section>
                                                 @endforeach
                                             </div>

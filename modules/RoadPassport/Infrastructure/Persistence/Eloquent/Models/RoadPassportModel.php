@@ -6,9 +6,12 @@ namespace Modules\RoadPassport\Infrastructure\Persistence\Eloquent\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\Foundation\Infrastructure\Persistence\PreservesPostgresDateOffsets;
 
 final class RoadPassportModel extends Model
 {
+    use PreservesPostgresDateOffsets;
+
     protected $table = 'road_passports';
 
     protected $primaryKey = 'id';
