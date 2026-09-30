@@ -32,7 +32,7 @@ final class ResetPasswordRequest extends FormRequest
             'password' => [
                 'required',
                 'string',
-                'min:8',
+                'min:12',
                 'max:255',
                 'confirmed',
             ],

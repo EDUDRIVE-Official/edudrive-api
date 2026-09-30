@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use Modules\Authorization\Domain\Entities\RoleAssignment;
 use Modules\Authorization\Domain\Enums\Role;
 use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
+use Modules\Authorization\Infrastructure\Persistence\Eloquent\Models\RoleAssignmentModel;
 use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Repositories\UserRepository;
 use Modules\Identity\Domain\ValueObjects\Email;
@@ -67,7 +68,10 @@ it('muestra el formulario de asignacion de roles a un superadministrador', funct
 
     $this->get('/roles/assign')
         ->assertOk()
-        ->assertSeeText('Asignar rol');
+        ->assertSeeText('Asignar rol')
+        ->assertSeeText('Usuario')
+        ->assertDontSeeText('Identificador del usuario')
+        ->assertSeeText('Toda la plataforma (solo roles globales)');
 });
 
 it('asigna un rol a un usuario y redirige al formulario con un mensaje de exito', function (): void {
@@ -117,4 +121,19 @@ it('vuelve al formulario con error cuando el rol es invalido', function (): void
 
     $response->assertRedirect();
     $response->assertSessionHasErrors(['role']);
+});
+
+it('impide crear un administrador institucional sin organización', function (): void {
+    /** @var TestCase $this */
+    $target = persistedRoleAssignmentWebTestUser();
+    $this->actingAs(actingAsSuperAdminUser(), 'web');
+
+    $this->post('/roles/assign', [
+        'user_id' => $target->id(),
+        'role' => 'institutional_admin',
+    ])->assertSessionHasErrors('organization_id');
+
+    expect(RoleAssignmentModel::query()
+        ->where('user_id', $target->id())
+        ->where('role', 'institutional_admin')->exists())->toBeFalse();
 });

@@ -7,6 +7,7 @@ namespace Modules\Identity\Infrastructure\Persistence\Eloquent\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
+use Modules\Foundation\Infrastructure\Persistence\PreservesPostgresDateOffsets;
 
 /**
  * @property string $id
@@ -23,6 +24,7 @@ use Laravel\Sanctum\HasApiTokens;
 class UserModel extends Authenticatable
 {
     use HasApiTokens;
+    use PreservesPostgresDateOffsets;
 
     protected $table = 'users';
 

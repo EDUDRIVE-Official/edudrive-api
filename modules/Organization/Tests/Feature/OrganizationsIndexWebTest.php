@@ -78,3 +78,42 @@ it('muestra el botón de crear a un superadministrador', function (): void {
     $response->assertSeeText('Nueva organización');
     $response->assertSee('href="'.route('organizations.create').'"', false);
 });
+
+it('limita la lista al centro del administrador institucional', function (): void {
+    /** @var TestCase $this */
+    $user = actingAsAuthenticatedUser();
+    $organizations = app(OrganizationRepository::class);
+    $visibleId = (string) Str::uuid();
+    $privateId = (string) Str::uuid();
+    $organizations->save(Organization::create(
+        id: OrganizationId::fromString($visibleId),
+        name: OrganizationName::fromString('Centro visible'),
+        type: OrganizationType::EducationalCenter,
+    ));
+    $organizations->save(Organization::create(
+        id: OrganizationId::fromString($privateId),
+        name: OrganizationName::fromString('Centro de otra organización'),
+        type: OrganizationType::EducationalCenter,
+    ));
+    app(RoleAssignmentRepository::class)->save(RoleAssignment::assign(
+        id: (string) Str::uuid(),
+        userId: (string) $user->id,
+        role: Role::InstitutionalAdmin,
+        organizationId: $visibleId,
+    ));
+    $student = actingAsAuthenticatedUser();
+    app(RoleAssignmentRepository::class)->save(RoleAssignment::assign(
+        id: (string) Str::uuid(),
+        userId: (string) $student->id,
+        role: Role::Student,
+        organizationId: $visibleId,
+    ));
+    $this->actingAs($user, 'web');
+
+    $this->get('/organizations')
+        ->assertOk()
+        ->assertSeeText('Centro visible')
+        ->assertSeeText('Administración responsable')
+        ->assertSeeText('Estudiantes')
+        ->assertDontSeeText('Centro de otra organización');
+});

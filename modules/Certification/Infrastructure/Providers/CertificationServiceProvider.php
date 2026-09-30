@@ -10,6 +10,7 @@ use Modules\Certification\Application\Commands\RevokeCertificateCommand;
 use Modules\Certification\Application\Queries\GetCertificateQuery;
 use Modules\Certification\Application\Queries\GetMyCertificatesQuery;
 use Modules\Certification\Application\Queries\VerifyCertificateQuery;
+use Modules\Certification\Application\Services\CertificateIssuer;
 use Modules\Certification\Application\UseCases\GetCertificateHandler;
 use Modules\Certification\Application\UseCases\GetMyCertificatesHandler;
 use Modules\Certification\Application\UseCases\IssueCertificateHandler;
@@ -17,6 +18,7 @@ use Modules\Certification\Application\UseCases\RevokeCertificateHandler;
 use Modules\Certification\Application\UseCases\VerifyCertificateHandler;
 use Modules\Certification\Domain\Repositories\CertificateRepository;
 use Modules\Certification\Infrastructure\Persistence\Eloquent\Repositories\EloquentCertificateRepository;
+use Modules\Certification\Infrastructure\Services\DefaultCertificateIssuer;
 use Modules\Foundation\Application\Bus\MessageHandlerRegistry;
 
 final class CertificationServiceProvider extends ServiceProvider
@@ -24,6 +26,7 @@ final class CertificationServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(CertificateRepository::class, EloquentCertificateRepository::class);
+        $this->app->bind(CertificateIssuer::class, DefaultCertificateIssuer::class);
     }
 
     public function boot(MessageHandlerRegistry $registry): void
@@ -36,6 +39,10 @@ final class CertificationServiceProvider extends ServiceProvider
 
         $this->loadRoutesFrom(
             dirname(__DIR__, 2).'/Presentation/Routes/api.php',
+        );
+
+        $this->loadRoutesFrom(
+            dirname(__DIR__, 2).'/Presentation/Routes/web.php',
         );
 
         $this->loadMigrationsFrom(

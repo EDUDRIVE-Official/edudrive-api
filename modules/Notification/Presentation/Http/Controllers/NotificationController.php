@@ -27,6 +27,7 @@ final class NotificationController
             category: (string) $data['category'],
             subject: (string) $data['subject'],
             body: (string) $data['body'],
+            actionUrl: isset($data['action_url']) ? (string) $data['action_url'] : null,
         ));
         assert($result === null || $result instanceof NotificationResponse);
 

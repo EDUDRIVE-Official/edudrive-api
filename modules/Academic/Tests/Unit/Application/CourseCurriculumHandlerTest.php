@@ -12,6 +12,7 @@ use Modules\Academic\Application\DTO\CourseUnitInput;
 use Modules\Academic\Application\Exceptions\CourseNotFound;
 use Modules\Academic\Application\Queries\GetCourseCurriculumQuery;
 use Modules\Academic\Application\Responses\CourseCurriculumResponse;
+use Modules\Academic\Application\Services\CoursePublicationQualityGate;
 use Modules\Academic\Application\Services\CourseSnapshotBuilder;
 use Modules\Academic\Application\UseCases\ApproveCourseHandler;
 use Modules\Academic\Application\UseCases\ArchiveCourseHandler;
@@ -333,21 +334,22 @@ it('publica y archiva cursos mediante mutaciones atomicas', function (): void {
     (new SubmitCourseForReviewHandler($publishableCourses))->handle(
         new SubmitCourseForReviewCommand($publishable->id()->value()),
     );
-    (new ApproveCourseHandler($publishableCourses))->handle(
+    (new ApproveCourseHandler($publishableCourses, new CoursePublicationQualityGate($publishableCourses, new Eng027NullUnitContentRepository)))->handle(
         new ApproveCourseCommand($publishable->id()->value()),
     );
 
     $versions = new Eng027CourseVersionRepository;
     $snapshotBuilder = new CourseSnapshotBuilder(new Eng027NullUnitContentRepository);
 
-    expect(fn () => (new PublishCourseHandler($publishableCourses, $versions, $snapshotBuilder))->handle(
+    $qualityGate = new CoursePublicationQualityGate($publishableCourses, new Eng027NullUnitContentRepository);
+    expect(fn () => (new PublishCourseHandler($publishableCourses, $versions, $snapshotBuilder, $qualityGate))->handle(
         new PublishCourseCommand($publishable->id()->value()),
     ))->toThrow(CourseUnitContentRequired::class);
     expect($publishableCourses->findById($publishable->id())?->status()->value)->toBe('approved')
         ->and($versions->allForCourse($publishable->id()))->toHaveCount(0);
 
     $publishableCourses->markAllUnitsComplete($publishable->id());
-    $published = (new PublishCourseHandler($publishableCourses, $versions, $snapshotBuilder))->handle(new PublishCourseCommand($publishable->id()->value()));
+    $published = (new PublishCourseHandler($publishableCourses, $versions, $snapshotBuilder, $qualityGate))->handle(new PublishCourseCommand($publishable->id()->value()));
 
     $archivable = Course::create(
         id: CourseId::fromString('019c2b00-0000-7000-8000-000000000002'),

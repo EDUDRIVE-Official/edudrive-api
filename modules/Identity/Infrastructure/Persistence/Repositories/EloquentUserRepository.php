@@ -6,6 +6,7 @@ namespace Modules\Identity\Infrastructure\Persistence\Repositories;
 
 use DateTimeImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Modules\Foundation\Infrastructure\Persistence\DatabaseDate;
 use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Repositories\UserRepository;
 use Modules\Identity\Domain\ValueObjects\Email;
@@ -72,9 +73,9 @@ final class EloquentUserRepository implements UserRepository
         return array_values(
             UserModel::query()
                 ->where(function (Builder $query) use ($threshold): void {
-                    $query->where('last_login_at', '<', $threshold)
+                    $query->where('last_login_at', '<', DatabaseDate::queryValue($threshold))
                         ->orWhere(function (Builder $query) use ($threshold): void {
-                            $query->whereNull('last_login_at')->where('created_at', '<', $threshold);
+                            $query->whereNull('last_login_at')->where('created_at', '<', DatabaseDate::queryValue($threshold));
                         });
                 })
                 ->orderBy('created_at')

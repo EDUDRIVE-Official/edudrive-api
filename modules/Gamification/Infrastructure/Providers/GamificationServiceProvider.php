@@ -28,6 +28,7 @@ use Modules\Gamification\Application\Queries\GetMyExperienceSummaryQuery;
 use Modules\Gamification\Application\Queries\ListAchievementsQuery;
 use Modules\Gamification\Application\Queries\ListBadgesQuery;
 use Modules\Gamification\Application\Queries\ListChallengesQuery;
+use Modules\Gamification\Application\Services\CourseCompletionRewarder;
 use Modules\Gamification\Application\UseCases\CompleteChallengeParticipationHandler;
 use Modules\Gamification\Application\UseCases\CreateAchievementHandler;
 use Modules\Gamification\Application\UseCases\CreateBadgeHandler;
@@ -64,6 +65,8 @@ use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\Eloque
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentExperienceEntryRepository;
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentUserAchievementRepository;
 use Modules\Gamification\Infrastructure\Persistence\Eloquent\Repositories\EloquentUserBadgeRepository;
+use Modules\Gamification\Infrastructure\Services\DefaultCourseCompletionRewarder;
+use Modules\Gamification\Presentation\Console\ReconcileCourseCompletionRewardsCommand;
 
 final class GamificationServiceProvider extends ServiceProvider
 {
@@ -76,10 +79,13 @@ final class GamificationServiceProvider extends ServiceProvider
         $this->app->bind(ExperienceEntryRepository::class, EloquentExperienceEntryRepository::class);
         $this->app->bind(ChallengeRepository::class, EloquentChallengeRepository::class);
         $this->app->bind(ChallengeParticipationRepository::class, EloquentChallengeParticipationRepository::class);
+        $this->app->bind(CourseCompletionRewarder::class, DefaultCourseCompletionRewarder::class);
     }
 
     public function boot(MessageHandlerRegistry $registry): void
     {
+        $this->commands([ReconcileCourseCompletionRewardsCommand::class]);
+
         $registry->register(CreateAchievementCommand::class, CreateAchievementHandler::class);
         $registry->register(RetireAchievementCommand::class, RetireAchievementHandler::class);
         $registry->register(GrantAchievementCommand::class, GrantAchievementHandler::class);
@@ -108,6 +114,10 @@ final class GamificationServiceProvider extends ServiceProvider
 
         $this->loadRoutesFrom(
             dirname(__DIR__, 2).'/Presentation/Routes/api.php',
+        );
+
+        $this->loadRoutesFrom(
+            dirname(__DIR__, 2).'/Presentation/Routes/web.php',
         );
 
         $this->loadMigrationsFrom(

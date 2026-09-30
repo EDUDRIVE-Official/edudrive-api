@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>EDUDRIVE 3D — Entrenamiento Vial</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --blue-900:#0b2545;
+    --blue-800:#123a6b;
+    --blue-600:#1d63d1;
+    --blue-500:#2f7dfa;
+    --blue-100:#e8f1ff;
+    --white:#ffffff;
+    --ink:#0b2545;
+    --gray:#5b6b82;
+    --green:#1f9d55;
+    --amber:#e8a33d;
+    --red:#e0483f;
+    --radius:16px;
+    --shadow:0 10px 30px rgba(11,37,69,0.25);
+    font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#04101f;color:var(--ink);}
+  #app{position:relative;width:100vw;height:100vh;}
+  canvas{display:block;touch-action:none;}
+
+  /* ---------- overlays comunes ---------- */
+  .overlay{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(1200px 800px at 50% 20%, rgba(29,99,209,0.35), transparent 60%), linear-gradient(180deg,#08182c,#04101f);
+    z-index:50;
+  }
+  .card{
+    background:var(--white); border-radius:24px; box-shadow:var(--shadow);
+    padding:32px 30px; width:min(520px,92vw); max-height:88vh; overflow-y:auto;
+  }
+  .eyebrow{
+    display:inline-block; font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--blue-600); background:var(--blue-100); padding:5px 12px; border-radius:999px; margin-bottom:12px;
+  }
+  h1{font-size:26px;margin:0 0 4px;color:var(--blue-900);}
+  h2{font-size:16px;margin:0 0 18px;color:var(--gray);font-weight:500;}
+  .btn{
+    appearance:none;border:none;cursor:pointer;font-weight:700;font-size:16px;
+    padding:14px 22px;border-radius:14px;transition:transform .12s ease, box-shadow .12s ease;
+    width:100%;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:linear-gradient(135deg,var(--blue-500),var(--blue-600));color:#fff;box-shadow:0 8px 20px rgba(47,125,250,0.4);}
+  .btn-ghost{background:var(--blue-100);color:var(--blue-800);margin-top:10px;}
+  .row{display:flex;gap:10px;margin-top:14px;}
+  .row .btn{flex:1;}
+  .obj-list{list-style:none;margin:0 0 20px;padding:0;}
+  .obj-list li{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;font-size:14px;color:var(--ink);}
+  .obj-list li .dot{width:8px;height:8px;border-radius:50%;background:var(--blue-500);margin-top:6px;flex:none;}
+  .controls-hint{font-size:12px;color:var(--gray);background:var(--blue-100);border-radius:12px;padding:10px 12px;margin-top:14px;line-height:1.5;}
+
+  /* ---------- HUD ---------- */
+  #hud{position:absolute;inset:0;pointer-events:none;z-index:20;display:none;font-variant-numeric:tabular-nums;}
+  .hud-top{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:flex-start;}
+  .hud-pill{background:rgba(11,37,69,0.72);backdrop-filter:blur(6px);color:#fff;border-radius:14px;padding:10px 16px;box-shadow:var(--shadow);}
+  .hud-pill .l1{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#9fc1ff;font-weight:700;}
+  .hud-pill .l2{font-size:16px;font-weight:700;margin-top:2px;}
+  #score-pill .l2{font-size:22px;}
+  .route-toggle-btn{
+    position:absolute; top:112px; left:50%; transform:translateX(-50%);
+    background:rgba(11,37,69,0.72); color:#fff; border:1px solid rgba(255,255,255,0.25);
+    border-radius:999px; padding:6px 14px; font-size:12px; font-weight:700; cursor:pointer;
+    box-shadow:var(--shadow); backdrop-filter:blur(6px);
+  }
+  .route-toggle-btn.off{ background:rgba(11,37,69,0.35); color:#b8c7de; }
+  #approaching-msg{    position:absolute;top:70px;left:50%;transform:translateX(-50%);
+    background:rgba(255,255,255,0.95);color:var(--blue-900);padding:8px 18px;border-radius:999px;
+    font-weight:700;font-size:13px;box-shadow:var(--shadow);opacity:0;transition:opacity .4s ease;
+  }
+  .hud-bottom{position:absolute;bottom:16px;left:14px;display:flex;align-items:flex-end;gap:14px;}
+  #speedo{
+    background:rgba(11,37,69,0.78);border-radius:20px;padding:12px 18px;color:#fff;text-align:center;box-shadow:var(--shadow);min-width:110px;
+  }
+  #speedo .val{font-size:30px;font-weight:800;line-height:1;}
+  #speedo .unit{font-size:11px;color:#9fc1ff;}
+  #speedo .limit{font-size:11px;margin-top:6px;color:#ffd7a3;font-weight:700;}
+  #signals{position:absolute;bottom:16px;right:14px;display:flex;gap:8px;}
+  .signal-ind{
+    width:38px;height:38px;border-radius:10px;background:rgba(11,37,69,0.55);display:flex;align-items:center;justify-content:center;
+    color:#3a5b8a;font-size:18px;font-weight:900;box-shadow:var(--shadow);
+  }
+  .signal-ind.active{background:var(--amber);color:#fff;animation:blink 0.5s steps(1) infinite;}
+  @keyframes blink{50%{opacity:.25;}}
+
+  /* toasts de violaciones */
+  #toasts{position:absolute;top:120px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;align-items:center;z-index:25;}
+  .toast{
+    padding:8px 16px;border-radius:12px;font-size:13px;font-weight:700;color:#fff;box-shadow:var(--shadow);
+    animation:toastIn .2s ease, toastOut .35s ease 1.65s forwards; opacity:0;
+  }
+  .toast.bad{background:var(--red);}
+  .toast.good{background:var(--green);}
+  .toast.info{background:var(--blue-600);}
+  @keyframes toastIn{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes toastOut{to{opacity:0;transform:translateY(-8px);}}
+
+  /* ---------- controles móviles ---------- */
+  #mobile-controls{position:absolute;inset:0;pointer-events:none;z-index:22;display:none;}
+  .m-btn{
+    position:absolute;pointer-events:auto;border-radius:20px;background:rgba(255,255,255,0.18);
+    border:2px solid rgba(255,255,255,0.5);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;
+    user-select:none;backdrop-filter:blur(3px);
+  }
+  .m-btn:active{background:rgba(255,255,255,0.4);}
+  #m-left{left:18px;bottom:110px;width:78px;height:78px;font-size:26px;border-radius:50%;}
+  #m-right{left:104px;bottom:110px;width:78px;height:78px;font-size:26px;border-radius:50%;}
+  #m-accel{right:18px;bottom:110px;width:88px;height:88px;font-size:14px;border-radius:50%;background:rgba(47,125,250,0.35);}
+  #m-brake{right:112px;bottom:96px;width:74px;height:74px;font-size:13px;border-radius:50%;background:rgba(224,72,63,0.35);}
+  #m-sigL{left:18px;bottom:22px;width:64px;height:44px;font-size:18px;}
+  #m-sigR{left:90px;bottom:22px;width:64px;height:44px;font-size:18px;}
+
+  /* ---------- results ---------- */
+  .score-hero{text-align:center;margin-bottom:18px;}
+  .score-hero .big{font-size:52px;font-weight:800;color:var(--blue-900);line-height:1;}
+  .score-hero .of{font-size:16px;color:var(--gray);}
+  .badge{display:inline-block;margin-top:8px;padding:6px 16px;border-radius:999px;font-weight:800;font-size:13px;}
+  .badge.pass{background:#e5f7ec;color:var(--green);}
+  .badge.fail{background:#fdeceb;color:var(--red);}
+  table.cats{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}
+  table.cats td{padding:8px 4px;border-bottom:1px solid #eef2f7;}
+  table.cats td:last-child{text-align:right;font-weight:700;color:var(--blue-800);}
+  .bar-bg{background:#eef2f7;border-radius:6px;height:6px;margin-top:4px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--blue-500);}
+  .viol-item{
+    display:flex; align-items:center; gap:10px; background:#fdeceb; border:1px solid #f6c9c5;
+    border-radius:12px; padding:9px 12px; margin-bottom:8px; font-size:13px; font-weight:600; color:#a4261a;
+  }
+  .viol-item .viol-icon{
+    width:26px;height:26px;border-radius:50%;background:var(--red);color:#fff;flex:none;
+    display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;
+  }
+  .viol-item .viol-count{
+    margin-left:auto;background:var(--red);color:#fff;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800;flex:none;
+  }
+  .viol-empty{
+    display:flex; align-items:center; gap:10px; background:#e5f7ec; border:1px solid #bfe8cf;
+    border-radius:12px; padding:9px 12px; margin-bottom:8px; font-size:13px; font-weight:600; color:var(--green);
+  }
+  .reco{background:var(--blue-100);border-left:4px solid var(--blue-600);padding:12px 14px;border-radius:10px;font-size:13px;margin-bottom:6px;color:var(--blue-900);}
+  .crit-banner{background:#fdeceb;border:1px solid #f4b8b3;color:#a4261a;font-weight:700;font-size:13px;padding:10px 14px;border-radius:12px;margin-bottom:14px;}
+
+  /* debug */
+  #debug-badge{
+    position:absolute;top:6px;left:50%;transform:translateX(-50%);z-index:60;
+    font-size:10px;letter-spacing:.08em;color:#ffd7a3;background:rgba(11,37,69,0.6);padding:3px 10px;border-radius:999px;
+    pointer-events:none;display:none;
+  }
+  #debug-log{
+    position:absolute;bottom:0;left:0;right:0;max-height:110px;overflow-y:auto;background:rgba(0,0,0,0.55);
+    color:#9fffb0;font-family:monospace;font-size:11px;padding:6px 10px;z-index:60;display:none;
+  }
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="canvas-holder"></div>
+
+  <!-- Pantalla inicial -->
+  <div id="screen-start" class="overlay">
+    <div class="card">
+      <span class="eyebrow">EDUDRIVE 3D</span>
+      <h1>Entrenamiento Vial</h1>
+      <h2>Aprendé y demostrá que sabés conducir respetando las normas de tránsito.</h2>
+      <button class="btn btn-primary" id="btn-goto-objective">Comenzar</button>
+    </div>
+  </div>
+
+  <!-- Objetivo del nivel -->
+  <div id="screen-objective" class="overlay hidden">
+    <div class="card">
+      <span class="eyebrow">Nivel 1 · Primera salida</span>
+      <h1>Uso correcto de una rotonda</h1>
+      <h2>Objetivo</h2>
+      <p style="font-size:14px;color:var(--ink);margin-top:-10px;">Ingresá correctamente a la rotonda y utilizá la <b>primera salida</b>, respetando la velocidad, la prioridad y la señalización.</p>
+      <ul class="obj-list" style="margin-top:16px;">
+        <li><span class="dot"></span>El sistema evalúa tus decisiones en silencio: velocidad, direccionales, prioridad de paso y la salida elegida.</li>
+        <li><span class="dot"></span>Nadie te va a decir cuándo frenar o señalizar — vos decidís.</li>
+        <li><span class="dot"></span>Al llegar a la meta vas a ver tu puntaje, tus infracciones y recomendaciones.</li>
+      </ul>
+      <div class="controls-hint" id="controls-hint-desktop">
+        <b>Controles (teclado):</b> ↑/W acelerar · ↓/S frenar-reversa · ←/A →/D dirección · Q direccional izq · E direccional der · R mostrar/ocultar ruta guía
+      </div>
+      <div class="controls-hint hidden" id="controls-hint-mobile">
+        <b>Controles (táctil):</b> volante en pantalla, acelerar/freno a la derecha, direccionales abajo a la izquierda. Botón "🧭 Ruta" arriba para mostrar/ocultar la guía.
+      </div>
+      <button class="btn btn-primary" id="btn-start-driving" style="margin-top:18px;">Empezar a conducir</button>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-top">
+      <div class="hud-pill">
+        <div class="l1">Nivel 1</div>
+        <div class="l2">Uso correcto de una rotonda</div>
+      </div>
+      <div class="hud-pill" id="score-pill">
+        <div class="l1">Puntos</div>
+        <div class="l2" id="score-val">100</div>
+      </div>
+    </div>
+    <button id="btn-toggle-route" class="route-toggle-btn" style="pointer-events:auto;">🧭 Ruta: ON</button>
+    <div id="approaching-msg">Aproximándose a rotonda</div>
+    <div class="hud-bottom">
+      <div id="speedo">
+        <div class="val" id="speed-val">0</div>
+        <div class="unit">km/h</div>
+        <div class="limit" id="limit-val">Límite: 40</div>
+      </div>
+    </div>
+    <div id="signals">
+      <div class="signal-ind" id="sig-left">◀</div>
+      <div class="signal-ind" id="sig-right">▶</div>
+    </div>
+  </div>
+  <div id="toasts"></div>
+
+  <!-- Controles móviles -->
+  <div id="mobile-controls">
+    <div class="m-btn" id="m-left">◀</div>
+    <div class="m-btn" id="m-right">▶</div>
+    <div class="m-btn" id="m-accel">ACELERAR</div>
+    <div class="m-btn" id="m-brake">FRENO</div>
+    <div class="m-btn" id="m-sigL">◀ giro</div>
+    <div class="m-btn" id="m-sigR">giro ▶</div>
+  </div>
+
+  <div id="debug-badge">DEBUG MODE — F1 para alternar</div>
+  <div id="debug-log"></div>
+
+  <!-- Resultados -->
+  <div id="screen-results" class="overlay hidden">
+    <div class="card">
+      <span class="eyebrow" id="res-eyebrow">Nivel completado</span>
+      <div class="score-hero">
+        <div class="big"><span id="res-score">0</span><span class="of">/100</span></div>
+        <div class="badge" id="res-badge">—</div>
+      </div>
+      <div id="res-critical" class="crit-banner hidden"></div>
+      <table class="cats" id="res-cats"></table>
+      <div id="res-viol-wrap">
+        <h2 style="margin-bottom:6px;">Infracciones detectadas</h2>
+        <ul class="viol-list" id="res-viol-list" style="list-style:none;margin:0 0 14px;padding:0;"></ul>
+      </div>
+      <h2 style="margin-bottom:6px;">Recomendaciones</h2>
+      <div id="res-reco"></div>
+      <div class="row">
+        <button class="btn btn-ghost" id="btn-retry">Repetir nivel</button>
+        <button class="btn btn-primary" id="btn-next">Siguiente nivel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   EDUDRIVE 3D — Nivel 1: Rotonda / Primera salida
+   Arquitectura modular: GameManager, LevelManager, VehicleController,
+   CameraController, InputManager, MobileInputController, TrafficManager,
+   TrafficVehicle, WaypointSystem, DrivingRulesEngine, ViolationManager,
+   CheckpointManager, ScoreManager, UIManager, ResultsManager, AudioManager
+   ========================================================================= */
+
+let DEBUG_MODE = false;
+
+/* ---------------------------------------------------------------------
+   CONFIGURACIÓN DEL NIVEL (preparado para agregar más niveles)
+--------------------------------------------------------------------- */
+const LEVEL_CONFIG = {
+  levelId: 1,
+  name: "Primera salida",
+  scenario: "roundabout_first_exit",
+  startingScore: 100,
+  passingScore: 70,
+  minScoreStop: 80, // si el puntaje cae a este valor o menos, el nivel finaliza de inmediato
+  targetExit: 1,
+  speedLimits: { approach: 40, entry: 25, roundabout: 30 }
+};
+
+const GEOM = {
+  innerRadius: 12,      // borde de la isla central
+  outerRadius: 21,      // borde exterior del anillo (rotonda)
+  ringCenter: 16.5,      // radio medio del anillo (línea divisoria entre los 2 carriles)
+  laneInner: 14.25,     // carril interior de la rotonda (un solo sentido, 2 carriles)
+  laneOuter: 18.75,     // carril exterior de la rotonda (el que se usa para tomar la próxima salida)
+  armLength: 58,        // longitud de cada vía de acceso
+  armHalfWidth: 5.6,    // mitad del ancho de cada vía (2 carriles: uno de ida, uno de vuelta) — más ancha
+};
+
+// Ángulos de los brazos (0=Este,90=Norte,180=Oeste,270=Sur). Tránsito CCW (mano derecha).
+const ARMS = { south:270, east:0, north:90, west:180 };
+
+function polarPos(thetaDeg, radius){
+  const t = thetaDeg * Math.PI/180;
+  return new THREE.Vector3(radius*Math.cos(t), 0, -radius*Math.sin(t));
+}
+function normDeg(d){ d = d % 360; if(d<0) d+=360; return d; }
+
+/* =========================================================================
+   AUDIO MANAGER — sonidos sencillos generados con WebAudio (sin archivos)
+   ========================================================================= */
+const AudioManager = {
+  ctx: null,
+  ensure(){ if(!this.ctx){ try{ this.ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } },
+  beep(freq, dur, type, vol){
+    this.ensure(); if(!this.ctx) return;
+    const t0 = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = type||'sine'; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol!==undefined?vol:0.08, t0);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    osc.connect(gain); gain.connect(this.ctx.destination);
+    osc.start(t0); osc.stop(t0+dur);
+  },
+  click(){ this.beep(720,0.05,'square',0.05); },
+  violation(){ this.beep(180,0.25,'sawtooth',0.09); },
+  success(){ this.beep(880,0.12,'sine',0.07); setTimeout(()=>this.beep(1180,0.15,'sine',0.07),90); },
+  collision(){ this.beep(90,0.3,'square',0.12); },
+  finish(){ this.beep(660,0.15,'sine',0.08); setTimeout(()=>this.beep(880,0.18,'sine',0.08),140); setTimeout(()=>this.beep(1100,0.25,'sine',0.08),300); }
+};
+
+/* =========================================================================
+   EVENT BUS — arquitectura basada en eventos
+   ========================================================================= */
+class EventBus{
+  constructor(){ this.listeners = {}; }
+  on(evt, fn){ (this.listeners[evt] = this.listeners[evt]||[]).push(fn); }
+  emit(evt, data){
+    if(DEBUG_MODE) UIManager.debugLog(evt + (data? (' · '+JSON.stringify(data)) : ''));
+    (this.listeners[evt]||[]).forEach(fn=>fn(data));
+  }
+}
+const Bus = new EventBus();
+
+/* =========================================================================
+   SCENE / ENTORNO — construcción del mundo Low Poly
+   ========================================================================= */
+const SceneBuilder = {
+  scene:null, renderer:null,
+  obstacles: [], // {pos:Vector3, radius, kind}
+
+  build(){
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x8fd3ff);
+    scene.fog = new THREE.Fog(0x8fd3ff, 75, 280);
+    this.scene = scene;
+
+    // luz
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x3a5b3a, 0.9);
+    scene.add(hemi);
+    const sun = new THREE.DirectionalLight(0xfff6e0, 0.95);
+    sun.position.set(60,90,40);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024,1024);
+    sun.shadow.camera.left=-90; sun.shadow.camera.right=90;
+    sun.shadow.camera.top=90; sun.shadow.camera.bottom=-90;
+    scene.add(sun);
+
+    // césped base
+    const grassGeo = new THREE.CircleGeometry(280, 48);
+    const grassMat = new THREE.MeshLambertMaterial({color:0x5fae5f});
+    const grass = new THREE.Mesh(grassGeo, grassMat);
+    grass.rotation.x = -Math.PI/2; grass.receiveShadow = true;
+    scene.add(grass);
+
+    // isla central
+    const island = new THREE.Mesh(
+      new THREE.CylinderGeometry(GEOM.innerRadius, GEOM.innerRadius, 1.1, 24),
+      new THREE.MeshLambertMaterial({color:0x3f9142})
+    );
+    island.position.y = 0.55; island.castShadow = true; island.receiveShadow = true;
+    scene.add(island);
+    const islandTop = new THREE.Mesh(
+      new THREE.CylinderGeometry(GEOM.innerRadius-0.3, GEOM.innerRadius-0.3, 0.05, 24),
+      new THREE.MeshLambertMaterial({color:0x4fb356})
+    );
+    islandTop.position.y = 1.13;
+    scene.add(islandTop);
+    this.addTree(0,0,3.2,1.4);
+    this.addTree(3,0,-3,1.1);
+    this.addTree(-3.5,0,2,1.0);
+
+    // anillo de asfalto (rotonda)
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(GEOM.innerRadius, GEOM.outerRadius, 48),
+      new THREE.MeshLambertMaterial({color:0x3a3f47, side:THREE.DoubleSide})
+    );
+    ring.rotation.x = -Math.PI/2; ring.position.y = 0.02; ring.receiveShadow = true;
+    scene.add(ring);
+
+    // línea de carril discontinua entre los 2 carriles de la rotonda (no continua)
+    this.addDashedRing(GEOM.ringCenter, {color:0xffffff, dashDeg:7, gapDeg:6, width:0.16});
+
+    // brazos de acceso
+    Object.entries(ARMS).forEach(([key, theta])=>{
+      this.buildArm(key, theta);
+    });
+
+    // señales de "ceda el paso" en TODOS los brazos — en una rotonda real
+    // cada brazo es de doble sentido (carril de entrada + carril de salida)
+    // y cada carril de entrada exige ceder el paso a quien ya circula.
+    Object.values(ARMS).forEach(theta=> this.addYieldSign(theta));
+    this.addDirectionArrow(ARMS.south);
+
+    // flechas de circulación dentro del anillo (sentido antihorario)
+    this.addRingFlowArrows();
+
+    // edificios Low Poly en los bordes del escenario, fuera del alcance de las vías
+    this.addBackgroundBuildings();
+
+    return scene;
+  },
+
+  addBackgroundBuildings(){
+    const palette = [0xcdd6e0, 0xb9c6d6, 0xdce3ea, 0xaebccb, 0xc7d0da, 0x9fb0c2, 0xd7ccc0];
+    const roofColor = 0x707d8c;
+    const count = 30;
+    for(let i=0;i<count;i++){
+      const angle = (360/count)*i + (Math.random()*12-6);
+      const radius = (GEOM.outerRadius+GEOM.armLength+25) + Math.random()*95; // bien afuera de las vías, ahora más largas
+      const w = 6 + Math.random()*9;
+      const d = 6 + Math.random()*9;
+      const h = 7 + Math.random()*24;
+      const pos = polarPos(angle, radius);
+      const color = palette[Math.floor(Math.random()*palette.length)];
+
+      const building = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshLambertMaterial({color}));
+      building.position.set(pos.x, h/2, pos.z);
+      building.rotation.y = Math.random()*Math.PI*2;
+      building.castShadow = true; building.receiveShadow = true;
+      this.scene.add(building);
+
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(w*1.03,0.5,d*1.03), new THREE.MeshLambertMaterial({color:roofColor}));
+      roof.position.set(pos.x, h+0.25, pos.z);
+      roof.rotation.y = building.rotation.y;
+      this.scene.add(roof);
+    }
+  },
+
+  buildArm(key, theta){
+    const from = GEOM.outerRadius, len = GEOM.armLength, hw = GEOM.armHalfWidth;
+    const mid = polarPos(theta, from+len/2);
+    const road = new THREE.Mesh(
+      new THREE.BoxGeometry(hw*2, 0.06, len),
+      new THREE.MeshLambertMaterial({color:0x3a3f47})
+    );
+    road.position.set(mid.x, 0.03, mid.z);
+    road.rotation.y = (theta+90)*Math.PI/180;
+    road.receiveShadow = true;
+    this.scene.add(road);
+
+    // línea central discontinua blanca — separa el carril de entrada del de salida
+    // (igual que en el manual: línea blanca discontinua, no doble amarilla continua)
+    this.addDashedLine(theta, from+1.5, from+len-2, 0, {color:0xffffff, width:0.14, dash:1.8, gap:1.3});
+
+    // marca "CEDA" pintada en el carril de entrada, justo antes de fusionarse al anillo
+    this.addCedaRoadMarking(theta, hw);
+
+    // aceras, postes y árboles a los lados de la vía
+    this.addSidewalksAndPoles(theta, from, len, hw);
+  },
+
+  // línea discontinua genérica (dashes a lo largo de un brazo, con offset lateral opcional)
+  addDashedLine(theta, fromR, toR, lateralOffset, opts){
+    opts = opts||{};
+    const color = opts.color!==undefined? opts.color : 0xffffff;
+    const width = opts.width||0.12;
+    const dash = opts.dash||1.6;
+    const gap = opts.gap||1.4;
+    const t = theta*Math.PI/180;
+    const dir = new THREE.Vector3(Math.cos(t),0,-Math.sin(t));
+    const perp = new THREE.Vector3(Math.sin(t),0,Math.cos(t));
+    const step = dash+gap;
+    const count = Math.max(0, Math.floor((toR-fromR)/step));
+    const mat = new THREE.MeshBasicMaterial({color, transparent:true, opacity:0.9});
+    for(let i=0;i<count;i++){
+      const rCenter = fromR + i*step + dash/2;
+      const base = dir.clone().multiplyScalar(rCenter).add(perp.clone().multiplyScalar(lateralOffset));
+      const seg = new THREE.Mesh(new THREE.BoxGeometry(width,0.01,dash), mat);
+      seg.position.set(base.x, 0.065, base.z);
+      seg.rotation.y = (theta+90)*Math.PI/180;
+      this.scene.add(seg);
+    }
+  },
+
+  // línea discontinua circular (para el divisor de carriles dentro de la rotonda)
+  addDashedRing(radius, opts){
+    opts = opts||{};
+    const color = opts.color!==undefined? opts.color : 0xffffff;
+    const width = opts.width||0.14;
+    const dashDeg = opts.dashDeg||7;
+    const gapDeg = opts.gapDeg||6;
+    const step = dashDeg+gapDeg;
+    const count = Math.floor(360/step);
+    const mat = new THREE.MeshBasicMaterial({color, transparent:true, opacity:0.85, side:THREE.DoubleSide});
+    for(let i=0;i<count;i++){
+      const startDeg = i*step;
+      const seg = new THREE.Mesh(
+        new THREE.RingGeometry(radius-width/2, radius+width/2, 6, 1, startDeg*Math.PI/180, dashDeg*Math.PI/180),
+        mat
+      );
+      seg.rotation.x = -Math.PI/2;
+      seg.position.y = 0.03;
+      this.scene.add(seg);
+    }
+  },
+
+  addCedaRoadMarking(theta, hw){
+    const t = theta*Math.PI/180;
+    const dir = new THREE.Vector3(Math.cos(t),0,-Math.sin(t));
+    const perp = new THREE.Vector3(Math.sin(t),0,Math.cos(t));
+    const entryLateralSign = -1; // carril de entrada (derecha, sentido de circulación por la derecha)
+    const panelLen = 5.6, panelW = Math.max(1.6, hw*0.9);
+    const panelR = GEOM.outerRadius + 4.2; // muy cerca del punto de fusión con el anillo
+    const panelCenter = dir.clone().multiplyScalar(panelR).add(perp.clone().multiplyScalar(hw*0.5*entryLateralSign));
+
+    // marco/borde amarillo del panel (como en el manual)
+    const borderGeo = new THREE.PlaneGeometry(panelW, panelLen);
+    borderGeo.rotateX(-Math.PI/2);
+    const border = new THREE.Mesh(borderGeo, new THREE.MeshBasicMaterial({color:0xffcf3f}));
+    border.rotation.y = (theta+90)*Math.PI/180;
+    border.position.set(panelCenter.x, 0.055, panelCenter.z);
+    this.scene.add(border);
+
+    // fondo oscuro dentro del marco (deja ver el borde amarillo asomando)
+    const bgGeo = new THREE.PlaneGeometry(panelW-0.35, panelLen-0.35);
+    bgGeo.rotateX(-Math.PI/2);
+    const bg = new THREE.Mesh(bgGeo, new THREE.MeshLambertMaterial({color:0x3a3f47}));
+    bg.rotation.y = (theta+90)*Math.PI/180;
+    bg.position.set(panelCenter.x, 0.06, panelCenter.z);
+    this.scene.add(bg);
+
+    // texto "CEDA" (textura canvas), orientado para leerse al aproximarse
+    const canvas = document.createElement('canvas');
+    canvas.width = 128; canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,128,256);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 44px Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('CEDA', 64, 165);
+    const tex = new THREE.CanvasTexture(canvas);
+    const textGeo = new THREE.PlaneGeometry(panelW-0.6, panelLen-0.6);
+    textGeo.rotateX(-Math.PI/2);
+    const text = new THREE.Mesh(textGeo, new THREE.MeshBasicMaterial({map:tex, transparent:true}));
+    text.rotation.y = (theta+90)*Math.PI/180;
+    text.position.set(panelCenter.x, 0.07, panelCenter.z);
+    this.scene.add(text);
+
+    // flecha blanca apuntando hacia el anillo (sentido de ingreso)
+    const arrowGeo = new THREE.ConeGeometry(0.5, 1.5, 3);
+    arrowGeo.rotateX(-Math.PI/2);
+    const arrow = new THREE.Mesh(arrowGeo, new THREE.MeshBasicMaterial({color:0xffffff}));
+    arrow.rotation.y = (theta+90)*Math.PI/180;
+    const arrowPos = dir.clone().multiplyScalar(panelR - panelLen*0.5 - 1.4).add(perp.clone().multiplyScalar(hw*0.5*entryLateralSign));
+    arrow.position.set(arrowPos.x, 0.08, arrowPos.z);
+    this.scene.add(arrow);
+  },
+
+  addRingFlowArrows(){
+    // flechas blancas tangentes al anillo indicando el sentido antihorario de circulación
+    const angles = [45, 135, 225, 315];
+    angles.forEach(a=>{
+      const p = polarPos(a, GEOM.ringCenter);
+      const t = a*Math.PI/180;
+      // tangente en sentido de theta creciente (antihorario)
+      const tangent = new THREE.Vector3(-Math.sin(t), 0, -Math.cos(t));
+      const heading = Math.atan2(tangent.x, tangent.z);
+      const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.55,1.6,3), new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.85}));
+      arrow.rotation.x = -Math.PI/2;
+      arrow.rotation.z = -heading + Math.PI/2;
+      arrow.position.set(p.x, 0.08, p.z);
+      this.scene.add(arrow);
+    });
+  },
+
+  addSidewalksAndPoles(theta, from, len, hw){
+    const t = theta*Math.PI/180;
+    const dir = new THREE.Vector3(Math.cos(t),0,-Math.sin(t));
+    const perp = new THREE.Vector3(-dir.z,0,dir.x);
+    for(let i=0;i<4;i++){
+      const d = from + 8 + i*(len/4.2);
+      const center = dir.clone().multiplyScalar(d);
+      [-1,1].forEach(side=>{
+        const pos = center.clone().add(perp.clone().multiplyScalar((hw+1.6)*side));
+        const pole = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.12,0.12,2.6,8),
+          new THREE.MeshLambertMaterial({color:0xcfd6df})
+        );
+        pole.position.set(pos.x,1.3,pos.z);
+        pole.castShadow = true;
+        this.scene.add(pole);
+        this.obstacles.push({pos:new THREE.Vector3(pos.x,0,pos.z), radius:0.5, kind:'pole'});
+      });
+      if(i%2===0){
+        const tPos = center.clone().add(perp.clone().multiplyScalar((hw+3.4)));
+        this.addTree(tPos.x, tPos.z, 1.0+Math.random()*0.5, 1.0);
+      }
+    }
+  },
+
+  addTree(x,z,h,rScale){
+    const g = new THREE.Group();
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.18,h,6), new THREE.MeshLambertMaterial({color:0x8a5a34}));
+    trunk.position.y = h/2; trunk.castShadow = true;
+    const top = new THREE.Mesh(new THREE.ConeGeometry(0.9*rScale,1.6*rScale,7), new THREE.MeshLambertMaterial({color:0x2e8b46}));
+    top.position.y = h + 0.7*rScale; top.castShadow = true;
+    g.add(trunk); g.add(top);
+    g.position.set(x,0,z);
+    this.scene.add(g);
+    this.obstacles.push({pos:new THREE.Vector3(x,0,z), radius:0.7*rScale, kind:'tree'});
+  },
+
+  addYieldSign(theta){
+    const hw = GEOM.armHalfWidth;
+    const t = theta*Math.PI/180;
+    const dir = new THREE.Vector3(Math.cos(t),0,-Math.sin(t));
+    const perp = new THREE.Vector3(Math.sin(t),0,Math.cos(t));
+    // esquina de la carretera justo antes de entrar a la rotonda, al costado derecho del carril de entrada
+    const pos = dir.clone().multiplyScalar(GEOM.outerRadius+2).add(perp.clone().multiplyScalar(-(hw+1.5)));
+
+    const g = new THREE.Group();
+
+    // poste
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.09,2.3,8), new THREE.MeshLambertMaterial({color:0xb9c2cc}));
+    pole.position.y = 1.15; pole.castShadow = true;
+    g.add(pole);
+
+    // señal CEDA: triángulo invertido, borde rojo grueso, fondo blanco, con el texto DENTRO
+    const outerShape = this.triangleShape(0.62);
+    const innerShape = this.triangleShape(0.47);
+    const red = new THREE.Mesh(new THREE.ShapeGeometry(outerShape), new THREE.MeshLambertMaterial({color:0xd6261c, side:THREE.DoubleSide}));
+    const white = new THREE.Mesh(new THREE.ShapeGeometry(innerShape), new THREE.MeshLambertMaterial({color:0xffffff, side:THREE.DoubleSide}));
+    red.position.y = 2.38;
+    white.position.y = 2.38; white.position.z = 0.01;
+    g.add(red); g.add(white);
+
+    // texto "CEDA" pintado dentro del triángulo (no debajo)
+    const canvas = document.createElement('canvas');
+    canvas.width = 160; canvas.height = 160;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,160,160);
+    ctx.fillStyle = '#161616';
+    ctx.font = 'bold 40px Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('CEDA', 80, 80);
+    const textTex = new THREE.CanvasTexture(canvas);
+    const text = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.62), new THREE.MeshBasicMaterial({map:textTex, transparent:true}));
+    text.position.y = 2.44; // un poco arriba del centro, donde el triángulo es más ancho
+    text.position.z = 0.02;
+    g.add(text);
+
+    g.position.set(pos.x, 0, pos.z);
+    g.rotation.y = (theta+90)*Math.PI/180; // el frente de la señal mira hacia el conductor que se aproxima
+    this.scene.add(g);
+    this.obstacles.push({pos:new THREE.Vector3(pos.x,0,pos.z), radius:0.35, kind:'sign'});
+  },
+
+  triangleShape(size){
+    // triángulo con la punta hacia abajo (forma clásica de una señal de ceda el paso)
+    const s = new THREE.Shape();
+    s.moveTo(-size, size*0.87);
+    s.lineTo(size, size*0.87);
+    s.lineTo(0, -size*0.87);
+    s.closePath();
+    return s;
+  },
+
+  addDirectionArrow(theta){
+    const pos = polarPos(theta, GEOM.outerRadius+10);
+    const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.6,1.4,3), new THREE.MeshBasicMaterial({color:0xffffff}));
+    arrow.rotation.x = -Math.PI/2; arrow.rotation.z = Math.PI/2;
+    arrow.position.set(pos.x, 0.08, pos.z);
+    this.scene.add(arrow);
+  }
+};
+
+/* =========================================================================
+   VEHICLE CONTROLLER
+   ========================================================================= */
+/* =========================================================================
+   CALCOMANÍA "EDUDRIVE" — textura pintada a los costados de los vehículos
+   ========================================================================= */
+function makeEdudriveTexture(mirrored){
+  const canvas = document.createElement('canvas');
+  canvas.width = 512; canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,512,128);
+  if(mirrored){ ctx.translate(512,0); ctx.scale(-1,1); }
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 76px Arial';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('EDUDRIVE', 256, 66);
+  return new THREE.CanvasTexture(canvas);
+}
+
+function addEdudriveStickers(group, halfWidth, bodyY, bodyLength){
+  const w = bodyLength*0.6, h = w*0.24;
+  const right = new THREE.Mesh(
+    new THREE.PlaneGeometry(w,h),
+    new THREE.MeshBasicMaterial({map:makeEdudriveTexture(false), transparent:true})
+  );
+  right.rotation.y = Math.PI/2;
+  right.position.set(halfWidth+0.012, bodyY, 0);
+
+  const left = new THREE.Mesh(
+    new THREE.PlaneGeometry(w,h),
+    new THREE.MeshBasicMaterial({map:makeEdudriveTexture(true), transparent:true})
+  );
+  left.rotation.y = -Math.PI/2;
+  left.position.set(-halfWidth-0.012, bodyY, 0);
+
+  group.add(right); group.add(left);
+
+  // calcomanía en la cajuela (parte trasera) — se ve desde la cámara en tercera persona
+  const halfLength = bodyLength/2;
+  const rw = halfWidth*1.5, rh = rw*0.34;
+  const rear = new THREE.Mesh(
+    new THREE.PlaneGeometry(rw, rh),
+    new THREE.MeshBasicMaterial({map:makeEdudriveTexture(false), transparent:true})
+  );
+  rear.position.set(0, bodyY+0.24, halfLength+0.015); // por encima de las luces de freno/direccionales
+  group.add(rear);
+}
+
+class VehicleController{
+  constructor(scene, color, startPos, startYaw){
+    this.speed = 0;            // m/s con signo (negativo = reversa)
+    this.yaw = startYaw||0;
+    this.maxSpeed = 16.7;      // ~60 km/h
+    this.reverseMax = -5.0;
+    this.accel = 6.0;
+    this.brakeDecel = 10.0;
+    this.friction = 2.2;
+    this.offRoadFriction = 6.5;
+    this.turnRate = 1.9;       // rad/s a velocidad de referencia
+    this.pos = startPos.clone();
+    this.signalLeft = false;
+    this.signalRight = false;
+    this.signalRightSince = null;
+    this.signalLeftSince = null;
+    this.onRoad = true;
+    this.radius = 1.2;
+
+    this.mesh = this.buildMesh(color);
+    this.mesh.position.copy(this.pos);
+    scene.add(this.mesh);
+  }
+
+  buildMesh(color){
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.7,0.6,3.2), new THREE.MeshLambertMaterial({color}));
+    body.position.y = 0.55; body.castShadow = true;
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.3,0.5,1.6), new THREE.MeshLambertMaterial({color:0xdfeeff}));
+    cabin.position.set(0,1.0,-0.15); cabin.castShadow = true;
+    g.add(body); g.add(cabin);
+    // ruedas
+    const wheelGeo = new THREE.CylinderGeometry(0.32,0.32,0.3,10);
+    const wheelMat = new THREE.MeshLambertMaterial({color:0x1c1c1c});
+    [[-0.85,0.32,1.05],[0.85,0.32,1.05],[-0.85,0.32,-1.05],[0.85,0.32,-1.05]].forEach(p=>{
+      const w = new THREE.Mesh(wheelGeo, wheelMat);
+      w.rotation.z = Math.PI/2; w.position.set(p[0],p[1],p[2]); w.castShadow = true;
+      g.add(w);
+    });
+    // luces de freno
+    const brakeMat = new THREE.MeshBasicMaterial({color:0x550000});
+    const bl = new THREE.Mesh(new THREE.BoxGeometry(0.35,0.2,0.05), brakeMat);
+    bl.position.set(-0.55,0.6,1.62);
+    const br = bl.clone(); br.position.x = 0.55;
+    g.add(bl); g.add(br);
+    this.brakeLights = [bl,br];
+    // direccionales (indicadores) — delanteros y traseros, a ambos lados
+    const sigMat = ()=> new THREE.MeshBasicMaterial({color:0x4d3a00});
+    const rl = new THREE.Mesh(new THREE.BoxGeometry(0.22,0.22,0.08), sigMat());
+    rl.position.set(-0.82,0.62,1.63);
+    const rr = rl.clone(); rr.material = sigMat(); rr.position.x = 0.82;
+    const fl = rl.clone(); fl.material = sigMat(); fl.position.set(-0.82,0.62,-1.63);
+    const fr = rl.clone(); fr.material = sigMat(); fr.position.set(0.82,0.62,-1.63);
+    g.add(rl); g.add(rr); g.add(fl); g.add(fr);
+    this.sigMeshes = {left:[fl,rl], right:[fr,rr]};
+    // calcomanía EDUDRIVE en los costados
+    addEdudriveStickers(g, 0.85, 0.55, 3.2);
+    return g;
+  }
+
+  forwardVec(){ return new THREE.Vector3(-Math.sin(this.yaw),0,-Math.cos(this.yaw)); }
+
+  update(dt, input){
+    // throttle / freno
+    if(input.throttle){
+      this.speed += this.accel*dt;
+    } else if(input.brake){
+      if(this.speed>0.05) this.speed -= this.brakeDecel*dt;
+      else this.speed -= this.accel*0.6*dt; // reversa
+    } else {
+      const fr = this.onRoad? this.friction: this.offRoadFriction;
+      if(this.speed>0) this.speed = Math.max(0,this.speed-fr*dt);
+      else if(this.speed<0) this.speed = Math.min(0,this.speed+fr*dt);
+    }
+    const capMax = this.onRoad? this.maxSpeed : this.maxSpeed*0.55;
+    this.speed = Math.max(this.reverseMax, Math.min(capMax, this.speed));
+
+    // dirección (menos sensible a baja velocidad, invertida en reversa)
+    const speedFactor = Math.min(1, Math.abs(this.speed)/6 + 0.25);
+    const steerDir = this.speed>=0? 1: -1;
+    if(input.steer !== 0){
+      this.yaw -= input.steer*this.turnRate*speedFactor*steerDir*dt;
+    }
+
+    const fwd = this.forwardVec();
+    this.pos.addScaledVector(fwd, this.speed*dt);
+    this.mesh.position.copy(this.pos);
+    this.mesh.rotation.y = this.yaw;
+
+    // luces de freno
+    const braking = input.brake && this.speed>0.05;
+    this.brakeLights.forEach(m=>{ m.material.color.set(braking? 0xff2222:0x550000); });
+
+    // direccionales parpadeo
+    const blinkOn = Math.floor(performance.now()/400)%2===0;
+    const onColor = 0xffa317, offColor = 0x4d3a00;
+    this.sigMeshes.left.forEach(m=> m.material.color.set(this.signalLeft && blinkOn? onColor:offColor));
+    this.sigMeshes.right.forEach(m=> m.material.color.set(this.signalRight && blinkOn? onColor:offColor));
+  }
+
+  speedKmh(){ return Math.abs(this.speed)*3.6; }
+
+  setSignal(side, on){
+    if(side==='left'){
+      this.signalLeft = on; if(on){ this.signalRight=false; this.signalLeftSince = performance.now(); }
+    } else {
+      this.signalRight = on; if(on){ this.signalLeft=false; this.signalRightSince = performance.now(); }
+    }
+  }
+}
+
+/* =========================================================================
+   TRAFFIC VEHICLE / TRAFFIC MANAGER — IA por waypoints (circula el anillo)
+   ========================================================================= */
+class TrafficVehicle{
+  constructor(scene){
+    this.thetaDeg = ARMS.north + 25; // arranca cerca del brazo norte
+    this.angularSpeed = 18; // grados/seg CCW (theta aumenta)
+    this.mesh = this.buildMesh();
+    scene.add(this.mesh);
+    this.pos = new THREE.Vector3();
+    this.radius = 1.2;
+    this.updatePosition();
+  }
+  buildMesh(){
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.7,0.6,3.2), new THREE.MeshLambertMaterial({color:0xd8912f}));
+    body.position.y = 0.55; body.castShadow = true;
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.3,0.5,1.6), new THREE.MeshLambertMaterial({color:0xfff3df}));
+    cabin.position.set(0,1.0,-0.15); cabin.castShadow = true;
+    g.add(body); g.add(cabin);
+    // ruedas (igual que el auto del jugador)
+    const wheelGeo = new THREE.CylinderGeometry(0.32,0.32,0.3,10);
+    const wheelMat = new THREE.MeshLambertMaterial({color:0x1c1c1c});
+    [[-0.85,0.32,1.05],[0.85,0.32,1.05],[-0.85,0.32,-1.05],[0.85,0.32,-1.05]].forEach(p=>{
+      const w = new THREE.Mesh(wheelGeo, wheelMat);
+      w.rotation.z = Math.PI/2; w.position.set(p[0],p[1],p[2]); w.castShadow = true;
+      g.add(w);
+    });
+    // luces traseras (siempre apagadas, es un vehículo de tráfico sin freno visible)
+    const tailMat = new THREE.MeshBasicMaterial({color:0x550000});
+    const tl = new THREE.Mesh(new THREE.BoxGeometry(0.35,0.2,0.05), tailMat);
+    tl.position.set(-0.55,0.6,1.62);
+    const tr = tl.clone(); tr.position.x = 0.55;
+    g.add(tl); g.add(tr);
+    // calcomanía EDUDRIVE en los costados
+    addEdudriveStickers(g, 0.85, 0.55, 3.2);
+    return g;
+  }
+  updatePosition(){
+    // el vehículo de tráfico nunca sale de la rotonda: circula siempre por el carril interior
+    const p = polarPos(this.thetaDeg, GEOM.laneInner);
+    this.pos.set(p.x,0,p.z);
+    this.mesh.position.copy(this.pos);
+    // orientar tangencialmente (CCW => derivada de posición)
+    const t = this.thetaDeg*Math.PI/180;
+    const tangent = new THREE.Vector3(-Math.sin(t), 0, -Math.cos(t)); // d/dtheta of (cos,-sin)*(-1) approx
+    this.mesh.rotation.y = Math.atan2(-tangent.x, -tangent.z);
+  }
+  update(dt){
+    this.thetaDeg = normDeg(this.thetaDeg + this.angularSpeed*dt);
+    this.updatePosition();
+  }
+}
+const TrafficManager = {
+  vehicles: [],
+  init(scene){ this.vehicles = [new TrafficVehicle(scene)]; },
+  update(dt){ this.vehicles.forEach(v=>v.update(dt)); }
+};
+
+/* =========================================================================
+   CAMERA CONTROLLER — tercera persona
+   ========================================================================= */
+class CameraController{
+  constructor(camera){
+    this.camera = camera;
+    this.current = new THREE.Vector3(0,10,20);
+    this.lookCurrent = new THREE.Vector3();
+  }
+  update(dt, target){
+    const fwd = target.forwardVec();
+    const behind = fwd.clone().multiplyScalar(-10.5);
+    const desired = target.pos.clone().add(behind).add(new THREE.Vector3(0,5.6,0));
+    const lookAhead = target.pos.clone().add(fwd.clone().multiplyScalar(7)).add(new THREE.Vector3(0,1.2,0));
+    const lerp = 1 - Math.pow(0.001, dt);
+    this.current.lerp(desired, lerp);
+    this.lookCurrent.lerp(lookAhead, lerp);
+    this.camera.position.copy(this.current);
+    this.camera.lookAt(this.lookCurrent);
+  }
+}
+
+/* =========================================================================
+   INPUT MANAGER (teclado) + MOBILE INPUT CONTROLLER (táctil)
+   ========================================================================= */
+const InputManager = {
+  state:{throttle:false, brake:false, steer:0, sigLeftPressed:false, sigRightPressed:false},
+  keys:{},
+  init(){
+    window.addEventListener('keydown', e=>{ this.keys[e.key]=true; this.recompute(); this.handleToggle(e); });
+    window.addEventListener('keyup', e=>{ this.keys[e.key]=false; this.recompute(); });
+  },
+  handleToggle(e){
+    if(e.repeat) return; // evita alternar rápidamente al mantener la tecla presionada
+    if(e.key==='q'||e.key==='Q') Bus.emit('turnSignalActivated',{side:'left', toggle:true});
+    if(e.key==='e'||e.key==='E') Bus.emit('turnSignalActivated',{side:'right', toggle:true});
+    if(e.key==='r'||e.key==='R') RoutePath.setVisible(!RoutePath.visible);
+    if(e.key==='F1'){ DEBUG_MODE = !DEBUG_MODE; UIManager.setDebugVisible(DEBUG_MODE); e.preventDefault && e.preventDefault(); }
+  },
+  recompute(){
+    const k = this.keys;
+    this.state.throttle = !!(k['ArrowUp']||k['w']||k['W']) || MobileInputController.throttle;
+    this.state.brake = !!(k['ArrowDown']||k['s']||k['S']) || MobileInputController.brake;
+    let steer = 0;
+    if(k['ArrowLeft']||k['a']||k['A']) steer -= 1;
+    if(k['ArrowRight']||k['d']||k['D']) steer += 1;
+    if(MobileInputController.steer !== 0) steer = MobileInputController.steer;
+    this.state.steer = steer;
+  }
+};
+
+const MobileInputController = {
+  throttle:false, brake:false, steer:0,
+  isMobile(){ return ('ontouchstart' in window) || navigator.maxTouchPoints>0; },
+  init(){
+    if(!this.isMobile()) return;
+    document.getElementById('mobile-controls').style.display='block';
+    document.getElementById('controls-hint-desktop').classList.add('hidden');
+    document.getElementById('controls-hint-mobile').classList.remove('hidden');
+    this.bindHold('m-accel', on=>{ this.throttle=on; InputManager.recompute(); });
+    this.bindHold('m-brake', on=>{ this.brake=on; InputManager.recompute(); });
+    this.bindHold('m-left', on=>{ this.steer = on? -1 : (this.steer===-1?0:this.steer); InputManager.recompute(); });
+    this.bindHold('m-right', on=>{ this.steer = on? 1 : (this.steer===1?0:this.steer); InputManager.recompute(); });
+    document.getElementById('m-sigL').addEventListener('touchstart', e=>{ e.preventDefault(); Bus.emit('turnSignalActivated',{side:'left', toggle:true}); });
+    document.getElementById('m-sigR').addEventListener('touchstart', e=>{ e.preventDefault(); Bus.emit('turnSignalActivated',{side:'right', toggle:true}); });
+  },
+  bindHold(id, cb){
+    const el = document.getElementById(id);
+    const on = e=>{ e.preventDefault(); cb(true); };
+    const off = e=>{ e.preventDefault(); cb(false); };
+    el.addEventListener('touchstart', on); el.addEventListener('touchend', off); el.addEventListener('touchcancel', off);
+  }
+};
+
+/* =========================================================================
+   CHECKPOINT MANAGER — zonas de evaluación en orden esperado
+   ========================================================================= */
+const CheckpointManager = {
+  zones: [],
+  visited: new Set(),
+  lastZoneKind: null,
+  reachedSection1: false,
+  ringEntryTime: null,
+  lastExitWasTarget: false,
+  lastExitLabel: null,
+
+  init(){
+    // Rotonda real de 4 brazos: Sur = entrada del jugador. En sentido antihorario
+    // (mano derecha) los brazos se numeran como salidas: Este=1ª, Norte=2ª, Oeste=3ª,
+    // y volver a Sur equivaldría a una 4ª salida (vuelta completa).
+    const R = GEOM.outerRadius, C = GEOM.ringCenter;
+    this.zones = [
+      {id:'approach_outer', pos:polarPos(ARMS.south, R+21), r:9, kind:'approach_outer'},
+      {id:'approach_inner', pos:polarPos(ARMS.south, R+8), r:7, kind:'approach_inner'},
+      {id:'yield_zone', pos:polarPos(ARMS.south, R+1), r:5, kind:'yield_zone'},
+      {id:'section1', pos:polarPos(315, C), r:6.5, kind:'section1'},
+      {id:'exit_east', pos:polarPos(ARMS.east, C), r:6.5, kind:'exit', arm:'east', order:1, isTarget:true},
+      {id:'exit_north', pos:polarPos(ARMS.north, C), r:6.5, kind:'exit', arm:'north', order:2, isTarget:false},
+      {id:'exit_west', pos:polarPos(ARMS.west, C), r:6.5, kind:'exit', arm:'west', order:3, isTarget:false},
+      {id:'finish_east', pos:polarPos(ARMS.east, R+GEOM.armLength-4), r:8, kind:'finish'},
+      {id:'finish_north', pos:polarPos(ARMS.north, R+GEOM.armLength-4), r:8, kind:'finish'},
+      {id:'finish_west', pos:polarPos(ARMS.west, R+GEOM.armLength-4), r:8, kind:'finish'},
+    ];
+    this.reachedSection1 = false;
+    this.lastExitWasTarget = false;
+    this.lastExitLabel = null;
+  },
+
+  update(playerPos){
+    for(const z of this.zones){
+      const d = Math.hypot(playerPos.x-z.pos.x, playerPos.z-z.pos.z);
+      const inside = d < z.r;
+      if(inside && !this.visited.has(z.id)){
+        this.visited.add(z.id);
+        this.onEnter(z);
+      }
+    }
+  },
+
+  onEnter(z){
+    switch(z.kind){
+      case 'approach_outer':
+        Bus.emit('vehicleEnteredZone', {zone:'approach_outer'});
+        UIManager.showApproaching();
+        DrivingRulesEngine.currentSpeedLimit = LEVEL_CONFIG.speedLimits.approach;
+        break;
+      case 'approach_inner':
+        DrivingRulesEngine.currentSpeedLimit = LEVEL_CONFIG.speedLimits.entry;
+        break;
+      case 'yield_zone':
+        DrivingRulesEngine.enteringYieldZone();
+        break;
+      case 'section1':
+        this.reachedSection1 = true;
+        DrivingRulesEngine.currentSpeedLimit = LEVEL_CONFIG.speedLimits.roundabout;
+        Bus.emit('checkpointReached',{id:'ROUNDABOUT_SECTION_1'});
+        break;
+      case 'exit':
+        DrivingRulesEngine.evaluateExit(z);
+        break;
+      case 'finish':
+        LevelManager.finish(this.lastExitWasTarget, this.lastExitLabel);
+        break;
+    }
+  }
+};
+
+/* =========================================================================
+   VIOLATION MANAGER + SCORE MANAGER
+   ========================================================================= */
+const POINTS = {
+  SPEEDING:-5, WRONG_DIRECTION:-25, FAILED_TO_YIELD:-15, INCORRECT_ROUNDABOUT_ENTRY:-15,
+  WRONG_EXIT:-25, COLLISION_SMALL:-5, COLLISION_CURB:-5, COLLISION_VEHICLE:-20,
+  LEFT_ROAD:-10, SIGNAL_NOT_USED:-5, WRONG_SIGNAL:-5, LANE_CHANGE_NO_SIGNAL:-5,
+  SUCCESSFUL_YIELD:5, CORRECT_ENTRY:0, CORRECT_EXIT:0
+};
+const CRITICAL_TYPES = new Set(['WRONG_EXIT','WRONG_DIRECTION']);
+
+const ScoreManager = {
+  score:100,
+  violations:{}, // type -> count
+  criticalErrors:[],
+  cooldowns:{},
+
+  reset(){
+    this.score = LEVEL_CONFIG.startingScore;
+    this.violations = {}; this.criticalErrors = []; this.cooldowns = {};
+    UIManager.updateScore(this.score);
+  },
+
+  canFire(type, cooldownMs){
+    const now = performance.now();
+    if(this.cooldowns[type] && now-this.cooldowns[type] < cooldownMs) return false;
+    this.cooldowns[type] = now;
+    return true;
+  },
+
+  register(type, opts){
+    opts = opts||{};
+    if(opts.cooldown && !this.canFire(type, opts.cooldown)) return;
+    const delta = POINTS[type]!==undefined? POINTS[type] : 0;
+    this.score = Math.max(0, Math.min(100, this.score+delta));
+    if(delta<0){
+      this.violations[type] = (this.violations[type]||0)+1;
+    }
+    if(CRITICAL_TYPES.has(type)) this.criticalErrors.push(type);
+    UIManager.updateScore(this.score);
+    if(delta<0){ UIManager.toast(VIOLATION_LABELS[type]||type, delta, 'bad'); AudioManager.violation(); }
+    else if(delta>0){ UIManager.toast(VIOLATION_LABELS[type]||type, delta, 'good'); AudioManager.success(); }
+    Bus.emit(type.toLowerCase(), opts);
+
+    // detener el nivel automáticamente si el puntaje cae al umbral configurado
+    if(this.score <= LEVEL_CONFIG.minScoreStop && DrivingRulesEngine.levelActive){
+      DrivingRulesEngine.levelActive = false;
+      setTimeout(()=>{
+        LevelManager.stopEarly('El nivel se detuvo automáticamente al llegar a '+Math.round(this.score)+' puntos.');
+      }, 300); // pequeña pausa para que se alcance a ver el último toast de penalización
+    }
+  }
+};
+
+const VIOLATION_LABELS = {
+  SPEEDING:'Exceso de velocidad', WRONG_DIRECTION:'Sentido contrario', FAILED_TO_YIELD:'No cediste el paso',
+  INCORRECT_ROUNDABOUT_ENTRY:'Entrada incorrecta', WRONG_EXIT:'Salida incorrecta', COLLISION_SMALL:'Colisión leve',
+  COLLISION_CURB:'Colisión con bordillo', COLLISION_VEHICLE:'Colisión con vehículo', LEFT_ROAD:'Abandonaste la vía',
+  SIGNAL_NOT_USED:'No utilizaste la direccional', WRONG_SIGNAL:'Direccional incorrecta',
+  LANE_CHANGE_NO_SIGNAL:'Cambio de carril sin direccional', SUCCESSFUL_YIELD:'Prioridad respetada'
+};
+
+const RECOMMENDATIONS = {
+  SPEEDING:'Reducí la velocidad al acercarte a una rotonda; los límites bajan a medida que te aproximás al punto de ingreso.',
+  WRONG_DIRECTION:'Recordá que en una rotonda con tránsito por la derecha se circula en sentido contrario a las agujas del reloj.',
+  FAILED_TO_YIELD:'Antes de ingresar a la rotonda, cedé el paso a los vehículos que ya están circulando dentro de ella.',
+  INCORRECT_ROUNDABOUT_ENTRY:'Verificá la prioridad y la velocidad antes de ingresar a la rotonda.',
+  WRONG_EXIT:'Contá los brazos de la rotonda antes de entrar para tomar la salida correcta.',
+  COLLISION_SMALL:'Mantené distancia con el mobiliario urbano (postes, señales) al tomar las curvas.',
+  COLLISION_CURB:'Cuidá la trayectoria para no invadir la isla central de la rotonda.',
+  COLLISION_VEHICLE:'Guardá distancia de seguridad con los demás vehículos que circulan en la rotonda.',
+  LEFT_ROAD:'Mantené el vehículo dentro de los límites de la vía en todo momento.',
+  SIGNAL_NOT_USED:'Recordá utilizar la direccional antes de abandonar una rotonda para comunicar tu intención a los demás conductores.',
+  WRONG_SIGNAL:'Verificá que la direccional que activás corresponda con el lado real de tu salida.',
+  LANE_CHANGE_NO_SIGNAL:'Al cambiar de carril dentro de la rotonda, señalizá hacia el lado al que te movés: derecha si vas hacia el carril exterior, izquierda si volvés al interior.'
+};
+
+/* =========================================================================
+   DRIVING RULES ENGINE — motor central de evaluación
+   ========================================================================= */
+const DrivingRulesEngine = {
+  currentSpeedLimit: LEVEL_CONFIG.speedLimits.approach,
+  yieldWaiting:false,
+  yieldResolved:false,
+  enteredRing:false,
+  prevTheta:null,
+  wrongDirAccum:0,
+  levelActive:false,
+  lastLaneBand:null,
+
+  reset(){
+    this.currentSpeedLimit = LEVEL_CONFIG.speedLimits.approach;
+    this.yieldWaiting=false; this.yieldResolved=false; this.enteredRing=false;
+    this.prevTheta=null; this.wrongDirAccum=0; this.levelActive=true; this.exitDecided=false;
+    this.lastLaneBand=null;
+  },
+
+  enteringYieldZone(){
+    this.yieldWaiting = true;
+  },
+
+  aiConflict(){
+    const ai = TrafficManager.vehicles[0];
+    if(!ai) return false;
+    const t = ai.thetaDeg;
+    return t>200 && t<270;
+  },
+
+  update(dt, player){
+    if(!this.levelActive) return;
+
+    // velocidad
+    const kmh = player.speedKmh();
+    if(kmh > this.currentSpeedLimit + 4){
+      ScoreManager.register('SPEEDING', {cooldown:2500});
+    }
+
+    // ¿está sobre la vía?
+    player.onRoad = RoadSurface.isOnRoad(player.pos);
+    if(!player.onRoad){
+      const dCenter = Math.hypot(player.pos.x, player.pos.z);
+      if(dCenter < GEOM.innerRadius+player.radius){
+        ScoreManager.register('COLLISION_CURB', {cooldown:1800});
+      } else {
+        ScoreManager.register('LEFT_ROAD', {cooldown:2500});
+      }
+    }
+
+    // prioridad / ceda el paso: se resuelve cuando el jugador cruza al anillo
+    const distCenter = Math.hypot(player.pos.x, player.pos.z);
+    const nearSouthEntry = distCenter < GEOM.outerRadius+2 && distCenter > GEOM.innerRadius-2;
+    if(this.yieldWaiting && !this.enteredRing){
+      if(distCenter <= GEOM.outerRadius){
+        // el jugador intenta entrar al anillo
+        this.enteredRing = true;
+        if(this.aiConflict()){
+          ScoreManager.register('FAILED_TO_YIELD', {cooldown:6000});
+        } else if(!this.yieldResolved){
+          ScoreManager.register('SUCCESSFUL_YIELD', {cooldown:6000});
+        }
+      } else if(!this.aiConflict()){
+        this.yieldResolved = true; // ya pasó el auto, puede entrar tranquilo
+      }
+    }
+
+    // sentido de circulación dentro del anillo
+    if(distCenter < GEOM.outerRadius+1 && distCenter > GEOM.innerRadius-1){
+      const theta = normDeg(Math.atan2(-player.pos.z, player.pos.x)*180/Math.PI);
+      if(this.prevTheta!==null){
+        let delta = theta - this.prevTheta;
+        if(delta>180) delta-=360; if(delta<-180) delta+=360;
+        if(Math.abs(player.speed)>0.5){
+          if(delta<-0.15) this.wrongDirAccum += -delta;
+          else this.wrongDirAccum = Math.max(0,this.wrongDirAccum-0.5);
+          if(this.wrongDirAccum > 20 && !ScoreManager.criticalErrors.includes('WRONG_DIRECTION')){
+            ScoreManager.register('WRONG_DIRECTION', {});
+          }
+        }
+      }
+      this.prevTheta = theta;
+    }
+
+    // cambio de carril dentro de la rotonda: exige usar la direccional correspondiente
+    // (carril interior -> exterior = direccional derecha; exterior -> interior = direccional izquierda)
+    if(distCenter > GEOM.innerRadius+0.5 && distCenter < GEOM.outerRadius-0.5){
+      const band = distCenter < GEOM.ringCenter ? 'inner' : 'outer';
+      if(this.lastLaneBand!==null && band!==this.lastLaneBand && Math.abs(player.speed)>1){
+        if(band==='outer'){
+          // se movió hacia afuera: debía usar la direccional derecha
+          if(!player.signalRight){
+            ScoreManager.register('LANE_CHANGE_NO_SIGNAL', {cooldown:3000});
+          }
+        } else {
+          // se movió hacia adentro: debía usar la direccional izquierda
+          if(!player.signalLeft){
+            ScoreManager.register('LANE_CHANGE_NO_SIGNAL', {cooldown:3000});
+          }
+        }
+      }
+      this.lastLaneBand = band;
+    }
+
+    // colisiones con obstáculos estáticos
+    for(const ob of SceneBuilder.obstacles){
+      const d = Math.hypot(player.pos.x-ob.pos.x, player.pos.z-ob.pos.z);
+      if(d < ob.radius+player.radius){
+        ScoreManager.register('COLLISION_SMALL', {cooldown:2000});
+        const push = new THREE.Vector3(player.pos.x-ob.pos.x, 0, player.pos.z-ob.pos.z).normalize().multiplyScalar(0.15);
+        player.pos.add(push); player.speed *= 0.5;
+      }
+    }
+    // colisión con tráfico
+    const ai = TrafficManager.vehicles[0];
+    if(ai){
+      const d = Math.hypot(player.pos.x-ai.pos.x, player.pos.z-ai.pos.z);
+      if(d < ai.radius+player.radius){
+        ScoreManager.register('COLLISION_VEHICLE', {cooldown:3000});
+        const push = new THREE.Vector3(player.pos.x-ai.pos.x,0,player.pos.z-ai.pos.z).normalize().multiplyScalar(0.2);
+        player.pos.add(push); player.speed *= 0.4;
+      }
+    }
+  },
+
+  evaluateExit(zone){
+    if(!this.levelActive) return;
+    if(this.exitDecided) return; // ya se evaluó la salida tomada en este intento
+    this.exitDecided = true;
+
+    const ORDINALS = {1:'primera',2:'segunda',3:'tercera'};
+    // señalización: se espera direccional derecha activa >=0.9s antes de este punto
+    // (esta comprobación aplica siempre, sin importar cuál salida se tome)
+    const nowActiveRight = VehicleRef.player.signalRight;
+    const rightHeldLongEnough = nowActiveRight && VehicleRef.player.signalRightSince && (performance.now()-VehicleRef.player.signalRightSince>900);
+    const leftActive = VehicleRef.player.signalLeft;
+
+    if(leftActive && !nowActiveRight){
+      ScoreManager.register('WRONG_SIGNAL', {cooldown:99999});
+    } else if(!rightHeldLongEnough){
+      ScoreManager.register('SIGNAL_NOT_USED', {cooldown:99999});
+    }
+
+    if(zone.isTarget){
+      ScoreManager.register('CORRECT_EXIT', {});
+      CheckpointManager.lastExitWasTarget = true;
+      CheckpointManager.lastExitLabel = 'Tomaste correctamente la primera salida.';
+      Bus.emit('correctExitTaken', {});
+    } else {
+      ScoreManager.register('WRONG_EXIT', {});
+      CheckpointManager.lastExitWasTarget = false;
+      CheckpointManager.lastExitLabel = 'Tomaste la '+(ORDINALS[zone.order]||zone.order+'ª')+' salida en lugar de la primera.';
+      Bus.emit('wrongExitTaken', {arm:zone.arm});
+    }
+  }
+};
+
+const RoadSurface = {
+  isOnRoad(pos){
+    const d = Math.hypot(pos.x,pos.z);
+    if(d>=GEOM.innerRadius-0.4 && d<=GEOM.outerRadius+0.4) return true;
+    for(const key in ARMS){
+      const theta = ARMS[key]*Math.PI/180;
+      const dir = new THREE.Vector3(Math.cos(theta),0,-Math.sin(theta));
+      const perp = new THREE.Vector3(-dir.z,0,dir.x);
+      const radial = pos.x*dir.x + pos.z*dir.z;
+      const lateral = pos.x*perp.x + pos.z*perp.z;
+      if(radial>GEOM.outerRadius-2 && radial<GEOM.outerRadius+GEOM.armLength && Math.abs(lateral)<GEOM.armHalfWidth){
+        return true;
+      }
+    }
+    return false;
+  }
+};
+
+/* =========================================================================
+   UI MANAGER
+   ========================================================================= */
+const UIManager = {
+  toastWrap:null,
+  init(){
+    this.toastWrap = document.getElementById('toasts');
+    document.getElementById('score-val').textContent='100';
+  },
+  updateScore(v){ document.getElementById('score-val').textContent = Math.round(v); },
+  updateSpeed(kmh, limit){
+    document.getElementById('speed-val').textContent = Math.round(kmh);
+    document.getElementById('limit-val').textContent = 'Límite: '+Math.round(limit);
+  },
+  updateSignals(left,right){
+    document.getElementById('sig-left').classList.toggle('active', left);
+    document.getElementById('sig-right').classList.toggle('active', right);
+  },
+  showApproaching(){
+    const el = document.getElementById('approaching-msg');
+    el.style.opacity = '1';
+    setTimeout(()=>{ el.style.opacity='0'; }, 2600);
+  },
+  toast(label, delta, kind){
+    const div = document.createElement('div');
+    div.className = 'toast '+kind;
+    div.textContent = (delta>0? '+':'')+delta+' · '+label;
+    this.toastWrap.appendChild(div);
+    setTimeout(()=>div.remove(), 2000);
+  },
+  setDebugVisible(on){
+    document.getElementById('debug-badge').style.display = on? 'block':'none';
+    document.getElementById('debug-log').style.display = on? 'block':'none';
+  },
+  debugLog(msg){
+    const el = document.getElementById('debug-log');
+    if(!el) return;
+    const line = document.createElement('div');
+    line.textContent = msg;
+    el.appendChild(line);
+    el.scrollTop = el.scrollHeight;
+    while(el.childNodes.length>60) el.removeChild(el.firstChild);
+  }
+};
+
+/* =========================================================================
+   RESULTS MANAGER
+   ========================================================================= */
+const ResultsManager = {
+  show(passedExit, exitLabel, stoppedEarly){
+    const score = ScoreManager.score;
+    const critical = ScoreManager.criticalErrors;
+    const passed = stoppedEarly
+      ? (critical.length===0 && score>=LEVEL_CONFIG.passingScore)
+      : (passedExit && critical.length===0 && score>=LEVEL_CONFIG.passingScore);
+
+    document.getElementById('screen-results').classList.remove('hidden');
+    document.getElementById('hud').style.display='none';
+    document.getElementById('mobile-controls').style.display='none';
+
+    document.getElementById('res-score').textContent = Math.round(score);
+    const eyebrow = document.getElementById('res-eyebrow');
+    if(stoppedEarly){
+      eyebrow.textContent = 'Prueba detenida';
+    } else if(critical.length>0){
+      eyebrow.textContent = 'Nivel no superado';
+    } else if(passed){
+      eyebrow.textContent = 'Nivel completado';
+    } else {
+      eyebrow.textContent = 'Nivel finalizado';
+    }
+    const badge = document.getElementById('res-badge');
+    let grade = 'Debe repetir';
+    if(score>=90) grade='Excelente'; else if(score>=80) grade='Muy bien'; else if(score>=70) grade='Aprobado';
+    badge.textContent = passed? grade : 'No aprobado';
+    badge.className = 'badge '+(passed?'pass':'fail');
+
+    const critBanner = document.getElementById('res-critical');
+    if(critical.length>0){
+      critBanner.classList.remove('hidden');
+      critBanner.textContent = 'Nivel no aprobado por error crítico: '+critical.map(c=>VIOLATION_LABELS[c]||c).join(', ');
+    } else if(stoppedEarly){
+      critBanner.classList.remove('hidden');
+      critBanner.textContent = exitLabel || 'El nivel se detuvo automáticamente.';
+    } else if(!passedExit){
+      critBanner.classList.remove('hidden');
+      critBanner.textContent = exitLabel || 'No llegaste a completar la ruta esperada de la primera salida.';
+    } else {
+      critBanner.classList.add('hidden');
+    }
+
+    // categorías
+    const v = ScoreManager.violations;
+    const cat = {
+      'Control de velocidad': Math.max(0, 20 - 5*(v.SPEEDING||0)),
+      'Señalización': Math.max(0, 20 - 5*((v.SIGNAL_NOT_USED||0)+(v.WRONG_SIGNAL||0)+(v.LANE_CHANGE_NO_SIGNAL||0))),
+      'Prioridad': Math.max(0, 25 - 15*(v.FAILED_TO_YIELD||0)),
+      'Circulación': Math.max(0, 25 - 25*((v.WRONG_EXIT||0)+(v.WRONG_DIRECTION||0))),
+      'Seguridad': Math.max(0, 10 - 3*((v.COLLISION_SMALL||0)+(v.COLLISION_CURB||0)) - 5*(v.COLLISION_VEHICLE||0) - 2*(v.LEFT_ROAD||0))
+    };
+    const maxes = {'Control de velocidad':20,'Señalización':20,'Prioridad':25,'Circulación':25,'Seguridad':10};
+    const table = document.getElementById('res-cats');
+    table.innerHTML='';
+    Object.entries(cat).forEach(([name,val])=>{
+      const tr = document.createElement('tr');
+      const max = maxes[name];
+      tr.innerHTML = `<td style="width:55%">${name}<div class="bar-bg"><div class="bar-fill" style="width:${Math.max(0,val)/max*100}%"></div></div></td><td>${Math.max(0,Math.round(val))}/${max}</td>`;
+      table.appendChild(tr);
+    });
+
+    // infracciones
+    const list = document.getElementById('res-viol-list');
+    list.innerHTML='';
+    const violKeys = Object.keys(v);
+    if(violKeys.length===0){
+      const li = document.createElement('li');
+      li.className = 'viol-empty';
+      li.innerHTML = '<span class="viol-icon" style="background:var(--green);">✓</span><span>Ninguna — excelente manejo.</span>';
+      list.appendChild(li);
+    } else {
+      violKeys.forEach(k=>{
+        const li = document.createElement('li');
+        li.className = 'viol-item';
+        li.innerHTML = '<span class="viol-icon">!</span><span>'+(VIOLATION_LABELS[k]||k)+'</span><span class="viol-count">×'+v[k]+'</span>';
+        list.appendChild(li);
+      });
+    }
+
+    // recomendaciones
+    const recoWrap = document.getElementById('res-reco');
+    recoWrap.innerHTML='';
+    if(violKeys.length===0){
+      const d = document.createElement('div'); d.className='reco';
+      d.textContent = 'Mantené este nivel de atención: identificaste correctamente la prioridad, la velocidad y la señalización.';
+      recoWrap.appendChild(d);
+    } else {
+      violKeys.forEach(k=>{
+        if(RECOMMENDATIONS[k]){
+          const d = document.createElement('div'); d.className='reco';
+          d.textContent = RECOMMENDATIONS[k];
+          recoWrap.appendChild(d);
+        }
+      });
+    }
+
+    // guardar resultado (localStorage) — preparado para enviarse luego a una API
+    const result = {
+      levelId: LEVEL_CONFIG.levelId,
+      scenario: LEVEL_CONFIG.scenario,
+      score: Math.round(score),
+      passed: passed,
+      duration: Math.round((performance.now()-LevelManager.startTime)/1000),
+      violations: violKeys.map(k=>({type:k, count:v[k]})),
+      criticalErrors: critical,
+      completedAt: new Date().toISOString()
+    };
+    try{
+      const key = 'edudrive_level1_results';
+      const arr = JSON.parse(localStorage.getItem(key)||'[]');
+      arr.push(result);
+      localStorage.setItem(key, JSON.stringify(arr));
+    }catch(e){}
+
+    AudioManager.finish();
+  }
+};
+
+/* =========================================================================
+   LEVEL MANAGER / GAME MANAGER
+   ========================================================================= */
+/* =========================================================================
+   GOAL MARKER — flecha 3D amarilla flotante sobre el punto de llegada
+   ========================================================================= */
+const GoalMarker = {
+  group: null,
+  baseY: 4.2,
+  t: 0,
+
+  targetPos(){
+    // el punto de llegada de este nivel: la meta de la primera salida (brazo Este)
+    return polarPos(ARMS.east, GEOM.outerRadius+GEOM.armLength-4);
+  },
+
+  init(scene){
+    this.remove(scene);
+    const target = this.targetPos();
+    const mat = new THREE.MeshBasicMaterial({color:0xffe600});
+
+    const group = new THREE.Group();
+
+    // vara del asta
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.42,3.2,12), mat);
+    shaft.position.y = 1.9;
+    group.add(shaft);
+
+    // punta de flecha apuntando hacia abajo (hacia el punto de llegada)
+    const head = new THREE.Mesh(new THREE.ConeGeometry(1.5,2.6,14), mat);
+    head.position.y = 0.0;
+    head.rotation.x = Math.PI; // invierte el cono para que la punta mire al suelo
+    group.add(head);
+
+    // halo/brillo debajo, sobre el pavimento, para marcar el punto exacto
+    const halo = new THREE.Mesh(
+      new THREE.RingGeometry(1.6,2.3,24),
+      new THREE.MeshBasicMaterial({color:0xffe600, transparent:true, opacity:0.55, side:THREE.DoubleSide})
+    );
+    halo.rotation.x = -Math.PI/2;
+    halo.position.y = -this.baseY+0.06; // relativo al grupo, queda pegado al piso
+    group.add(halo);
+    this.halo = halo;
+
+    group.position.set(target.x, this.baseY, target.z);
+    scene.add(group);
+    this.group = group;
+    this.t = 0;
+  },
+
+  update(dt){
+    if(!this.group) return;
+    this.t += dt;
+    // animación: sube y baja suavemente, y gira sobre su propio eje para verse desde cualquier ángulo
+    this.group.position.y = this.baseY + Math.sin(this.t*1.8)*0.35;
+    this.group.rotation.y += dt*1.4;
+    if(this.halo) this.halo.scale.setScalar(1 + Math.sin(this.t*3)*0.12);
+  },
+
+  remove(scene){
+    if(this.group){ scene.remove(this.group); this.group = null; }
+  }
+};
+
+/* =========================================================================
+   ROUTE PATH — flechas guía en el pavimento marcando la ruta sugerida
+   (carril de entrada → anillo por el carril exterior → carril de salida)
+   ========================================================================= */
+const RoutePath = {
+  markers: [],
+  chevronGeo: null,
+  tGlobal: 0,
+
+  ensureGeo(){
+    if(!this.chevronGeo){
+      const g = new THREE.ConeGeometry(0.48, 1.15, 3);
+      g.rotateX(-Math.PI/2); // apex queda apuntando hacia local -Z tras el "bake"
+      this.chevronGeo = g;
+    }
+    return this.chevronGeo;
+  },
+
+  perpAt(thetaDeg){
+    const t = thetaDeg*Math.PI/180;
+    return new THREE.Vector3(Math.sin(t),0,Math.cos(t));
+  },
+
+  buildWaypoints(){
+    const hw = GEOM.armHalfWidth, laneOff = hw/2;
+    const pts = [];
+    // brazo sur — carril de entrada (derecha), desde la salida del jugador hacia la rotonda
+    const pS = this.perpAt(ARMS.south).multiplyScalar(-laneOff);
+    [GEOM.outerRadius+GEOM.armLength-7, GEOM.outerRadius+24, GEOM.outerRadius+9, GEOM.outerRadius+1.5]
+      .forEach(r=> pts.push(polarPos(ARMS.south,r).add(pS)));
+    // anillo — carril exterior, de Sur(270°) a Este(360°) en sentido antihorario
+    for(let t=270;t<=360;t+=15){ pts.push(polarPos(t, GEOM.laneOuter)); }
+    // brazo este — carril de salida, hasta la meta
+    const pE = this.perpAt(ARMS.east).multiplyScalar(laneOff);
+    [GEOM.outerRadius+1.5, GEOM.outerRadius+14, GEOM.outerRadius+GEOM.armLength-7]
+      .forEach(r=> pts.push(polarPos(ARMS.east,r).add(pE)));
+    return pts;
+  },
+
+  build(scene){
+    this.clear(scene);
+    const geo = this.ensureGeo();
+    const pts = this.buildWaypoints();
+    const spacing = 3.0;
+    for(let i=0;i<pts.length-1;i++){
+      const a = pts[i], b = pts[i+1];
+      const segLen = a.distanceTo(b);
+      const steps = Math.max(1, Math.round(segLen/spacing));
+      for(let s=0;s<steps;s++){
+        const tpar = steps>1? s/steps : 0;
+        const pos = a.clone().lerp(b, tpar);
+        const dirVec = b.clone().sub(a);
+        if(dirVec.lengthSq()<1e-6) dirVec.set(0,0,-1); else dirVec.normalize();
+        const mat = new THREE.MeshBasicMaterial({color:0x33c9ff, transparent:true, opacity:0.7, depthWrite:false});
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(pos.x, 0.22, pos.z);
+        // orienta el chevron para que apunte en la dirección de avance del tramo
+        mesh.rotation.y = Math.atan2(-dirVec.x, -dirVec.z);
+        mesh.visible = this.visible;
+        scene.add(mesh);
+        this.markers.push({mesh});
+      }
+    }
+  },
+
+  update(dt){
+    this.tGlobal += dt;
+    const n = this.markers.length;
+    for(let i=0;i<n;i++){
+      const m = this.markers[i];
+      const phase = this.tGlobal*2.6 - i*0.3;
+      const wave = 0.5+0.5*Math.sin(phase);
+      m.mesh.material.opacity = 0.25 + 0.65*wave;
+      m.mesh.position.y = 0.22 + wave*0.14;
+    }
+  },
+
+  clear(scene){
+    this.markers.forEach(m=>scene.remove(m.mesh));
+    this.markers = [];
+  },
+
+  visible: true,
+  setVisible(v){
+    this.visible = v;
+    this.markers.forEach(m=>{ m.mesh.visible = v; });
+    const btn = document.getElementById('btn-toggle-route');
+    if(btn){
+      btn.textContent = '🧭 Ruta: '+(v?'ON':'OFF');
+      btn.classList.toggle('off', !v);
+    }
+  }
+};
+
+const VehicleRef = {};
+
+const LevelManager = {
+  startTime:0,
+  finished:false,
+
+  setup(scene){
+    CheckpointManager.init();
+    ScoreManager.reset();
+    DrivingRulesEngine.reset();
+    TrafficManager.init(scene);
+    GoalMarker.init(scene);
+    RoutePath.build(scene);
+    // el jugador aparece en el carril derecho (carril de entrada) de la vía sur,
+    // no en el centro de la calle — igual que la marca de "CEDA" y la señal de ceda el paso.
+    const southT = ARMS.south*Math.PI/180;
+    const southPerp = new THREE.Vector3(Math.sin(southT),0,Math.cos(southT));
+    const startPos = polarPos(ARMS.south, GEOM.outerRadius+GEOM.armLength-5)
+      .add(southPerp.multiplyScalar(-(GEOM.armHalfWidth/2)));
+    const player = new VehicleController(scene, 0x2f7dfa, startPos, 0);
+    VehicleRef.player = player;
+    this.startTime = performance.now();
+    this.finished = false;
+  },
+
+  finish(exitCorrect, exitLabel){
+    if(this.finished) return;
+    this.finished = true;
+    DrivingRulesEngine.levelActive = false;
+    ResultsManager.show(exitCorrect, exitLabel);
+  },
+
+  stopEarly(reason){
+    if(this.finished) return;
+    this.finished = true;
+    DrivingRulesEngine.levelActive = false;
+    ResultsManager.show(false, reason, true);
+  }
+};
+
+Bus.on('turnSignalActivated', data=>{
+  const p = VehicleRef.player; if(!p) return;
+  if(data.side==='left') p.setSignal('left', !p.signalLeft);
+  else p.setSignal('right', !p.signalRight);
+  AudioManager.click();
+});
+
+/* =========================================================================
+   GAME MANAGER — orquesta escenas, loop y flujo de pantallas
+   ========================================================================= */
+const GameManager = {
+  scene:null, camera:null, renderer:null, camCtrl:null, clock:null,
+
+  init(){
+    UIManager.init();
+    InputManager.init();
+    MobileInputController.init();
+    this.scene = SceneBuilder.build();
+
+    const holder = document.getElementById('canvas-holder');
+    this.camera = new THREE.PerspectiveCamera(62, window.innerWidth/window.innerHeight, 0.1, 500);
+    this.renderer = new THREE.WebGLRenderer({antialias:true});
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.shadowMap.enabled = true;
+    holder.appendChild(this.renderer.domElement);
+    this.camCtrl = new CameraController(this.camera);
+    this.clock = new THREE.Clock();
+
+    window.addEventListener('resize', ()=>{
+      this.camera.aspect = window.innerWidth/window.innerHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    this.bindScreens();
+    this.animate();
+  },
+
+  bindScreens(){
+    document.getElementById('btn-goto-objective').addEventListener('click', ()=>{
+      AudioManager.click();
+      document.getElementById('screen-start').classList.add('hidden');
+      document.getElementById('screen-objective').classList.remove('hidden');
+    });
+    document.getElementById('btn-start-driving').addEventListener('click', ()=>{
+      AudioManager.click();
+      document.getElementById('screen-objective').classList.add('hidden');
+      document.getElementById('hud').style.display='block';
+      if(MobileInputController.isMobile()) document.getElementById('mobile-controls').style.display='block';
+      LevelManager.setup(this.scene);
+    });
+    document.getElementById('btn-retry').addEventListener('click', ()=>{
+      AudioManager.click();
+      this.restartLevel();
+    });
+    document.getElementById('btn-next').addEventListener('click', ()=>{
+      AudioManager.click();
+      this.restartLevel(); // Nivel 2 aún no existe: se prepara el flujo para agregarlo luego
+    });
+    document.getElementById('btn-toggle-route').addEventListener('click', ()=>{
+      AudioManager.click();
+      RoutePath.setVisible(!RoutePath.visible);
+    });
+  },
+
+  restartLevel(){
+    // limpia vehículo y tráfico anterior
+    if(VehicleRef.player) this.scene.remove(VehicleRef.player.mesh);
+    TrafficManager.vehicles.forEach(v=>this.scene.remove(v.mesh));
+    TrafficManager.vehicles = [];
+    CheckpointManager.visited.clear();
+    document.getElementById('screen-results').classList.add('hidden');
+    document.getElementById('hud').style.display='block';
+    if(MobileInputController.isMobile()) document.getElementById('mobile-controls').style.display='block';
+    LevelManager.setup(this.scene);
+  },
+
+  animate(){
+    requestAnimationFrame(()=>this.animate());
+    const dt = Math.min(0.05, this.clock.getDelta());
+    GoalMarker.update(dt);
+    RoutePath.update(dt);
+    if(VehicleRef.player && DrivingRulesEngine.levelActive){
+      InputManager.recompute();
+      VehicleRef.player.update(dt, InputManager.state);
+      TrafficManager.update(dt);
+      CheckpointManager.update(VehicleRef.player.pos);
+      DrivingRulesEngine.update(dt, VehicleRef.player);
+      this.camCtrl.update(dt, VehicleRef.player);
+      UIManager.updateSpeed(VehicleRef.player.speedKmh(), DrivingRulesEngine.currentSpeedLimit);
+      UIManager.updateSignals(VehicleRef.player.signalLeft, VehicleRef.player.signalRight);
+    }
+    this.renderer.render(this.scene, this.camera);
+  }
+};
+
+GameManager.init();
+</script>
+</body>
+</html>

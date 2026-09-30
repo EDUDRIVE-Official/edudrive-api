@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Modules\AiGovernance\Infrastructure\Persistence\Eloquent\Repositories;
 
-use DateTimeImmutable;
 use Modules\AiGovernance\Domain\Aggregates\AiProviderEvaluation;
 use Modules\AiGovernance\Domain\Enums\AiProviderApprovalStatus;
 use Modules\AiGovernance\Domain\Repositories\AiProviderEvaluationRepository;
 use Modules\AiGovernance\Domain\ValueObjects\AiProviderEvaluationId;
 use Modules\AiGovernance\Infrastructure\Persistence\Eloquent\Models\AiProviderEvaluationModel;
+use Modules\Foundation\Infrastructure\Persistence\DatabaseDate;
 
 final readonly class EloquentAiProviderEvaluationRepository implements AiProviderEvaluationRepository
 {
@@ -23,8 +23,8 @@ final readonly class EloquentAiProviderEvaluationRepository implements AiProvide
                 'retention_policy' => $evaluation->retentionPolicy(),
                 'security_review_notes' => $evaluation->securityReviewNotes(),
                 'approval_status' => $evaluation->approvalStatus()->value,
-                'reviewed_at' => $evaluation->reviewedAt(),
-                'next_review_due_at' => $evaluation->nextReviewDueAt(),
+                'reviewed_at' => DatabaseDate::normalize($evaluation->reviewedAt()),
+                'next_review_due_at' => DatabaseDate::normalize($evaluation->nextReviewDueAt()),
             ],
         );
     }
@@ -60,8 +60,8 @@ final readonly class EloquentAiProviderEvaluationRepository implements AiProvide
             retentionPolicy: (string) $model->getAttribute('retention_policy'),
             securityReviewNotes: $model->getAttribute('security_review_notes') === null ? null : (string) $model->getAttribute('security_review_notes'),
             approvalStatus: AiProviderApprovalStatus::from((string) $model->getAttribute('approval_status')),
-            reviewedAt: $reviewedAt === null ? null : new DateTimeImmutable((string) $reviewedAt),
-            nextReviewDueAt: $nextReviewDueAt === null ? null : new DateTimeImmutable((string) $nextReviewDueAt),
+            reviewedAt: $reviewedAt === null ? null : DatabaseDate::restore($reviewedAt),
+            nextReviewDueAt: $nextReviewDueAt === null ? null : DatabaseDate::restore($nextReviewDueAt),
         );
     }
 }

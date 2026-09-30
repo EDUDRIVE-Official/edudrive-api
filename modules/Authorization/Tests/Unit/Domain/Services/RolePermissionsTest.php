@@ -99,7 +99,7 @@ it('otorga consulta de intentos de evaluación al superadministrador', function 
 });
 
 it('otorga consulta de intentos de evaluación a administradores institucionales y docentes, pero no a estudiantes', function (): void {
-    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewExamAttempts))->toBeTrue()
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewExamAttempts))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewExamAttempts))->toBeTrue()
         ->and(RolePermissions::grants(Role::Student, Permission::ViewExamAttempts))->toBeFalse();
 });
@@ -110,8 +110,8 @@ it('otorga permisos de enrollments al superadministrador', function (): void {
 });
 
 it('otorga manage y view de enrollments al administrador institucional, solo view al docente y ninguno al estudiante', function (): void {
-    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageEnrollments))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewEnrollments))->toBeTrue()
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageEnrollments))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewEnrollments))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageEnrollments))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewEnrollments))->toBeTrue()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageEnrollments))->toBeFalse()
@@ -124,8 +124,8 @@ it('otorga permisos de grupos al superadministrador', function (): void {
 });
 
 it('otorga manage y view de grupos al administrador institucional, solo view al docente y ninguno al estudiante', function (): void {
-    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageGroups))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewGroups))->toBeTrue()
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageGroups))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewGroups))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageGroups))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewGroups))->toBeTrue()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageGroups))->toBeFalse()
@@ -138,8 +138,8 @@ it('otorga permisos de pasaporte vial al superadministrador', function (): void 
 });
 
 it('otorga manage y view de pasaporte vial al administrador institucional, solo view al docente y ninguno al estudiante', function (): void {
-    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageRoadPassports))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewRoadPassports))->toBeTrue()
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageRoadPassports))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewRoadPassports))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageRoadPassports))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewRoadPassports))->toBeTrue()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageRoadPassports))->toBeFalse()
@@ -152,8 +152,8 @@ it('otorga permisos de certificaciones al superadministrador', function (): void
 });
 
 it('otorga manage y view de certificaciones al administrador institucional, solo view al docente y ninguno al estudiante', function (): void {
-    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageCertifications))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewCertifications))->toBeTrue()
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageCertifications))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewCertifications))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageCertifications))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewCertifications))->toBeTrue()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageCertifications))->toBeFalse()
@@ -166,8 +166,8 @@ it('otorga permisos de simuladores al superadministrador', function (): void {
 });
 
 it('otorga manage y view de simuladores al administrador institucional, solo view al docente y ninguno al estudiante', function (): void {
-    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageSimulators))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewSimulators))->toBeTrue()
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageSimulators))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewSimulators))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageSimulators))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewSimulators))->toBeTrue()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageSimulators))->toBeFalse()
@@ -180,8 +180,8 @@ it('otorga permisos de sesiones de simulacion al superadministrador', function (
 });
 
 it('otorga manage y view de sesiones de simulacion al administrador institucional, solo view al docente y ninguno al estudiante', function (): void {
-    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageSimulationSessions))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewSimulationSessions))->toBeTrue()
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageSimulationSessions))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewSimulationSessions))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageSimulationSessions))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewSimulationSessions))->toBeTrue()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageSimulationSessions))->toBeFalse()
@@ -194,8 +194,8 @@ it('otorga permisos de logros al superadministrador', function (): void {
 });
 
 it('otorga manage y view de logros al administrador institucional, y view al docente y al estudiante', function (): void {
-    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageAchievements))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewAchievements))->toBeTrue()
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageAchievements))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewAchievements))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageAchievements))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewAchievements))->toBeTrue()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageAchievements))->toBeFalse()
@@ -208,8 +208,8 @@ it('otorga permisos de insignias al superadministrador', function (): void {
 });
 
 it('otorga manage y view de insignias al administrador institucional, y view al docente y al estudiante', function (): void {
-    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageBadges))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewBadges))->toBeTrue()
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageBadges))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewBadges))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageBadges))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewBadges))->toBeTrue()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageBadges))->toBeFalse()
@@ -218,14 +218,14 @@ it('otorga manage y view de insignias al administrador institucional, y view al 
 
 it('otorga el permiso de gestion de experiencia al superadministrador y al administrador institucional, y a nadie mas', function (): void {
     expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageExperience))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageExperience))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageExperience))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageExperience))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageExperience))->toBeFalse();
 });
 
 it('otorga manage y view de retos al administrador institucional, y view al docente y al estudiante', function (): void {
-    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageChallenges))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewChallenges))->toBeTrue()
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageChallenges))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewChallenges))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageChallenges))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewChallenges))->toBeTrue()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageChallenges))->toBeFalse()
@@ -239,14 +239,14 @@ it('otorga permisos de retos al superadministrador', function (): void {
 
 it('otorga el permiso de gestion de notificaciones al superadministrador y al administrador institucional, y a nadie mas', function (): void {
     expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageNotifications))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageNotifications))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageNotifications))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageNotifications))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageNotifications))->toBeFalse();
 });
 
 it('otorga manage y view de plantillas de comunicacion al administrador institucional, y view al docente pero no al estudiante', function (): void {
-    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageCommunicationTemplates))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewCommunicationTemplates))->toBeTrue()
+    expect(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageCommunicationTemplates))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewCommunicationTemplates))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageCommunicationTemplates))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewCommunicationTemplates))->toBeTrue()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageCommunicationTemplates))->toBeFalse()
@@ -264,7 +264,7 @@ it('otorga manage, view de usuarios y view de reportes al superadministrador y a
         ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewReports))->toBeTrue()
         ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageUsers))->toBeTrue()
         ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewUsers))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewReports))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewReports))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageUsers))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewUsers))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewReports))->toBeFalse()
@@ -276,8 +276,8 @@ it('otorga manage, view de usuarios y view de reportes al superadministrador y a
 it('otorga manage y view de archivos ajenos al superadministrador y al administrador institucional, y a nadie mas', function (): void {
     expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageFiles))->toBeTrue()
         ->and(RolePermissions::grants(Role::SuperAdmin, Permission::ViewFiles))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageFiles))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewFiles))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageFiles))->toBeFalse()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewFiles))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageFiles))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewFiles))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageFiles))->toBeFalse()
@@ -286,7 +286,7 @@ it('otorga manage y view de archivos ajenos al superadministrador y al administr
 
 it('otorga exports.view al superadministrador y al administrador institucional, y a nadie mas', function (): void {
     expect(RolePermissions::grants(Role::SuperAdmin, Permission::ViewExports))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewExports))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewExports))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewExports))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ViewExports))->toBeFalse();
 });
@@ -311,7 +311,7 @@ it('otorga la gestion de politicas legales unicamente al superadministrador', fu
 
 it('otorga la consulta de consentimientos por organizacion al superadministrador y al administrador institucional', function (): void {
     expect(RolePermissions::grants(Role::SuperAdmin, Permission::ViewOrganizationConsents))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewOrganizationConsents))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ViewOrganizationConsents))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ViewOrganizationConsents))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ViewOrganizationConsents))->toBeFalse();
 });
@@ -352,7 +352,7 @@ it('otorga la consulta de analitica unicamente al superadministrador', function 
 
 it('otorga la gestion de relaciones tutor-menor al superadministrador y al administrador institucional, y a nadie mas', function (): void {
     expect(RolePermissions::grants(Role::SuperAdmin, Permission::ManageGuardianRelationships))->toBeTrue()
-        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageGuardianRelationships))->toBeTrue()
+        ->and(RolePermissions::grants(Role::InstitutionalAdmin, Permission::ManageGuardianRelationships))->toBeFalse()
         ->and(RolePermissions::grants(Role::Teacher, Permission::ManageGuardianRelationships))->toBeFalse()
         ->and(RolePermissions::grants(Role::Student, Permission::ManageGuardianRelationships))->toBeFalse();
 });

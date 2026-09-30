@@ -7,6 +7,7 @@ namespace Modules\Academic\Application\UseCases;
 use Modules\Academic\Application\Commands\ApproveCourseCommand;
 use Modules\Academic\Application\Exceptions\CourseNotFound;
 use Modules\Academic\Application\Responses\CourseStatusResponse;
+use Modules\Academic\Application\Services\CoursePublicationQualityGate;
 use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\ValueObjects\CourseId;
@@ -15,12 +16,14 @@ final readonly class ApproveCourseHandler
 {
     public function __construct(
         private CourseRepository $courses,
+        private CoursePublicationQualityGate $qualityGate,
     ) {}
 
     public function handle(
         ApproveCourseCommand $command,
     ): CourseStatusResponse {
         $courseId = CourseId::fromString($command->courseId);
+        $this->qualityGate->assertReady($courseId);
 
         $course = $this->courses->updateAtomically(
             $courseId,

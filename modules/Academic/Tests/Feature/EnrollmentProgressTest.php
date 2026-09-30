@@ -16,6 +16,7 @@ use Modules\Authorization\Domain\Enums\Role;
 use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Repositories\UserRepository;
 use Modules\Identity\Domain\ValueObjects\Email;
+use Modules\Learning\Domain\Repositories\LearningEventRepository;
 use Tests\TestCase;
 
 uses(RefreshDatabase::class);
@@ -87,10 +88,17 @@ it('completa una leccion propia', function (): void {
 
     $this->postJson("/api/v1/academic/enrollments/{$enrollment->id()->value()}/lessons/{$lessonId}/complete", [
         'time_spent_minutes' => 10,
+        'reflection' => 'Voy a observar el entorno detenidamente antes de decidir.',
+        'self_assessment' => 'voy_avanzando',
     ])->assertOk()
         ->assertJsonPath('data.completed_lessons_count', 1)
         ->assertJsonPath('data.time_spent_minutes', 10)
         ->assertJsonPath('data.progress_percentage', 100);
+
+    $events = app(LearningEventRepository::class)->findByEnrollmentId($enrollment->id()->value());
+    expect($events)->toHaveCount(1)
+        ->and($events[0]->evidence()['reflection'])->toBe('Voy a observar el entorno detenidamente antes de decidir.')
+        ->and($events[0]->evidence()['self_assessment'])->toBe('voy_avanzando');
 });
 
 it('rechaza completar una leccion ajena', function (): void {

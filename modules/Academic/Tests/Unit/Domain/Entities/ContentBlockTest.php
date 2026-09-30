@@ -7,6 +7,7 @@ use Modules\Academic\Domain\Entities\ContentBlocks\ContentBlock;
 use Modules\Academic\Domain\Entities\ContentBlocks\DownloadContentBlock;
 use Modules\Academic\Domain\Entities\ContentBlocks\ImageContentBlock;
 use Modules\Academic\Domain\Entities\ContentBlocks\InteractiveContentBlock;
+use Modules\Academic\Domain\Entities\ContentBlocks\ScenarioContentBlock;
 use Modules\Academic\Domain\Entities\ContentBlocks\TextContentBlock;
 use Modules\Academic\Domain\Entities\ContentBlocks\VideoContentBlock;
 use Modules\Academic\Domain\Enums\ContentBlockType;
@@ -45,6 +46,16 @@ function createContentBlockDirectly(string $type, int $position): ContentBlock
             'url' => 'https://activities.example.test/cruce',
             'accessible_text' => 'Alternativa accesible',
         ]),
+        'scenario' => ScenarioContentBlock::fromPayload(contentBlockId(), $position, [
+            'title' => 'Cruce seguro',
+            'context' => 'Un vehiculo estacionado bloquea la visibilidad.',
+            'prompt' => 'Que debes hacer?',
+            'accessible_text' => 'Escenario descrito completamente en texto.',
+            'choices' => [
+                ['id' => 'wait', 'label' => 'Esperar', 'feedback' => 'Bien.', 'correct' => true],
+                ['id' => 'run', 'label' => 'Correr', 'feedback' => 'No es seguro.', 'correct' => false],
+            ],
+        ]),
         'download' => DownloadContentBlock::fromPayload(contentBlockId(), $position, [
             'url' => 'https://docs.example.test/manual.pdf',
             'display_name' => 'Manual',
@@ -74,8 +85,39 @@ it('limita los tipos de bloque al catalogo soportado', function (): void {
     expect(array_map(
         static fn (ContentBlockType $type): string => $type->value,
         ContentBlockType::cases(),
-    ))->toBe(['text', 'image', 'video', 'audio', 'interactive', 'download']);
+    ))->toBe(['text', 'image', 'video', 'audio', 'interactive', 'scenario', 'download']);
 });
+
+it('crea escenarios con retroalimentacion inmediata y alternativa accesible', function (): void {
+    $block = createContentBlockDirectly('scenario', 1);
+
+    expect($block->type())->toBe(ContentBlockType::Scenario)
+        ->and($block->payload()['accessible_text'])->toBe('Escenario descrito completamente en texto.')
+        ->and($block->payload()['choices'])->toHaveCount(2);
+});
+
+it('exige una sola respuesta correcta y opciones identificables en escenarios', function (array $choices): void {
+    ContentBlockFactory::create(contentBlockId(), 'scenario', 1, [
+        'title' => 'Cruce seguro',
+        'context' => 'Debes cruzar una calle.',
+        'prompt' => '¿Qué haces?',
+        'accessible_text' => 'La situación se ofrece completamente en texto.',
+        'choices' => $choices,
+    ]);
+})->with([
+    'sin respuesta correcta' => [[
+        ['id' => 'a', 'label' => 'A', 'feedback' => 'Revisa.', 'correct' => false],
+        ['id' => 'b', 'label' => 'B', 'feedback' => 'Revisa.', 'correct' => false],
+    ]],
+    'dos respuestas correctas' => [[
+        ['id' => 'a', 'label' => 'A', 'feedback' => 'Bien.', 'correct' => true],
+        ['id' => 'b', 'label' => 'B', 'feedback' => 'Bien.', 'correct' => true],
+    ]],
+    'identificadores duplicados' => [[
+        ['id' => 'a', 'label' => 'A', 'feedback' => 'Bien.', 'correct' => true],
+        ['id' => 'a', 'label' => 'B', 'feedback' => 'Revisa.', 'correct' => false],
+    ]],
+])->throws(InvalidContentBlock::class);
 
 it('rechaza tipos de bloque desconocidos con el contrato publico', function (): void {
     try {

@@ -27,6 +27,7 @@ use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\ProgramCourseMod
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\ProgramLicenseStageModel;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\ProgramModel;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\ProgramVehicleTypeModel;
+use Modules\Foundation\Infrastructure\Persistence\DatabaseDate;
 
 final class EloquentProgramRepository implements ProgramRepository
 {
@@ -43,8 +44,8 @@ final class EloquentProgramRepository implements ProgramRepository
                         'min_age' => $program->audience()->minAge(),
                         'max_age' => $program->audience()->maxAge(),
                         'status' => $program->status()->value,
-                        'published_at' => $program->publishedAt(),
-                        'archived_at' => $program->archivedAt(),
+                        'published_at' => DatabaseDate::normalize($program->publishedAt()),
+                        'archived_at' => DatabaseDate::normalize($program->archivedAt()),
                     ],
                 );
 

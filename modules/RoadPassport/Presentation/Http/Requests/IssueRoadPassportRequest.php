@@ -17,7 +17,7 @@ final class IssueRoadPassportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'string', 'uuid'],
+            'user_id' => ['required', 'string', 'uuid', 'exists:users,id'],
         ];
     }
 }

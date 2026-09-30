@@ -60,7 +60,7 @@ it('guarda y reconstruye un programa educativo completo con sus cursos ordenados
         ])
         ->and($stored?->audience()->vehicleTypes())->toBe([VehicleType::Motorcycle])
         ->and($stored?->status())->toBe(ProgramStatus::Published)
-        ->and($stored?->publishedAt()?->format(DATE_ATOM))->toBe('2026-08-03T14:30:00+00:00')
+        ->and($stored?->publishedAt()?->getTimestamp())->toBe($program->publishedAt()?->getTimestamp())
         ->and($stored?->archivedAt())->toBeNull()
         ->and(array_map(
             static fn ($course): string => $course->courseId()->value(),

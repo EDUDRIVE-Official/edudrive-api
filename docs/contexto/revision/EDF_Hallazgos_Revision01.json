@@ -1,0 +1,126 @@
+{
+  "fecha": "2026-09-25",
+  "estado": "Revisión documental; cierre curricular pendiente",
+  "hallazgos": [
+    {
+      "id": "H01",
+      "tipo": "Contradicción",
+      "prioridad": "Cierre",
+      "titulo": "Perfil adulto sin conducción exige conducir",
+      "evidencia": "Matriz: Perfiles de salida, Movilidad permanente sin conducción; PED E4 S2, PRE E4 S2, SOS E4 S2 y criterios de PAS/COV E4.",
+      "correccion": "Separar alcance por rol y formular observables para adulto no conductor; no marcar una S de conducción aprobada o cumplida por omisión.",
+      "estado": "Solución de diseño propuesta; falta integrar fichas y perfiles."
+    },
+    {
+      "id": "H02",
+      "tipo": "Vacío de alineación",
+      "prioridad": "Cierre",
+      "titulo": "Una S carece de evidencia explícita en su actividad",
+      "evidencia": "EDU-SOS-001.E1.S3: Cuidar el espacio común. Actividad y evidencia se centran en elegir modo/ruta.",
+      "correccion": "Añadir conducta observable de cuidado del espacio, evidencia y anclas de rúbrica; separar de la elección de ruta.",
+      "estado": "Texto de corrección redactado; falta integrar y revisar las otras fichas con la misma pauta."
+    },
+    {
+      "id": "H03",
+      "tipo": "Ambigüedad de evaluación",
+      "prioridad": "Cierre",
+      "titulo": "Señal prevista de la tarea frente a pista de respuesta",
+      "evidencia": "EDU-CIC-001.E1.S2: Frenar a una indicación; regla general sin pistas y límite 1 cuando la indicación resuelve la decisión.",
+      "correccion": "Declarar antes de evaluar las señales que son estímulos de la tarea; diferenciarlas de pistas y de intervención de protección.",
+      "estado": "Aclaración redactada; aplicar por observable."
+    },
+    {
+      "id": "H04",
+      "tipo": "Contradicción",
+      "prioridad": "Corrección directa",
+      "titulo": "Número de evaluadores en retención",
+      "evidencia": "Piloto, Indicadores: doble valoración en A/B/C y seguimientos. Kit PIL-01, F02: permite R con un solo observador.",
+      "correccion": "En este piloto, dos evaluadores independientes también en R. Una toma con uno no cierra el seguimiento previsto.",
+      "estado": "Errata redactada según el documento padre; reedición pendiente."
+    },
+    {
+      "id": "H05",
+      "tipo": "Colisión de identificadores",
+      "prioridad": "Corrección directa",
+      "titulo": "F03 designa documentos diferentes",
+      "evidencia": "Piloto F03 = Seguimiento individual; kit F03 = Registro en Pasaporte Vial.",
+      "correccion": "Usar identificadores completos de documento, formulario y versión; no resolver referencias por F03 aislado.",
+      "estado": "Correspondencia de identificadores redactada; reedición pendiente."
+    },
+    {
+      "id": "H06",
+      "tipo": "Vacío de arquitectura",
+      "prioridad": "Cierre",
+      "titulo": "C2 mezcla evidencia individual y conjunto de dominio",
+      "evidencia": "Matriz, CTM: C0-C3 en calidad de evidencia; C2 exige protocolo completo. Un intento válido con P1 incompleto no queda caracterizado por esa escala.",
+      "correccion": "Separar validez/procedencia del intento y confianza de la afirmación curricular. Mantener el intento verificable aunque no conceda dominio.",
+      "estado": "Contrato conceptual propuesto; falta integración."
+    },
+    {
+      "id": "H07",
+      "tipo": "Vacío de arquitectura",
+      "prioridad": "Cierre",
+      "titulo": "Transiciones y alcance de la afirmación no están formalizados",
+      "evidencia": "Matriz, CTM y Pasaporte: enumera estados y alcance, sin una tabla completa de precedencias y unidad de decisión por rol/vehículo/modalidad.",
+      "correccion": "Identificar cada afirmación por persona, competencia, versión y alcance; fijar precedencias ante contradicción, vencimiento y retención.",
+      "estado": "Reglas propuestas; falta especificación de aceptación documental."
+    },
+    {
+      "id": "H08",
+      "tipo": "Desarrollo pendiente",
+      "prioridad": "Producción",
+      "titulo": "Ficha curricular no equivale a lección lista",
+      "evidencia": "50 fichas; cinco experiencias para cuatro códigos distintos; kit imprimible solo de PIL-01.",
+      "correccion": "Mantener inventario por código y producir recursos a partir de fichas revisadas. No medir avance por número de PDF.",
+      "estado": "Inventario de 50 códigos creado."
+    },
+    {
+      "id": "H09",
+      "tipo": "Verificación pendiente",
+      "prioridad": "Cierre normativo",
+      "titulo": "Falta registro de reglas costarricenses verificadas",
+      "evidencia": "La matriz exige registro normativo, pero no entrega relación regla-artículo-edición-vigencia-responsable por contenido. CR02 es copia institucional, no auditoría de vigencia completa.",
+      "correccion": "Completar registro y mapeo de manuales por clase antes de dar por cerrados contenidos legales.",
+      "estado": "Pendiente; este informe no certifica vigencia legal ni verifica íntegramente manuales."
+    },
+    {
+      "id": "H10",
+      "tipo": "Límite de una vista derivada",
+      "prioridad": "Cierre de integración",
+      "titulo": "El JSON no contiene todas las reglas curriculares",
+      "evidencia": "Claves raíz: documento, version, fecha, estado, nota, campos_solicitados, campos_adicionales, matriz, comparacion_THINK. Protocolos, CTM y prerrequisitos están en la narrativa.",
+      "correccion": "Definir el paquete maestro con filas y reglas versionadas antes de usarlo como fuente para sistemas; no tratar el JSON actual como contrato completo.",
+      "estado": "Límite identificado; no es un error de los campos pedidos."
+    }
+  ],
+  "fuentes_examinadas": [
+    {
+      "archivo": "output/edudrive/EDF_Matriz_Curricular_EDUDRIVE_3-80_v1.0.0.json",
+      "sha256": "4755e0d861504f84ead67acde12e62c69cf67ec77c33e63c7fe10be690b0b51e"
+    },
+    {
+      "archivo": "output/edudrive/EDF_Matriz_Curricular_EDUDRIVE_3-80_v1.0.0.md",
+      "sha256": "412c9dd01fd389668155ed1c7da1ad12ba5673a1cdb4d9e17be09450edecf9f4"
+    },
+    {
+      "archivo": "output/edudrive/piloto/EDF_Diseno_Piloto_Curricular_EDUDRIVE_v1.0.0.json",
+      "sha256": "bd5d8f8b69279aff87f25d1d32b2813123f90c619177dedeed10da3e20273726"
+    },
+    {
+      "archivo": "output/edudrive/piloto/EDF_Diseno_Piloto_Curricular_EDUDRIVE_v1.0.0.md",
+      "sha256": "8d86e95cc680c3fa3e9cf817f9986dc69e9a168e6dc6ea183e9b987957e71299"
+    },
+    {
+      "archivo": "output/edudrive/kit-pil01/PIL01_Guia_fuente_v1.0.0.md",
+      "sha256": "e5131eeb18edccae2cfa376aeba621247bed4753bfdad7e11df8c2e44551bdec"
+    },
+    {
+      "archivo": "output/pdf/PIL01_Ensayo_entre_adultos_v1.0.0.md",
+      "sha256": "6e4d22d170c4e3a8f6174fd8c0ee8b23e850a636bf778f50c69b0651ff01442d"
+    },
+    {
+      "archivo": "outputs/01a0d8ea-acc9-7221-8c70-15cb546032bf/PIL01_Control_de_aplicacion_v1.0.0.xlsx",
+      "sha256": "00aedd3ec39f3888b48e8e85ae72aab7f78f0f8707f5469f790311e25185b5d5"
+    }
+  ]
+}

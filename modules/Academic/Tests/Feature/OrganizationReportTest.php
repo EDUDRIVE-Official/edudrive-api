@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
+use Modules\Authorization\Application\Services\AccessibleOrganizationsResolver;
 use Modules\Authorization\Domain\Entities\RoleAssignment;
+use Modules\Authorization\Domain\Enums\Permission;
 use Modules\Authorization\Domain\Enums\Role;
 use Modules\Authorization\Domain\Repositories\RoleAssignmentRepository;
 use Modules\Identity\Domain\Entities\User;
@@ -64,11 +66,13 @@ it('consulta los cuatro indicadores institucionales con el permiso reports.view'
     $this->getJson('/api/v1/academic/reports/organizations/adoption')->assertOk()->assertJsonStructure(['data']);
 });
 
-it('permite consultar los indicadores institucionales al administrador institucional', function (): void {
+it('rechaza los indicadores institucionales sin reports.view aunque el rol sea administrador institucional', function (): void {
     /** @var TestCase $this */
     actingAsRole(Role::InstitutionalAdmin);
 
-    $this->getJson('/api/v1/academic/reports/organizations/participation')->assertOk();
+    foreach (['participation', 'completion', 'performance', 'adoption'] as $report) {
+        $this->getJson('/api/v1/academic/reports/organizations/'.$report)->assertForbidden();
+    }
 });
 
 it('rechaza consultar los indicadores institucionales sin el permiso reports.view', function (): void {
@@ -89,11 +93,22 @@ it('requiere autenticacion para consultar los indicadores institucionales', func
     $this->getJson('/api/v1/academic/reports/organizations/adoption')->assertUnauthorized();
 });
 
-it('limita al administrador institucional a su propia organizacion sin filtro explicito', function (): void {
+// Exercise the controller's scope contract separately from the current role matrix.
+function actingAsReportUserWithResolvedScope(string $organizationId): void
+{
+    $user = actingAsRole(Role::SuperAdmin);
+    $resolver = Mockery::mock(AccessibleOrganizationsResolver::class);
+    $resolver->shouldReceive('resolveForPermission')
+        ->once()->with((string) $user->getAuthIdentifier(), Permission::ViewReports)
+        ->andReturn([$organizationId]);
+    app()->instance(AccessibleOrganizationsResolver::class, $resolver);
+}
+
+it('limita los reportes al alcance resuelto sin filtro explicito', function (): void {
     /** @var TestCase $this */
     $own = persistedReportOrganization();
     persistedReportOrganization();
-    actingAsRoleInOrganization(Role::InstitutionalAdmin, $own->id()->value());
+    actingAsReportUserWithResolvedScope($own->id()->value());
 
     $response = $this->getJson('/api/v1/academic/reports/organizations/participation')->assertOk();
 
@@ -104,17 +119,17 @@ it('rechaza pedir explicitamente una organizacion ajena', function (): void {
     /** @var TestCase $this */
     $own = persistedReportOrganization();
     $other = persistedReportOrganization();
-    actingAsRoleInOrganization(Role::InstitutionalAdmin, $own->id()->value());
+    actingAsReportUserWithResolvedScope($own->id()->value());
 
     $this->getJson('/api/v1/academic/reports/organizations/participation?organization_ids[]='.$other->id()->value())
         ->assertStatus(403)
         ->assertJsonPath('code', 'ORGANIZATION_NOT_ACCESSIBLE');
 });
 
-it('permite al administrador institucional filtrar explicitamente por su propia organizacion', function (): void {
+it('permite filtrar explicitamente por una organizacion dentro del alcance resuelto', function (): void {
     /** @var TestCase $this */
     $own = persistedReportOrganization();
-    actingAsRoleInOrganization(Role::InstitutionalAdmin, $own->id()->value());
+    actingAsReportUserWithResolvedScope($own->id()->value());
 
     $this->getJson('/api/v1/academic/reports/organizations/participation?organization_ids[]='.$own->id()->value())
         ->assertOk()

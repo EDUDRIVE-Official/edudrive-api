@@ -47,6 +47,7 @@ final readonly class StudentProfileComposer
             ],
             enrollments: array_map(
                 static fn (Enrollment $enrollment): array => [
+                    'enrollment_id' => $enrollment->id()->value(),
                     'course_id' => $enrollment->courseId()->value(),
                     'status' => $enrollment->status()->value,
                     'enrolled_at' => $enrollment->enrolledAt()->format(DATE_ATOM),

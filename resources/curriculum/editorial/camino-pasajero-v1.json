@@ -1,0 +1,505 @@
+{
+  "id": "camino-pasajero-editorial-2026-09-20-v1",
+  "status": "editorial_draft",
+  "lessons": [
+    {
+      "lesson_id": "e67850f8-00c0-5583-b087-157e7f92813e",
+      "course_code": "EDU-EXP-001",
+      "unit": "1. Encuentra el lugar seguro",
+      "title": "Reto 1: ¿Por dónde cruzamos?",
+      "source_design_version": 2,
+      "draft_revision": 1,
+      "stage": "pending_review",
+      "proposed_stage": "discover",
+      "requires_guardian": true,
+      "objective": "Elegir entre dos lugares de cruce y justificar la elección con visibilidad y espacio protegido.",
+      "instruction": "Hoy vas a elegir dónde esperar y observar. No vas a cruzar una calle real.",
+      "blocks": [
+        {
+          "type": "text",
+          "payload": {
+            "title": "Antes de decidir",
+            "markdown": "Luna va al parque con su abuelo. La entrada está enfrente, pero dos carros estacionados tapan parte de la calle.\n\nEl lugar más cercano no siempre permite ver. Buscá dos pistas: un espacio protegido para esperar y un lugar previsto para cruzar donde puedan observar el tránsito.\n\nElegir ese lugar es el primer paso. Todavía falta comprobar si se puede cruzar."
+          }
+        },
+        {
+          "type": "scenario",
+          "payload": {
+            "title": "El atajo entre automóviles",
+            "context": "Luna y su abuelo están en la acera. Frente al parque, dos carros estacionados tapan la vista. Más adelante hay un paso peatonal al que pueden llegar por la acera.",
+            "prompt": "¿A qué lugar conviene ir para seguir observando?",
+            "accessible_text": "Luna y su abuelo están en la acera. Frente al parque, dos carros estacionados tapan la vista. Más adelante hay un paso peatonal al que pueden llegar por la acera. ¿A qué lugar conviene ir para seguir observando?",
+            "choices": [
+              {
+                "id": "paso",
+                "label": "Caminar por la acera hasta el paso peatonal.",
+                "feedback": "Elegiste llegar por la acera a un lugar previsto para cruzar. Al llegar, Luna y su abuelo todavía deben detenerse y comprobar el tránsito.",
+                "correct": true
+              },
+              {
+                "id": "atajo",
+                "label": "Pasar entre los carros para llegar directo al parque.",
+                "feedback": "Los carros ocultan a Luna y le tapan la vista. Salir entre ellos la expone antes de saber qué se acerca.",
+                "correct": false
+              },
+              {
+                "id": "correr",
+                "label": "Correr por el espacio entre los carros.",
+                "feedback": "Correr no permite ver lo que los carros ocultan. El atajo sigue teniendo el mismo problema.",
+                "correct": false
+              }
+            ],
+            "stop_at_decision_point": true
+          }
+        },
+        {
+          "type": "scenario",
+          "payload": {
+            "title": "La esquina con poca visibilidad",
+            "context": "Luna llega con su abuelo a un paso marcado. Una van estacionada impide ver parte de la calle desde la acera.",
+            "prompt": "¿Qué hacen si las líneas están pintadas, pero no pueden ver?",
+            "accessible_text": "Luna llega con su abuelo a un paso marcado. Una van estacionada impide ver parte de la calle desde la acera. ¿Qué hacen si las líneas están pintadas, pero no pueden ver?",
+            "choices": [
+              {
+                "id": "usar-igual",
+                "label": "Usar el paso porque está marcado.",
+                "feedback": "Las líneas indican un lugar de cruce, pero no muestran lo que hay detrás de la van.",
+                "correct": false
+              },
+              {
+                "id": "asomarse-calzada",
+                "label": "Bajar a la calle para mirar detrás de la van.",
+                "feedback": "Así Luna entraría en la zona de los vehículos antes de poder observarla.",
+                "correct": false
+              },
+              {
+                "id": "buscar-visible",
+                "label": "Esperar en la acera y buscar con su abuelo otro cruce con visibilidad.",
+                "feedback": "Reconociste que falta información. Permanecen protegidos mientras el adulto ayuda a buscar una alternativa; no cruzan solo porque hay líneas.",
+                "correct": true
+              }
+            ],
+            "stop_at_decision_point": true
+          }
+        },
+        {
+          "type": "text",
+          "payload": {
+            "title": "Mostrá lo que observaste",
+            "markdown": "En una imagen o maqueta, señalá un lugar protegido para esperar y un obstáculo que tape la vista. Podés señalar, describir o usar tarjetas.\n\nCompletá: «Elijo este lugar porque…» y «Todavía no cruzo porque necesito comprobar…».\n\nEsta práctica se hace dentro del aula o en casa, fuera del tránsito."
+          }
+        }
+      ],
+      "adult": "Usá una imagen o maqueta, no una salida a la vía. Pedí dos pistas antes de explicar la respuesta. Si el estudiante no las reconoce, señalá una y registrá que necesitó apoyo. No presentes el paso marcado como garantía ni este ejercicio como autorización para cruzar solo.",
+      "transfer": {
+        "case": "En un dibujo nuevo hay un cruce cercano tapado por vegetación y otro accesible por acera, con vista despejada. Ningún vehículo se muestra detenido.",
+        "prompt": "Elegí dónde esperar y explicá qué falta comprobar antes de cruzar.",
+        "observe": [
+          "Identifica un lugar protegido.",
+          "Reconoce la obstrucción.",
+          "Distingue elegir lugar de iniciar cruce."
+        ]
+      },
+      "visual": "Conservar títulos e IDs de elección. Mostrar acera, carros y campo visual; usar van en el segundo caso. Al elegir la respuesta correcta el personaje llega al punto de espera, no cruza automáticamente.",
+      "alignment": "Mantener PEATON.LUGAR como propuesta; registrar justificación por separado de lesson_completed."
+    },
+    {
+      "lesson_id": "dc052328-04a0-5e0e-8118-eab46b3a5cf7",
+      "course_code": "EDU-EXP-001",
+      "unit": "1. Encuentra el lugar seguro",
+      "title": "Reto 2: Todos compartimos la vía",
+      "source_design_version": 2,
+      "draft_revision": 1,
+      "stage": "pending_review",
+      "proposed_stage": "discover",
+      "requires_guardian": true,
+      "objective": "Identificar dos movimientos posibles y explicar qué información queda oculta antes de continuar.",
+      "instruction": "Vas a buscar quién puede moverse y qué parte de la calle no se ve.",
+      "blocks": [
+        {
+          "type": "text",
+          "payload": {
+            "title": "No todas las personas se mueven igual",
+            "markdown": "Luna camina con su abuelo. En la vía hay personas a pie, bicicletas, carros y autobuses. Algunas personas usan silla de ruedas, bastón u otros apoyos.\n\nAntes de continuar, hacé dos preguntas: «¿Quién puede moverse?» y «¿Qué no puedo observar desde aquí?».\n\nNo necesitás adivinar lo que hará cada persona. Necesitás reconocer cuándo falta información."
+          }
+        },
+        {
+          "type": "scenario",
+          "payload": {
+            "title": "El autobús en la parada",
+            "context": "Luna y su abuelo esperan en la acera. Un autobús detenido tapa parte de la calle mientras bajan pasajeros. Quieren llegar al otro lado.",
+            "prompt": "¿Qué decisión toma en cuenta la parte que no pueden ver?",
+            "accessible_text": "Luna y su abuelo esperan en la acera. Un autobús detenido tapa parte de la calle mientras bajan pasajeros. Quieren llegar al otro lado. ¿Qué decisión toma en cuenta la parte que no pueden ver?",
+            "choices": [
+              {
+                "id": "frente",
+                "label": "Cruzar por delante del autobús.",
+                "feedback": "El autobús detenido no permite saber si se acerca otro vehículo por la parte que tapa.",
+                "correct": false
+              },
+              {
+                "id": "esperar",
+                "label": "Esperar en la acera y buscar un cruce donde puedan observar.",
+                "feedback": "Identificaste un espacio oculto. Primero necesitan recuperar información; bajar pasajeros no significa que toda la calle esté libre.",
+                "correct": true
+              },
+              {
+                "id": "detras",
+                "label": "Cruzar por detrás del autobús.",
+                "feedback": "Desde atrás también pueden quedar ocultos Luna y otros vehículos. Cambiar de extremo no resuelve por sí solo la falta de vista.",
+                "correct": false
+              }
+            ]
+          }
+        },
+        {
+          "type": "scenario",
+          "payload": {
+            "title": "Movimientos que se cruzan",
+            "context": "Luna sigue en un espacio protegido de la acera con su abuelo. Un carro sale de un garaje y una bicicleta se aproxima por la vía. Ambos movimientos pueden encontrarse con su recorrido.",
+            "prompt": "¿Qué necesitan comprobar antes de seguir?",
+            "accessible_text": "Luna sigue en un espacio protegido de la acera con su abuelo. Un carro sale de un garaje y una bicicleta se aproxima por la vía. Ambos movimientos pueden encontrarse con su recorrido. ¿Qué necesitan comprobar antes de seguir?",
+            "choices": [
+              {
+                "id": "revisar-todos",
+                "label": "Qué hacen el carro y la bicicleta.",
+                "feedback": "Identificaste dos movimientos, no solo el más llamativo. Permanecen protegidos mientras comprueban ambos.",
+                "correct": true
+              },
+              {
+                "id": "solo-carro",
+                "label": "Solo que el carro termine de salir.",
+                "feedback": "Aunque pase el carro, todavía falta comprobar el movimiento de la bicicleta.",
+                "correct": false
+              },
+              {
+                "id": "avisar",
+                "label": "Entrar al recorrido de ambos y pedirles que paren.",
+                "feedback": "Para avisar no hace falta colocarse en sus trayectorias. Desde una posición protegida pueden esperar y observar.",
+                "correct": false
+              }
+            ]
+          }
+        },
+        {
+          "type": "text",
+          "payload": {
+            "title": "Dos movimientos, una decisión",
+            "markdown": "En una maqueta, el acompañante coloca un carro junto a un garaje y una bicicleta en la vía. Señalá o describí por dónde podría moverse cada uno.\n\nDespués tapa parte de la escena con una tarjeta. Decí qué información falta. No inventés que está libre lo que no podés observar.\n\nActividad de mesa: no se realiza junto a vehículos en movimiento."
+          }
+        }
+      ],
+      "adult": "Nombrá vehículos y posiciones si el estudiante usa descripción verbal o material táctil. El sonido no es requisito. Preguntá por cada movimiento por separado si necesita ayuda y registralo. No pidas cálculos de velocidad ni pruebas en tránsito.",
+      "transfer": {
+        "case": "En una maqueta nueva hay una bicicleta detenida junto a una puerta y una van que tapa una entrada. No se ve qué hay detrás.",
+        "prompt": "Nombrá un movimiento posible y una cosa que todavía no podés saber.",
+        "observe": [
+          "Distingue una posibilidad de una certeza.",
+          "Identifica información oculta.",
+          "No propone exponerse para averiguarla."
+        ]
+      },
+      "visual": "El autobús enseña ocultamiento; no representar aquí el descenso del propio jugador, que se trabaja en PR02. La escena del garaje muestra los dos movimientos, sin depender del sonido.",
+      "alignment": "PEATON.LUGAR por sí solo no representa este objetivo. Proponer revisión con RIESGO.DETECTA/RIESGO.ANTICIPA y la competencia correspondiente; no cambiar automáticamente la vinculación."
+    },
+    {
+      "lesson_id": "11a8de85-50f4-5f65-acbc-42d0a621ad80",
+      "course_code": "EDU-EXP-001",
+      "unit": "1. Encuentra el lugar seguro",
+      "title": "Reto 3: Una ruta segura para todas las personas",
+      "source_design_version": 2,
+      "draft_revision": 1,
+      "stage": "pending_review",
+      "proposed_stage": "discover",
+      "requires_guardian": true,
+      "objective": "Comparar dos recorridos y justificar una alternativa que mantenga un paso continuo y accesible.",
+      "instruction": "Vas a comparar dos rutas y pedir apoyo cuando una barrera impide continuar.",
+      "blocks": [
+        {
+          "type": "text",
+          "payload": {
+            "title": "Una ruta que permita pasar",
+            "markdown": "Luna va con su abuelo. La ruta corta tiene una acera bloqueada. Otra ruta permite seguir por la acera hasta un cruce con visibilidad.\n\nCompará por dónde se puede caminar o desplazarse sin entrar a la zona de los carros. Una rampa bloqueada también puede impedir el paso de alguien que usa silla de ruedas.\n\nNo te corresponde mover barreras ni dirigir a otras personas."
+          }
+        },
+        {
+          "type": "scenario",
+          "payload": {
+            "title": "Dos caminos a la escuela",
+            "context": "Luna y su abuelo comparan dos rutas. En la corta, una obra tapa toda la acera. La otra tiene acera continua y un cruce marcado con visibilidad.",
+            "prompt": "¿Qué ruta les permite llegar al cruce sin rodear la obra por la calle?",
+            "accessible_text": "Luna y su abuelo comparan dos rutas. En la corta, una obra tapa toda la acera. La otra tiene acera continua y un cruce marcado con visibilidad. ¿Qué ruta les permite llegar al cruce sin rodear la obra por la calle?",
+            "choices": [
+              {
+                "id": "corta",
+                "label": "La corta, porque ya la conocen.",
+                "feedback": "Conocer la ruta no quita la obra. Hoy su acera está bloqueada.",
+                "correct": false
+              },
+              {
+                "id": "calzada",
+                "label": "La corta, bajando a la calle al llegar a la obra.",
+                "feedback": "Rodear por la calle los coloca donde circulan vehículos; la obra sigue sin ofrecerles un paso protegido.",
+                "correct": false
+              },
+              {
+                "id": "protegida",
+                "label": "La que mantiene la acera continua hasta el cruce.",
+                "feedback": "Comparaste la continuidad del recorrido. Al llegar al cruce todavía deben detenerse y comprobar antes de avanzar.",
+                "correct": true
+              }
+            ],
+            "stop_at_decision_point": true
+          }
+        },
+        {
+          "type": "scenario",
+          "payload": {
+            "title": "La rampa está bloqueada",
+            "context": "Luna y su abuelo están en la acera. Una macetera bloquea una rampa. Cerca espera una persona que usa silla de ruedas; hay tránsito en la calle.",
+            "prompt": "¿Cómo pueden ofrecer apoyo sin decidir por esa persona?",
+            "accessible_text": "Luna y su abuelo están en la acera. Una macetera bloquea una rampa. Cerca espera una persona que usa silla de ruedas; hay tránsito en la calle. ¿Cómo pueden ofrecer apoyo sin decidir por esa persona?",
+            "choices": [
+              {
+                "id": "preguntar",
+                "label": "Preguntar si necesita ayuda y escuchar qué apoyo pide.",
+                "feedback": "Ofrecen ayuda con respeto. El abuelo puede colaborar en buscar una alternativa protegida, sin empujar la silla ni mover a la persona sin permiso.",
+                "correct": true
+              },
+              {
+                "id": "empujar",
+                "label": "Empujar la silla hacia donde parece más fácil pasar.",
+                "feedback": "Moverla sin permiso puede sorprender a la persona y quitarle control sobre su recorrido.",
+                "correct": false
+              },
+              {
+                "id": "calzada",
+                "label": "Indicarle que pase por la calle junto a los carros.",
+                "feedback": "La barrera no se resuelve enviando a la persona a una zona con tránsito. Necesitan buscar otra alternativa.",
+                "correct": false
+              }
+            ],
+            "stop_at_decision_point": true
+          }
+        },
+        {
+          "type": "text",
+          "payload": {
+            "title": "Compará sin salir a la calle",
+            "markdown": "En un mapa inventado, marcá con palabras o símbolos: «puedo esperar», «falta información» y «barrera». Podés añadir colores, pero no usarlos como única señal.\n\nElegí una ruta y explicá una razón. Si ninguna ofrece un recorrido protegido, indicá que hace falta apoyo adulto para buscar otra opción.\n\nNo dibujés tu domicilio ni nombres de personas."
+          }
+        }
+      ],
+      "adult": "Facilitá dos rutas ficticias con diferencias visibles y nombradas. No pedir al niño mover objetos pesados, resolver obras o asumir el traslado de otras personas. Valorar consentimiento y accesibilidad sin convertir a la persona con discapacidad en un obstáculo.",
+      "transfer": {
+        "case": "En otro plano, la ruta habitual tiene una rampa cerrada y la alternativa conserva un paso continuo. Una persona del grupo necesita usar la rampa.",
+        "prompt": "¿Qué cambiarías del plan y qué preguntarías antes de ayudar?",
+        "observe": [
+          "Reconoce barrera y continuidad.",
+          "Justifica cambio de ruta.",
+          "Ofrece apoyo sin sustituir decisiones."
+        ]
+      },
+      "visual": "Conservar escenas de rutas/rampa, señalando qué es obra y qué es paso. Añadir etiquetas que no dependan del color. La opción de ayuda no debe animar empuje sin consentimiento.",
+      "alignment": "Conservar PEATON.LUGAR para ruta; someter evidencia de consentimiento/convivencia a revisión curricular, sin afirmar que una sola elección evalúa ambas competencias."
+    },
+    {
+      "lesson_id": "10186544-ae2b-5ed0-8960-589af90689fc",
+      "course_code": "EDU-EXP-003",
+      "unit": "1. El viaje empieza antes de subir",
+      "title": "Subir desde un lugar protegido",
+      "source_design_version": 1,
+      "draft_revision": 1,
+      "stage": "pending_review",
+      "proposed_stage": "discover",
+      "requires_guardian": true,
+      "objective": "Reconocer cuándo no debe acercarse al vehículo y pedir a su acompañante un acceso protegido.",
+      "instruction": "Vas a decidir cuándo esperar y a quién avisar. No vas a subir a un vehículo real durante esta práctica.",
+      "blocks": [
+        {
+          "type": "text",
+          "payload": {
+            "title": "Primero espero; después me acerco",
+            "markdown": "Luna viaja con una persona adulta. Esperan en la acera, lejos del borde.\n\nUna puerta abierta no significa que ya puedan subir. El vehículo debe estar completamente detenido y el acceso debe estar protegido.\n\nSi la puerta queda hacia el tránsito, Luna se lo dice a su acompañante. La persona adulta se encarga de resolver dónde pueden subir; Luna no corre hacia la puerta."
+          }
+        },
+        {
+          "type": "scenario",
+          "payload": {
+            "title": "Vehículo aún en movimiento",
+            "context": "Luna espera en la acera con su acompañante. Un autobús se acerca lentamente con la puerta abierta, pero todavía está en movimiento.",
+            "prompt": "¿Qué hace Luna mientras el autobús sigue moviéndose?",
+            "accessible_text": "Luna espera en la acera con su acompañante. Un autobús se acerca lentamente con la puerta abierta, pero todavía está en movimiento. ¿Qué hace Luna mientras el autobús sigue moviéndose?",
+            "choices": [
+              {
+                "id": "impulso",
+                "label": "Camina junto a la puerta para estar lista.",
+                "feedback": "Caminar junto al autobús la acerca a un vehículo que todavía puede cambiar de velocidad o dirección.",
+                "correct": false
+              },
+              {
+                "id": "segura",
+                "label": "Espera lejos del borde con su acompañante.",
+                "feedback": "La puerta abierta no cambia lo importante: el autobús sigue moviéndose. Esperan su detención y comprueban el acceso antes de acercarse.",
+                "correct": true
+              },
+              {
+                "id": "copiar",
+                "label": "Se acerca al borde porque otras personas ya lo hicieron.",
+                "feedback": "Que otras personas se acerquen no detiene el autobús ni despeja el espacio de entrada.",
+                "correct": false
+              }
+            ]
+          }
+        },
+        {
+          "type": "scenario",
+          "payload": {
+            "title": "Ascenso junto a la calzada",
+            "context": "Un carro viene a recoger a Luna y a su acompañante. Están en la acera, pero la puerta disponible obliga a acercarse al tránsito.",
+            "prompt": "¿Qué puede hacer Luna sin entrar a la calle?",
+            "accessible_text": "Un carro viene a recoger a Luna y a su acompañante. Están en la acera, pero la puerta disponible obliga a acercarse al tránsito. ¿Qué puede hacer Luna sin entrar a la calle?",
+            "choices": [
+              {
+                "id": "impulso",
+                "label": "Cruzar rápido hasta la puerta disponible.",
+                "feedback": "La rapidez no convierte en protegido el acceso que pasa junto al tránsito.",
+                "correct": false
+              },
+              {
+                "id": "copiar",
+                "label": "Seguir a alguien que ya caminó hacia esa puerta.",
+                "feedback": "El recorrido de otra persona también puede estar expuesto a vehículos.",
+                "correct": false
+              },
+              {
+                "id": "segura",
+                "label": "Avisar a su acompañante y esperar que resuelva un acceso protegido.",
+                "feedback": "Luna reconoce el problema y lo comunica. La persona adulta coordina otra ubicación o alternativa; Luna permanece en la acera.",
+                "correct": true
+              }
+            ]
+          }
+        },
+        {
+          "type": "text",
+          "payload": {
+            "title": "Ensayo con tarjetas",
+            "markdown": "Dentro del aula, ordená: «espero protegido», «el vehículo se detiene», «compruebo el acceso con mi acompañante», «me acerco para subir».\n\nEl acompañante agrega una tarjeta: «la puerta da al tránsito». Indicá qué paso se detiene y a quién avisás.\n\nNo se usan vehículos, puertas automáticas ni motores reales."
+          }
+        }
+      ],
+      "adult": "Modelá el acceso con tarjetas o dibujo. La responsabilidad de coordinar ubicación, detención y acceso es adulta. Si no existe opción protegida, no presiones al niño a completar la secuencia. Registrar si detectó el problema antes o después de una pista.",
+      "transfer": {
+        "case": "En una imagen nueva el vehículo está detenido, pero una barrera ocupa el acceso desde la acera.",
+        "prompt": "¿Alcanza con que el vehículo esté detenido? ¿Qué le dirías a tu acompañante?",
+        "observe": [
+          "Reconoce que detención y acceso protegido son condiciones distintas.",
+          "Permanece en espera.",
+          "Comunica la dificultad al adulto."
+        ]
+      },
+      "visual": "No presentar la puerta abierta en marcha como conducta normal: es la condición problemática del caso. Opción segura deja al personaje esperando; no lo teletransporta al interior.",
+      "alignment": "PASAJERO.ACCESO; distinguir decisión infantil de coordinación adulta."
+    },
+    {
+      "lesson_id": "b9bd70ec-62b8-553f-a4f4-461f264453e2",
+      "course_code": "EDU-EXP-003",
+      "unit": "1. El viaje empieza antes de subir",
+      "title": "Bajar y volver a observar",
+      "source_design_version": 1,
+      "draft_revision": 1,
+      "stage": "pending_review",
+      "proposed_stage": "discover",
+      "requires_guardian": true,
+      "objective": "Distinguir un punto de descenso protegido y volver a observar como peatón después de bajar.",
+      "instruction": "Vas a ordenar qué sucede antes y después de bajar. Bajar del vehículo no es una señal para cruzar.",
+      "blocks": [
+        {
+          "type": "text",
+          "payload": {
+            "title": "Al bajar empieza otra decisión",
+            "markdown": "Luna viaja con su acompañante. Antes de bajar necesitan un punto protegido y el vehículo completamente detenido.\n\nDespués de bajar, permanecen en un espacio protegido y observan de nuevo. El autobús, otros carros o una puerta pueden tapar parte de la calle.\n\nSi necesitan cruzar, primero buscan un cruce con visibilidad y comprueban sus condiciones. Que el autobús se vaya no significa que la calle esté libre."
+          }
+        },
+        {
+          "type": "scenario",
+          "payload": {
+            "title": "Bajar entre vehículos",
+            "context": "En un viaje sin emergencia, el carro de Luna se detiene en una fila. Desde la puerta no hay acceso directo a un espacio protegido: tendría que pasar entre carros para llegar a la acera.",
+            "prompt": "¿Qué hace Luna antes de abrir la puerta?",
+            "accessible_text": "En un viaje sin emergencia, el carro de Luna se detiene en una fila. Desde la puerta no hay acceso directo a un espacio protegido: tendría que pasar entre carros para llegar a la acera. ¿Qué hace Luna antes de abrir la puerta?",
+            "choices": [
+              {
+                "id": "segura",
+                "label": "Avisa a su acompañante y espera un punto de descenso protegido.",
+                "feedback": "Una detención en la fila no es un punto de descenso adecuado. El adulto resuelve dónde pueden bajar; Luna no sale entre carros.",
+                "correct": true
+              },
+              {
+                "id": "impulso",
+                "label": "Abre y pasa entre los carros hasta la acera.",
+                "feedback": "Salir la coloca entre vehículos antes de contar con un recorrido protegido.",
+                "correct": false
+              },
+              {
+                "id": "copiar",
+                "label": "Baja porque otra persona también abrió su puerta.",
+                "feedback": "Que otra persona baje no asegura que haya un espacio protegido para Luna.",
+                "correct": false
+              }
+            ]
+          }
+        },
+        {
+          "type": "scenario",
+          "payload": {
+            "title": "Después del autobús",
+            "context": "Luna y su acompañante ya bajaron y están en la acera. El autobús tapa parte de la calle. Necesitan llegar al otro lado.",
+            "prompt": "¿Qué deben hacer antes de iniciar un cruce?",
+            "accessible_text": "Luna y su acompañante ya bajaron y están en la acera. El autobús tapa parte de la calle. Necesitan llegar al otro lado. ¿Qué deben hacer antes de iniciar un cruce?",
+            "choices": [
+              {
+                "id": "impulso",
+                "label": "Pasar por delante del autobús detenido.",
+                "feedback": "El autobús puede ocultarlos y tapar vehículos que se aproximan. Su detención no controla el resto de la calle.",
+                "correct": false
+              },
+              {
+                "id": "segura",
+                "label": "Esperar protegidos y buscar un cruce donde puedan comprobar el tránsito.",
+                "feedback": "Separaste bajar de cruzar. Cuando recuperan visibilidad todavía deben observar los movimientos y las señales del cruce.",
+                "correct": true
+              },
+              {
+                "id": "copiar",
+                "label": "Seguir a quienes bajaron y empezaron a cruzar.",
+                "feedback": "El grupo puede no haber visto los movimientos ocultos. Luna y su acompañante necesitan comprobarlos.",
+                "correct": false
+              }
+            ]
+          }
+        },
+        {
+          "type": "text",
+          "payload": {
+            "title": "Del asiento a la acera, en una maqueta",
+            "markdown": "Ordená las tarjetas: «vehículo detenido en punto protegido», «descenso con acompañante», «espera en acera», «nueva observación».\n\nPoné una caja que represente al autobús. Explicá qué tapa. Quitá la caja y agregá una bicicleta al dibujo: ¿por qué todavía hace falta observar?\n\nTodo se hace en una mesa; no es un ejercicio de descenso o cruce real."
+          }
+        }
+      ],
+      "adult": "Aclarar que el primer caso es un viaje cotidiano sin emergencia; no generalizar permanecer dentro a cualquier situación. Guiar la maqueta sin sugerir que el alejamiento del bus autoriza cruzar. El adulto controla el descenso y la continuidad del acompañamiento.",
+      "transfer": {
+        "case": "En una maqueta distinta, el autobús ya salió, pero una van estacionada sigue tapando parte del cruce.",
+        "prompt": "¿Qué cambió y qué problema todavía queda?",
+        "observe": [
+          "Reconoce que bajar y cruzar son decisiones distintas.",
+          "Detecta el obstáculo restante.",
+          "No toma la salida del bus como autorización automática."
+        ]
+      },
+      "visual": "Secuencia requerida: personaje dentro, vehículo detenido, descenso, llegada a acera y pausa. Luego decisión peatonal. Reutilizar la escena de descenso únicamente tras comprobar que muestra todos esos estados.",
+      "alignment": "PASAJERO.ACCESO para descenso; enlace explícito con PEATON.LUGAR/observación como continuidad, no doble acreditación automática."
+    }
+  ]
+}

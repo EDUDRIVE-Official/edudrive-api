@@ -68,8 +68,9 @@ it('guarda y recupera una matricula por identificador', function (): void {
         ->and($stored?->courseId()->equals($course->id()))->toBeTrue()
         ->and($stored?->status())->toBe(EnrollmentStatus::Pending)
         ->and($stored?->source())->toBe(EnrollmentSource::Individual)
-        ->and($stored?->startsAt()?->format(DATE_ATOM))->toBe('2026-09-01T00:00:00+00:00')
-        ->and($stored?->endsAt()?->format(DATE_ATOM))->toBe('2026-12-01T00:00:00+00:00');
+        ->and($stored?->startsAt()?->getTimestamp())->toBe($enrollment->startsAt()?->getTimestamp())
+        ->and($stored?->endsAt()?->getTimestamp())->toBe($enrollment->endsAt()?->getTimestamp())
+        ->and($stored?->enrolledAt()->getTimestamp())->toBe($enrollment->enrolledAt()->getTimestamp());
 });
 
 it('lista matriculas filtradas por curso usuario organizacion estado y source', function (): void {

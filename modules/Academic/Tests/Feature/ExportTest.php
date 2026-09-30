@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Modules\Academic\Domain\Aggregates\Course;
 use Modules\Academic\Domain\Repositories\CourseRepository;
@@ -10,6 +11,11 @@ use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
 use Modules\Authorization\Domain\Enums\Role;
 use Tests\TestCase;
+
+beforeEach(function (): void {
+    Storage::fake('s3')
+        ->buildTemporaryUrlsUsing(fn (string $path, DateTimeInterface $expiration): string => 'https://storage.example.invalid/'.rawurlencode($path).'?expires='.$expiration->getTimestamp());
+});
 
 it('exporta cursos a csv de forma asincrona con el permiso exports.view', function (): void {
     /** @var TestCase $this */

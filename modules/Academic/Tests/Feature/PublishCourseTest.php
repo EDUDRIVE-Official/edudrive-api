@@ -54,6 +54,17 @@ it('rechaza publicar un curso que ya está publicado', function (): void {
         ->assertJsonPath('code', 'COURSE_ALREADY_PUBLISHED');
 });
 
+it('impide aprobar una experiencia oficial sin calidad pedagogica trazable', function (): void {
+    /** @var TestCase $this */
+    actingAsSuperAdminUser();
+    $course = createDraftCourseForPublishing('EDU-EXP-INCOMPLETE');
+    postJson("/api/v1/academic/courses/{$course->id()->value()}/submit-for-review")->assertOk();
+
+    postJson("/api/v1/academic/courses/{$course->id()->value()}/approve")
+        ->assertUnprocessable()
+        ->assertJsonPath('code', 'COURSE_PEDAGOGICAL_QUALITY_REQUIRED');
+});
+
 it('rechaza publicar un curso archivado', function (): void {
     /** @var TestCase $this */
     actingAsSuperAdminUser();

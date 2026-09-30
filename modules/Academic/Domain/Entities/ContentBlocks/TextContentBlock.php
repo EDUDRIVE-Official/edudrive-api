@@ -23,20 +23,37 @@ final readonly class TextContentBlock implements ContentBlock
         private int $position,
         private string $markdown,
         private ?string $title,
+        private ?string $supplement,
     ) {}
 
     /** @param array<string, mixed> $payload */
     public static function fromPayload(ContentBlockId $id, int $position, array $payload): self
     {
         self::ensureValidPosition($position);
-        self::ensureKeys($payload, ['markdown', 'title']);
+        self::ensureKeys($payload, ['markdown', 'title', 'supplement']);
         $markdown = self::requiredMarkdown($payload);
 
         if (self::containsRawHtml($markdown)) {
             throw InvalidContentBlock::create();
         }
 
-        return new self($id, $position, $markdown, self::optionalString($payload, 'title'));
+        return new self($id, $position, $markdown, self::optionalString($payload, 'title'), self::validatedSupplement($id, $position, $payload));
+    }
+
+    /** @param array<string, mixed> $payload */
+    public static function validatedSupplement(ContentBlockId $id, int $position, array $payload): ?string
+    {
+        if (! array_key_exists('supplement', $payload)) {
+            return null;
+        }
+
+        $value = $payload['supplement'];
+        if (! is_string($value) || trim($value) === '' || mb_strlen($value) > 20000) {
+            throw InvalidContentBlock::create();
+        }
+
+        // Reuse the same Markdown safety rules; the inner payload has no supplement.
+        return self::fromPayload($id, $position, ['markdown' => $value])->markdown;
     }
 
     public function id(): ContentBlockId
@@ -59,6 +76,7 @@ final readonly class TextContentBlock implements ContentBlock
         return array_filter([
             'markdown' => $this->markdown,
             'title' => $this->title,
+            'supplement' => $this->supplement,
         ], static fn (mixed $value): bool => $value !== null);
     }
 

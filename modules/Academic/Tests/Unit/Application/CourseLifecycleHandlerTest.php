@@ -10,6 +10,7 @@ use Modules\Academic\Application\Exceptions\CourseNotFound;
 use Modules\Academic\Application\Exceptions\CourseVersionNotFound;
 use Modules\Academic\Application\Queries\GetCourseVersionQuery;
 use Modules\Academic\Application\Queries\ListCourseVersionsQuery;
+use Modules\Academic\Application\Services\CoursePublicationQualityGate;
 use Modules\Academic\Application\UseCases\ApproveCourseHandler;
 use Modules\Academic\Application\UseCases\GetCourseVersionHandler;
 use Modules\Academic\Application\UseCases\ListCourseVersionsHandler;
@@ -24,6 +25,7 @@ use Modules\Academic\Domain\Exceptions\CourseCannotBeReopened;
 use Modules\Academic\Domain\Exceptions\CourseReviewStateInvalid;
 use Modules\Academic\Domain\Repositories\CourseRepository;
 use Modules\Academic\Domain\Repositories\CourseVersionRepository;
+use Modules\Academic\Domain\Repositories\UnitContentRepository;
 use Modules\Academic\Domain\ValueObjects\CourseCode;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\CourseTitle;
@@ -97,6 +99,11 @@ final class Eng029LifecycleCourseRepository implements CourseRepository
     {
         return array_values($this->courses);
     }
+}
+
+function eng029QualityGate(CourseRepository $courses): CoursePublicationQualityGate
+{
+    return new CoursePublicationQualityGate($courses, Mockery::mock(UnitContentRepository::class));
 }
 
 final class Eng029LifecycleVersionRepository implements CourseVersionRepository
@@ -199,7 +206,7 @@ it('aprueba un curso en revision con una mutacion atomica', function (): void {
     $course = eng029LifecycleCourse('under_review');
     $courses = new Eng029LifecycleCourseRepository([$course]);
 
-    $response = (new ApproveCourseHandler($courses))->handle(
+    $response = (new ApproveCourseHandler($courses, eng029QualityGate($courses)))->handle(
         new ApproveCourseCommand($course->id()->value()),
     );
 
@@ -256,7 +263,7 @@ it('propaga el error 422 cuando la transicion de estado es ilegal', function ():
     $course = eng029LifecycleCourse();
     $courses = new Eng029LifecycleCourseRepository([$course]);
 
-    expect(fn () => (new ApproveCourseHandler($courses))->handle(
+    expect(fn () => (new ApproveCourseHandler($courses, eng029QualityGate($courses)))->handle(
         new ApproveCourseCommand($course->id()->value()),
     ))->toThrow(CourseReviewStateInvalid::class, 'El curso no se encuentra en el estado requerido para esta accion.');
 

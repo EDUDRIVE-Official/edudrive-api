@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Learning\Infrastructure\Persistence\Eloquent\Repositories;
 
 use DateTimeImmutable;
+use Modules\Foundation\Infrastructure\Persistence\DatabaseDate;
 use Modules\Learning\Domain\Entities\LearningEvent;
 use Modules\Learning\Domain\Repositories\LearningEventRepository;
 use Modules\Learning\Domain\ValueObjects\LearningEventId;
@@ -23,7 +24,7 @@ final class EloquentLearningEventRepository implements LearningEventRepository
             'verb' => $event->verb()->value,
             'subject_id' => $event->subjectId(),
             'evidence' => $event->evidence(),
-            'occurred_at' => $event->occurredAt(),
+            'occurred_at' => DatabaseDate::normalize($event->occurredAt()),
         ]);
     }
 

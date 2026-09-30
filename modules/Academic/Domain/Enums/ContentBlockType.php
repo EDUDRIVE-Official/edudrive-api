@@ -11,5 +11,6 @@ enum ContentBlockType: string
     case Video = 'video';
     case Audio = 'audio';
     case Interactive = 'interactive';
+    case Scenario = 'scenario';
     case Download = 'download';
 }

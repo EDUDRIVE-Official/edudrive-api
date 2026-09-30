@@ -25,11 +25,11 @@ it('consulta el resumen del sistema con el permiso reports.view', function (): v
         ]);
 });
 
-it('otorga reports.view tambien al administrador institucional', function (): void {
+it('rechaza el resumen global al administrador institucional sin reports.view', function (): void {
     /** @var TestCase $this */
     actingAsRole(Role::InstitutionalAdmin);
 
-    $this->getJson('/api/v1/admin/reports/summary')->assertOk();
+    $this->getJson('/api/v1/admin/reports/summary')->assertForbidden();
 });
 
 it('rechaza consultar el resumen sin el permiso reports.view', function (): void {

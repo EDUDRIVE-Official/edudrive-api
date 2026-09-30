@@ -85,6 +85,22 @@ it('aumenta la confianza con mas evidencia independiente, con retornos decrecien
         ->and($fiveScore)->toBeGreaterThan($oneScore * 5);
 });
 
+it('valora mas una practica acompañada con contexto y observacion verificables', function (): void {
+    $now = new DateTimeImmutable('2026-08-26T00:00:00+00:00');
+    $complete = newTrustPassport();
+    $complete->recordEvidence(Evidence::create(EvidenceType::GuidedPracticeObserved, 'practice-complete', 'course-1', $now, [
+        'safe_environment_confirmed' => true,
+        'practice_context' => 'controlled_space',
+        'observation' => 'Se detuvo y explicó el peligro antes de decidir.',
+    ]));
+    $historical = newTrustPassport();
+    $historical->recordEvidence(Evidence::create(EvidenceType::GuidedPracticeObserved, 'practice-historical', 'course-1', $now, []));
+
+    $calculator = new RoadPassportTrustCalculator;
+    expect($calculator->calculate($complete, $now))->toBeGreaterThan($calculator->calculate($historical, $now))
+        ->and($calculator->calculate($historical, $now))->toBeGreaterThan(0);
+});
+
 it('acota el resultado a 100', function (): void {
     $now = new DateTimeImmutable('2026-08-26T00:00:00+00:00');
     $passport = newTrustPassport();

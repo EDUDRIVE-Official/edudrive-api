@@ -64,6 +64,7 @@ final readonly class ReplaceUnitContentHandler
                         ),
                         $lesson->blocks,
                     ),
+                    learningDesign: $lesson->learningDesign,
                 ),
                 $command->lessons,
             ),

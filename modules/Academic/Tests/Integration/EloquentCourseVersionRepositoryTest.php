@@ -69,7 +69,7 @@ it('guarda y recupera una version con su snapshot canonico', function (): void {
         ->and($stored?->versionNumber())->toBe(1)
         ->and($stored?->status())->toBe(CourseVersionStatus::Published)
         ->and($stored?->snapshot())->toBe(['course' => ['id' => $course->id()->value()], 'modules' => [['id' => 'mod-1']]])
-        ->and($stored?->publishedAt()->format(DATE_ATOM))->toBe('2026-08-10T08:00:00+00:00')
+        ->and($stored?->publishedAt()->getTimestamp())->toBe((new DateTimeImmutable('2026-08-10T08:00:00+00:00'))->getTimestamp())
         ->and($stored?->archivedAt())->toBeNull();
 });
 
@@ -119,7 +119,7 @@ it('impone la unicidad de course_id con version_number', function (): void {
 
     $repository->save($first);
 
-    expect(fn () => $repository->save($duplicate))->toThrow(QueryException::class)
+    expect(fn () => DB::transaction(fn () => $repository->save($duplicate)))->toThrow(QueryException::class)
         ->and(DB::table('academic_course_versions')->where('course_id', $course->id()->value())->count())->toBe(1);
 });
 

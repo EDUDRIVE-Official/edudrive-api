@@ -17,7 +17,11 @@ final class CompleteLessonRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'time_spent_minutes' => ['nullable', 'integer', 'min:0'],
+            'time_spent_minutes' => ['nullable', 'integer', 'min:1', 'max:240'],
+            'scenario_answers' => ['sometimes', 'array'],
+            'scenario_answers.*' => ['required', 'string', 'max:100'],
+            'reflection' => ['nullable', 'string', 'min:10', 'max:500'],
+            'self_assessment' => ['nullable', 'in:necesito_practicar,voy_avanzando,puedo_aplicarlo'],
         ];
     }
 }

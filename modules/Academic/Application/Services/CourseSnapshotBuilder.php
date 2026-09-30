@@ -125,6 +125,7 @@ final readonly class CourseSnapshotBuilder
             'duration_minutes' => $lesson->durationMinutes(),
             'position' => $lesson->position(),
             'blocks' => $blocks,
+            'learning_design' => $lesson->learningDesign()?->toArray(),
         ];
     }
 }

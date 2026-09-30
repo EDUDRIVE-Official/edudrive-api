@@ -78,6 +78,11 @@ COPY . .
 COPY --from=assets /app/public/build ./public/build
 
 RUN composer install --no-dev --no-interaction --optimize-autoloader --no-ansi --no-scripts \
+    && mkdir -p \
+        /var/www/html/storage/framework/cache \
+        /var/www/html/storage/framework/sessions \
+        /var/www/html/storage/framework/views \
+        /var/www/html/storage/logs \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 USER www-data

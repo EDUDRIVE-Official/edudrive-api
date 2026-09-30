@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Validation\ValidationException;
+use Modules\Academic\Presentation\Http\Middleware\EnsurePilotReviewerOrCourseManager;
 use Modules\Authorization\Presentation\Http\Middleware\EnsurePermission;
 use Modules\Foundation\Domain\Exceptions\DomainException;
 use Modules\Foundation\Presentation\Http\Middleware\CorrelationId;
@@ -29,10 +30,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // En producción, Caddy termina TLS y reenvía la solicitud a
+        // nginx/php-fpm dentro de la red privada de Docker. Confiar en los
+        // encabezados del proxy permite que Laravel genere enlaces HTTPS y
+        // cookies seguras usando la URL original solicitada por la persona.
+        $middleware->trustProxies(at: '*');
+
         $middleware->append(CorrelationId::class);
 
         $middleware->alias([
             'permission' => EnsurePermission::class,
+            'pilot.reviewer' => EnsurePilotReviewerOrCourseManager::class,
             'simulator.auth' => AuthenticateSimulator::class,
             'api_consumer.auth' => AuthenticateApiConsumer::class,
             'scope' => EnsureApiConsumerScope::class,

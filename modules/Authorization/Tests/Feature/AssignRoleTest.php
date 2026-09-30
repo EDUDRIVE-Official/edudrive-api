@@ -112,7 +112,7 @@ it('rechaza la asignación de un rol a un usuario inexistente', function (): voi
     postJson('/api/v1/authorization/role-assignments', [
         'user_id' => (string) Str::uuid(),
         'role' => 'teacher',
-    ])->assertNotFound();
+    ])->assertUnprocessable()->assertJsonValidationErrors(['user_id']);
 });
 
 it('rechaza la asignación de roles a quien no es superadministrador', function (): void {

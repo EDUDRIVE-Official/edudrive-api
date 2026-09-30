@@ -7,6 +7,7 @@ namespace Modules\Integration\Infrastructure\Persistence\Eloquent\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Modules\Foundation\Infrastructure\Persistence\PreservesPostgresDateOffsets;
 
 /**
  * @property string $id
@@ -19,6 +20,8 @@ use Illuminate\Support\Carbon;
  */
 final class ApiConsumerModel extends Model
 {
+    use PreservesPostgresDateOffsets;
+
     protected $table = 'integration_api_consumers';
 
     protected $primaryKey = 'id';

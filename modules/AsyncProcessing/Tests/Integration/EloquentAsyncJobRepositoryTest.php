@@ -33,7 +33,7 @@ it('guarda y recupera un trabajo asincrono pendiente', function (): void {
         ->and($found?->requestedByUserId())->toBe($job->requestedByUserId())
         ->and($found?->status())->toBe(AsyncJobStatus::Pending)
         ->and($found?->result())->toBeNull()
-        ->and($found?->createdAt()->format(DateTimeInterface::ATOM))->toBe('2026-08-29T10:00:00+00:00');
+        ->and($found?->createdAt()->getTimestamp())->toBe((new DateTimeImmutable('2026-08-29T10:00:00+00:00'))->getTimestamp());
 });
 
 it('guarda y recupera el resultado tras completar el trabajo', function (): void {
@@ -83,6 +83,18 @@ it('lista los trabajos completados o fallidos anteriores a un umbral', function 
 
     expect($found)->toHaveCount(1)
         ->and($found[0]->id()->equals($old->id()))->toBeTrue();
+});
+
+it('respeta el instante exacto del umbral con offset UTC', function (): void {
+    $repository = app(AsyncJobRepository::class);
+    $job = newPersistableAsyncJob();
+    $finished = new DateTimeImmutable('2026-08-29T10:00:00+00:00');
+    $job->complete(['ok' => true], $finished);
+    $repository->save($job);
+
+    expect($repository->allCompletedOrFailedBefore($finished))->toBe([])
+        ->and($repository->allCompletedOrFailedBefore($finished->modify('-1 second')))->toBe([])
+        ->and($repository->allCompletedOrFailedBefore($finished->modify('+1 second')))->toHaveCount(1);
 });
 
 it('elimina un trabajo asincrono existente', function (): void {

@@ -17,11 +17,13 @@ it('consulta los cinco reportes academicos con el permiso reports.view', functio
     $this->getJson('/api/v1/academic/reports/activity')->assertOk()->assertJsonStructure(['data']);
 });
 
-it('permite consultar los reportes al administrador institucional', function (): void {
+it('impide consultar reportes globales al administrador institucional sin reports.view', function (): void {
     /** @var TestCase $this */
     actingAsRole(Role::InstitutionalAdmin);
 
-    $this->getJson('/api/v1/academic/reports/progress')->assertOk();
+    foreach (['progress', 'performance', 'approval', 'competencies', 'activity'] as $report) {
+        $this->getJson('/api/v1/academic/reports/'.$report)->assertForbidden();
+    }
 });
 
 it('rechaza consultar los reportes academicos sin el permiso reports.view', function (): void {

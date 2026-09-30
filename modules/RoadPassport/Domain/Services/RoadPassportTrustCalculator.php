@@ -14,6 +14,10 @@ final class RoadPassportTrustCalculator
     private const BASE_WEIGHT = [
         EvidenceType::ExamPassed->value => 15,
         EvidenceType::CourseCompleted->value => 10,
+        EvidenceType::LessonCompleted->value => 3,
+        EvidenceType::GuidedPracticeObserved->value => 4,
+        EvidenceType::SelfReportedPractice->value => 1,
+        EvidenceType::StudentReflection->value => 2,
     ];
 
     private const FULL_WEIGHT_DAYS = 90;
@@ -44,7 +48,21 @@ final class RoadPassportTrustCalculator
         $baseWeight = self::BASE_WEIGHT[$evidence->type->value];
         $ageInDays = ($now->getTimestamp() - $evidence->occurredAt->getTimestamp()) / 86400;
 
-        return $baseWeight * $this->decayFactorFor($ageInDays);
+        return $baseWeight * $this->qualityFactorFor($evidence) * $this->decayFactorFor($ageInDays);
+    }
+
+    private function qualityFactorFor(Evidence $evidence): float
+    {
+        if ($evidence->type !== EvidenceType::GuidedPracticeObserved) {
+            return 1.0;
+        }
+
+        $details = $evidence->details;
+        $hasSafeEnvironment = ($details['safe_environment_confirmed'] ?? false) === true;
+        $hasContext = is_string($details['practice_context'] ?? null) && trim($details['practice_context']) !== '';
+        $hasObservation = is_string($details['observation'] ?? null) && mb_strlen(trim($details['observation'])) >= 10;
+
+        return $hasSafeEnvironment && $hasContext && $hasObservation ? 1.0 : 0.5;
     }
 
     private function decayFactorFor(float $ageInDays): float

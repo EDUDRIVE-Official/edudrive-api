@@ -48,7 +48,7 @@ it('guarda y recupera la expiracion y el historial', function (): void {
 
     $found = app(ApiConsumerRepository::class)->findById($consumer->id());
 
-    expect($found?->expiresAt()?->format(DATE_ATOM))->toBe('2027-08-29T10:00:00+00:00')
+    expect($found?->expiresAt()?->getTimestamp())->toBe((new DateTimeImmutable('2027-08-29T10:00:00+00:00'))->getTimestamp())
         ->and($found?->status())->toBe(ApiConsumerStatus::Suspended)
         ->and($found?->history())->toHaveCount(1)
         ->and($found?->history()[0]->reason)->toBe('Uso indebido');

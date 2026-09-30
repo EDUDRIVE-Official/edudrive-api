@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Modules\RoadPassport\Infrastructure\Persistence\Eloquent\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Modules\Foundation\Infrastructure\Persistence\PreservesPostgresDateOffsets;
 
 final class RoadPassportHistoryEntryModel extends Model
 {
+    use PreservesPostgresDateOffsets;
+
     protected $table = 'road_passport_history_entries';
 
     protected $primaryKey = 'id';

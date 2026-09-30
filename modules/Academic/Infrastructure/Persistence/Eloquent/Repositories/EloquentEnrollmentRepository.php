@@ -11,6 +11,7 @@ use Modules\Academic\Domain\Repositories\EnrollmentRepository;
 use Modules\Academic\Domain\ValueObjects\CourseId;
 use Modules\Academic\Domain\ValueObjects\EnrollmentId;
 use Modules\Academic\Infrastructure\Persistence\Eloquent\Models\EnrollmentModel;
+use Modules\Foundation\Infrastructure\Persistence\DatabaseDate;
 use Modules\Organization\Domain\ValueObjects\OrganizationId;
 
 final readonly class EloquentEnrollmentRepository implements EnrollmentRepository
@@ -25,9 +26,9 @@ final readonly class EloquentEnrollmentRepository implements EnrollmentRepositor
                 'organization_id' => $enrollment->organizationId()?->value(),
                 'status' => $enrollment->status()->value,
                 'source' => $enrollment->source()->value,
-                'starts_at' => $enrollment->startsAt(),
-                'ends_at' => $enrollment->endsAt(),
-                'enrolled_at' => $enrollment->enrolledAt(),
+                'starts_at' => DatabaseDate::normalize($enrollment->startsAt()),
+                'ends_at' => DatabaseDate::normalize($enrollment->endsAt()),
+                'enrolled_at' => DatabaseDate::normalize($enrollment->enrolledAt()),
             ],
         );
     }

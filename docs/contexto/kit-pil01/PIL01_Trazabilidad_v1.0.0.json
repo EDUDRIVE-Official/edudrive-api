@@ -1,0 +1,94 @@
+{
+  "id": "EDF-KIT-PIL01",
+  "version": "1.0.0",
+  "fecha": "2026-09-25",
+  "estado": "Materiales preparados; piloto no aplicado",
+  "competencia": "EDU-PED-001.E1",
+  "protocolo": "P1",
+  "padres": [
+    {
+      "archivo": "output/edudrive/EDF_Matriz_Curricular_EDUDRIVE_3-80_v1.0.0.json",
+      "sha256": "4755e0d861504f84ead67acde12e62c69cf67ec77c33e63c7fe10be690b0b51e"
+    },
+    {
+      "archivo": "output/edudrive/piloto/EDF_Diseno_Piloto_Curricular_EDUDRIVE_v1.0.0.json",
+      "sha256": "bd5d8f8b69279aff87f25d1d32b2813123f90c619177dedeed10da3e20273726"
+    }
+  ],
+  "archivos": [
+    {
+      "archivo": "PIL01_01_Guia_del_facilitador_v1.0.0.pdf",
+      "paginas": 12,
+      "sha256": "e8202bec07e3047fa7c7a284fed3de40ada9067824825fd4affa43725d9afe52"
+    },
+    {
+      "archivo": "PIL01_02_Materiales_de_ensenanza_v1.0.0.pdf",
+      "paginas": 7,
+      "sha256": "d8d629d28edad4cb8740ee0c7b62665bc0566b8083f701d3b5db449dcdd5ec14"
+    },
+    {
+      "archivo": "PIL01_03_Evaluacion_RESERVADA_v1.0.0.pdf",
+      "paginas": 11,
+      "sha256": "b393372d98d027e670bd93aed72f8be885a5bdc21f3542ced518a5c68b36df9d"
+    }
+  ],
+  "escenas": [
+    {
+      "variant": "A1",
+      "day": "D3",
+      "kind": "casa",
+      "garage": null,
+      "start": 300,
+      "cross": 455,
+      "ballx": 525,
+      "reverse": false,
+      "goal": "Cruce residencial; pelota fija en la calzada representada."
+    },
+    {
+      "variant": "B1",
+      "day": "D7",
+      "kind": "escuela",
+      "garage": 280,
+      "start": 135,
+      "cross": 455,
+      "ballx": 520,
+      "reverse": false,
+      "goal": "Acceso de garaje atraviesa la acera antes del cruce. Ajustar punto de espera antes de esa entrada."
+    },
+    {
+      "variant": "R1",
+      "day": "D24",
+      "kind": "parque",
+      "garage": 570,
+      "start": 680,
+      "cross": 430,
+      "ballx": 355,
+      "reverse": false,
+      "goal": "Llegada desde el lado contrario y acceso antes del cruce; retención de S1–S3."
+    },
+    {
+      "variant": "A2",
+      "day": "Reevaluación",
+      "kind": "escuela",
+      "garage": null,
+      "start": 620,
+      "cross": 395,
+      "ballx": 335,
+      "reverse": true,
+      "goal": "Aproximación desde el lado opuesto del cruce; vehículo en el otro carril."
+    },
+    {
+      "variant": "B2",
+      "day": "Reevaluación",
+      "kind": "casa",
+      "garage": 570,
+      "start": 690,
+      "cross": 410,
+      "ballx": 340,
+      "reverse": false,
+      "goal": "Entrada ubicada a la derecha del cruce; nueva disposición y trayecto de derecha a izquierda."
+    }
+  ],
+  "alcance": "Circuito protegido con adulto. Mesa sola es evidencia de simulación, no completa P1.",
+  "datos_personales": "Ninguno; formularios vacíos."
+}

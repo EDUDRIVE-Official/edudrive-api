@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\DB;
 use Modules\Identity\Domain\Entities\User;
 use Modules\Identity\Domain\Enums\UserStatus;
 use Modules\Identity\Domain\Repositories\UserRepository;
@@ -115,6 +116,11 @@ it('guarda y recupera la fecha de ultimo inicio de sesion', function (): void {
 
     expect($repository->findById($user->id())?->lastLoginAt())
         ->toEqual($loginAt);
+
+    if (DB::getDriverName() === 'pgsql') {
+        $row = DB::selectOne('select extract(epoch from last_login_at) as instant from users where id = ?', [$user->id()]);
+        expect((int) $row->instant)->toBe($loginAt->getTimestamp());
+    }
 });
 
 it('elimina un usuario existente', function (): void {

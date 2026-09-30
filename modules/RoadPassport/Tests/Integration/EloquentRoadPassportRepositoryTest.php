@@ -142,9 +142,13 @@ it('guarda y recupera evidencia con sus detalles', function (): void {
 
     expect($found?->evidence())->toHaveCount(1);
     $evidence = $found?->evidence()[0];
+    $actualDetails = $evidence?->details ?? [];
+    $expectedDetails = ['percentage' => 80, 'passed' => true];
+    ksort($actualDetails);
+    ksort($expectedDetails);
     expect($evidence?->type)->toBe(EvidenceType::ExamPassed)
         ->and($evidence?->courseId)->toBe($course->id()->value())
-        ->and($evidence?->details)->toBe(['percentage' => 80, 'passed' => true]);
+        ->and($actualDetails)->toBe($expectedDetails);
 });
 
 it('reemplaza la evidencia en vez de duplicarla al guardar de nuevo', function (): void {

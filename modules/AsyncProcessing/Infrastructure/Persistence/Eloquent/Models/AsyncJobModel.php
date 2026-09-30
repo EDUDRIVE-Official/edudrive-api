@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\AsyncProcessing\Infrastructure\Persistence\Eloquent\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Modules\Foundation\Infrastructure\Persistence\PreservesPostgresDateOffsets;
 
 /**
  * @property string $id
@@ -16,6 +17,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 final class AsyncJobModel extends Model
 {
+    use PreservesPostgresDateOffsets;
+
     protected $table = 'async_jobs';
 
     protected $primaryKey = 'id';

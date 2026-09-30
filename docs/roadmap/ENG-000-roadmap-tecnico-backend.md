@@ -1,5 +1,16 @@
 # ENG-000 — Roadmap Técnico del Backend EDUDRIVE
 
+## PED-002 — Instrumentos del piloto P912
+
+Estado: Borrador editorial con integridad estructural comprobable. Banco interno de 12 ítems, cuaderno sin respuestas, guía de facilitación, registro por indicador y dos tareas protegidas de transferencia. Ver `docs/product/p912/`. No se conecta todavía al completado de lecciones; ese flujo exige respuestas correctas y no es válido como diagnóstico independiente. Pendientes revisión humana, integración separada, aplicación y validación.
+
+## Incremento PED-001 — Consolidación pedagógica (2026-09-16)
+
+Estado: En validación. Prioridad acordada: peatones y pasajeros, primaria de 9–12 años.
+Alcance: eliminar inferencias de etapa a partir del tipo de actividad en las definiciones iniciales, clasificar nuevas finalizaciones como evidencia formativa, aclarar límites del Pasaporte y preparar secuencia/rúbrica del piloto.
+Referencias: `docs/product/TRANSICION-PEDAGOGICA-v0.2.md` y `docs/product/PILOTO-PRIMARIA-9-12-v0.1.md`.
+Sin migración de datos ni despliegue. Pendientes: pruebas PHP, revisión editorial, instrumentos independientes y piloto real. No representa cierre ni homologación del modelo.
+
 ## 1. Información del documento
 
 | Campo | Valor |

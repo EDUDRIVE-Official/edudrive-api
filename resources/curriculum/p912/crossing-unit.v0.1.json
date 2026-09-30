@@ -1,0 +1,35 @@
+{
+  "id": "P912-U01",
+  "version": "0.1.0",
+  "title": "Me detengo, observo y decido antes de cruzar",
+  "status": "draft_requires_human_review",
+  "audience": "Primaria de 9–12 años, con acompañamiento adulto",
+  "purpose": "Reconocer cuándo falta información para avanzar y explicar una decisión protegida, sin practicar cruces en tránsito real.",
+  "scope": "Unidad de peatones dentro del piloto. Todas las decisiones de esperar se plantean antes de entrar en la calzada, con Luna aún en un espacio protegido; no son una instrucción de detenerse en medio del cruce. No cubre por sí sola el cruce completo, la formación de pasajeros ni autoriza desplazamientos autónomos.",
+  "goals": [
+    {"indicator": "P912.ESPACIO", "text": "Señala un lugar de espera dentro de la acera, separado del borde.", "practice": "U01-A", "evidence": ["D01", "C01"], "transfer": "T01"},
+    {"indicator": "P912.VISIBILIDAD", "text": "Identifica qué oculta la vista y explica qué todavía no puede comprobar.", "practice": "U01-A", "evidence": ["D01", "C01", "R01"], "transfer": "T01"},
+    {"indicator": "P912.PAUSA", "text": "Pospone el avance cuando hay un conflicto o información insuficiente.", "practice": "U01-B", "evidence": ["D02", "C02", "R01"], "transfer": "T01"},
+    {"indicator": "P912.COMPRUEBA", "text": "Considera los movimientos que pueden llegar al cruce, incluidos los giros.", "practice": "U01-B", "evidence": ["D02", "C02", "R01"], "transfer": "T01"},
+    {"indicator": "P912.AYUDA", "text": "Explica cómo pedir acompañamiento o cambiar de plan si no puede comprobar con seguridad.", "practice": "U01-C", "evidence": ["D04", "C04"], "transfer": "T01"}
+  ],
+  "phases": [
+    {"title": "1. Antes de enseñar", "duration": "10–15 minutos orientativos", "instruction": "Presentá D01, D02 y D04 sin enseñar las explicaciones de esta unidad. Pedí una respuesta oral, señalada con explicación o escrita. No corrijás durante esta fase. Registrá literalmente, sin completar lo que la persona no dijo.", "record": "Primera respuesta, modalidad, apoyo de acceso, ayuda de contenido y barreras. Si no responde, no atribuir automáticamente un error vial."},
+    {"title": "2. Comprender y practicar", "duration": "20–25 minutos orientativos", "instruction": "Usá las tres actividades de abajo. Primero dejá decidir; luego explicá y ofrecé ayuda. Cambiá la posición de los objetos para que no memorice un lado de la escena.", "record": "Respuesta inicial, ayuda concreta y respuesta posterior. Toda esta fase es formativa, incluso cuando acierta sin pista."},
+    {"title": "3. Aplicar en un contexto protegido", "duration": "10–15 minutos orientativos", "instruction": "Usá T01 en una maqueta distinta, mesa o patio cerrado sin vehículos activos. El participante mueve o señala el personaje; el adulto no decide por él. Nunca salir a la calzada como parte de esta actividad.", "record": "Qué hizo y explicó por indicador. Anotá si la posición del adulto o del material reveló la respuesta."},
+    {"title": "4. Comprobar sin pistas previas", "duration": "10–15 minutos, en otro momento", "instruction": "Presentá C01, C02 y C04 sin volver a mostrar las prácticas. Si necesitás ayudar, hacelo y registralo: la respuesta posterior será formativa. La devolución se da después de cerrar la forma.", "record": "Resultado por indicador y ayuda recibida, sin nota global, premios por rapidez ni aprobación automática."},
+    {"title": "5. Volver a comprobar más adelante", "duration": "3–4 semanas después, intervalo propuesto", "instruction": "Usá R01 para muestrear visibilidad, pausa y comprobación. Este ítem no permite concluir retención de ESPACIO ni AYUDA; esos indicadores necesitan nuevas situaciones revisadas.", "record": "Intervalo real, prácticas intermedias conocidas, apoyos y límites de la conclusión. No afirmar retención total."}
+  ],
+  "activities": [
+    {"id": "U01-A", "title": "Lo que no veo también importa", "setup": "En un plano de mesa, ubicá a Luna y a una persona adulta en una acera. Una caja representa un puesto cerrado que oculta parte de la calle. Dejá otro espacio dentro de la acera.", "prompt": "Mostrá dónde esperarías. ¿Qué parte no podés ver y qué información te falta?", "hint": "¿Desde ese lugar podés comprobar todo lo que podría acercarse?", "explanation": "No ver un vehículo no significa que no venga. Si falta visibilidad, no entramos en la calle para conseguirla: conservamos un espacio protegido y buscamos una alternativa con la persona adulta.", "variation": "Mové el obstáculo al otro lado. No premiés elegir siempre izquierda o derecha; pedí explicar el cambio."},
+    {"id": "U01-B", "title": "La escena cambió", "setup": "En la maqueta, el paso está junto al borde de una intersección, no en el centro. Mostrá una señal peatonal que permite avanzar y un vehículo de juguete cuya trayectoria de giro atraviesa ese paso. Luna aún está en la acera.", "prompt": "¿Qué cambió? Mostrá qué harías ahora y qué necesitás comprobar.", "hint": "Seguí con el dedo el recorrido del vehículo. ¿Coincide con el de Luna?", "explanation": "La señal aporta información, pero hay que comprobar también los movimientos que llegan al cruce. Si persiste un conflicto, esperamos protegidos. La persona conductora debe respetar al peatón; esta actividad no traslada esa responsabilidad al niño o niña.", "variation": "Retirá el vehículo que gira y colocá un objeto que tape otra parte de la vista. Preguntá qué información sigue faltando; no enseñés a avanzar automáticamente porque desapareció un solo conflicto."},
+    {"id": "U01-C", "title": "Cambiar de plan también es decidir", "setup": "Una barrera de papel interrumpe la ruta prevista en la maqueta. No existe un paso protegido visible para continuar. Luna está acompañada y permanece en la acera.", "prompt": "¿Qué le dirías a la persona adulta y qué harías mientras encuentran otra opción?", "hint": "¿Necesitás resolverlo entrando en la calle? ¿Quién puede acompañarte?", "explanation": "Pedir apoyo y esperar en un espacio protegido es una decisión válida. No hace falta improvisar una salida entre vehículos ni seguir a alguien sin comprobar.", "variation": "La persona adulta tampoco conoce la ruta. Practicá comunicar la dificultad y esperar mientras busca información; no inventar una alternativa supuestamente segura."}
+  ],
+  "accessibility": [
+    "Ofrecer lectura literal, letra ampliada, objetos táctiles y respuesta oral transcrita o señalada con explicación; no exigir lectura fluida para demostrar criterio vial.",
+    "Distinguir apoyo para acceder a la consigna de pistas que revelan qué decidir. Registrar ambos por separado.",
+    "No depender solo de color, sonido, rapidez, movimiento o 3D. Describir la señal y permitir detener la actividad.",
+    "No evaluar una mirada automática de un personaje como acción del participante. Valorar qué identifica, decide y explica."
+  ],
+  "human_review": {"pedagogical": null, "road_safety": null, "accessibility": null}
+}

@@ -15,11 +15,13 @@ it('consulta los cuatro reportes de simulacion con el permiso reports.view', fun
     $this->getJson('/api/v1/simulation/reports/risks')->assertOk()->assertJsonStructure(['data']);
 });
 
-it('permite consultar los reportes de simulacion al administrador institucional', function (): void {
+it('impide consultar reportes globales de simulacion al administrador institucional sin reports.view', function (): void {
     /** @var TestCase $this */
     actingAsRole(Role::InstitutionalAdmin);
 
-    $this->getJson('/api/v1/simulation/reports/sessions')->assertOk();
+    foreach (['sessions', 'telemetry', 'evolution', 'risks'] as $report) {
+        $this->getJson('/api/v1/simulation/reports/'.$report)->assertForbidden();
+    }
 });
 
 it('rechaza consultar los reportes de simulacion sin el permiso reports.view', function (): void {

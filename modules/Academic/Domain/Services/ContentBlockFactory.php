@@ -9,6 +9,7 @@ use Modules\Academic\Domain\Entities\ContentBlocks\ContentBlock;
 use Modules\Academic\Domain\Entities\ContentBlocks\DownloadContentBlock;
 use Modules\Academic\Domain\Entities\ContentBlocks\ImageContentBlock;
 use Modules\Academic\Domain\Entities\ContentBlocks\InteractiveContentBlock;
+use Modules\Academic\Domain\Entities\ContentBlocks\ScenarioContentBlock;
 use Modules\Academic\Domain\Entities\ContentBlocks\TextContentBlock;
 use Modules\Academic\Domain\Entities\ContentBlocks\VideoContentBlock;
 use Modules\Academic\Domain\Enums\ContentBlockType;
@@ -38,6 +39,7 @@ final class ContentBlockFactory
             ContentBlockType::Video => VideoContentBlock::fromPayload($id, $position, $payload),
             ContentBlockType::Audio => AudioContentBlock::fromPayload($id, $position, $payload),
             ContentBlockType::Interactive => InteractiveContentBlock::fromPayload($id, $position, $payload),
+            ContentBlockType::Scenario => ScenarioContentBlock::fromPayload($id, $position, $payload),
             ContentBlockType::Download => DownloadContentBlock::fromPayload($id, $position, $payload),
         };
     }

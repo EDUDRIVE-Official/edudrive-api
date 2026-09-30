@@ -1,0 +1,63 @@
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const host = document.querySelector('#viewport');
+try { start(); } catch (error) { host.innerHTML = '<div class="error">No se pudo iniciar la vista 3D. Abrí este archivo en un navegador con WebGL habilitado.</div>'; console.error(error); }
+function start() {
+    const scene = new THREE.Scene(); scene.background = new THREE.Color('#dbe9ee');
+    const camera = new THREE.PerspectiveCamera(39, 1, .1, 240);
+    const renderer = new THREE.WebGLRenderer({ antialias: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.18; host.append(renderer.domElement);
+    renderer.domElement.setAttribute('role', 'img'); renderer.domElement.setAttribute('aria-label', 'Intersección 3D: vehículos circulan por la derecha y una persona cruza por las franjas con señal peatonal verde.');
+    const controls = new OrbitControls(camera, renderer.domElement); controls.enableDamping = true; controls.maxPolarAngle = Math.PI * .47; controls.minDistance = 20; controls.maxDistance = 115;
+    scene.add(new THREE.HemisphereLight(0xeaf4ff, 0x76866a, 2.4)); const sun = new THREE.DirectionalLight(0xffefd5, 3.5); sun.position.set(-30, 65, 25); sun.castShadow = true; sun.shadow.mapSize.set(2048,2048); Object.assign(sun.shadow.camera, {left:-65,right:65,top:65,bottom:-65}); sun.shadow.normalBias = .035; scene.add(sun);
+    const mats = new Map(); const mat = color => { if (!mats.has(color)) mats.set(color, new THREE.MeshStandardMaterial({color,roughness:.72})); return mats.get(color); };
+    function mesh(geo, material, parent, x=0,y=0,z=0) { const m = new THREE.Mesh(geo, typeof material === 'string' ? mat(material) : material); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; parent.add(m); return m; }
+    const box = (p,x,y,z,w,h,d,c) => mesh(new THREE.BoxGeometry(w,h,d),c,p,x,y,z);
+    const rod = (p,a,b,r,c) => {const va=new THREE.Vector3(...a),vb=new THREE.Vector3(...b),delta=vb.clone().sub(va);const m=mesh(new THREE.CylinderGeometry(r,r,delta.length(),12),c,p); m.position.copy(va).add(vb).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());return m;};
+    box(scene,0,-.25,0,112,.4,112,'#90ad99'); box(scene,0,0,0,112,.12,14,'#465259'); box(scene,0,.005,0,14,.12,112,'#465259');
+    // Four separate corners leave both roads continuous, with one lane in each direction.
+    for(const sx of [-1,1]) for(const sz of [-1,1]) {
+        box(scene,sx*31.5,.16,sz*31.5,49,.32,49,'#cdd3d0');
+        box(scene,sx*34,.35,sz*34,38,.12,38,'#b1beb4');
+        const b=new THREE.Group();b.position.set(sx*32,0,sz*31);scene.add(b);
+        const height=sx===sz?12:17; box(b,0,height/2+.35,0,17,height,15,sx>0?'#e6e0d5':'#c2ced0');box(b,0,height+.55,0,17.6,.35,15.6,'#758b8d');
+        for(let y=3;y<height;y+=3) for(let x=-6;x<=6;x+=3) {box(b,x,y,7.53,1.9,1.75,.09,'#587983');box(b,x,y,-7.53,1.9,1.75,.09,'#587983');}
+        for(let y=3;y<height;y+=3)for(let z=-5;z<=5;z+=3){box(b,8.53,y,z,.09,1.75,1.9,'#587983');box(b,-8.53,y,z,.09,1.75,1.9,'#587983');}
+        for(const [x,z] of [[sx*18,sz*20],[sx*21,sz*13],[sx*43,sz*15]]) {box(scene,x,.55,z,2.7,.6,2.7,'#7f9687');rod(scene,[x,.6,z],[x,4,z],.18,'#716251');const crown=mesh(new THREE.IcosahedronGeometry(1.55,2),'#4e7d64',scene,x,4.6,z);crown.scale.y=1.3;}
+        box(scene,sx*17,.75,sz*14,3,.2,.7,'#96734e');
+    }
+    // Centre lines stop before the pedestrian crossings; white zebra bars run along walking direction.
+    for(let v=-54;v<55;v+=3.8)if(Math.abs(v)>14){box(scene,v,.073,0,2,.02,.13,'#ead388');box(scene,0,.077,v,.13,.02,2,'#ead388');}
+    for(const side of [-1,1]) {
+        for(let k=-5.7;k<=5.8;k+=1.5){box(scene,side*10,.083,k,2.6,.025,.75,'#f6f5e9');box(scene,k,.088,side*10,.75,.025,2.6,'#f6f5e9');}
+        for(const z of [-7.65,7.65]) {box(scene,side*10,.33,z,2.65,.03,1.05,'#d6b959'); for(let x=-1;x<=1;x+=.35) for(let dz=-.3;dz<=.3;dz+=.3) mesh(new THREE.SphereGeometry(.055,6,5),'#e7cb76',scene,side*10+x,.365,z+dz);}
+        for(const x of [-7.65,7.65])box(scene,x,.33,side*10,1.05,.03,2.65,'#d6b959');
+    }
+    box(scene,-13,.085,3.5,.3,.025,6.5,'#fff9e8');box(scene,13,.085,-3.5,.3,.025,6.5,'#fff9e8');box(scene,-3.5,.085,-13,6.5,.025,.3,'#fff9e8');box(scene,3.5,.085,13,6.5,.025,.3,'#fff9e8');
+    const signalMats=[];
+    function trafficSignal(x,z,rotation,axis){const p=new THREE.Group();p.position.set(x,0,z);p.rotation.y=rotation;scene.add(p);rod(p,[0,.2,0],[0,5.8,0],.085,'#435257');box(p,0,5,0,.64,1.9,.43,'#253238');const lenses=['#ee4851','#efbb46','#39d19b'].map((color,i)=>{const m=new THREE.MeshStandardMaterial({color:'#263537',emissive:color,emissiveIntensity:0});mesh(new THREE.SphereGeometry(.19,18,12),m,p,0,5.57-i*.57,.24).scale.z=.3;return m;}); signalMats.push({axis,lenses});}
+    trafficSignal(-13,7.8,-Math.PI/2,'ew');trafficSignal(13,-7.8,Math.PI/2,'ew');trafficSignal(-7.8,-13,Math.PI,'ns');trafficSignal(7.8,13,0,'ns');
+    const pedestrianMats=[];
+    function pedestrianSignal(z,rot){const p=new THREE.Group();p.position.set(11.9,0,z);p.rotation.y=rot;scene.add(p);rod(p,[0,0,0],[0,3.6,0],.06,'#4c5c60');box(p,0,3.12,0,.85,1.15,.32,'#253238'); const stop=new THREE.MeshStandardMaterial({color:'#e45757',emissive:'#ff333f',emissiveIntensity:1});const walk=new THREE.MeshStandardMaterial({color:'#183c31',emissive:'#35ffc0',emissiveIntensity:0});
+        mesh(new THREE.SphereGeometry(.085,12,8),stop,p,0,3.48,.19);rod(p,[0,3.38,.19],[0,3.15,.19],.037,stop);rod(p,[-.13,3.31,.19],[.13,3.31,.19],.027,stop);rod(p,[0,3.15,.19],[-.09,3.03,.19],.03,stop);rod(p,[0,3.15,.19],[.09,3.03,.19],.03,stop);
+        mesh(new THREE.SphereGeometry(.075,12,8),walk,p,0,2.98,.2);rod(p,[0,2.9,.2],[-.025,2.75,.2],.03,walk);rod(p,[-.025,2.75,.2],[-.14,2.63,.2],.025,walk);rod(p,[-.025,2.75,.2],[.12,2.66,.2],.025,walk);rod(p,[-.12,2.83,.2],[.13,2.85,.2],.022,walk);pedestrianMats.push({stop,walk});}
+    pedestrianSignal(-8.3,0);pedestrianSignal(8.3,Math.PI);
+    function car(color){const p=new THREE.Group();scene.add(p);box(p,0,.62,0,4.3,.65,1.85,color);box(p,-.15,1.1,0,2.25,.58,1.66,color);box(p,-.12,1.2,0,2.03,.35,1.68,'#344e5b');box(p,-.1,1.5,0,2.15,.1,1.72,color);box(p,0,1.18,0,.1,.48,1.7,color);box(p,2.16,.6,0,.06,.24,1.3,'#253a42');for(const s of [-1,1]){box(p,2.17,.83,s*.62,.065,.13,.36,'#fff7d4');box(p,-2.17,.83,s*.64,.06,.14,.34,'#c73b49');box(p,.4,1.15,s*.96,.32,.15,.2,color);for(const x of [-1.32,1.32]){mesh(new THREE.CylinderGeometry(.37,.37,.2,20),'#232c32',p,x,.38,s*.94).rotation.x=Math.PI/2;mesh(new THREE.CylinderGeometry(.21,.21,.215,16),'#9eaeb5',p,x,.38,s*.94).rotation.x=Math.PI/2;}}
+        return p;}
+    const lanes=[{axis:'ew',dx:1,dz:0,lane:3.5},{axis:'ew',dx:-1,dz:0,lane:-3.5},{axis:'ns',dx:0,dz:1,lane:-3.5},{axis:'ns',dx:0,dz:-1,lane:3.5}];
+    const cars=[];const palette=['#4e7f99','#e3e7e5','#bd6259','#d7bb82','#445a66','#77a698'];lanes.forEach((lane,i)=>{for(let j=0;j<4;j++){const model=car(palette[(i+j)%palette.length]);cars.push({lane,model,s:-20-j*11,speed:0,initial:-20-j*11});}});
+    const person=new THREE.Group();scene.add(person);box(person,0,1.08,0,.4,.56,.27,'#da8c43');mesh(new THREE.SphereGeometry(.19,20,14),'#b97f5e',person,0,1.65,0);const hair=mesh(new THREE.SphereGeometry(.195,16,12,0,Math.PI*2,0,Math.PI/2),'#3f3633',person,0,1.7,0);hair.rotation.x=-.15;const limbs=[];for(const side of [-1,1]){const leg=new THREE.Group();leg.position.set(side*.12,.82,0);person.add(leg);box(leg,0,-.29,0,.14,.57,.16,'#344e62');box(leg,0,-.6,.045,.17,.12,.29,'#e8e6d9');limbs.push(leg);const arm=new THREE.Group();arm.position.set(side*.27,1.32,0);person.add(arm);rod(arm,[0,0,0],[0,-.5,0],.057,'#b97f5e');limbs.push(arm);}
+    // A fully protected pedestrian interval follows a clearance long enough for a car to leave the zebra.
+    const phases=[{id:'ew',seconds:7,text:'Circulación vehicular',detail:'La persona espera en la acera. Su señal está en rojo.'},{id:'ew-yellow',seconds:2,text:'El tránsito se prepara para detenerse',detail:'Amarillo vehicular. El peatón sigue esperando.'},{id:'clear',seconds:7,text:'Despejando la intersección',detail:'Todos los vehículos tienen rojo. Terminan de salir los que ya ingresaron.'},{id:'walk',seconds:8,text:'Turno del peatón',detail:'Señal peatonal verde. Los cuatro accesos vehiculares permanecen en rojo.'},{id:'finish',seconds:3,text:'Finalizando el cruce',detail:'La persona llega a la acera; los vehículos todavía esperan.'},{id:'buffer',seconds:2,text:'Cruce despejado',detail:'La señal peatonal vuelve a rojo antes de habilitar los vehículos.'},{id:'ns',seconds:8,text:'Se restablece el flujo vehicular',detail:'Verde en la vía perpendicular. La persona ya está protegida.'},{id:'ns-yellow',seconds:2,text:'Cambio de turno vehicular',detail:'Amarillo en la vía perpendicular; la otra vía espera.'},{id:'clear2',seconds:7,text:'Despejando para el siguiente turno',detail:'Todos en rojo antes de volver al flujo de la otra vía.'}];
+    let phaseIndex=0,elapsed=0,time=0,paused=matchMedia('(prefers-reduced-motion: reduce)').matches,pedZ=8.9,fromZ=8.9,toZ=-8.9,cycle=0;
+    function updatePhase(){const p=phases[phaseIndex];document.querySelector('#status').textContent=p.text;document.querySelector('#detail').textContent=p.detail;document.querySelector('#dot').style.background=p.id==='walk'?'#23ad82':p.id.includes('yellow')?'#dfac36':'#557d8b';for(const signal of signalMats){const light=p.id===signal.axis?2:p.id===signal.axis+'-yellow'?1:0;signal.lenses.forEach((m,i)=>{m.color.set(i===light?['#ee4851','#efbb46','#39d19b'][i]:'#263537');m.emissiveIntensity=i===light?2:0;});}}
+    function positionCars(){for(const c of cars){const {dx,dz,lane}=c.lane;c.model.position.set(dx?c.s*dx:lane,.1,dz?c.s*dz:lane);c.model.rotation.y=Math.atan2(-dz,dx);}}
+    function tick(dt){time+=dt;elapsed+=dt;if(elapsed>=phases[phaseIndex].seconds){elapsed=0;phaseIndex++;if(phaseIndex===phases.length){phaseIndex=0;cycle++;fromZ=pedZ;toZ=-fromZ;}updatePhase();}const id=phases[phaseIndex].id;
+        for(const lane of lanes){const ordered=cars.filter(c=>c.lane===lane).sort((a,b)=>b.s-a.s);for(let i=0;i<ordered.length;i++){const c=ordered[i];let limit=Infinity;const green=id===lane.axis;if(!green && c.s<=-15.3)limit=-15.3;if(i>0)limit=Math.min(limit,ordered[i-1].s-7);const gap=limit-c.s;const target=gap<.1?0:Math.min(5.2,Math.sqrt(Math.max(0,2*3*gap)));c.speed=THREE.MathUtils.damp(c.speed,target,3,dt);c.s=Math.min(limit,c.s+c.speed*dt);}for(const c of ordered)if(c.s>57){c.s=Math.min(-58,...ordered.filter(other=>other!==c).map(other=>other.s-11));c.speed=0;}}
+        if(id==='walk')pedZ=THREE.MathUtils.lerp(fromZ,toZ,Math.min(1,elapsed/8));if(id==='finish')pedZ=toZ;person.position.set(10,.33,pedZ);person.rotation.y=toZ<fromZ?Math.PI:0;limbs.forEach((limb,i)=>limb.rotation.x=id==='walk'?Math.sin(time*8)*(i%2?-.36:.36)*(i<2?1:-1):0);
+        pedestrianMats.forEach(({stop,walk})=>{const green=id==='walk'||id==='finish'&&Math.floor(time*3)%2===0;stop.emissiveIntensity=id==='walk'||id==='finish'?0:2;stop.color.set(stop.emissiveIntensity?'#f45462':'#392c31');walk.emissiveIntensity=green?2:0;walk.color.set(green?'#39e4b3':'#173d34');});positionCars();}
+    function setView(value){if(value==='top'){camera.position.set(0,80,.1);controls.target.set(0,0,0);}else if(value==='crossing'){camera.position.set(30,16,26);controls.target.set(8,1,0);}else{camera.position.set(47,43,52);controls.target.set(0,0,0);}controls.update();}
+    const pauseButton=document.querySelector('#pause');function showPause(){pauseButton.textContent=paused?'Reanudar':'Pausar';pauseButton.setAttribute('aria-pressed',String(paused));}pauseButton.onclick=()=>{paused=!paused;showPause();};document.querySelector('#view').onchange=e=>setView(e.target.value);document.querySelector('#restart').onclick=()=>{phaseIndex=0;elapsed=0;time=0;cycle=0;pedZ=8.9;fromZ=8.9;toZ=-8.9;cars.forEach(c=>{c.s=c.initial;c.speed=0;});updatePhase();tick(0);};
+    const resize=new ResizeObserver(()=>{const {width,height}=host.getBoundingClientRect();renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();});resize.observe(host);setView('overview');showPause();updatePhase();tick(0);
+    let last=performance.now();function animate(now){const dt=Math.min((now-last)/1000,.04);last=now;if(!document.hidden){if(!paused)tick(dt);controls.update();renderer.render(scene,camera);}requestAnimationFrame(animate);}requestAnimationFrame(animate);
+}

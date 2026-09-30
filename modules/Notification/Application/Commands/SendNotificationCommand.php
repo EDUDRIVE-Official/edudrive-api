@@ -14,5 +14,6 @@ final readonly class SendNotificationCommand implements Command
         public string $category,
         public string $subject,
         public string $body,
+        public ?string $actionUrl = null,
     ) {}
 }

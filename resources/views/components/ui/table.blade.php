@@ -1,5 +1,5 @@
 @props([])
-<div class="overflow-x-auto rounded-md border border-border">
+<div class="campus-table overflow-x-auto rounded-md border border-border" tabindex="0" role="region" aria-label="Tabla de datos desplazable">
     <table {{ $attributes->merge(['class' => 'w-full text-left font-sans text-sm']) }}>
         @isset($head)
             <thead class="bg-background text-text-secondary">
