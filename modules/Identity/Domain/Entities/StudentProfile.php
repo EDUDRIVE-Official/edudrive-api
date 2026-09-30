@@ -14,6 +14,7 @@ final class StudentProfile
         private ?string $accessibilityNeeds,
         private ?string $learningPreferences,
         private DateTimeImmutable $updatedAt,
+        private ?string $learningPurpose = null,
     ) {}
 
     public static function create(string $userId, ?DateTimeImmutable $occurredAt = null): self
@@ -33,6 +34,7 @@ final class StudentProfile
         ?string $accessibilityNeeds,
         ?string $learningPreferences,
         DateTimeImmutable $updatedAt,
+        ?string $learningPurpose = null,
     ): self {
         return new self(
             userId: $userId,
@@ -40,6 +42,7 @@ final class StudentProfile
             accessibilityNeeds: $accessibilityNeeds,
             learningPreferences: $learningPreferences,
             updatedAt: $updatedAt,
+            learningPurpose: $learningPurpose,
         );
     }
 
@@ -53,6 +56,19 @@ final class StudentProfile
         $this->accessibilityNeeds = $accessibilityNeeds;
         $this->learningPreferences = $learningPreferences;
         $this->updatedAt = $occurredAt;
+    }
+
+    public function learningPurpose(): ?string
+    {
+        return $this->learningPurpose;
+    }
+
+    public function choosePurpose(?string $purpose): void
+    {
+        if ($purpose !== null && ! in_array($purpose, ['mobility', 'auto', 'motorcycle'], true)) {
+            throw new \InvalidArgumentException('Propósito de aprendizaje inválido.');
+        }
+        $this->learningPurpose = $purpose;
     }
 
     public function userId(): string

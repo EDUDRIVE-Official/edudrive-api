@@ -43,8 +43,14 @@
                 <span class="rounded-full bg-surface px-3 py-1 text-xs font-medium text-text-secondary">{{ $learnerStage['age_range'] }}</span>
             </div>
             <p class="mt-2 text-sm leading-6 text-text-secondary">{{ $learnerStage['guidance'] }}</p>
+            <p class="mt-2 text-sm">La edad orienta el recorrido; completar un curso no demuestra por sí solo una competencia.</p>
+            @if ($learnerStage['stage'] === 'E4')
+                <p class="mt-2 text-sm font-semibold">Propósito: {{ ['mobility' => 'Movilidad cotidiana · peatón, pasajero y ciclismo según tu elección', 'auto' => 'Automóvil', 'motorcycle' => 'Motocicleta'][$learningPurpose ?? ''] ?? 'Por elegir en Mi perfil' }}</p>
+                <p class="mt-2 text-sm">Siguiente paso: diagnóstico inicial con orientación. La evaluación por competencias aún no está disponible en este recorrido.</p>
+            @endif
+            <a class="mt-3 inline-block underline" href="{{ route('student-profile.show') }}">Revisar mi edad, propósito y apoyos</a>
             @if ($recommendedCount === 0)
-                <p class="mt-3 text-sm">Todavía no hay una recomendación por etapa para tu perfil. Podés consultar el catálogo y continuar tus cursos; para elegir uno nuevo, solicitá orientación docente.</p>
+                <p class="mt-3 text-sm">Aún no hay un curso publicado con correspondencia confirmada para tu recorrido. Tus cursos y avances se conservan. Solicitá orientación antes de elegir contenido de otra edad.</p>
             @endif
             @if ($canManage)
                 <p class="mt-3 text-sm">Clasificación del catálogo: {{ $courseCollection->filter(fn (array $course): bool => $course['audience']['stage'] !== null)->count() }} de {{ $courseCollection->count() }} cursos tienen una etapa única en todas sus lecciones. Esta clasificación no sustituye la revisión del contenido.</p>

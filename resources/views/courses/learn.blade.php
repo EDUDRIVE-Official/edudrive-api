@@ -553,7 +553,7 @@
                                                     </fieldset>
                                                     <label class="mb-4 block text-sm font-bold text-text" for="reflection-{{ $lesson['id'] }}">
                                                         {{ $learnerStage['reflection_prompt'] }}
-                                                        @if (in_array($learnerStage['stage'], ['explore', 'discover'], true))
+                                                        @if (in_array($learnerStage['stage'], ['explore', 'discover', 'E1', 'E2'], true))
                                                             <span class="mt-2 block text-xs font-normal leading-5 text-text-secondary">Podés elegir una idea con ayuda de una persona adulta y cambiarla para contar lo que pensás.</span>
                                                             <span class="mt-2 flex flex-wrap gap-2" aria-label="Ideas para comenzar la reflexión">
                                                                 @foreach (['Voy a detenerme y mirar con calma.', 'Voy a buscar un lugar más seguro.', 'Voy a pedir ayuda antes de acercarme a la vía.'] as $reflectionStarter)

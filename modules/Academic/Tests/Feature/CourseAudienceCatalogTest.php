@@ -36,7 +36,7 @@ it('does not recommend pending or unclassified courses', function (): void {
     $missing = audienceCourse('AUD-MISSING', null);
     $this->actingAs(actingAsRole(Role::Student), 'web');
     $this->get('/courses')->assertOk()->assertDontSeeText('Recomendada para vos')
-        ->assertSeeText('Público pendiente de revisión')->assertSeeText('Etapa por confirmar');
+        ->assertSeeText('PÃºblico pendiente de revisiÃ³n')->assertSeeText('Etapa por confirmar');
     $audiences = app(CourseAudienceCatalog::class)->forCourses([$pending, $missing]);
     expect($audiences[$pending]['stage'])->toBeNull()
         ->and($audiences[$missing]['classified'])->toBe(0);
@@ -49,7 +49,7 @@ it('blocks future publication of an experience with its audience pending', funct
             ->assertReady(CourseId::fromString($id));
         test()->fail('A pending audience was accepted.');
     } catch (CoursePedagogicalQualityRequired $exception) {
-        expect($exception->getMessage())->toContain('público pendiente de revisión');
+        expect($exception->getMessage())->toContain('pÃºblico pendiente de revisiÃ³n');
     }
 });
 
@@ -81,3 +81,12 @@ it('does not infer a single audience from mixed or partially classified lessons'
     expect($catalog->forCourses([$id])[$id]['classified'])->toBe(1)
         ->and($catalog->forCourses([$id])[$id]['stage'])->toBeNull();
 });
+
+it('does not recommend the 9-12 course outside its audience', function (int $age): void {
+    $id = audienceCourse('AUD-BOUNDARY', 'discover');
+    $student = actingAsRole(Role::Student);
+    $student->forceFill(['date_of_birth' => now()->subYears($age)->toDateString()])->save();
+    $response = $this->actingAs($student, 'web')->get('/courses')->assertOk();
+    $courses = collect($response->viewData('courses'))->keyBy('id');
+    expect($courses[$id]['is_recommended'])->toBeFalse();
+})->with([3, 6, 7, 8, 13, 17, 35, 82]);

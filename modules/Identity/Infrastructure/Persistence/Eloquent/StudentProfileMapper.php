@@ -17,6 +17,7 @@ final class StudentProfileMapper
             accessibilityNeeds: $model->accessibility_needs,
             learningPreferences: $model->learning_preferences,
             updatedAt: $model->updated_at->toDateTimeImmutable(),
+            learningPurpose: $model->learning_purpose,
         );
     }
 
@@ -30,6 +31,7 @@ final class StudentProfileMapper
             'education_level' => $profile->educationLevel(),
             'accessibility_needs' => $profile->accessibilityNeeds(),
             'learning_preferences' => $profile->learningPreferences(),
+            'learning_purpose' => $profile->learningPurpose(),
         ];
     }
 }
