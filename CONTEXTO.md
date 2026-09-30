@@ -1,19 +1,21 @@
 # CONTEXTO — EDUDRIVE
 
-Actualizado: **28 de septiembre de 2026**, zona horaria America/Costa_Rica. Edición documental 1.0.
+Actualizado: **30 de septiembre de 2026**, America/Costa_Rica. Edición documental 1.1. Producción descrita según los registros de entrega del 29 de septiembre; no se realizó un nuevo despliegue al actualizar este documento.
 
 Este es el punto de entrada para entender y continuar el sistema. Resume el estado conocido y enlaza las fuentes; no sustituye el código, los registros de publicación ni la matriz curricular. Las fechas de comprobación importan: una función presente en el repositorio no demuestra que esté publicada, y una prueba técnica no demuestra eficacia pedagógica.
 
 ## 1. Estado actual en una página
 
-- App existente: [app.edudrive.vr506.com](https://app.edudrive.vr506.com/login). El proyecto combina administración educativa, cursos, seguimiento, Pasaporte Vial y componentes de simulación.
-- Última entrega comprobada en este trabajo: **`descubro-review-20260928r1`**, publicada el 28 de septiembre. Amplía la guía acompañada de DESCUBRO y conserva los ajustes anteriores del Pasaporte.
+- Última entrega registrada: **`editorial-approved-20260929r1`**, posterior a `consolidacion-20260929r1`. App: [EDUDRIVE](https://app.edudrive.vr506.com/login). [Registro de publicación y recuperación](docs/engineering/PUBLICACION-CURSOS-2026-09-29.md).
+- Publicados **Camino Seguro (27 lecciones)** y **Pasajero Responsable (12)**, versión 2, con aprobación declarada por el usuario. Cinco lecciones ampliadas; IDs, avances e historial conservados. Esto no constituye validación pedagógica con participantes.
+- Cierre técnico del 29: **2605 pruebas PHP, 8585 aserciones y cero fallos** en SQLite aislado; PHPStan nivel 8 sin errores y Pint aprobado en los 63 PHP modificados. Comprobación focalizada PostgreSQL: **64 pruebas y 206 aserciones**. La integración editorial posterior pasó **192 pruebas y 825 aserciones**; no se repitió la suite general tras esa integración.
+- Respaldo restaurado en PostgreSQL aislado y 86 fechas comprobadas antes de la publicación técnica. Los requisitos previos de respaldo/restauración quedaron cumplidos en esa entrega. Persisten las limitaciones de cobertura descritas en [el registro](docs/engineering/PUBLICACION-2026-09-29.md).
 - DESCUBRO «Cruzar con acompañamiento» está disponible en producción **solo para cuentas activas con rol global `super_admin`**. Esa restricción corresponde a esta experiencia; no describe el acceso de toda la app.
 - El recorrido tiene tres explicaciones, cuatro decisiones, retroalimentación, avance persistente, repaso, narración opcional, resumen de habilidades y guía para acompañantes.
 - La matriz 3–80 vigente de trabajo es **2.0.0-borrador.1**: 60 fichas, 180 subcompetencias y 18 comparaciones THINK!. Sigue en revisión; faltan anclas específicas en 48 fichas.
 - No se ha realizado el piloto curricular ni una aplicación con participantes en este trabajo. Fecha, sede y equipo de campo siguen sin definir.
 - Hay código previo de Learning, Decision Engine y cálculo de confianza del Pasaporte. **No debe confundirse con la implementación completa del modelo curricular nuevo.** DESCUBRO mantiene su progreso separado de esas acreditaciones.
-- El trabajo acumulado se registró localmente en la rama `codex/consolidacion-20260928`; la subida está pendiente por falta de permiso de escritura de la cuenta Git. La suite general todavía requiere resolver hallazgos antes de integrar en `main`. Ver [informe de consolidación](docs/engineering/CONSOLIDACION-2026-09-28.md).
+- GitHub contiene la rama `codex/consolidacion-20260928` y el [PR #1](https://github.com/EDUDRIVE-Official/edudrive-api/pull/1). Las correcciones y la integración editorial del 29 siguen pendientes de commit y subida; el despliegue se realizó desde el árbol de trabajo. La actualización documental no registra esos cambios de código. `main` permanece en `a6803b7` (verificado el 30).
 
 ## 2. Dónde vive cada cosa
 
@@ -129,7 +131,11 @@ Archivos clave: [controlador](modules/Academic/Presentation/Http/Controllers/Des
 | 27 septiembre | `descubro-review-20260927r2` | Pasaporte pendiente de emisión y eliminación del rótulo duplicado. Cuatro pruebas/69 aserciones y revisión visual. |
 | 28 septiembre | `descubro-review-20260928r1` | Guía acompañada ampliada. Cuatro pruebas/81 aserciones, compilación de vistas, salud y navegación en línea comprobadas. |
 | 28 septiembre | Este CONTEXTO | Consolidación documental y enlaces a fuentes versionadas. |
-| 28 septiembre | Consolidación GitHub | Rama local con trabajo acumulado y correcciones de calidad; pendiente permiso de escritura y revisión de la suite general. Sin despliegue. |
+| 28 septiembre | Consolidación GitHub | Rama subida y PR #1 creado. Primeros fallos de CI históricos; no describen el cierre local del 29. |
+
+| 29 septiembre | Consolidación y fechas | 2605 pruebas SQLite y 64 focalizadas PostgreSQL aprobadas; publicación técnica con respaldo restaurado. |
+| 29 septiembre | Cursos versión 2 | Camino Seguro y Pasajero Responsable publicados; 192 pruebas focalizadas. |
+| 30 septiembre | Contexto 1.1 | Estado documental reconciliado; sin nuevo despliegue. |
 
 Los resultados pertenecen a cada entrega y no se suman como si fueran una suite nueva. No se ejecutó una auditoría funcional completa del sistema al redactar este documento.
 
@@ -144,42 +150,47 @@ Fuentes recientes:
 
 ## 7. Producción, respaldo y reversión
 
-Estado verificado durante la publicación del 28 de septiembre; no constituye monitoreo continuo.
+Último estado registrado el 29 de septiembre; no constituye monitoreo continuo.
 
 | Componente | Versión registrada |
 | --- | --- |
-| App / worker / scheduler | `edudrive-api:descubro-review-20260928r1` |
-| ID de imagen de app | `sha256:af548196f23e7da6a998a2dcb5a433c7ebe261be315d67673576a566f9239399` |
-| nginx | `edudrive-nginx:descubro-review-20260927r1` |
-| Compose activo | `compose.prod.yaml` + `compose.bootstrap.yaml` + **`compose.descubro-review.yaml`** |
-| Entrega actual | `/opt/edudrive/releases/descubro-review-20260928r1` |
-| Registro de éxito | `deployment-complete.json` en esa entrega |
+| App / worker / scheduler | `edudrive-api:editorial-approved-20260929r1` |
+| ID de app | `sha256:3398e960e160f19824a82673012041e47a7af8cbec57c380612e9d916b3dcb92` |
+| nginx | `edudrive-nginx:editorial-approved-20260929r1` |
+| ID de nginx | `sha256:af48146799d4fff4a845f706e57b0c7e6dea6eacf5b0f3b984c9d747b0d5283d` |
+| Compose activo | `compose.prod.yaml` + `compose.bootstrap.yaml` + `compose.descubro-review.yaml` |
+| Entrega | `/opt/edudrive/releases/editorial-approved-20260929r1` |
+| Evidencias | `validation.json`, `publication.json`, `activated-at.txt` |
 
-El código está dentro de las imágenes; editar el repositorio local no publica cambios. El volumen de app monta `storage`, no el código fuente. Las entregas recientes añadieron archivos concretos sobre imágenes conocidas; no se publicó todo el árbol local pendiente de consolidación.
+El código reside en las imágenes. La entrega técnica del 29 partió del árbol local; la editorial añadió un paquete incremental. GitHub aún no reproduce esas entregas. No hubo migraciones ni seeders en ambas publicaciones del 29.
 
-Respaldo de datos previo a la publicación inicial: `/opt/edudrive/releases/descubro-review-20260927r1/before-descubro.dump`, conservado en el servidor. Se comprobó su listado mediante `pg_restore --list`; no se realizó un ensayo de restauración. Solo se aplicó la migración `2026_09_25_000001_create_academic_descubro_progress_table.php`. Los ajustes r2 y del día 28 no requirieron migraciones.
+El `before.dump` de la entrega editorial se restauró íntegramente en PostgreSQL aislado. SHA256: `c9a17f440f3f540efd23cddc98277323e0efea9e0a057bc645a3ef6acf22b019`. Se conservaron versiones 1 y 2 de los cursos y se compararon huellas del progreso antes/después.
 
-La última entrega conserva `compose.before.yaml` y las imágenes anteriores. Para una reversión operativa, comprobar primero la versión activa, restaurar el override anterior, recrear app/worker/scheduler/nginx y regenerar cachés. Esa reversión de imágenes no restaura datos; no se ejecutó durante la entrega. Ver los registros enlazados antes de actuar.
+**Recuperación:** la última entrega no encontró las imágenes anteriores `consolidacion-20260929r1` al intentar revertir. No asumir que `compose.before.yaml` basta para recuperar; verificar o reconstruir las imágenes primero. Evaluar escrituras posteriores antes de restaurar datos y mantener compatibilidad con los campos `supplement`. Consultar [el registro editorial](docs/engineering/PUBLICACION-CURSOS-2026-09-29.md). No repetir el script de publicación sobre los cursos ya actualizados.
+
+Al cierre de esa entrega `/up` y `/login` respondían 200 y nginx estaba saludable. La revisión visual autenticada quedó pendiente por falta de sesión; las comprobaciones del kernel HTTP no se presentan como navegación visual.
 
 No ejecutar indiscriminadamente el despliegue genérico ni todas las migraciones pendientes: el flujo reciente necesita el override de revisión. No ejecutar seeders para actualizar cursos persistidos; pueden reemplazar contenido o reabrirlo. Fuente general: [despliegue VPS](docs/operaciones/despliegue-vps.md), [ambientes](docs/operaciones/ambientes.md), [CI/CD](docs/operaciones/ci-cd.md), [respaldos](docs/operaciones/backups-rpo-rto.md). Los registros recientes describen las excepciones actuales a esos runbooks.
 
 ## 8. Estado de Git y documentación heredada
 
-Base remota comprobada el 28 de septiembre: `main` en `a6803b7`, `feat(deploy): add single-VPS production deployment (Docker Compose + scripted runbook)`. El trabajo local acumulado se registró después en `codex/consolidacion-20260928`, con primer commit `f40041d`. GitHub rechazó la simulación de subida con HTTP 403 para `AbelCampos2025`; no hay rama remota ni PR de esta consolidación todavía. **La rama de consolidación contiene también trabajo que no se verificó como publicado; no representa una reproducción exacta de las imágenes activas.**
+El 30 de septiembre se comprobaron `main` en `a6803b7` y la rama remota de consolidación en `3d69d2a`, antes del commit documental de esta actualización. El PR #1 fue creado en borrador. La autenticación con **EDUDRIVE-Official** permitió la subida; el antiguo bloqueo de `AbelCampos2025` está resuelto para este flujo.
 
-Preservar el trabajo existente, revisar archivos concretos y comprobar el índice antes de un commit. No usar `git add .`, `git add -A`, reset masivo ni regenerar todos los contenidos para consolidar esta entrega. La preparación local resuelve el registro del trabajo; siguen pendientes el acceso de escritura, la publicación de la rama y la revisión de los fallos de la suite general.
+Las correcciones de código y pruebas del 29 y la integración editorial siguen en el árbol local, pendientes de registrar y subir. Esta actualización versiona documentación y registros de entrega, no ese código ni una integración en `main`. Los resultados de CI de la rama anterior no validan los cambios locales posteriores.
+
+Preservar los cambios existentes y revisar explícitamente el contenido del próximo commit. No mezclar documentación con código sin verificar su alcance. No repetir las pruebas ya documentadas salvo cambios nuevos o una diferencia de entorno que lo justifique.
 
 [SESION.md](docs/engineering/SESION.md) contiene un estado histórico del 16 de agosto. [ENG-LOG](docs/engineering/ENG-LOG.md) conserva cierres anteriores y [roadmap](docs/roadmap/ENG-000-roadmap-tecnico-backend.md) combina planificación e incrementos posteriores. No tomar sus «pendiente» o «completado» aislados como prueba del estado actual; contrastar fecha, código, pruebas y entrega. Las instrucciones históricas sobre herramientas o próximos pasos no sustituyen el alcance acordado actualmente.
 
 ## 9. Pendientes y orden de continuidad propuesto
 
-1. **Consolidación técnica:** reconciliar cambios locales con las imágenes publicadas y preparar una revisión reproducible en Git; registrar pruebas y actualizar el proceso de despliegue para incluir el override activo. El registro local y las fuentes documentales ya se prepararon; la publicación en GitHub y la integración validada siguen pendientes.
+1. **Consolidación técnica:** registrar y subir las correcciones e integración editorial pendientes, reconciliándolas con los paquetes publicados; ajustar CI para construir los recursos Vite y verificar el commit resultante. Conservar la evidencia de pruebas ya aprobadas. Integración en `main` pendiente.
 2. **Cierre curricular:** completar anclas en las 48 fichas restantes y alineación de subcompetencias, actividad, evidencia y evaluación. Cerrar verificación normativa, manuales, recursos y escenarios. La matriz sigue siendo borrador.
 3. **Derivados:** reeditar instrumentos del piloto, retención e identificadores para que correspondan a la misma edición. PIL-01 y P912 son materiales distintos; no mezclar sus resultados ni criterios.
 4. **Modelo y software:** revisar la distancia entre Learning OS/CTM/Decision Engine propuestos y el código existente; diseñar contratos y pruebas por competencia antes de conectar nuevas acreditaciones.
 5. **Validación y público:** organizar revisión especializada y aplicación posterior cuando los materiales estén cerrados; definir fecha, sede y equipo. La apertura a estudiantes es una decisión pendiente, no consecuencia automática de publicar una pantalla.
 
-Limitaciones conocidas: comprobación de voz limitada al equipo revisado; pruebas visuales parciales; falta ensayo de restauración; no hay evaluación pedagógica con participantes; no existe en este documento una auditoría exhaustiva de todos los módulos o configuraciones de producción.
+Limitaciones conocidas: comprobación de voz limitada al equipo revisado; pruebas visuales parciales; restauración de PostgreSQL comprobada, sin ensayo integral de recuperación de objetos/roles/ACL; no hay evaluación pedagógica con participantes; no existe en este documento una auditoría exhaustiva de todos los módulos o configuraciones de producción.
 
 ## 10. Cómo mantener este contexto
 

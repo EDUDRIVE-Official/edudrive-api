@@ -1,12 +1,25 @@
 # EDUDRIVE - Estado documental actual
 
+> Estado reconciliado al 30 de septiembre: ver [CONTEXTO.md](../../CONTEXTO.md). Las notas cronológicas inferiores conservan estados históricos. La rama y el PR #1 ya existen; las publicaciones del 29 y las pruebas aprobadas posteriores sustituyen los bloqueos anteriores. El código del 29 sigue pendiente de commit/subida; esta actualización registra documentación.
+
+
+**Cierre posterior del 29 de septiembre:** Camino Seguro (27 lecciones) y Pasajero Responsable (12) publicados en versión 2 con aprobación confirmada por el usuario. Integradas las cinco lecciones editoriales ampliadas; avances y versiones anteriores conservados. Activa `editorial-approved-20260929r1`. [Registro y límites](../engineering/PUBLICACION-CURSOS-2026-09-29.md). Las notas anteriores de publicación pendiente son históricas.
+
 Contexto general consolidado del sistema: [CONTEXTO.md del repositorio](../../CONTEXTO.md). Este archivo conserva el detalle curricular y el historial de los incrementos de esta conversación; las entradas históricas deben leerse según su fecha.
 
 Fecha: 28 de septiembre de 2026.
 
-Consolidación de Git: trabajo registrado en la rama local `codex/consolidacion-20260928`; subida pendiente por acceso de escritura y revisión de la suite general. [Informe](../engineering/CONSOLIDACION-2026-09-28.md). La versión de producción sigue siendo `descubro-review-20260928r1`.
+**Publicación posterior, 29 de septiembre:** `consolidacion-20260929r1` activa y saludable. Se verificó restauración de respaldo y compatibilidad de fechas existentes en copia aislada; no hubo migraciones ni cambios de permisos. Las notas siguientes de publicación pendiente son históricas. Correcciones aún sin commit/push. [Registro operativo](../engineering/PUBLICACION-2026-09-29.md).
+
+**Actualización técnica del 29 de septiembre:** la corrección de fechas pasó 64 pruebas PostgreSQL aisladas (206 aserciones). La suite completa SQLite pasó 2605 pruebas (8585 aserciones); PHPStan nivel 8 sin errores y Pint aprobado en los 63 PHP modificados. Falta respaldo actualizado, restauración comprobada y revisión histórica antes de desplegar. Producción no fue modificada; cambios aún sin commit ni subida.
+
+Consolidación de Git: rama `codex/consolidacion-20260928` subida hasta `3d69d2a`, confirmada por consulta remota el 28 de septiembre. Pendiente validar la suite general e integrar en `main`, que sigue en `a6803b7`. [Informe](../engineering/CONSOLIDACION-2026-09-28.md). La versión de producción sigue siendo `descubro-review-20260928r1`.
 
 **Fase activa: revisar y cerrar el material curricular.**
+
+El plan de despliegue y tratamiento prudente de fechas históricas está en [FECHAS-DESPLIEGUE-2026-09-28.md](../engineering/FECHAS-DESPLIEGUE-2026-09-28.md). Se comprobaron configuración y tipos de columnas de producción en solo lectura, no sus filas históricas. El respaldo localizado tiene listado legible, pero no restauración validada.
+
+El resultado anterior de 2604 pruebas queda sustituido por el cierre de 2605 indicado arriba. La validación PostgreSQL es focalizada, no la suite general. Ver el informe de consolidación para distinguir los ensayos previos.
 
 **Estado de la app en línea: DESCUBRO publicado para revisión administrativa el 27 de septiembre de 2026**, en https://app.edudrive.vr506.com/descubro/cruzar-acompanado. Versión actual `descubro-review-20260928r1` (guía acompañada ampliada; conserva los ajustes del Pasaporte de r2). Solo cuentas activas con rol global `super_admin`; estudiantes, docentes y administradores institucionales no tienen acceso a esta experiencia. Se conservan ambiente de producción y depuración desactivada. Respaldo verificado, migración específica aplicada y servicios estables. La sesión real del administrador mostró el perfil, inicio y repaso; narración y detención verificadas. No se inició ni completó una práctica durante esa revisión. [Registro operativo, respaldo y reversión](DESCUBRO_PUBLICACION_ADMIN_20260927.md). Las entradas siguientes describen la evolución previa; sus estados de «sin publicar» o «bloqueo en producción» fueron sustituidos por esta publicación restringida, sin cambiar el estado de revisión curricular.
 
