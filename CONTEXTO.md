@@ -1,12 +1,12 @@
 # CONTEXTO — EDUDRIVE
 
-Actualizado: **30 de septiembre de 2026**, America/Costa_Rica. Edición documental 1.1. Producción descrita según los registros de entrega del 29 de septiembre; no se realizó un nuevo despliegue al actualizar este documento.
+Actualizado: **4 de octubre de 2026**, America/Costa_Rica. Edición documental 1.2. Producción descrita según los registros de entrega del 29 de septiembre; no se realizó un nuevo despliegue al actualizar este documento.
 
 Este es el punto de entrada para entender y continuar el sistema. Resume el estado conocido y enlaza las fuentes; no sustituye el código, los registros de publicación ni la matriz curricular. Las fechas de comprobación importan: una función presente en el repositorio no demuestra que esté publicada, y una prueba técnica no demuestra eficacia pedagógica.
 
-## Trabajo en revisión: recorridos curriculares (30 de septiembre)
+## Integrado en main, sin desplegar: recorridos curriculares
 
-PR #2, rama `codex/recorridos-matriz-20260930`: perfil y catálogo muestran las cuatro etapas de la matriz y sus franjas internas. Propósito opcional 17+ persistido en `student_profiles.learning_purpose`: movilidad, automóvil o motocicleta. Migración aditiva pendiente de producción. Se conservan matrículas, historial y clasificación original de cursos. Cursos adultos sin correspondencia explícita de rol no se recomiendan automáticamente. El diagnóstico curricular y el motor completo de progresión por evidencia siguen pendientes; la pantalla lo indica. No se amplía el acceso restringido a DESCUBRO. Esta implementación no está desplegada.
+[PR #2](https://github.com/EDUDRIVE-Official/edudrive-api/pull/2), rama `codex/recorridos-matriz-20260930`, integrado en `main` el 4 de octubre mediante `0347b278cfb12b8bebfbacf2382fb38fea5af3cb`. CI de `main` (ejecución `37233856509`): Pint + Larastan, Pest y construcción/publicación de imagen aprobados. Antes del merge se corrigieron dos aserciones con tildes mal codificadas y un espacio de estilo detectado por Pint. Las pruebas de Academic e Identity se ejecutaron en local (1310 aprobadas y 2 fallos, ya corregidos); no se completó una suite local global. Perfil y catálogo muestran las cuatro etapas de la matriz y sus franjas internas. Propósito opcional 17+ persistido en `student_profiles.learning_purpose`: movilidad, automóvil o motocicleta. Migración aditiva pendiente de producción. Se conservan matrículas, historial y clasificación original de cursos. Cursos adultos sin correspondencia explícita de rol no se recomiendan automáticamente. El diagnóstico curricular y el motor completo de progresión por evidencia siguen pendientes; la pantalla lo indica. No se amplía el acceso restringido a DESCUBRO. **No está desplegada:** producción sigue en `editorial-approved-20260929r1`, sin la migración `learning_purpose` ni las etapas E1–E4. Pendientes técnicos conocidos: dos vocabularios de etapa conviven (`E1`–`E4` y `explore`…`teach`), las edades 3–4, 7–8 y 17+ no reciben recomendación automática de curso, y el propósito 17+ se valida con cadenas repetidas en lugar de un enum.
 
 ## 1. Estado actual en una página
 
@@ -140,6 +140,7 @@ Archivos clave: [controlador](modules/Academic/Presentation/Http/Controllers/Des
 | 29 septiembre | Consolidación y fechas | 2605 pruebas SQLite y 64 focalizadas PostgreSQL aprobadas; publicación técnica con respaldo restaurado. |
 | 29 septiembre | Cursos versión 2 | Camino Seguro y Pasajero Responsable publicados; 192 pruebas focalizadas. |
 | 30 septiembre | Contexto 1.1 | Estado documental reconciliado; sin nuevo despliegue. |
+| 4 octubre | PR #2 en `main` | Recorridos curriculares y propósito 17+ integrados (`0347b27`); CI de `main` en verde e imagen publicada en GHCR; sin despliegue. |
 
 Los resultados pertenecen a cada entrega y no se suman como si fueran una suite nueva. No se ejecutó una auditoría funcional completa del sistema al redactar este documento.
 
