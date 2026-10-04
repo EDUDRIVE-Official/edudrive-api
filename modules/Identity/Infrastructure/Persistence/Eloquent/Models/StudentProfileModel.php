@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $education_level
  * @property string|null $accessibility_needs
  * @property string|null $learning_preferences
+ * @property string|null $learning_purpose
  * @property Carbon $updated_at
  */
 final class StudentProfileModel extends Model
@@ -29,5 +30,6 @@ final class StudentProfileModel extends Model
         'education_level',
         'accessibility_needs',
         'learning_preferences',
+        'learning_purpose',
     ];
 }

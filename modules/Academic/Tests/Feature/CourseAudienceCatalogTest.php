@@ -81,3 +81,12 @@ it('does not infer a single audience from mixed or partially classified lessons'
     expect($catalog->forCourses([$id])[$id]['classified'])->toBe(1)
         ->and($catalog->forCourses([$id])[$id]['stage'])->toBeNull();
 });
+
+it('does not recommend the 9-12 course outside its audience', function (int $age): void {
+    $id = audienceCourse('AUD-BOUNDARY', 'discover');
+    $student = actingAsRole(Role::Student);
+    $student->forceFill(['date_of_birth' => now()->subYears($age)->toDateString()])->save();
+    $response = $this->actingAs($student, 'web')->get('/courses')->assertOk();
+    $courses = collect($response->viewData('courses'))->keyBy('id');
+    expect($courses[$id]['is_recommended'])->toBeFalse();
+})->with([3, 6, 7, 8, 13, 17, 35, 82]);

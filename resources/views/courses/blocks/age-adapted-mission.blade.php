@@ -1,18 +1,18 @@
 @php
     $stageMission = match ($learnerStage['stage']) {
-        'explore' => [
+        'explore', 'E1' => [
             'icon' => '🔎', 'title' => 'Buscá y señalá',
             'action' => 'Con una persona adulta, encontrá tres pistas en la escena: quién se mueve, qué puede cambiar y dónde esperarías.',
             'evidence' => 'Señalá las pistas y contá la decisión con tus propias palabras. Tu acompañante puede ayudarte a escribirla.',
             'success' => 'Reconocés un lugar protegido y esperás antes de actuar.',
         ],
-        'discover' => [
+        'discover', 'E2' => [
             'icon' => '🧩', 'title' => 'Armá la secuencia',
             'action' => 'Ordená mentalmente cuatro pasos: detenerte, observar, escuchar y decidir. Explicá qué ocurriría si omitís uno.',
             'evidence' => 'Describí una pista que antes no notabas y el paso que esa pista cambia.',
             'success' => 'Podés explicar la secuencia, no solamente repetir la respuesta.',
         ],
-        'understand' => [
+        'understand', 'E3' => [
             'icon' => '🕵️', 'title' => 'Encontrá el riesgo oculto',
             'action' => 'Identificá una suposición peligrosa, una presión posible y una alternativa que conserve tiempo y espacio.',
             'evidence' => 'Defendé tu alternativa usando dos pistas observables de la situación.',

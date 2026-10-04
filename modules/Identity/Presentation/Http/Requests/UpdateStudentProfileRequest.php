@@ -18,6 +18,7 @@ final class UpdateStudentProfileRequest extends FormRequest
     {
         return [
             'date_of_birth' => ['nullable', 'date', 'before_or_equal:today'],
+            'learning_purpose' => ['nullable', 'in:mobility,auto,motorcycle'],
             'education_level' => ['nullable', 'string', 'max:255'],
             'accessibility_needs' => ['nullable', 'string', 'max:2000'],
             'learning_preferences' => ['nullable', 'string', 'max:2000'],

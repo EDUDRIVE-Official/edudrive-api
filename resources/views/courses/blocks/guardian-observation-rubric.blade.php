@@ -1,5 +1,5 @@
 @php
-    $earlyStage = in_array($learnerStage['stage'], ['explore', 'discover'], true);
+    $earlyStage = in_array($learnerStage['stage'], ['explore', 'discover', 'E1', 'E2'], true);
     $observationCriteria = $earlyStage
         ? [
             'Se detiene en el lugar acordado antes de observar.',

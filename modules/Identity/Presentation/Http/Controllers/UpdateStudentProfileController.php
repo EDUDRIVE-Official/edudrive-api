@@ -36,6 +36,8 @@ final class UpdateStudentProfileController extends Controller
                 educationLevel: $data['education_level'] ?? null,
                 accessibilityNeeds: $data['accessibility_needs'] ?? null,
                 learningPreferences: $data['learning_preferences'] ?? null,
+                learningPurpose: $data['learning_purpose'] ?? null,
+                updateLearningPurpose: array_key_exists('learning_purpose', $data),
             ),
         );
         if (array_key_exists('date_of_birth', $data)) {

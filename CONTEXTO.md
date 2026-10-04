@@ -4,6 +4,10 @@ Actualizado: **30 de septiembre de 2026**, America/Costa_Rica. Edición document
 
 Este es el punto de entrada para entender y continuar el sistema. Resume el estado conocido y enlaza las fuentes; no sustituye el código, los registros de publicación ni la matriz curricular. Las fechas de comprobación importan: una función presente en el repositorio no demuestra que esté publicada, y una prueba técnica no demuestra eficacia pedagógica.
 
+## Trabajo en revisión: recorridos curriculares (30 de septiembre)
+
+PR #2, rama `codex/recorridos-matriz-20260930`: perfil y catálogo muestran las cuatro etapas de la matriz y sus franjas internas. Propósito opcional 17+ persistido en `student_profiles.learning_purpose`: movilidad, automóvil o motocicleta. Migración aditiva pendiente de producción. Se conservan matrículas, historial y clasificación original de cursos. Cursos adultos sin correspondencia explícita de rol no se recomiendan automáticamente. El diagnóstico curricular y el motor completo de progresión por evidencia siguen pendientes; la pantalla lo indica. No se amplía el acceso restringido a DESCUBRO. Esta implementación no está desplegada.
+
 ## 1. Estado actual en una página
 
 - Última entrega registrada: **`editorial-approved-20260929r1`**, posterior a `consolidacion-20260929r1`. App: [EDUDRIVE](https://app.edudrive.vr506.com/login). [Registro de publicación y recuperación](docs/engineering/PUBLICACION-CURSOS-2026-09-29.md).
