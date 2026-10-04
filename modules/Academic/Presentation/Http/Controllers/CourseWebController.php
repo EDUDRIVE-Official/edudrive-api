@@ -348,6 +348,7 @@ final class CourseWebController
             return false;
         }
         $age = (int) $user->date_of_birth->age;
+
         // Existing course bands are content metadata, not the new curricular stages.
         // Adult courses need explicit role mapping before automatic recommendation.
         return match ($audience) {
