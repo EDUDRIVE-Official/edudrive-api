@@ -36,7 +36,7 @@ it('does not recommend pending or unclassified courses', function (): void {
     $missing = audienceCourse('AUD-MISSING', null);
     $this->actingAs(actingAsRole(Role::Student), 'web');
     $this->get('/courses')->assertOk()->assertDontSeeText('Recomendada para vos')
-        ->assertSeeText('PÃºblico pendiente de revisiÃ³n')->assertSeeText('Etapa por confirmar');
+        ->assertSeeText('Público pendiente de revisión')->assertSeeText('Etapa por confirmar');
     $audiences = app(CourseAudienceCatalog::class)->forCourses([$pending, $missing]);
     expect($audiences[$pending]['stage'])->toBeNull()
         ->and($audiences[$missing]['classified'])->toBe(0);
@@ -49,7 +49,7 @@ it('blocks future publication of an experience with its audience pending', funct
             ->assertReady(CourseId::fromString($id));
         test()->fail('A pending audience was accepted.');
     } catch (CoursePedagogicalQualityRequired $exception) {
-        expect($exception->getMessage())->toContain('pÃºblico pendiente de revisiÃ³n');
+        expect($exception->getMessage())->toContain('público pendiente de revisión');
     }
 });
 
