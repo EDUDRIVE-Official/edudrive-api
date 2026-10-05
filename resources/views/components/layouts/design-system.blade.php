@@ -25,9 +25,9 @@
                 @click="theme = theme === 'dark' ? 'light' : 'dark'"
                 :aria-pressed="theme === 'dark'"
                 aria-label="Cambiar entre modo claro y oscuro"
-                class="rounded-sm border border-border px-3 py-2 text-sm text-text hover:bg-surface focus-visible:outline-none focus-visible:shadow-focus"
+                class="inline-flex min-h-12 items-center rounded-sm border-2 border-border px-4 text-base font-semibold text-text hover:bg-surface focus-visible:outline-none focus-visible:shadow-focus"
             >
-                <span x-text="theme === 'dark' ? 'Modo oscuro' : 'Modo claro'"></span>
+                <span x-text="theme === 'dark' ? 'Pasar a modo claro' : 'Pasar a modo oscuro'"></span>
             </button>
         </div>
         {{ $slot }}
