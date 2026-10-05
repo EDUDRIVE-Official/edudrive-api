@@ -121,9 +121,9 @@
                 };
             @endphp
 
-            <section class="campus-hero passport-identity relative overflow-hidden rounded-2xl bg-[#0b3a6e] p-6 text-white shadow-lg sm:p-8" aria-labelledby="digital-passport-title">
-                <div class="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-[#008a78]/55" aria-hidden="true"></div>
-                <div class="absolute -bottom-28 right-32 h-56 w-56 rounded-full bg-[#f5b700]/20" aria-hidden="true"></div>
+            <section class="campus-hero passport-identity relative overflow-hidden rounded-2xl bg-hero p-6 text-white shadow-lg sm:p-8" aria-labelledby="digital-passport-title">
+                <div class="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-secondary/55" aria-hidden="true"></div>
+                <div class="absolute -bottom-28 right-32 h-56 w-56 rounded-full bg-accent/20" aria-hidden="true"></div>
                 <div class="relative">
                     <div class="flex flex-wrap items-start justify-between gap-5">
                         <div>
@@ -135,7 +135,7 @@
                         <div class="flex items-start gap-3">
                             <div class="text-right">
                                 <span class="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold">
-                                    <span class="h-2 w-2 rounded-full {{ $passport['status'] === 'active' ? 'bg-[#5bd6c0]' : ($passport['status'] === 'suspended' ? 'bg-[#f5b700]' : 'bg-red-400') }}" aria-hidden="true"></span>
+                                    <span class="h-2 w-2 rounded-full {{ $passport['status'] === 'active' ? 'bg-accent' : ($passport['status'] === 'suspended' ? 'bg-accent' : 'bg-red-400') }}" aria-hidden="true"></span>
                                     {{ $statusLabels[$passport['status']] ?? $passport['status'] }}
                                 </span>
                                 <p class="mt-3 font-heading text-2xl font-bold"><span class="mr-1 align-middle font-sans text-xs font-medium text-white/60">Nivel</span> {{ $passport['level'] }}</p>
@@ -149,7 +149,7 @@
                             <div><p class="text-xs font-bold uppercase tracking-wide text-white/65">Confianza del recorrido</p><p class="mt-1 font-heading text-lg font-bold">{{ $trustState['label'] }}</p></div>
                             <p class="font-heading text-4xl font-bold">{{ $trustScore }}<span class="text-sm font-medium text-white/65">/100</span></p>
                         </div>
-                        <div class="mt-3 h-3 overflow-hidden rounded-full bg-white/20" role="progressbar" aria-label="Confianza del recorrido vial" aria-valuenow="{{ $trustScore }}" aria-valuemin="0" aria-valuemax="100"><div class="h-full rounded-full {{ $trustScore >= 75 ? 'bg-[#5bd6c0]' : ($trustScore >= 40 ? 'bg-[#73b7ff]' : ($trustScore > 0 ? 'bg-[#f5b700]' : 'bg-white/35')) }} transition-all" style="width: {{ $trustScore }}%"></div></div>
+                        <div class="mt-3 h-3 overflow-hidden rounded-full bg-white/20" role="progressbar" aria-label="Confianza del recorrido vial" aria-valuenow="{{ $trustScore }}" aria-valuemin="0" aria-valuemax="100"><div class="h-full rounded-full {{ $trustScore >= 75 ? 'bg-accent' : ($trustScore >= 40 ? 'bg-[#73b7ff]' : ($trustScore > 0 ? 'bg-accent' : 'bg-white/35')) }} transition-all" style="width: {{ $trustScore }}%"></div></div>
                         <div class="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-white/65">
                             <span>Folio educativo {{ strtoupper(substr($passport['id'], 0, 8)) }}</span>
                             <span>Documento educativo verificable · No sustituye una licencia</span>

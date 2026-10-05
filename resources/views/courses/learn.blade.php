@@ -112,7 +112,7 @@
                 <ol class="mt-5 grid gap-3 border-t border-border pt-4 text-sm sm:grid-cols-3" aria-label="Cómo completar una lección">
                     <li class="flex gap-3"><span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">1</span><span><strong class="block text-text">Descubrí</strong><span class="text-text-secondary">Leé, escuchá y explorá.</span></span></li>
                     <li class="flex gap-3"><span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-white">2</span><span><strong class="block text-text">Decidí</strong><span class="text-text-secondary">Resolvé situaciones reales.</span></span></li>
-                    <li class="flex gap-3"><span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f5b700] text-xs font-bold text-[#102a43]">3</span><span><strong class="block text-text">Reflexioná</strong><span class="text-text-secondary">Registrá qué aplicarías.</span></span></li>
+                    <li class="flex gap-3"><span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-[#102a43]">3</span><span><strong class="block text-text">Reflexioná</strong><span class="text-text-secondary">Registrá qué aplicarías.</span></span></li>
                 </ol>
             </section>
         @endif

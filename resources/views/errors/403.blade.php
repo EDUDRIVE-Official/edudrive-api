@@ -1,6 +1,9 @@
 <x-layouts.app title="EDUDRIVE — Acceso denegado">
-    <div class="flex flex-col gap-4">
-        <h1 class="font-heading text-2xl font-bold">Acceso denegado</h1>
-        <p class="font-sans text-text">No tiene permisos para acceder a este recurso.</p>
+    <div class="campus-card mx-auto flex max-w-2xl flex-col gap-4">
+        <div class="flex items-center gap-4">
+            <span class="ed-pic" aria-hidden="true"><x-ui.icon name="warning" size="lg" /></span>
+            <h1>Acceso denegado</h1>
+        </div>
+        <p class="font-sans text-lg text-text">No tiene permisos para acceder a este recurso.</p>
     </div>
 </x-layouts.app>

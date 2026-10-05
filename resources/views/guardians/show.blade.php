@@ -12,11 +12,11 @@
             </div>
         @endif
         <a href="{{ route('guardians.web.index') }}" class="inline-flex min-h-11 items-center self-start rounded-md px-2 text-sm font-semibold text-primary hover:bg-primary/10">← Volver a mi acompañamiento</a>
-        <section class="relative overflow-hidden rounded-xl bg-[#0b3a6e] px-6 py-7 text-white shadow-md sm:px-8" aria-labelledby="minor-progress-title">
-            <div class="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#008a78]/55" aria-hidden="true"></div>
+        <section class="relative overflow-hidden rounded-xl bg-hero px-6 py-7 text-white shadow-md sm:px-8" aria-labelledby="minor-progress-title">
+            <div class="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-secondary/55" aria-hidden="true"></div>
             <div class="relative flex flex-wrap items-center justify-between gap-5">
-                <div><p class="text-sm font-bold uppercase tracking-[0.16em] text-[#5bd6c0]">Acompañamiento activo</p><h1 id="minor-progress-title" class="mt-2 font-heading text-3xl font-bold">Progreso de {{ $profile['name'] }}</h1><p class="mt-2 text-sm text-white/75">Información compartida de forma segura por la relación de acompañamiento.</p></div>
-                <div class="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white/30 bg-white/10 text-3xl" aria-hidden="true">🤝</div>
+                <div><p class="text-sm font-bold uppercase tracking-[0.16em] text-accent">Acompañamiento activo</p><h1 id="minor-progress-title" class="mt-2 font-heading text-3xl font-bold">Progreso de {{ $profile['name'] }}</h1><p class="mt-2 text-sm text-white/75">Información compartida de forma segura por la relación de acompañamiento.</p></div>
+                <div class="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white/30 bg-white/10 text-3xl" aria-hidden="true"><x-ui.icon name="family" size="lg" /></div>
             </div>
         </section>
 
