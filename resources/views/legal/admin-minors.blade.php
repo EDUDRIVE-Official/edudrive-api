@@ -2,7 +2,7 @@
     <div class="mx-auto flex max-w-4xl flex-col gap-6">
         <div class="campus-heading"><h1 class="font-heading text-2xl font-bold">Consentimientos de menores</h1></div>
         <x-ui.card>
-            <form method="GET" action="{{ route('legal.admin.minors') }}" class="flex items-end gap-3">
+            <form method="GET" action="{{ route('legal.admin.minors') }}" class="flex flex-wrap items-end gap-3">
                 <div class="flex flex-1 flex-col gap-1">
                     <label for="organization_id" class="text-sm font-medium text-text">Organización</label>
                     <select id="organization_id" name="organization_id" required class="min-h-[44px] rounded-sm border border-border bg-surface px-3 text-base text-text">

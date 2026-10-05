@@ -43,7 +43,7 @@
                     <summary class="cursor-pointer text-sm font-bold text-primary">Ver lecciones que requieren revisión</summary>
                     <ul class="mt-3 space-y-3">
                         @foreach (array_slice($quality['issues'], 0, 25) as $issue)
-                            <li class="rounded-md border border-border bg-surface p-3 text-sm"><a href="{{ route('courses.show', $issue['course_id']) }}" class="font-bold text-primary hover:text-secondary">{{ $issue['course_code'] }} · {{ $issue['course'] }}</a><span class="mt-1 block font-medium text-text">{{ $issue['lesson'] }}</span><span class="mt-1 block text-xs text-text-secondary">{{ implode(' · ', $issue['reasons']) }}</span></li>
+                            <li class="rounded-md border border-border bg-surface p-3 text-sm"><a href="{{ route('courses.show', $issue['course_id']) }}" class="ed-enlace font-bold">{{ $issue['course_code'] }} · {{ $issue['course'] }}</a><span class="mt-1 block font-medium text-text">{{ $issue['lesson'] }}</span><span class="mt-1 block text-xs text-text-secondary">{{ implode(' · ', $issue['reasons']) }}</span></li>
                         @endforeach
                     </ul>
                 </details>
