@@ -39,14 +39,12 @@
             }
         @endphp
         <div>
-            <a href="{{ route('courses.show', $course['id']) }}" class="inline-flex min-h-11 items-center rounded-md px-2 text-sm font-semibold text-primary hover:bg-primary/10">← Volver al curso</a>
-            <section class="campus-hero relative mt-3 overflow-hidden rounded-xl bg-[#0b3a6e] px-6 py-7 text-white shadow-md sm:px-8" aria-labelledby="learning-course-title">
-                <div class="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#008a78]/50" aria-hidden="true"></div>
-                <div class="absolute -bottom-24 right-28 h-44 w-44 rounded-full bg-[#f5b700]/20" aria-hidden="true"></div>
+            <a href="{{ route('courses.show', $course['id']) }}" class="ed-enlace"><x-ui.icon name="back" size="sm" />Volver al curso</a>
+            <section class="campus-hero mt-3 px-6 py-7 text-white sm:px-8" aria-labelledby="learning-course-title">
                 <div class="relative flex flex-wrap items-end justify-between gap-5">
                     <div>
-                        <p class="text-sm font-bold uppercase tracking-[0.16em] text-[#5bd6c0]">{{ $adminPreview ? 'Vista integral de superadministración' : 'Tu aula' }} · {{ $course['code'] }}</p>
-                        <h1 id="learning-course-title" class="mt-2 max-w-3xl font-heading text-3xl font-bold">{{ $course['title'] }}</h1>
+                        <p class="text-lg font-bold text-accent">{{ $adminPreview ? 'Vista integral de superadministración' : 'Tu aula' }} · {{ $course['code'] }}</p>
+                        <h1 id="learning-course-title" class="mt-2 max-w-3xl">{{ $course['title'] }}</h1>
                     </div>
                     <div class="rounded-lg bg-white/10 px-4 py-3 text-right"><p class="text-sm font-bold text-white">{{ $adminPreview ? $progress['total_lessons'].' lecciones disponibles' : $progress['completed_lessons_count'].' de '.$progress['total_lessons'].' lecciones' }}</p><p class="mt-1 text-xs text-white/75">{{ $adminPreview ? 'Sin bloqueos ni requisitos previos' : 'Aproximadamente '.intdiv(max(0, $totalMinutes - $completedMinutes) + 59, 60).' h restantes' }}</p></div>
                 </div>
@@ -54,7 +52,7 @@
                     <p class="relative mt-5 rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-sm font-semibold text-white/90">Esta revisión no crea una matrícula, no registra respuestas y no modifica el progreso de ningún estudiante.</p>
                 @else
                     <div class="relative mt-5 h-3 overflow-hidden rounded-full bg-white/20" role="progressbar" aria-valuenow="{{ $progress['progress_percentage'] }}" aria-valuemin="0" aria-valuemax="100">
-                        <div class="h-full rounded-full bg-[#5bd6c0] transition-all" style="width: {{ $progress['progress_percentage'] }}%"></div>
+                        <div class="h-full rounded-full bg-accent transition-all" style="width: {{ $progress['progress_percentage'] }}%"></div>
                     </div>
                     <p class="relative mt-2 text-right text-sm font-semibold text-white/85">{{ $progress['progress_percentage'] }}% completado</p>
                 @endif
