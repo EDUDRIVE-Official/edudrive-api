@@ -270,6 +270,18 @@ label:has(> input[type='checkbox']), label:has(> input[type='radio']) { min-heig
 .border.border-dashed { border-width: 3px; border-color: var(--color-border-strong); }
 .campus-hero .uppercase, .catalog-hero .uppercase { text-transform: none; letter-spacing: .03em; font-size: 1.1rem; }
 
+/* =====================================================================
+   Fase 4 — administración y páginas internas (herencia de tokens)
+   ===================================================================== */
+/* Controles con borde fino heredado -> borde de 3 px y radio de botón. */
+:is(select, textarea, input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden']):not([type='file'])).border.border-border { border-width: 3px; border-color: var(--color-border-strong); border-radius: var(--radius-sm); }
+:is(a, button).border.border-border:not(.rounded-full) { border-width: 3px; border-color: var(--color-border-strong); }
+/* Botones y enlaces con aspecto de botón: mínimo táctil de 48 px aunque su altura salga del relleno. */
+:is(a, button)[class*='px-']:is([class*='bg-primary'], [class*='bg-secondary'], [class*='bg-danger'], [class*='border-border'], [class*='border-primary']):not([class*='text-left']):not([class*='sr-only']):not(.rounded-full) { min-height: 48px; display: inline-flex; align-items: center; }
+:is(a, button)[class*='px-']:is([class*='bg-primary'], [class*='bg-secondary'], [class*='bg-danger'], [class*='border-border'], [class*='border-primary']):not([class*='text-left']):not([class*='sr-only']):not([class*='justify-']):not(.rounded-full) { justify-content: center; }
+/* Degradados decorativos residuales -> color plano (el texto no debe quedar sobre degradados). */
+[class*='bg-gradient-to-'] { background-image: none; background-color: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface)); }
+
 /* Explicit light surfaces keep feedback readable in either application theme.
    Text and symbols repeat the meaning so color is never the only signal. */
 .lesson-page-copy > * + * { margin-top: 1.5rem; }
