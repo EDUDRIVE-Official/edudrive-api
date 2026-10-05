@@ -259,6 +259,17 @@ details[open] > summary:not([class*='flex']):not(.navigation-trigger)::before { 
 .learning-campus [role='status'] > p.text-success, .course-campus [role='status'] > p.text-success { --ed-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E"); font-weight: 800; }
 .learning-campus [role='status'] > p[class~='text-warning-text'], .course-campus [role='status'] > p[class~='text-warning-text'] { --ed-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E"); font-weight: 800; }
 
+/* =====================================================================
+   Fase 3 — normalización de pantallas heredadas
+   ===================================================================== */
+input[type='checkbox'], input[type='radio'] { width: 1.5rem; height: 1.5rem; flex: none; accent-color: var(--color-primary); cursor: pointer; }
+label:has(> input[type='checkbox']), label:has(> input[type='radio']) { min-height: 48px; cursor: pointer; }
+.shadow-xs, .shadow-sm, .shadow-md { box-shadow: none; }
+/* Tarjetas con borde fino -> placa de 3 px (se excluyen avisos de peligro y etiquetas pequeñas). */
+:is(section, article, aside, details, form, div).border:is(.rounded-lg, .rounded-xl, .rounded-2xl):not([class*='border-danger']):not([class*='text-xs']):not(.rounded-full) { border-width: 3px; border-color: var(--color-border-strong); }
+.border.border-dashed { border-width: 3px; border-color: var(--color-border-strong); }
+.campus-hero .uppercase, .catalog-hero .uppercase { text-transform: none; letter-spacing: .03em; font-size: 1.1rem; }
+
 /* Explicit light surfaces keep feedback readable in either application theme.
    Text and symbols repeat the meaning so color is never the only signal. */
 .lesson-page-copy > * + * { margin-top: 1.5rem; }
@@ -303,8 +314,8 @@ details[open] > summary:not([class*='flex']):not(.navigation-trigger)::before { 
     --radius-xs: 4px;
     --radius-sm: 10px;
     --radius-md: 14px;
-    --radius-lg: 16px;
-    --radius-xl: 24px;
+    --radius-lg: 14px;
+    --radius-xl: 14px;
     --radius-full: 9999px;
 
     /* Sombras — edudrive-design-system/tokens/shadows.json */
@@ -403,7 +414,8 @@ details[open] > summary:not([class*='flex']):not(.navigation-trigger)::before { 
     /* Con la tipografía más grande, los controles no deben salirse del contenedor en pantallas angostas. */
     select, input, textarea { max-width: 100%; }
     label { max-width: 100%; }
-    label > select, label > input { min-width: 0; flex: 1 1 8rem; }
+    label > select, label > input:not([type='checkbox']):not([type='radio']) { min-width: 0; }
+    label:not(.flex-col) > select { flex: 1 1 8rem; }
 }
 
 [x-cloak] {

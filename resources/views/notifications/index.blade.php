@@ -4,15 +4,15 @@
         $unreadCount = $notificationCollection->where('status', 'unread')->count();
         $categoryLabels = ['curso' => 'Curso', 'logro' => 'Logro', 'certificado' => 'Certificado', 'practica_lista' => 'Práctica familiar', 'acompañamiento' => 'Acompañamiento', 'reflexion_acompañamiento' => 'Reflexión del estudiante', 'sistema' => 'Sistema', 'recordatorio' => 'Recordatorio', 'seguridad' => 'Seguridad'];
         $channelLabels = ['web' => 'En EDUDRIVE', 'email' => 'Correo electrónico', 'mobile' => 'Aviso móvil', 'internal_message' => 'Mensaje interno'];
-        $categoryIcons = ['curso' => '📘', 'logro' => '🏆', 'certificado' => '🏅', 'practica_lista' => '🧭', 'acompañamiento' => '🤝', 'reflexion_acompañamiento' => '💭', 'sistema' => 'ℹ️', 'recordatorio' => '⏰', 'seguridad' => '🛡️'];
+        $categoryIcons = ['curso' => 'book', 'logro' => 'certificate', 'certificado' => 'certificate', 'practica_lista' => 'progress', 'acompañamiento' => 'family', 'reflexion_acompañamiento' => 'edit', 'sistema' => 'info', 'recordatorio' => 'clock', 'seguridad' => 'admin'];
     @endphp
     <div class="mx-auto flex max-w-4xl flex-col gap-6">
-        <section class="campus-hero relative overflow-hidden rounded-xl bg-[#0b3a6e] px-6 py-8 text-white shadow-md sm:px-8" aria-labelledby="notifications-title">
-            <div class="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-[#008a78]/55" aria-hidden="true"></div>
-            <div class="absolute -bottom-24 right-32 h-48 w-48 rounded-full bg-[#f5b700]/20" aria-hidden="true"></div>
+        <section class="campus-hero relative overflow-hidden rounded-xl bg-hero px-6 py-8 text-white shadow-md sm:px-8" aria-labelledby="notifications-title">
+            <div class="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-secondary/55" aria-hidden="true"></div>
+            <div class="absolute -bottom-24 right-32 h-48 w-48 rounded-full bg-accent/20" aria-hidden="true"></div>
             <div class="relative flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
-                <div><p class="text-sm font-bold uppercase tracking-[0.16em] text-[#5bd6c0]">Tu actividad</p><h1 id="notifications-title" class="mt-2 font-heading text-3xl font-bold sm:text-4xl">Mis notificaciones</h1><p class="mt-3 max-w-2xl text-sm leading-6 text-white/85">Avisos útiles para continuar cursos, reconocer avances y completar prácticas o reflexiones pendientes.</p></div>
-                <div class="flex shrink-0 gap-3 text-center"><div class="rounded-xl bg-white/10 px-5 py-3"><p class="font-heading text-3xl font-bold">{{ count($notifications) }}</p><p class="text-xs text-white/70">Recibidas</p></div><div class="rounded-xl bg-white/10 px-5 py-3"><p class="font-heading text-3xl font-bold text-[#ffd45a]">{{ $unreadCount }}</p><p class="text-xs text-white/70">Sin leer</p></div></div>
+                <div><p class="text-sm font-bold uppercase tracking-[0.16em] text-accent">Tu actividad</p><h1 id="notifications-title" class="mt-2 font-heading text-3xl font-bold sm:text-4xl">Mis notificaciones</h1><p class="mt-3 max-w-2xl text-sm leading-6 text-white/85">Avisos útiles para continuar cursos, reconocer avances y completar prácticas o reflexiones pendientes.</p></div>
+                <div class="flex shrink-0 gap-3 text-center"><div class="rounded-xl bg-white/10 px-5 py-3"><p class="font-heading text-3xl font-bold">{{ count($notifications) }}</p><p class="text-xs text-white/70">Recibidas</p></div><div class="rounded-xl bg-white/10 px-5 py-3"><p class="font-heading text-3xl font-bold text-accent">{{ $unreadCount }}</p><p class="text-xs text-white/70">Sin leer</p></div></div>
             </div>
         </section>
 
@@ -32,7 +32,7 @@
                 <article @class(['rounded-xl border bg-surface p-5 shadow-sm transition hover:shadow-md', 'border-l-4 border-l-primary border-y-border border-r-border' => $notification['status'] === 'unread', 'border-border opacity-85' => $notification['status'] !== 'unread'])>
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div class="flex min-w-0 gap-3">
-                            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xl" aria-hidden="true">{{ $categoryIcons[$notification['category']] ?? '🔔' }}</span>
+                            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xl" aria-hidden="true"><x-ui.icon :name="$categoryIcons[$notification['category']] ?? 'bell'" /></span>
                             <div>
                             <div class="mb-1 flex flex-wrap items-center gap-2">
                                 <h3 class="font-heading font-bold">{{ $notification['subject'] }}</h3>
@@ -60,7 +60,7 @@
                     @endif
                 </article>
             @empty
-                <div class="rounded-xl border border-dashed border-border bg-surface p-8 text-center"><p class="text-4xl" aria-hidden="true">🔔</p><h3 class="mt-3 font-heading font-bold">Tu bandeja está al día</h3><p class="mt-1 text-sm text-text-secondary">Todavía no tenés notificaciones.</p></div>
+                <div class="rounded-xl border border-dashed border-border bg-surface p-8 text-center"><p class="flex justify-center" aria-hidden="true"><x-ui.icon name="bell" size="lg" /></p><h3 class="mt-3 font-heading font-bold">Tu bandeja está al día</h3><p class="mt-1 text-sm text-text-secondary">Todavía no tenés notificaciones.</p></div>
             @endforelse
         </section>
 
