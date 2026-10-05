@@ -5,7 +5,7 @@
 @endphp
 <div class="flex flex-col gap-1">
     @if ($label)
-        <label for="{{ $id }}" class="font-sans text-sm font-medium text-text">{{ $label }}</label>
+        <label for="{{ $id }}" class="font-sans text-base font-bold text-text">{{ $label }}</label>
     @endif
 
     <input
@@ -14,13 +14,13 @@
         type="{{ $type }}"
         @if ($error) aria-invalid="true" aria-describedby="{{ $errorId }}" @endif
         {{ $attributes->except(['id', 'name', 'type'])->merge([
-            'class' => 'min-h-[44px] rounded-sm border bg-surface px-3 font-sans text-base text-text '
+            'class' => 'min-h-[48px] rounded-sm border-[3px] bg-surface px-3 font-sans text-base font-medium text-text '
                 . 'focus-visible:outline-none focus-visible:shadow-focus '
-                . ($error ? 'border-danger' : 'border-border'),
+                . ($error ? 'border-danger' : 'border-border-strong'),
         ]) }}
     />
 
     @if ($error)
-        <p id="{{ $errorId }}" class="font-sans text-sm text-danger-text">{{ $error }}</p>
+        <p id="{{ $errorId }}" class="font-sans text-sm font-semibold text-danger-text">{{ $error }}</p>
     @endif
 </div>

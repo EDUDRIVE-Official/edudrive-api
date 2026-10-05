@@ -38,6 +38,33 @@
         </section>
 
         <section>
+            <h2 class="mb-4 font-heading text-xl font-semibold">Etapas</h2>
+            <p class="mb-4 text-text-secondary">Cada etapa tiene forma y etiqueta propias: el color nunca es la única señal.</p>
+            <ul class="flex flex-wrap items-end gap-8">
+                @foreach (['E1' => ['DESCUBRO', '3–6 años'], 'E2' => ['COMPRENDO', '7–12 años'], 'E3' => ['DECIDO', '13–16 años'], 'E4' => ['CONDUZCO', '17+ años']] as $code => [$name, $ages])
+                    <li class="flex flex-col items-center gap-2 text-center">
+                        <x-ui.stage-plate :stage="$code" size="lg" />
+                        <span class="font-heading text-xl font-extrabold">{{ $name }}</span>
+                        <span class="text-sm text-text-secondary">{{ $ages }}</span>
+                    </li>
+                @endforeach
+            </ul>
+            <div class="mt-6" aria-hidden="true"><span class="ed-cebra"></span></div>
+        </section>
+
+        <section>
+            <h2 class="mb-4 font-heading text-xl font-semibold">Iconos</h2>
+            <ul class="flex flex-wrap gap-4">
+                @foreach (['user', 'book', 'passport', 'certificate', 'progress', 'bell', 'more', 'admin', 'sun', 'moon', 'check', 'x', 'warning', 'info', 'search', 'edit', 'clock', 'organization', 'family'] as $icon)
+                    <li class="flex w-24 flex-col items-center gap-1 text-center text-sm text-text-secondary">
+                        <x-ui.icon :name="$icon" size="lg" class="text-text" />
+                        <span>{{ $icon }}</span>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+
+        <section>
             <h2 class="mb-4 font-heading text-xl font-semibold">Tabla</h2>
             <x-ui.table>
                 <x-slot:head>

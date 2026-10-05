@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#0B3A6E">
+    <meta name="theme-color" content="#14161A">
     <title>{{ $title }}</title>
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <script>
@@ -23,7 +23,7 @@
     @if(request()->routeIs('pilot-instruments.*'))
         <a href="#pilot-main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-surface focus:p-4 focus:text-text focus:outline">Saltar al contenido del ensayo</a>
     @endif
-    <header class="platform-header border-b border-border bg-surface shadow-xs" x-data="{ mobileMenuOpen: false }" @keydown.escape.window="mobileMenuOpen = false">
+    <header class="platform-header" x-data="{ mobileMenuOpen: false }" @keydown.escape.window="mobileMenuOpen = false">
         <div class="platform-header-inner mx-auto max-w-7xl px-6">
             <div class="flex min-h-16 items-center justify-between gap-6 py-3">
                 <a href="{{ url('/') }}" class="shrink-0 rounded-sm focus-visible:outline-none focus-visible:shadow-focus" aria-label="EDUDRIVE — Inicio">
@@ -51,20 +51,21 @@
                         @click="theme = theme === 'dark' ? 'light' : 'dark'"
                         :aria-pressed="theme === 'dark'"
                         aria-label="Cambiar entre modo claro y oscuro"
-                        class="shrink-0 rounded-md border border-border px-3 py-2 text-sm font-medium text-text hover:bg-background focus-visible:outline-none focus-visible:shadow-focus"
+                        class="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-sm border-2 border-border px-3 text-base font-semibold text-text hover:border-text hover:bg-background focus-visible:outline-none focus-visible:shadow-focus"
                     >
-                        <span class="hidden sm:inline" x-text="theme === 'dark' ? 'Modo oscuro' : 'Modo claro'"></span>
-                        <span class="sm:hidden" aria-hidden="true" x-text="theme === 'dark' ? '☾' : '☀'"></span>
+                        <span aria-hidden="true" x-show="theme === 'dark'"><x-ui.icon name="sun" /></span>
+                        <span aria-hidden="true" x-show="theme !== 'dark'"><x-ui.icon name="moon" /></span>
+                        <span class="hidden sm:inline" x-text="theme === 'dark' ? 'Pasar a modo claro' : 'Pasar a modo oscuro'"></span>
                     </button>
                     @auth
                         <button
                             type="button"
-                            class="inline-flex min-h-11 items-center gap-2 rounded-md border border-border px-3 text-sm font-bold text-text hover:bg-background focus-visible:outline-none focus-visible:shadow-focus md:hidden"
+                            class="inline-flex min-h-12 items-center gap-2 rounded-sm border-[3px] border-text px-4 text-base font-bold text-text hover:bg-background focus-visible:outline-none focus-visible:shadow-focus md:hidden"
                             @click="mobileMenuOpen = ! mobileMenuOpen"
                             :aria-expanded="mobileMenuOpen"
                             aria-controls="mobile-navigation"
                         >
-                            <span aria-hidden="true">☰</span>
+                            <x-ui.icon name="menu" />
                             <span>Menú</span>
                         </button>
                     @endauth
@@ -103,11 +104,11 @@
                             $hasPermission(\Modules\Authorization\Domain\Enums\Permission::ViewAnalytics) ? ['Analítica', route('analytics.index')] : null,
                     ]));
                 @endphp
-                <div class="platform-navigation hidden border-t border-border py-3 md:block">
+                <div class="platform-navigation hidden md:block">
                     <nav class="flex flex-wrap items-center gap-1" aria-label="Navegación principal">
                         @foreach ($personalLinks as [$label, $url, $active])
-                            <a href="{{ $url }}" @class(['inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition', 'shadow-xs' => $active, 'text-text hover:bg-background hover:text-primary' => ! $active]) @if ($active) aria-current="page" @endif>
-                                <span class="navigation-symbol" aria-hidden="true">{{ match($label) { 'Mi perfil' => '◉', 'Cursos' => '▤', 'Pasaporte' => '◇', 'Certificados' => '☆', 'Mi progreso' => '↗', default => '◌' } }}</span>
+                            <a href="{{ $url }}" @if ($active) aria-current="page" @endif>
+                                <span class="navigation-symbol" aria-hidden="true"><x-ui.icon :name="match($label) { 'Mi perfil' => 'user', 'Cursos' => 'book', 'Pasaporte' => 'passport', 'Certificados' => 'certificate', 'Mi progreso' => 'progress', default => 'bell' }" /></span>
                                 <span>{{ $label }}</span>
                                 @if ($label === 'Notificaciones' && $unreadNotificationCount > 0)
                                     <span class="inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1.5 text-xs font-bold text-white" aria-label="{{ $unreadNotificationCount }} {{ $unreadNotificationCount === 1 ? 'notificación sin leer' : 'notificaciones sin leer' }}">{{ $unreadNotificationCount > 99 ? '99+' : $unreadNotificationCount }}</span>
@@ -116,8 +117,8 @@
                         @endforeach
                         <details class="relative navigation-dropdown" @click.outside="$el.open = false" @keydown.escape.stop="$el.open = false; $el.querySelector('summary').focus()">
                             <summary class="navigation-trigger" @if(collect($moreLinks)->contains(fn ($link) => $link[1] === url()->current())) data-active="true" @endif>
-                                <span class="navigation-symbol" aria-hidden="true">⊞</span>
-                                <span>Más <span class="navigation-chevron" aria-hidden="true">⌄</span></span>
+                                <span class="navigation-symbol" aria-hidden="true"><x-ui.icon name="more" /></span>
+                                <span>Más <span class="navigation-chevron" aria-hidden="true"><x-ui.icon name="chevron" size="sm" class="rotate-90" /></span></span>
                             </summary>
                             <div class="absolute left-0 z-20 mt-2 flex min-w-48 flex-col rounded-md border border-border bg-surface p-2 shadow-lg">
                                 @foreach ($moreLinks as [$label, $url])<a href="{{ $url }}" class="rounded-sm px-3 py-2 text-sm hover:bg-background">{{ $label }}</a>@endforeach
@@ -126,8 +127,8 @@
                         @if (count($adminLinks) > 0)
                             <details class="relative navigation-dropdown" @click.outside="$el.open = false" @keydown.escape.stop="$el.open = false; $el.querySelector('summary').focus()">
                                 <summary class="navigation-trigger" @if(collect($adminLinks)->contains(fn ($link) => $link[1] === url()->current())) data-active="true" @endif>
-                                    <span class="navigation-symbol" aria-hidden="true">⚙</span>
-                                    <span>Administración <span class="navigation-chevron" aria-hidden="true">⌄</span></span>
+                                    <span class="navigation-symbol" aria-hidden="true"><x-ui.icon name="admin" /></span>
+                                    <span>Administración <span class="navigation-chevron" aria-hidden="true"><x-ui.icon name="chevron" size="sm" class="rotate-90" /></span></span>
                                 </summary>
                                 <div class="absolute right-0 z-20 mt-2 flex min-w-56 flex-col rounded-md border border-border bg-surface p-2 shadow-lg">
                                     @foreach ($adminLinks as [$label, $url])
@@ -149,21 +150,21 @@
                     <p class="mb-3 truncate text-sm font-semibold text-text">{{ auth()->user()->name }}</p>
                     <div class="grid gap-1">
                         @foreach ($personalLinks as [$label, $url, $active])
-                            <a href="{{ $url }}" @class(['flex min-h-11 items-center justify-between rounded-md px-3 py-2 text-sm font-semibold', 'bg-primary text-white' => $active, 'text-text hover:bg-background' => ! $active]) @if ($active) aria-current="page" @endif>
+                            <a href="{{ $url }}" @class(['flex min-h-12 items-center justify-between rounded-md px-3 py-2 text-base font-semibold', 'bg-accent text-[#14161a]' => $active, 'text-text hover:bg-background' => ! $active]) @if ($active) aria-current="page" @endif>
                                 <span>{{ $label }}</span>
                                 @if ($label === 'Notificaciones' && $unreadNotificationCount > 0)<span class="rounded-full bg-danger px-2 py-0.5 text-xs font-bold text-white" aria-label="{{ $unreadNotificationCount }} {{ $unreadNotificationCount === 1 ? 'notificación sin leer' : 'notificaciones sin leer' }}">{{ $unreadNotificationCount > 99 ? '99+' : $unreadNotificationCount }}</span>@endif
                             </a>
                         @endforeach
                     </div>
                     <p class="mb-1 mt-4 px-3 text-xs font-bold uppercase tracking-wider text-text-secondary">Más opciones</p>
-                    <div class="grid gap-1">@foreach ($moreLinks as [$label, $url])<a href="{{ $url }}" class="min-h-11 rounded-md px-3 py-2.5 text-sm text-text hover:bg-background">{{ $label }}</a>@endforeach</div>
+                    <div class="grid gap-1">@foreach ($moreLinks as [$label, $url])<a href="{{ $url }}" class="flex min-h-12 items-center rounded-md px-3 py-2.5 text-base text-text hover:bg-background">{{ $label }}</a>@endforeach</div>
                     @if (count($adminLinks) > 0)
                         <p class="mb-1 mt-4 px-3 text-xs font-bold uppercase tracking-wider text-primary">Administración</p>
-                        <div class="grid gap-1">@foreach ($adminLinks as [$label, $url])<a href="{{ $url }}" class="min-h-11 rounded-md px-3 py-2.5 text-sm text-text hover:bg-background">{{ $label }}</a>@endforeach</div>
+                        <div class="grid gap-1">@foreach ($adminLinks as [$label, $url])<a href="{{ $url }}" class="flex min-h-12 items-center rounded-md px-3 py-2.5 text-base text-text hover:bg-background">{{ $label }}</a>@endforeach</div>
                     @endif
                     <form method="POST" action="{{ route('logout') }}" class="mt-4 border-t border-border pt-4">
                         @csrf
-                        <button type="submit" class="min-h-11 w-full rounded-md border border-border px-4 text-left text-sm font-semibold text-text hover:bg-background">Cerrar sesión</button>
+                        <button type="submit" class="min-h-12 w-full rounded-md border-2 border-border px-4 text-left text-base font-semibold text-text hover:bg-background">Cerrar sesión</button>
                     </form>
                 </nav>
             @endauth
