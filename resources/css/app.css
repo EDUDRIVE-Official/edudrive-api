@@ -282,6 +282,11 @@ label:has(> input[type='checkbox']), label:has(> input[type='radio']) { min-heig
 /* Degradados decorativos residuales -> color plano (el texto no debe quedar sobre degradados). */
 [class*='bg-gradient-to-'] { background-image: none; background-color: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface)); }
 
+/* Fase 5 — administración del super_admin: elementos de grid y flex-1 pueden encogerse (evita desbordes con selects de opciones largas). */
+.grid > *, .flex-1 { min-width: 0; }
+/* Enlaces subrayados sueltos de listas, tablas y fichas: objetivo táctil de 48 px (las páginas de formularios para imprimir mantienen sus líneas de captura). */
+main :is(li, td, article) a.text-primary.underline, main section > a.text-primary.underline { display: inline-flex; align-items: center; min-height: 48px; }
+
 /* Explicit light surfaces keep feedback readable in either application theme.
    Text and symbols repeat the meaning so color is never the only signal. */
 .lesson-page-copy > * + * { margin-top: 1.5rem; }
