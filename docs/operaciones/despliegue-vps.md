@@ -101,7 +101,7 @@ El script automatiza exactamente el runbook de `docs/operaciones/ci-cd.md`:
 respalda la base de datos (si ya había una aplicación corriendo), descarga
 la imagen, construye la imagen de `nginx`, corre las migraciones de forma
 controlada, reemplaza los contenedores, cachea configuración/rutas/vistas,
-y verifica `http://localhost/up` antes de darse por terminado.
+y verifica `http://127.0.0.1/up` dentro del contenedor nginx antes de darse por terminado (no `localhost`: nginx escucha solo en IPv4 y `localhost` resuelve primero a IPv6).
 
 ## 4. Verificación
 

@@ -71,7 +71,10 @@ docker compose -f "$COMPOSE_FILE" exec -T app php artisan optimize
 
 echo "==> Verificando salud de la aplicacion"
 ATTEMPTS=0
-until docker compose -f "$COMPOSE_FILE" exec -T nginx wget --spider -q http://localhost/up; do
+# 127.0.0.1 y no "localhost": nginx escucha solo en IPv4 y, dentro de la imagen alpine,
+# "localhost" resuelve primero a ::1, lo que da "Connection refused" aunque el servicio este sano
+# (el healthcheck de compose.prod.yaml usa la misma direccion).
+until docker compose -f "$COMPOSE_FILE" exec -T nginx wget --spider -q http://127.0.0.1/up; do
     ATTEMPTS=$((ATTEMPTS + 1))
     if [ "$ATTEMPTS" -ge 10 ]; then
         echo "La aplicacion no respondio saludable dentro de la red privada tras el despliegue." >&2
