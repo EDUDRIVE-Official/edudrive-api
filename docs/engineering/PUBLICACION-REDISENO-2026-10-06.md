@@ -36,7 +36,7 @@ URL: https://app.edudrive.vr506.com.
 - **No hubo navegación autenticada en producción**: no se contó con una sesión de prueba allí. Las pantallas autenticadas se comprobaron solo en la copia restaurada (kernel HTTP) y antes, en local.
 - No se ejecutaron acciones de escritura de usuarios ni flujos completos en producción.
 - El `queue-worker` se reinicia aproximadamente cada hora (159 reinicios en unos 6,6 días, con código de salida 0): es el comportamiento esperado de un worker con límite de tiempo, no una caída.
-- **Defecto latente en `scripts/deploy.sh`:** verifica la salud con `wget http://localhost/up` dentro del contenedor nginx, pero nginx escucha solo en IPv4 y `localhost` resuelve primero a IPv6, así que esa comprobación falla aunque el servicio esté sano (el healthcheck del contenedor usa `127.0.0.1` y pasa). No se usó el script; conviene corregirlo antes de usarlo.
+- **Defecto latente en `scripts/deploy.sh`:** verifica la salud con `wget http://localhost/up` dentro del contenedor nginx, pero nginx escucha solo en IPv4 y `localhost` resuelve primero a IPv6, así que esa comprobación falla aunque el servicio esté sano (el healthcheck del contenedor usa `127.0.0.1` y pasa). No se usó el script. La comprobación se corrigió después a `127.0.0.1` (verificado con el mismo comando contra el nginx en marcha: `localhost` dio código 1 y `127.0.0.1` código 0); el script sigue sin contemplar los overrides y no se ha vuelto a ejecutar de punta a punta.
 - Las imágenes de entregas anteriores a `editorial-approved-20260929r1` no existen en el servidor; solo las de esa versión se conservan.
 
 ## Reversión
