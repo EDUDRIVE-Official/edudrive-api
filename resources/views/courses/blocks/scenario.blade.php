@@ -15,7 +15,7 @@
         str_contains($context, 'automóvil') || str_contains($context, 'vehículo') => ['🚗', 'Vehículo y trayectoria posible'],
         default => ['⚠️', 'Condición que requiere atención'],
     };
-    $incidentScenes = ['Bicicleta caída' => 'fallen-bicycle', 'Cable desconocido' => 'unknown-cable', 'Mensaje incompleto' => 'incomplete-message', 'Ubicación privada' => 'private-location'];
+    $incidentScenes = ['Bicicleta caída' => 'fallen-bicycle', 'Cable desconocido' => 'unknown-cable', 'Mensaje incompleto' => 'incomplete-message', 'Ubicación privada' => 'private-location', 'Persona en el suelo' => 'person-on-ground'];
     $visibleCycling3dTitles = [
         'Dos caminos al parque', 'La ruta cambia con la hora', 'Bajada mojada', 'Subida con carga',
         'Vehículo que podría girar', 'Salida desde una calle lateral', 'Autobús detenido', 'Pasajero que puede descender',

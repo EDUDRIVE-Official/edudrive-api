@@ -85,6 +85,27 @@
                 ],
             ],
         ],
+        'person-on-ground' => [
+            'intro' => 'Abrí la escena 3D para observar qué pasa cuando alguien quiere levantar de inmediato a una persona caída.',
+            'legend' => 'Anillo verde: espacio libre alrededor de la persona. Azul: servicio de ayuda y sus instrucciones. Rojo: riesgo de empeorar la lesión. Violeta: redes públicas.',
+            'steps' => [
+                'segura' => [
+                    'Alguien quiere levantar de inmediato a la persona. Te alejás y dejás espacio libre a su alrededor.',
+                    'Pedís ayuda y seguís las instrucciones del servicio: no moverla y esperar a los profesionales.',
+                    'Llega el personal de emergencia y atiende a la persona; el tránsito espera con seguridad.',
+                ],
+                'exponer' => [
+                    'Pensás en mover a la persona para que el tránsito continúe.',
+                    'La levantás sin saber si tiene una lesión: moverla puede empeorarla.',
+                    'El tránsito sigue, pero la persona quedó en peor situación y nadie llamó a ayuda profesional.',
+                ],
+                'grabar' => [
+                    'Sacás el teléfono para grabar a la persona en el suelo.',
+                    'Mientras grabás, nadie llama al servicio de ayuda y la persona sigue en la calzada.',
+                    'Compartir imágenes retrasa la ayuda y vulnera la privacidad: primero se pide ayuda.',
+                ],
+            ],
+        ],
     ];
     $config = $catalog[$sceneKey];
 @endphp

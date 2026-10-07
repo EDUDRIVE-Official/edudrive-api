@@ -726,6 +726,7 @@ const incidentScenes = {
     'unknown-cable': async () => (await import('./unknown-cable-decision-3d')).mountUnknownCableDecision,
     'incomplete-message': async () => (await import('./incomplete-message-decision-3d')).mountIncompleteMessageDecision,
     'private-location': async () => (await import('./private-location-decision-3d')).mountPrivateLocationDecision,
+    'person-on-ground': async () => (await import('./person-on-ground-decision-3d')).mountPersonOnGroundDecision,
 };
 Alpine.data('incidentDecision3d', (choices, blockId, sceneKey) => {
     let engine = null; const outcomeFor = id => id === 'segura' ? 'protected' : id === 'grabar' ? 'record' : 'expose';
