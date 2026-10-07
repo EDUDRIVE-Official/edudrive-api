@@ -1,29 +1,58 @@
 @php
-    $fbSteps = [
-        'segura' => [
-            'Te alejás de la calzada y te ubicás en un lugar protegido.',
-            'Desde ahí pedís que una persona adulta o un servicio de ayuda intervenga.',
-            'La ayuda llega sin sumar otra persona en riesgo y el acceso queda libre.',
+    // Textos de cada escena 3D de respuesta ante incidentes. Las claves de pasos son los ids de las opciones.
+    $catalog = [
+        'fallen-bicycle' => [
+            'intro' => 'Abrí la escena 3D para observar qué pasa alrededor de la persona caída mientras el tránsito sigue circulando.',
+            'legend' => 'Verde: lugar protegido y acceso libre para la ayuda. Rojo: exposición que aumenta el peligro. Amarillo: persona que necesita ayuda.',
+            'steps' => [
+                'segura' => [
+                    'Te alejás de la calzada y te ubicás en un lugar protegido.',
+                    'Desde ahí pedís que una persona adulta o un servicio de ayuda intervenga.',
+                    'La ayuda llega sin sumar otra persona en riesgo y el acceso queda libre.',
+                ],
+                'exponer' => [
+                    'Sentís el impulso de correr hacia la persona caída.',
+                    'Al entrar en la calzada, un vehículo tiene que frenar de golpe.',
+                    'Ahora hay dos personas expuestas: el peligro aumentó.',
+                ],
+                'grabar' => [
+                    'Sacás el teléfono para grabar la escena.',
+                    'Pasa el tiempo y la persona sigue sin ayuda mientras circulan vehículos.',
+                    'Grabar no ayuda: primero se pide ayuda.',
+                ],
+            ],
         ],
-        'exponer' => [
-            'Sentís el impulso de correr hacia la persona caída.',
-            'Al entrar en la calzada, un vehículo tiene que frenar de golpe.',
-            'Ahora hay dos personas expuestas: el peligro aumentó.',
-        ],
-        'grabar' => [
-            'Sacás el teléfono para grabar la escena.',
-            'Pasa el tiempo y la persona sigue sin ayuda mientras circulan vehículos.',
-            'Grabar no ayuda: primero se pide ayuda.',
+        'unknown-cable' => [
+            'intro' => 'Abrí la escena 3D para observar el cable caído, la zona de peligro y qué pasa según tu decisión.',
+            'legend' => 'Anillo amarillo o rojo: zona de peligro alrededor del cable, que no se debe pisar. Verde: lugar seguro desde donde advertir y pedir ayuda. Azul: posible descarga eléctrica.',
+            'steps' => [
+                'segura' => [
+                    'Te detenés lejos del cable, fuera de la zona de peligro.',
+                    'Advertís a otras personas con un gesto y una señal, sin acercarte ni tocar el cable.',
+                    'Pedís ayuda a emergencias y a la empresa eléctrica; nadie se acerca al cable.',
+                ],
+                'exponer' => [
+                    'Pensás en mover el cable para despejar el paso.',
+                    'Te acercás: un cable caído puede estar energizado aunque no se vea nada.',
+                    'Tocarlo o acercarte crea una segunda víctima: el peligro aumentó.',
+                ],
+                'grabar' => [
+                    'Sacás el teléfono para grabar y compartir.',
+                    'Mientras grabás, otra persona y un vehículo se acercan sin saber del peligro.',
+                    'Primero se advierte y se pide ayuda; después, si es seguro, se comparte.',
+                ],
+            ],
         ],
     ];
+    $config = $catalog[$sceneKey];
 @endphp
-<section class="rounded-lg border-2 border-primary bg-surface p-5" x-data="fallenBicycleDecision3d(@js($scenario['choices']), @js($block['id']))" aria-labelledby="scenario-{{ $block['id'] }}">
+<section class="rounded-lg border-2 border-primary bg-surface p-5" x-data="incidentDecision3d(@js($scenario['choices']), @js($block['id']), @js($sceneKey))" aria-labelledby="scenario-{{ $block['id'] }}">
     <p class="text-xs font-semibold uppercase tracking-wide text-primary">Práctica de decisión · 3D</p>
     <h4 id="scenario-{{ $block['id'] }}" class="mt-1 font-heading text-lg font-bold">{{ $scenario['title'] }}</h4>
     <div class="mt-4 overflow-hidden rounded-lg border border-border bg-background">
         <div x-ref="viewport" style="height:clamp(320px,48vw,500px);position:relative;background:#c8e4ef">
             <div x-show="!ready" class="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center" style="color:#12324a">
-                <p class="max-w-lg text-sm" x-text="error || 'Abrí la escena 3D para observar qué pasa alrededor de la persona caída mientras el tránsito sigue circulando.'"></p>
+                <p class="max-w-lg text-sm" x-text="error || @js($config['intro'])"></p>
                 <button type="button" class="min-h-11 rounded-md bg-primary px-5 font-bold text-white" @click="open()" :disabled="loading" x-text="loading ? 'Preparando práctica…' : 'Abrir práctica 3D'"></button>
             </div>
         </div>
@@ -47,7 +76,7 @@
         </div>
         <div class="border-t border-border p-4" role="status" aria-live="polite" aria-atomic="true">
             <p class="text-sm leading-6 text-text-secondary" x-show="!selected">{{ $scenario['context'] }}</p>
-            @foreach ($fbSteps as $id => $texts)
+            @foreach ($config['steps'] as $id => $texts)
                 <template x-if="selected?.id === @js($id)">
                     <p class="text-sm font-medium leading-6 text-text" x-text="@js($texts)[step]"></p>
                 </template>
@@ -58,7 +87,7 @@
 
     @include('courses.blocks.editorial-decision-feedback', ['answerField' => $answerField ?? null])
 
-    <p class="mt-4 text-xs text-text-secondary">Verde: lugar protegido y acceso libre para la ayuda. Rojo: exposición que aumenta el peligro. Amarillo: persona que necesita ayuda.</p>
+    <p class="mt-4 text-xs text-text-secondary">{{ $config['legend'] }}</p>
     <details class="mt-4 text-sm text-text-secondary">
         <summary class="cursor-pointer font-medium">Alternativa accesible</summary>
         <p class="mt-2 leading-6">{{ $scenario['accessible_text'] }}</p>

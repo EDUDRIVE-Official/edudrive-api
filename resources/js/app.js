@@ -721,11 +721,15 @@ Alpine.data('messageCrossingDecision3d', (choices, blockId, isMap = false, isBus
         destroy() { destroyed = true; engine?.dispose(); engine = null; },
     };
 });
-Alpine.data('fallenBicycleDecision3d', (choices, blockId) => {
+const incidentScenes = {
+    'fallen-bicycle': async () => (await import('./fallen-bicycle-decision-3d')).mountFallenBicycleDecision,
+    'unknown-cable': async () => (await import('./unknown-cable-decision-3d')).mountUnknownCableDecision,
+};
+Alpine.data('incidentDecision3d', (choices, blockId, sceneKey) => {
     let engine = null; const outcomeFor = id => id === 'segura' ? 'protected' : id === 'grabar' ? 'record' : 'expose';
     return {
         choices, selected: null, ready: false, loading: false, error: '', paused: false, view: 'overview', step: 0,
-        async open() { if (engine || this.loading) return; this.loading = true; this.error = ''; try { const { mountFallenBicycleDecision } = await import('./fallen-bicycle-decision-3d'); engine = mountFallenBicycleDecision(this.$refs.viewport, index => { this.step = index; }); engine.setView(this.view); this.ready = true; } catch { this.error = 'No se pudo abrir la práctica 3D. Podés responder usando la descripción escrita.'; } finally { this.loading = false; } },
+        async open() { if (engine || this.loading) return; this.loading = true; this.error = ''; try { const mount = await incidentScenes[sceneKey](); engine = mount(this.$refs.viewport, index => { this.step = index; }); engine.setView(this.view); this.ready = true; } catch { this.error = 'No se pudo abrir la práctica 3D. Podés responder usando la descripción escrita.'; } finally { this.loading = false; } },
         async choose(id) { await this.open(); this.selected = this.choices.find(choice => choice.id === id); this.step = 0; this.paused = false; engine?.setPaused(false); engine?.setOutcome(outcomeFor(id)); this.$dispatch('scenario-answered', { id: blockId, correct: this.selected.correct }); },
         goStep(index) { if (!this.selected) return; this.step = Math.max(0, Math.min(2, index)); this.paused = true; engine?.setStep(this.step); },
         changeView(value) { this.view = value; engine?.setView(value); }, togglePause() { this.paused = !this.paused; engine?.setPaused(this.paused); },
