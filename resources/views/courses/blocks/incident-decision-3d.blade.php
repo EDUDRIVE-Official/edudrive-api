@@ -106,6 +106,27 @@
                 ],
             ],
         ],
+        'emergency-arrival' => [
+            'intro' => 'Abrí la escena 3D para observar qué pasa cuando llegan las emergencias y un grupo bloquea el acceso mientras graba.',
+            'legend' => 'Verde: paso libre y privacidad protegida. Rojo: acceso bloqueado y atención retrasada. Violeta: redes públicas. Anillo amarillo: zona de atención.',
+            'steps' => [
+                'segura' => [
+                    'Llegan las emergencias y un grupo bloquea el acceso grabando. Te alejás y pedís dejar de grabar.',
+                    'El grupo se retira y queda un paso libre para el personal de emergencia.',
+                    'Los profesionales atienden con privacidad: nadie graba ni difunde imágenes.',
+                ],
+                'exponer' => [
+                    'Querés acercarte para obtener más información.',
+                    'Al entrar al círculo, el grupo se aprieta y el acceso se cierra.',
+                    'El personal de emergencia no puede pasar: la atención se retrasa.',
+                ],
+                'grabar' => [
+                    'Sacás el teléfono para grabar como las demás personas.',
+                    'Más teléfonos y más gente: el paso sigue bloqueado y los profesionales esperan.',
+                    'Grabar y compartir retrasa la atención y vulnera la privacidad.',
+                ],
+            ],
+        ],
     ];
     $config = $catalog[$sceneKey];
 @endphp
