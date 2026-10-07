@@ -43,6 +43,27 @@
                 ],
             ],
         ],
+        'incomplete-message' => [
+            'intro' => 'Abrí la escena 3D para observar qué pasa cuando un aviso llega incompleto y cada decisión que podés tomar.',
+            'legend' => 'Gris: ubicación sin confirmar. Verde: ubicación y datos confirmados. Azul: servicio de ayuda y preguntas necesarias. Violeta: información que circula en grupos o redes.',
+            'steps' => [
+                'segura' => [
+                    'Alguien dice «hubo un accidente» y corta. Te quedás disponible, con el teléfono cerca.',
+                    'El servicio de ayuda pregunta y respondés solo lo necesario: dónde ocurrió y si hay personas heridas.',
+                    'Con esos datos confirmados, la ayuda llega al lugar correcto.',
+                ],
+                'exponer' => [
+                    'Recibís el aviso incompleto y querés avisar a más personas.',
+                    'Enviás el mensaje a un grupo y esperás: nadie sabe dónde ocurrió ni qué hacer.',
+                    'Se pierde tiempo y circula información sin confirmar; la ayuda no llega.',
+                ],
+                'grabar' => [
+                    'Querés mostrar lo que pasa y empezás a grabar.',
+                    'Mientras grabás, nadie llama al servicio de ayuda.',
+                    'Compartir imágenes retrasa la respuesta y vulnera la privacidad: primero se pide ayuda.',
+                ],
+            ],
+        ],
     ];
     $config = $catalog[$sceneKey];
 @endphp

@@ -37,7 +37,7 @@ export function createStage(host, { label, overview = { position: [10, 19, 30], 
     const tube = (a, b, r, material, parent) => { const from = new THREE.Vector3(...a), to = new THREE.Vector3(...b), dir = to.clone().sub(from); const value = cyl(r, dir.length(), material, parent, 0, 0, 0, 10); value.position.copy(from).add(to).multiplyScalar(.5); value.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize()); return value; };
     const ring = (inner, outer, material, x, y, z) => { const value = new THREE.Mesh(new THREE.RingGeometry(inner, outer, 56), material); value.rotation.x = -Math.PI / 2; value.position.set(x, y, z); scene.add(value); return value; };
 
-    const stage = { THREE, scene, camera, renderer, controls, reduced, canvasTexture, speckle, track, mat, paint, glass, glow, mesh, box, cyl, capsule, tube, ring, resetCamera, view: 'overview', paused: false, simTime: 0 };
+    const stage = { THREE, scene, camera, renderer, controls, reduced, disposables, canvasTexture, speckle, track, mat, paint, glass, glow, mesh, box, cyl, capsule, tube, ring, resetCamera, view: 'overview', paused: false, simTime: 0 };
 
     // Bucle de render: solo avanza y dibuja si la escena es visible y la pestaña está activa.
     let frame = 0, last = performance.now(), disposed = false;
@@ -152,4 +152,30 @@ export function buildCar(stage, color) {
         tire.rotation.x = rim.rotation.x = hub.rotation.x = Math.PI / 2; wheels.push(wheelGroup);
     }
     return { group, wheels, brakeMat };
+}
+
+// Etiqueta flotante con texto (globo de diálogo, aviso, ícono). Siempre mira a la cámara y se ve sobre la escena.
+export function buildLabel(stage, text, { bg = '#ffffff', fg = '#0f172a', width = 2.4 } = {}) {
+    const { THREE: T, scene, track } = stage;
+    const canvas = document.createElement('canvas'); canvas.width = 320; canvas.height = 112; const ctx = canvas.getContext('2d');
+    ctx.fillStyle = bg; ctx.strokeStyle = fg; ctx.lineWidth = 6; ctx.beginPath(); ctx.roundRect(6, 6, 308, 100, 28); ctx.fill(); ctx.stroke();
+    let size = 52; ctx.font = `700 ${size}px system-ui, sans-serif`; while (ctx.measureText(text).width > 270 && size > 20) { size -= 2; ctx.font = `700 ${size}px system-ui, sans-serif`; }
+    ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, 160, 58);
+    const texture = new T.CanvasTexture(canvas); texture.colorSpace = T.SRGBColorSpace; const material = new T.SpriteMaterial({ map: texture, depthTest: false, transparent: true });
+    const sprite = new T.Sprite(material); sprite.scale.set(width * 1.5, width * 1.5 * 112 / 320, 1); sprite.renderOrder = 10; sprite.visible = false; scene.add(sprite); stage.disposables.push(texture, material); return sprite;
+}
+
+// Marcador de ubicación: esfera sobre un cono invertido.
+export function buildPin(stage, color) {
+    const { THREE: T, scene, glow, mesh } = stage; const group = new T.Group(); scene.add(group); const material = glow(color, 1, .9);
+    const head = mesh(new T.SphereGeometry(.45, 20, 16), material, group, 0, .9, 0); const tip = mesh(new T.ConeGeometry(.3, .8, 16), material, group, 0, .3, 0); tip.rotation.x = Math.PI; head.castShadow = tip.castShadow = false;
+    return { group, material };
+}
+
+// Ambulancia: carrocería blanca con módulo trasero, franja roja y barra de luces. Frente en +x.
+export function buildAmbulance(stage) {
+    const { THREE: T, mat, glow, box } = stage; const car = buildCar(stage, '#f4f6f7'); const white = mat('#f4f6f7', { roughness: .4 }), red = mat('#d4281f', { roughness: .5 });
+    box(2.9, 1.05, 1.75, white, car.group, -.75, 1.75, 0); box(2.95, .22, 1.8, red, car.group, -.75, 1.35, 0); box(.04, .5, .9, red, car.group, -2.24, 1.78, 0);
+    const blue = glow('#2f7bff', 1, 1.8), redLight = glow('#ff3b30', 1, 1.8); box(.3, .14, .5, blue, car.group, .35, 2.38, -.45); box(.3, .14, .5, redLight, car.group, .35, 2.38, .45);
+    return { ...car, blue, redLight };
 }

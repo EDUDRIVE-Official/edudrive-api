@@ -724,6 +724,7 @@ Alpine.data('messageCrossingDecision3d', (choices, blockId, isMap = false, isBus
 const incidentScenes = {
     'fallen-bicycle': async () => (await import('./fallen-bicycle-decision-3d')).mountFallenBicycleDecision,
     'unknown-cable': async () => (await import('./unknown-cable-decision-3d')).mountUnknownCableDecision,
+    'incomplete-message': async () => (await import('./incomplete-message-decision-3d')).mountIncompleteMessageDecision,
 };
 Alpine.data('incidentDecision3d', (choices, blockId, sceneKey) => {
     let engine = null; const outcomeFor = id => id === 'segura' ? 'protected' : id === 'grabar' ? 'record' : 'expose';
