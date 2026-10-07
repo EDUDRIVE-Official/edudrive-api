@@ -64,6 +64,27 @@
                 ],
             ],
         ],
+        'private-location' => [
+            'intro' => 'Abrí la escena 3D para observar cómo pedir ayuda desde un lugar público sin exponer tu ubicación ni tus fotos.',
+            'legend' => 'Azul: servicio de ayuda y preguntas necesarias. Verde: referencia mínima y acompañamiento adulto. Violeta: redes públicas que cualquiera puede ver. Rojo: privacidad expuesta.',
+            'steps' => [
+                'segura' => [
+                    'Necesitás pedir ayuda en un lugar público. Un adulto de confianza se acerca para acompañarte.',
+                    'Llaman al servicio de ayuda y dan solo la referencia necesaria: la parada de bus frente a la escuela.',
+                    'La ayuda llega al lugar correcto y esperás acompañada, sin exponer tu ubicación a desconocidos.',
+                ],
+                'exponer' => [
+                    'Pensás en publicar tu ubicación y tus fotos para que alguien te ayude.',
+                    'La publicación la puede ver cualquier persona: nadie sabe quién la va a leer.',
+                    'Tu ubicación y tus fotos quedan expuestas y nadie llamó a un servicio de ayuda.',
+                ],
+                'grabar' => [
+                    'Querés grabar lo que pasa y compartirlo.',
+                    'Mientras grabás y compartís, nadie llama al servicio de ayuda.',
+                    'Compartir imágenes retrasa la ayuda y vulnera la privacidad: primero se pide ayuda.',
+                ],
+            ],
+        ],
     ];
     $config = $catalog[$sceneKey];
 @endphp
