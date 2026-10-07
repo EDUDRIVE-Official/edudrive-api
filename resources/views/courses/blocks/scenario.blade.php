@@ -109,6 +109,8 @@
     @include('courses.blocks.real-crosswalk-decision-3d', ['scenario' => $scenario, 'block' => $block, 'answerField' => $answerField ?? null])
 @elseif ($scenario['title'] === 'Cruce de ciclovía')
     @include('courses.blocks.cycle-track-crossing-decision-3d', ['scenario' => $scenario, 'block' => $block, 'answerField' => $answerField ?? null])
+@elseif ($scenario['title'] === 'Bicicleta caída' && collect($scenario['choices'])->pluck('id')->sort()->values()->all() === ['exponer', 'grabar', 'segura'])
+    @include('courses.blocks.fallen-bicycle-decision', ['scenario' => $scenario, 'block' => $block, 'answerField' => $answerField ?? null])
 @elseif ($scenario['title'] === 'Te hacen una señal')
     @include('courses.blocks.courtesy-signal-decision-3d', ['scenario' => $scenario, 'block' => $block, 'answerField' => $answerField ?? null])
 @else
